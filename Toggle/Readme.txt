@@ -19,3 +19,5 @@
 0x0000053C  0x01 0x90 0x0F 0x24
 0x00000540  0x30 0x46 0xFF 0xF7
 0x00000584  0x50 0x4D 0x55 0x4A  ('P','M','U','J')
+
+PS. The project for the stm32476 board have included "stm32l4xx.h","stm32l476xx.h","system_stm32l4xx.h","system_stm32l4xx.c" and "startup_stm32l476xx.s"(./Toggle/STM32L476)
