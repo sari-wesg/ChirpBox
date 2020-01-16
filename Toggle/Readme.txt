@@ -1,7 +1,6 @@
 1) Add "ll_flash.c" and "toggle.c" to your projects.
 
-2) The last page of the active bank is used for user Data e. So the user data offset should be 0x0807F808.The data size should not more than 2048 bytes.
-
+2) The last page of the active bank is used for user Data. So the user data address should be start with 0x0807F800.The data size should not more than 2048 bytes.
 3) TOGGLE_RESET_EXTI_CALLBACK() is mapped 0x08000534(bank1) or 0x08080534(bank2),offset is 0x00000534.
 
 0x00000534  0x7C 0xB5 0x00 0x20
