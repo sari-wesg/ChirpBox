@@ -3,7 +3,7 @@ uint8_t LL_Flash_Unlock(void);
 uint32_t FLASH_If_Check(uint32_t start);
 uint8_t LL_FLASH_OB_Unlock(void);
 
-uint8_t LL_Flash_PageErase(uint16_t PageNumber)
+uint8_t LL_FLASH_PageErase(uint16_t PageNumber)
 {
 	uint32_t BankActive;
 	BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);

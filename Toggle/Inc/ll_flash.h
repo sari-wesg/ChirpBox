@@ -14,11 +14,7 @@
                                                                             to unlock the FLASH registers access */	 
 #define FLASH_OPTKEY1              ((uint32_t)0x08192A3BU)               /*!< Flash option byte key1 */
 #define FLASH_OPTKEY2              ((uint32_t)0x4C5D6E7FU)               /*!< Flash option byte key2: used with FLASH_OPTKEY1 
-//                                                                            to allow option bytes operations */
-//#define FLASH_START_BANK1          ((uint32_t)0x08000000)
-//#define FLASH_START_BANK2          ((uint32_t)0x08080000)
-//#define USER_FLASH_END_ADDRESS     ((uint32_t)0x08100000)
-
+                                                                            to allow option bytes operations */
 enum
 {
   FLASH_CHK_OK = 0,
@@ -60,7 +56,7 @@ __STATIC_INLINE void LL_FLASH_DisenableProgram(FLASH_TypeDef *FLASHx)
   CLEAR_BIT(FLASHx->CR,FLASH_CR_PG);
 }
 
-uint8_t LL_Flash_PageErase(uint16_t Npages);
+uint8_t LL_FLASH_PageErase(uint16_t Npages);
 uint32_t STMFLASH_Read32( uint32_t faddr );
 uint8_t LL_FLASH_Program64(uint32_t faddr,uint32_t* pData);
 uint8_t STMFLASH_BankSwitch(void);	 

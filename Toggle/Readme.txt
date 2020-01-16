@@ -1,18 +1,8 @@
-1) Add "ll_flash.h" and "toggle.h" to your include files path.
-2) Add "ll_flash.c" and "toggle.c" to your projects.
-3) Your "main.c" should be added to
-   "#include toggle.h"
-4) Meanwhile, you should add the following codes after your "main()" in the main.c.
+1) Add "ll_flash.c" and "toggle.c" to your projects.
 
-   "void Reset_Handler(void)
-   { 
-	SystemInit();
-	if(TOGGLE_RESET_EXTI_CALLBACK()==FLAG_WRT_OK)
-		main();
-    }"
-5) The last page of the active bank is used for user Data except the address 0x0807F800 and 0x0807F804. So the user data offset should be 0x0807F808.You mustn't erase the last page of the active bank. And the data size should not more than 2040 bytes.
+2) The last page of the active bank is used for user Data e. So the user data offset should be 0x0807F808.The data size should not more than 2048 bytes.
 
-6) TOGGLE_RESET_EXTI_CALLBACK() is mapped 0x08000534(bank1) or 0x08080534(bank2),offset is 0x00000534.
+3) TOGGLE_RESET_EXTI_CALLBACK() is mapped 0x08000534(bank1) or 0x08080534(bank2),offset is 0x00000534.
 
 0x00000534  0x7C 0xB5 0x00 0x20
 0x00000538  0x11 0x4E 0x00 0x90
