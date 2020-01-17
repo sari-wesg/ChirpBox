@@ -73,6 +73,37 @@ uint8_t LL_FLASH_Program64(uint32_t faddr,uint32_t* pData)
 	return LL_OK;
 }
 
+uint8_t LL_FLASH_Program64s(uint32_t destination, uint32_t* pData,uint16_t DataLen)
+{
+	uint32_t prog_bit = 0;
+	uint16_t i = 0;
+	LL_Flash_Unlock();
+	while (LL_FLASH_IsActiveFlag_BSY(FLASH))       //wait for flash operation complete
+  {
+	}	           
+	for (i = 0; (i < DataLen / 2) && (destination <= (0x08080000 - 8)); i++)
+	{
+		LL_FLASH_EnableProgram(FLASH);              //flash program enable
+		while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
+	  {
+	  }
+	  /* Program the double word */
+    *(__IO uint32_t*)(destination) = *(pData+2*i);            //program 4 bytes, little endian
+    *(__IO uint32_t*)(destination+4) = *(pData+2*i+1);
+		if(*(uint64_t*)destination==*(uint64_t*)(pData+2*i))
+		{
+			destination += 8;
+		  prog_bit = FLASH_CR_PG;
+			CLEAR_BIT(FLASH->CR,prog_bit);
+		}
+		else
+		  i = i-1;
+		LL_FLASH_DisenableProgram(FLASH);
+	}	
+	LL_FLASH_Lock(FLASH);
+	return LL_OK;
+}
+
 uint32_t STMFLASH_Read32( uint32_t faddr )
 {
   return *(__IO uint32_t*)faddr;

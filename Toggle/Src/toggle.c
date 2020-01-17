@@ -4,6 +4,7 @@
 #define  JUMP_FLAG_ADDRESS             ((uint32_t)0x0807F7F8)    //page 254
 #define  JUMP_FLAG                     0x4A554D50 //"JUMP"
 #define  JUMP_N_FLAG                   0xFFFFFFFF
+#define  USER_DATA_PATCH               0xFF
 
 uint8_t TOGGLE_RESET_EXTI_CALLBACK(void)//uint16_t
 { 
@@ -108,3 +109,35 @@ void Reset_Handler(void)
 	}
 }
 
+uint8_t USR_FLASH_PageErase(void)
+{
+	return LL_FLASH_PageErase(255);
+}
+
+uint8_t USR_FLASH_Program8(uint32_t faddr,uint8_t* pData, uint16_t DataLen)
+{
+	uint8_t data_add=0;
+	uint16_t data32_len=DataLen;
+	uint8_t i=0;
+	if(DataLen > MAX_LEN)
+		return FLASH_WT_OUT_OF_RANGE;
+	else
+	{
+		if(data32_len%8!=0)
+		{
+			data_add = 8 - (data32_len%8);
+			for(i=0;i < data_add; i++)
+			{
+			  *(uint8_t*)(pData+DataLen+i) = (uint8_t)(USER_DATA_PATCH+i);
+        data32_len += 1;
+			}		
+		}
+		data32_len = data32_len/4;
+		return LL_FLASH_Program64s(faddr, (uint32_t*)pData, data32_len);
+	}
+}
+
+uint8_t USR_FLASH_Read8( uint32_t faddr )
+{
+  return *(__IO uint8_t*)faddr;
+}

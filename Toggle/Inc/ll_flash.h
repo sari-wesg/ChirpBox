@@ -58,8 +58,10 @@ __STATIC_INLINE void LL_FLASH_DisenableProgram(FLASH_TypeDef *FLASHx)
 
 uint8_t LL_FLASH_PageErase(uint16_t Npages);
 uint32_t STMFLASH_Read32( uint32_t faddr );
+uint8_t LL_FLASH_Program64s(uint32_t destination, uint32_t* pData,uint16_t DataLen);
 uint8_t LL_FLASH_Program64(uint32_t faddr,uint32_t* pData);
-uint8_t STMFLASH_BankSwitch(void);	 
+uint8_t STMFLASH_BankSwitch(void);	
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

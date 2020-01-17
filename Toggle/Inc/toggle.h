@@ -12,11 +12,16 @@
 #define BANK_TOGGLE_OK      0x10
 #define USR_FLASH_START     0x0807F800
 #define USR_FLASH_END       0x08080000
+#define USR_PAGE                255	
+#define MAX_LEN            	    2048 
+#define FLASH_WT_OUT_OF_RANGE	  0xFF 
 	 
 
 uint8_t TOGGLE_RESET_EXTI_CALLBACK(void) __attribute__((section(".ARM.__at_0x08000534")));
-	
-#ifdef __cplusplus
+uint8_t USR_FLASH_PageErase(void);
+uint8_t USR_FLASH_Program8(uint32_t faddr,uint8_t* pData, uint16_t DataLen);	 
+uint8_t USR_FLASH_Read8(uint32_t faddr);
+	 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
