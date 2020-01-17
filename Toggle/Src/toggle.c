@@ -45,7 +45,7 @@ uint8_t TOGGLE_RESET_EXTI_CALLBACK(void)//uint16_t
 					BX      R0
 				}
 #elif defined ( __GNUC__ )
-				static ALWAYS_INLINE void BEFORE_MAIN(void)
+				static inline __attribute__((always_inline)) void BEFORE_MAIN(void)
 				{
 					__ASM volatile
 					(
@@ -75,7 +75,7 @@ uint8_t TOGGLE_RESET_EXTI_CALLBACK(void)//uint16_t
 					);
 				}
 
-				static ALWAYS_INLINE void INTO_MAIN(void)
+				static inline __attribute__((always_inline)) void INTO_MAIN(void)
 				{
 					__ASM volatile
 					(
