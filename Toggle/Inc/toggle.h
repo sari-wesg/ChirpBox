@@ -15,11 +15,6 @@
 	 
 
 uint8_t TOGGLE_RESET_EXTI_CALLBACK(void) __attribute__((section(".ARM.__at_0x08000534")));
-//uint8_t USR_FLASH_PageErase(void);
-//uint8_t USR_FLASH_Program16(uint32_t faddr,uint16_t* pData);
-//uint8_t USR_FLASH_Program32(uint32_t faddr,uint32_t* pData);
-//uint8_t USR_FLASH_Program64(uint32_t faddr,uint64_t* pData);	 
-//uint8_t TOGGLE_RESET_EXTI_CALLBACK(void);//
 	
 #ifdef __cplusplus
 }

@@ -36,21 +36,75 @@ uint8_t TOGGLE_RESET_EXTI_CALLBACK(void)//uint16_t
 	}
 	return state;
 }
-__ASM void INTO_MAIN(void)
-{
-  IMPORT  __main
-	LDR     R0, =__main
-  BX      R0
-}
+
+#if   defined ( __CC_ARM )
+				__ASM void INTO_MAIN(void)
+				{
+					IMPORT  __main
+					LDR     R0, =__main
+					BX      R0
+				}
+#elif defined ( __GNUC__ )
+				static ALWAYS_INLINE void BEFORE_MAIN(void)
+				{
+					__ASM volatile
+					(
+						"ldr   sp, =_estack	\n"
+						"movs	r1, #0			  \n"
+						"b	LoopCopyDataInit\n"
+						"CopyDataInit:			\n"
+						"ldr	r3, =_sidata	\n"
+						"ldr	r3, [r3, r1]	\n"
+						"str	r3, [r0, r1]	\n"
+						"adds	r1, r1, #4		\n"
+						"LoopCopyDataInit:"
+						"ldr	r0, =_sdata		\n"
+						"ldr	r3, =_edata		\n"
+						"adds	r2, r0, r1		\n"
+						"cmp	r2, r3			  \n"
+						"bcc	CopyDataInit	\n"
+						"ldr	r2, =_sbss		\n"
+						"b	LoopFillZerobss	\n"
+						"FillZerobss:			  \n"
+						"movs	r3, #0			  \n"
+						"str	r3, [r2], #4	\n"
+						"LoopFillZerobss:		\n"
+						"ldr	r3, = _ebss		\n"
+						"cmp	r2, r3			  \n"
+						"bcc	FillZerobss		\n"
+					);
+				}
+
+				static ALWAYS_INLINE void INTO_MAIN(void)
+				{
+					__ASM volatile
+					(
+						"bl	main				  \n"
+						"LoopForever:			\n"
+						"b LoopForever		\n"
+					);
+				}
+#elif defined ( __ICCARM__ )
+				static void INTO_MAIN(void)
+				{
+					__ASM volatile
+					(
+					  "LDR     R0, =__iar_program_start  \n"
+					  "BX      R0                        \n"
+					)
+        }
+#endif
 void Reset_Handler(void)
 { 
-	SystemInit();
+	#if defined ( __GNUC__ )
+	      BEFORE_MAIN();
+				SystemInit();
+	#else 
+				SystemInit();
+	#endif
 	if(TOGGLE_RESET_EXTI_CALLBACK()==FLAG_WRT_OK)
 	{
       INTO_MAIN();
 	}
 }
-//uint8_t USR_FLASH_PageErase(void)
-//{
-//	
-//}
+
