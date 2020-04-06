@@ -12,6 +12,9 @@
 *.map
 *.exp
 
+# Debug output
+*.crf
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -50,3 +53,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+
+!*.uvprojx
+!*.h
+!*.c
+!*.ioc
+!*.axf
+!*.bin
+!*.hex

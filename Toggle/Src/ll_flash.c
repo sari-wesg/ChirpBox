@@ -8,9 +8,9 @@ uint8_t LL_FLASH_PageErase(uint16_t PageNumber)
 	uint32_t BankActive;
 	BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
 	LL_Flash_Unlock();
-	while (LL_FLASH_IsActiveFlag_BSY(FLASH)) 
-	{ 
-	} 
+	while (LL_FLASH_IsActiveFlag_BSY(FLASH))
+	{
+	}
 	if(PageNumber>200)
 	{
 		SET_BIT(FLASH->CR, FLASH_CR_PER);        //enable flash earse
@@ -21,11 +21,11 @@ uint8_t LL_FLASH_PageErase(uint16_t PageNumber)
 		else                                     //bank2 is active
 		{
 			SET_BIT(FLASH->CR, FLASH_CR_BKER);     //earse bank2
-		}			
+		}
 	  SET_BIT(FLASH->CR, (PageNumber << 3));   //set page to earse
     SET_BIT(FLASH->CR, FLASH_CR_STRT);       //start earsing...
 		while (LL_FLASH_IsActiveFlag_BSY(FLASH)) //wait for flash operation complete
-	  { 
+	  {
 	  }
 		CLEAR_BIT(FLASH->CR, FLASH_CR_PNB);      //clear page to earse
 		CLEAR_BIT(FLASH->CR, FLASH_CR_PER);      //disable flash earse
@@ -33,8 +33,8 @@ uint8_t LL_FLASH_PageErase(uint16_t PageNumber)
 	else
 	{
 		return LL_ERROR;
-	}	
-	
+	}
+
 	LL_FLASH_Lock(FLASH);
 	return LL_OK;
 }
@@ -59,7 +59,7 @@ uint8_t LL_FLASH_Program64(uint32_t faddr,uint32_t* pData)
 	/* Program the double word */
   *(__IO uint32_t*)faddr = *pData;            //program 4 bytes, little endian
   *(__IO uint32_t*)(faddr+4) = *(pData+1);
-	
+
 	prog_bit = FLASH_CR_PG;
 	while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
 	{
@@ -80,7 +80,7 @@ uint8_t LL_FLASH_Program64s(uint32_t destination, uint32_t* pData,uint16_t DataL
 	LL_Flash_Unlock();
 	while (LL_FLASH_IsActiveFlag_BSY(FLASH))       //wait for flash operation complete
   {
-	}	           
+	}
 	for (i = 0; (i < DataLen / 2) && (destination <= (0x08080000 - 8)); i++)
 	{
 		LL_FLASH_EnableProgram(FLASH);              //flash program enable
@@ -99,7 +99,7 @@ uint8_t LL_FLASH_Program64s(uint32_t destination, uint32_t* pData,uint16_t DataL
 		else
 		  i = i-1;
 		LL_FLASH_DisenableProgram(FLASH);
-	}	
+	}
 	LL_FLASH_Lock(FLASH);
 	return LL_OK;
 }
@@ -113,18 +113,18 @@ uint8_t STMFLASH_BankSwitch(void)
 {
 	uint8_t result;
 	uint32_t usr_conf;
-	
+
 	LL_FLASH_Lock(FLASH);
 	/* Clear OPTVERR bit set on virgin samples */
 	if((FLASH_SR_OPTVERR) & (FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))
   { SET_BIT(FLASH->ECCR, ((FLASH_SR_OPTVERR) & (FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))); }
- 
-  if((FLASH_SR_OPTVERR) & ~(FLASH_ECCR_ECCC | FLASH_ECCR_ECCD)) 
+
+  if((FLASH_SR_OPTVERR) & ~(FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))
   { WRITE_REG(FLASH->SR, ((FLASH_SR_OPTVERR) & ~(FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))); }
-  
+
 	usr_conf = READ_REG(FLASH->OPTR);
-  result = LL_Flash_Unlock();	
-	
+  result = LL_Flash_Unlock();
+
 	if( result == LL_OK)
 	{
 		  result = LL_FLASH_OB_Unlock();
@@ -132,10 +132,10 @@ uint8_t STMFLASH_BankSwitch(void)
 			{
 				  while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
 					{
-					}			
+					}
 					if(usr_conf & FLASH_OPTR_BFB2)
-					{	
-						CLEAR_BIT(FLASH->OPTR, FLASH_OPTR_BFB2);     
+					{
+						CLEAR_BIT(FLASH->OPTR, FLASH_OPTR_BFB2);
 					}
 					else
 					{
@@ -149,11 +149,11 @@ uint8_t STMFLASH_BankSwitch(void)
 			}
 			/* If the option byte program operation is completed, disable the OPTSTRT Bit */
 			CLEAR_BIT(FLASH->CR, FLASH_CR_OPTSTRT);
-			
+
 			/* Set the bit to force the option byte reloading */
 			if (result == LL_OK)
 			{
-				LL_FLASH_SET_OBL_Launch(FLASH);  
+				LL_FLASH_SET_OBL_Launch(FLASH);
 			}
 			while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
 			{
@@ -164,11 +164,11 @@ uint8_t STMFLASH_BankSwitch(void)
 
 uint8_t LL_Flash_Unlock(void)
 {
-	while (LL_FLASH_IsActiveFlag_BSY(FLASH))  
+	while (LL_FLASH_IsActiveFlag_BSY(FLASH))
 	{
-	} 
-	if (LL_FLASH_LockState(FLASH)!=0) 
-	{ 
+	}
+	if (LL_FLASH_LockState(FLASH)!=0)
+	{
 		LL_FLASh_SetKey(FLASH,FLASH_KEY1);
 		LL_FLASh_SetKey(FLASH,FLASH_KEY2);
 	}
@@ -191,6 +191,6 @@ uint8_t LL_FLASH_OB_Unlock(void)
   else
   {
     return LL_ERROR;
-  }    
-  return LL_OK;  
+  }
+  return LL_OK;
 }
