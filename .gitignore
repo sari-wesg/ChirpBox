@@ -38,6 +38,7 @@
 *.i*86
 *.x86_64
 *.hex
+*.bin
 
 # Debug files
 *.dSYM/
@@ -55,10 +56,25 @@ Mkfile.old
 dkms.conf
 
 
+*.rar
+*.o
+*.d
+*.htm
+*.dep
+*.map
+*.bak
+*.lnp
+*.lst
+*.ini
+*.iex
+*.sct
+*.scvd
+*.uvguix
+*.dbg*
+*.uvguix.*
+
 !*.uvprojx
 !*.h
 !*.c
 !*.ioc
 !*.axf
-!*.bin
-!*.hex
