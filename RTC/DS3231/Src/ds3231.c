@@ -78,7 +78,8 @@ void DS3231_ModifyTime(uint8_t year, uint8_t month, uint8_t date,
   */
 void DS3231_GetTime(void)
 {
-    HAL_I2C_Mem_Read_IT(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_REG_LENGTH);
+  DS3231.flag = 0;
+  HAL_I2C_Mem_Read_IT(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_REG_LENGTH);
 }
 
 void DS3231_ShowTime(void)
