@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "toggle.h": "c",
+        "ds3231.h": "c"
+    }
+}

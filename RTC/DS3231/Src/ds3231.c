@@ -149,6 +149,42 @@ void DS3231_SetAlarm2_Time(uint8_t date, uint8_t hour, uint8_t mintue)
     while(HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
                       &(DS3231.Control), 2, 0xffff) != HAL_OK);
 }
+
+/**
+  * @brief  Set the duration of alarm1 time
+  * @param  hour: 00–23 (default)
+  * @param  mintue: 00–59
+  * @param  second: 00–59
+  * @retval None
+  */
+void DS3231_SetAlarm1_Duration(uint8_t hour, uint8_t mintue, uint8_t second)
+{
+  uint8_t alarm_hour, alarm_min, alarm_sec;
+  DS3231_GetTime();
+  while (!DS3231.flag)
+    ;
+  alarm_sec = (DS3231.Second + second) % 60;
+  alarm_min = (DS3231.Second + second) / 60 + (DS3231.Minute + mintue) % 60;
+  alarm_hour = (DS3231.Minute + mintue) / 60 + (DS3231.Hour + hour) % 60;
+  DS3231_SetAlarm1_Time(DS3231.Date, alarm_hour, alarm_min, alarm_sec);
+}
+
+/**
+  * @brief  Set the duration of alarm2 time
+  * @param  hour: 00–23 (default)
+  * @param  mintue: 00–59
+  * @retval None
+  */
+void DS3231_SetAlarm2_Duration(uint8_t hour, uint8_t mintue)
+{
+  uint8_t alarm_hour, alarm_min;
+  DS3231_GetTime();
+  while (!DS3231.flag)
+    ;
+  alarm_min = (DS3231.Minute + mintue) % 60;
+  alarm_hour = (DS3231.Minute + mintue) / 60 + (DS3231.Hour + hour) % 60;
+  DS3231_SetAlarm2_Time(DS3231.Date, alarm_hour, alarm_min);
+}
 //**************************************************************************************************
 
 /**

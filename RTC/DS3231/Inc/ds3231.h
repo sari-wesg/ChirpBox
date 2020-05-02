@@ -68,7 +68,8 @@ void DS3231_GetTime(void);
 void DS3231_ShowTime(void);
 void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t second);
 void DS3231_SetAlarm2_Time(uint8_t date, uint8_t hour, uint8_t mintue);
-
+void DS3231_SetAlarm1_Duration(uint8_t hour, uint8_t mintue, uint8_t second);
+void DS3231_SetAlarm2_Duration(uint8_t hour, uint8_t mintue);
 
 
 #endif  /* __RTC_H__ */
