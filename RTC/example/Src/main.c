@@ -36,8 +36,6 @@ static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
 
 #define BANK1
-uint32_t BankActive;
-
 /* Private user code ---------------------------------------------------------*/
 extern DS3231_TypeDef DS3231;
 /**
@@ -46,6 +44,11 @@ extern DS3231_TypeDef DS3231;
   */
 int main(void)
 {
+  /* Protection for reset from Bank1 when power off */
+  #if defined (BANK1)
+    LL_FLASH_PageErase(254);
+  #endif
+
   /* MCU Configuration--------------------------------------------------------*/
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
@@ -67,7 +70,6 @@ int main(void)
   // Enable timer2 IRQ every second, and enable show time flag in the IRQ callback
 	htim2.Instance->CCR1 = htim2.Instance->CNT + 16000000u;
 
-	BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
   // Modify time at 2020/2/12, Wednesday, 1:20:00
   #if defined (BANK1)
     DS3231_ModifyTime(20, 2, 12, 3, 1, 20, 0);
@@ -77,10 +79,9 @@ int main(void)
   DS3231_ShowTime();
 
   #if defined (BANK1)
-    DS3231_SetAlarm1_Time(12, 1, 20, 6); /* set at 1:20:06 */
-    // DS3231_SetAlarm1_Duration(0, 0, 5); /* set 5 seconds */
-    HAL_Delay(2000);
-    // LL_FLASH_PageErase(254);
+    DS3231_SetAlarm1_Time(12, 1, 20, 5); /* set at 1:20:05 */
+    // DS3231_SetAlarm1_Duration(0, 0, 3); /* set after 3 seconds */
+    HAL_Delay(3000); /* Delay 3 seconds */
     STMFLASH_BankSwitch();
   #endif
 
@@ -281,13 +282,10 @@ int _write (int fd, char *pBuffer, int size)
     return size;
 }
 #endif
+
 void TIM2_IRQHandler(void)
 {
 	__HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
-  if (!BankActive)
-    printf("BANK1, ");
-  else
-    printf("BANK2, ");
 	htim2.Instance->CCR1 += 16000000u;
   DS3231_GetTime();
 }
