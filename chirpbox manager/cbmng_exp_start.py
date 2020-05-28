@@ -134,3 +134,6 @@ def collect_topology():
 	# TODO: Serial commands here...
 	print("Results of " + filename + " have been collected!" )
 	return True	
+
+def disseminate():
+	# TODO: Serial commands here...	
