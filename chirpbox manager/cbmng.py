@@ -67,19 +67,27 @@ def main(argv):
 		else:
 			print("The testbed is idle...")
 			exit(0)
-	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 4)):
-		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]))
+	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 5)):
+		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]))
 		exit(1)
 	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 2)):
 		if(cbmng_exp_start.check() == True):
 			cbmng_exp_start.assign_sniffer()
+		exit(0)
+	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 2)):
+		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == True)):
+			cbmng_exp_start.collect_data()
+		exit(0)
+	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 2)):
+		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == True)):
+			cbmng_exp_start.collect_topology()
 		exit(0)
 	elif(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):
 		print_help_text()
 		exit(0)
 
 	else:
-		print("Please input valid command")
+		print("Please input a valid command")
     
 if __name__ == "__main__":
     # execute only if run as a script

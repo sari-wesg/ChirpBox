@@ -48,6 +48,14 @@ def check():
 
 	return True
 
+def check_finished():
+	try:
+		f = open(running_status, mode = 'r')
+		f.close()
+	except FileNotFoundError:
+		return False
+	return True
+
 def start():
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
@@ -57,8 +65,9 @@ def start():
 		end_time_t = start_time_t + datetime.timedelta(minutes = expconfapp.experiment_duration)
 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 		exp_no = cbmng_common.tid_maker()
-		print("Experiment #" + exp_no + " is going to start at " + start_time + ", and stop at " + end_time)
-		running_dict = {'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
+		exp_name = expconfapp.experiment_name
+		print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
+		running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
 		with open(running_status, "w") as f:
 			json.dump(running_dict, f)
 		# TODO: Add the serial command to start
@@ -72,8 +81,6 @@ def is_running():
 		f.close()
 	except FileNotFoundError:
 		return False
-	except PermissionError:
-		return False
 
 	with open(running_status, 'r') as load_f:
 		running_dict = json.load(load_f)
@@ -85,15 +92,16 @@ def is_running():
 		else:
 			return False
 
-def connectivity_evaluation(sf, channel):
+def connectivity_evaluation(sf, channel, tx_power):
 	time_now = datetime.datetime.now()
 	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	end_time_t = start_time_t + datetime.timedelta(minutes = 10)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
-	print("Connectivity evaluation (SF " + str(sf) + ", Channel " + str(channel) + " MHz) is going to start at " + start_time + ", and stop at " + end_time)
-	running_dict = {'connectivity_evaluation': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	exp_name = "Chirpbox_connectivity_sf" + str(sf) + "ch" + str(channel) + "tp" + str(tx_power)
+	print("Connectivity evaluation (SF " + str(sf) + ", Channel " + str(channel) + " MHz, " + str(tx_power) + " dBm) is going to start at " + start_time + ", and stop at " + end_time)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 	# TODO: Add the serial command to start	
@@ -108,3 +116,21 @@ def assign_sniffer():
 		return True
 	else:
 		return False
+
+def collect_data():
+	with open(running_status,'r') as load_f:
+		load_dict = json.load(load_f)
+		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ")"
+	print("Collecting ...")
+	# TODO: Serial commands here...
+	print("Results of " + filename + " have been collected!" )
+	return True
+
+def collect_topology():
+	with open(running_status,'r') as load_f:
+		load_dict = json.load(load_f)
+		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ")"
+	print("Collecting ...")
+	# TODO: Serial commands here...
+	print("Results of " + filename + " have been collected!" )
+	return True	

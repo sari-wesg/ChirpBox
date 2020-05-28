@@ -1,5 +1,6 @@
 {
-
+	"experiment_name": "test",
+	"experiment_description": "Just for description",
 	"payload_length": 6, 
 	"experiment_duration": 11,
 	"num_generated_packets": "True",
