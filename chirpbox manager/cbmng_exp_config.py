@@ -2,8 +2,8 @@ import cbmng_common
 import json
 
 class myExpConfApproach(cbmng_common.ExpConfApproach):
-	payload_length = 0;
-	experiment_duration = 0;
+	payload_length = 0
+	experiment_duration = 0
 
 	def read_configuration(self):
 		with open(cbmng_common.ExpConfApproach.conf_json,'r') as load_f:

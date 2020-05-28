@@ -18,21 +18,21 @@ def print_help_text():
 	print("*********************************************")
 	print("Chirpbox: Help\n\
 One can do as follows to prepare an experiment:\n\
-1) Configure an experiment configuration file, including payload length, traffic pattern, interference, and experiment duration;\n\
-2) Configure a firmware file (.bin) to be tested;\n\
-3) Configure a methodology file to assign the metrics to be computed;\n\
+1) Configure an experiment configuration file, including payload length, traffic pattern, interference, and experiment duration\n\
+2) Configure a firmware file (.bin) to be tested\n\
+3) Configure a methodology file to assign the metrics to be computed\n\
 As soon as all the steps mentioned above have been configured properly, then one can start experiments.")
 	print("The commands are:\n\
-1) \"python cbmng.py -ec [filename]\" to configure experiments;\n\
-2) \"python cbmng.py -ef [filename]\" to configure firmware;\n\
-3) \"python cbmng.py -em [filename]\" to configure methodology;\n\
-4) \"python cbmng.py -start\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem;\n\
+1) \"python cbmng.py -ec [filename]\" to configure experiments\n\
+2) \"python cbmng.py -ef [filename]\" to configure firmware\n\
+3) \"python cbmng.py -em [filename]\" to configure methodology\n\
+4) \"python cbmng.py -start\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem\n\
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
 6) \"python cbmng.py -dissem [filename]\" to disseminate the firmware [filename]\n\
 7) \"python cbmng.py -coldata\" to collect the results\n\
 8) \"python cbmng.py -connect [SF] [Channel]\" to evaluate connectivity of the network with a given SF and Channel (MHz)\n\
 9) \"python cbmng.py -coltopo\" to obtain the topology\n\
-10) \"python cbmng.py -settosnf\" to assign nodes to work as sniffers\n")
+10) \"python cbmng.py -assignsnf\" to assign nodes to work as sniffers\n")
 
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
@@ -58,7 +58,7 @@ def main(argv):
 	 	 	exit(0)
 	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 2)):
 	 	if(cbmng_exp_start.check() == True):
-	 		cbmng_exp_start.start();
+	 		cbmng_exp_start.start()
 	 	exit(0)
 	elif(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
 		if(cbmng_exp_start.is_running() == True):
@@ -68,8 +68,12 @@ def main(argv):
 			print("The testbed is idle...")
 			exit(0)
 	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 4)):
-		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]));
+		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]))
 		exit(1)
+	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 2)):
+		if(cbmng_exp_start.check() == True):
+			cbmng_exp_start.assign_sniffer()
+		exit(0)
 	elif(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):
 		print_help_text()
 		exit(0)

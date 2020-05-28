@@ -2,11 +2,12 @@ import cbmng_common
 import json
 
 class myExpMethodApproach(cbmng_common.ExpMethodApproach):
-	num_generated_packets = False;
-	num_received_packets = False;
-	e2e_latency = False;
-	tx_energy = False;
-	rx_energy = False;
+	num_generated_packets = False
+	num_received_packets = False
+	e2e_latency = False
+	tx_energy = False
+	rx_energy = False
+	sniffer = []
 
 	def read_configuration(self):
 		with open(cbmng_common.ExpMethodApproach.methodology_file,'r') as load_f:
@@ -26,6 +27,9 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 			# Rx time:
 			myExpMethodApproach.rx_energy = load_dict['rx_energy']
 			print("rx_energy: " + str(myExpMethodApproach.rx_energy))
+			# Rx time:
+			myExpMethodApproach.sniffer = load_dict['sniffer']
+			print("sniffer: " + str(myExpMethodApproach.sniffer))
 		with open("tmp_exp_meth.json","w") as dump_f:
 			json.dump(load_dict,dump_f)
 		# TODO: Add some codes here
