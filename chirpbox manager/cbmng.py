@@ -30,7 +30,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
 6) \"python cbmng.py -dissem [filename]\" to disseminate the firmware [filename]\n\
 7) \"python cbmng.py -coldata\" to collect the results\n\
-8) \"python cbmng.py -gettopo [SF] [Channel]\" to evaluate connectivity of the network with a given SF and Channel (MHz)\n\
+8) \"python cbmng.py -connect [SF] [Channel]\" to evaluate connectivity of the network with a given SF and Channel (MHz)\n\
 9) \"python cbmng.py -coltopo\" to obtain the topology\n\
 10) \"python cbmng.py -settosnf\" to assign nodes to work as sniffers\n")
 
@@ -41,46 +41,41 @@ expmethapp = cbmng_exp_method.myExpMethodApproach()
 def main(argv):
 	if(((argv[1] == "version") or (argv[1] == "-v")) and (len(argv) == 2)):
 		get_current_version(Chirpbox_procedure_manager_version)
-	if(((argv[1] == "experiment_configuration") or (argv[1] == "-ec")) and (len(argv) == 3)):
+	elif(((argv[1] == "experiment_configuration") or (argv[1] == "-ec")) and (len(argv) == 3)):
 		if(expconfapp.experiment_configuration(argv[2]) == True):
 			expconfapp.read_configuration()
 		else:
 			exit(0)
-	if(((argv[1] == "experiment_firmware") or (argv[1] == "-ef")) and (len(argv) == 3)):
+	elif(((argv[1] == "experiment_firmware") or (argv[1] == "-ef")) and (len(argv) == 3)):
 		if(expfirmapp.experiment_firmware(argv[2]) == True):
 			expfirmapp.read_configuration()
 		else:
 			exit(0)
-	if(((argv[1] == "experiment_methodology") or (argv[1] == "-em")) and (len(argv) == 3)):
+	elif(((argv[1] == "experiment_methodology") or (argv[1] == "-em")) and (len(argv) == 3)):
 		if(expmethapp.experiment_methodology(argv[2]) == True):
 			expmethapp.read_configuration()
 		else:
 	 	 	exit(0)
-	if(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 2)):
+	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 2)):
 	 	if(cbmng_exp_start.check() == True):
 	 		cbmng_exp_start.start();
 	 	exit(0)
-	if(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
+	elif(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
 		if(cbmng_exp_start.is_running() == True):
 			print("The testbed is running...")
 			exit(1)
 		else:
 			print("The testbed is idle...")
 			exit(0)
-	if(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):
+	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 4)):
+		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]));
+		exit(1)
+	elif(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):
 		print_help_text()
 		exit(0)
 
-	#print("esf")
-
-
-	#expconfapp.experiment_duration
-	
-
-	# print(len(argv))
-    # print(argv[1])
-    # print(argv[2])
-    # print(argv[3])
+	else:
+		print("Please input valid command")
     
 if __name__ == "__main__":
     # execute only if run as a script

@@ -58,7 +58,7 @@ def start():
 		with open(running_status, "w") as f:
 			json.dump(running_dict, f)
 		# TODO: Add the serial command to start
-
+		return True
 	else:
 		return False
 
@@ -80,4 +80,17 @@ def is_running():
 			return True
 		else:
 			return False
-	
+
+def connectivity_evaluation(sf, channel):
+	time_now = datetime.datetime.now()
+	start_time_t = time_now + datetime.timedelta(minutes = 2)
+	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	end_time_t = start_time_t + datetime.timedelta(minutes = 10)
+	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	exp_no = cbmng_common.tid_maker()
+	print("Connectivity evaluation (SF " + str(sf) + ", Channel " + str(channel) + " MHz) is going to start at " + start_time + ", and stop at " + end_time)
+	running_dict = {'connectivity_evaluation': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
+	# TODO: Add the serial command to start	
+	return True
