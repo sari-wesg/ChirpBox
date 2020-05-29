@@ -30,7 +30,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
 6) \"python cbmng.py -dissem\" to disseminate the file, e.g., the firmware\n\
 7) \"python cbmng.py -coldata\" to collect the results\n\
-8) \"python cbmng.py -connect [SF] [Channel]\" to evaluate connectivity of the network with a given SF and Channel (MHz)\n\
+8) \"python cbmng.py -connect [SF] [Channel] [Tx_power]\" to evaluate connectivity of the network with a given SF, a given Channel (MHz), and a given Tx_power (dBm).\n\
 9) \"python cbmng.py -coltopo\" to obtain the topology\n\
 10) \"python cbmng.py -assignsnf\" to assign nodes to work as sniffers\n")
 
