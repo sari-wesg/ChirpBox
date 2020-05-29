@@ -5,6 +5,9 @@ import cbmng_common
 import datetime
 import time
 import json
+import transfer_to_initiator.myserial.serial_send
+
+import serial
 
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
@@ -136,4 +139,53 @@ def collect_topology():
 	return True	
 
 def disseminate():
-	# TODO: Serial commands here...	
+	# config and open the serial port
+	ser = transfer_to_initiator.myserial.serial_send.config_port('COM10')
+	# corresponded task number
+	disseminate_task = 2
+
+	timeout_cnt = 0
+
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+			 	if (line == "Input initiator task:"):
+			 	 	time.sleep(2)
+			 	 	print('Input disseminate_task')
+			 	 	ser.write(str(disseminate_task).encode()) # send commands
+			 	if (line == "C"):
+			 	 	print("*YMODEM* send\n")
+			 	 	break
+			if(timeout_cnt > 1000):
+				break
+		except:
+			pass
+	if(timeout_cnt > 1000):
+		print("Timeout...")
+		return
+	# transmit the file
+	transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
+	print("*YMODEM* done\n")
+
+	# switch bank
+	timeout_cnt = 0
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+				print (line)
+				if (line == "Input initiator task:"):
+	 				time.sleep(2)
+	# 				print(line)
+	 				break
+			if(timeout_cnt > 1000):
+				break
+		except:
+	 		pass
+
+	if(timeout_cnt > 1000):
+		print("Timeout...")
+		return

@@ -28,7 +28,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 3) \"python cbmng.py -em [filename]\" to configure methodology\n\
 4) \"python cbmng.py -start\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem\n\
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
-6) \"python cbmng.py -dissem\" to disseminate the files, e.g., the firmware\n\
+6) \"python cbmng.py -dissem\" to disseminate the file, e.g., the firmware\n\
 7) \"python cbmng.py -coldata\" to collect the results\n\
 8) \"python cbmng.py -connect [SF] [Channel]\" to evaluate connectivity of the network with a given SF and Channel (MHz)\n\
 9) \"python cbmng.py -coltopo\" to obtain the topology\n\
@@ -82,7 +82,7 @@ def main(argv):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == True)):
 			cbmng_exp_start.collect_topology()
 		exit(0)
-	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 3)):
+	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 2)):
 		if(cbmng_exp_start.check() == True):
 			cbmng_exp_start.disseminate()
 		exit(0)		
