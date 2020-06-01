@@ -189,11 +189,13 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	print("Done!")
 	return True
 
-def assign_sniffer(num, pairs, com_port):
+def assign_sniffer(com_port):
 	if(expmethapp.experiment_methodology(exp_meth) == True):
 		expmethapp.read_configuration()
 		time_now = datetime.datetime.now()
-		print("The sniffer(s): " + str(expmethapp.sniffer))
+		pairs = expmethapp.sniffer_and_channels
+		num = len(pairs) / 2
+		print("Sniffers and channels: " + str(pairs))
 	else:
 		return False
 	# config and open the serial port
@@ -218,7 +220,7 @@ def assign_sniffer(num, pairs, com_port):
 			 	 	if(num == 1):
 			 	 		print("There is one sniffer.")
 			 	 	if(num > 1):
-			 	 		print("There is " + str(num) + " sniffers.")
+			 	 		print("There are " + str(int(num)) + " sniffers.")
 			 	 	ser.write(str(num).encode()) # send commands
 			 	 	timeout_cnt = 0			 	
 			 	if (line == "Sniffer config..."):
@@ -243,7 +245,16 @@ def assign_sniffer(num, pairs, com_port):
 	print("Done!")
 	return True
 
-def collect_data(com_port, start_addr, end_addr):
+def collect_data(com_port):
+	if(expmethapp.experiment_methodology(exp_meth) == True):
+		expmethapp.read_configuration()
+		start_addr = expmethapp.start_address
+		end_addr = expmethapp.end_address
+		print("start address: " + str(start_addr))
+		print("end address: " + str(end_addr))
+	else:
+		return False
+
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"

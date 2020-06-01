@@ -7,7 +7,9 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 	e2e_latency = False
 	tx_energy = False
 	rx_energy = False
-	sniffer = []
+	sniffer_and_channels = []
+	start_address = ''
+	end_address = ''
 
 	def read_configuration(self):
 		with open(cbmng_common.ExpMethodApproach.methodology_file,'r') as load_f:
@@ -27,9 +29,16 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 			# Rx time:
 			myExpMethodApproach.rx_energy = load_dict['rx_energy']
 			print("rx_energy: " + str(myExpMethodApproach.rx_energy))
-			# Rx time:
-			myExpMethodApproach.sniffer = load_dict['sniffer']
-			print("sniffer: " + str(myExpMethodApproach.sniffer))
+			# Sniffer and channels:
+			myExpMethodApproach.sniffer_and_channels = load_dict['sniffer_and_channels']
+			print("sniffer_and_channels: " + str(myExpMethodApproach.sniffer_and_channels))
+			# Start_address:
+			myExpMethodApproach.start_address = load_dict['start_address']
+			print("start_address: " + str(myExpMethodApproach.start_address))
+			# End_address:
+			myExpMethodApproach.end_address = load_dict['end_address']
+			print("end_address: " + str(myExpMethodApproach.end_address))
+
 		with open("tmp_exp_meth.json","w") as dump_f:
 			json.dump(load_dict,dump_f)
 		# TODO: Add some codes here

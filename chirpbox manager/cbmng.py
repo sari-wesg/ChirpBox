@@ -30,10 +30,10 @@ As soon as all the steps mentioned above have been configured properly, then one
 4) \"python cbmng.py -start [com_port]\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem\n\
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
 6) \"python cbmng.py -dissem [com_port]\" to disseminate the file, e.g., the firmware\n\
-7) \"python cbmng.py -coldata [start_addr] [end_addr] [com_port]\" to collect the results in the given area of the flash (from [start_addr] to [end_addr])\n\
+7) \"python cbmng.py -coldata [com_port]\" to collect the results in the given area of the flash (from [start_addr] to [end_addr]). These addresses are assigned in the methodology file.\n\
 8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [com_port]\" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
 9) \"python cbmng.py -coltopo [com_port]\" to obtain the topology\n\
-10) \"python cbmng.py -assignsnf [node_id] [channel] [com_port]\" to assign a node to work as a sniffer at a given channel (KHz)\n")
+10) \"python cbmng.py -assignsnf [com_port]\" to assign a node to work as a sniffer at a given channel (KHz). Sniffers and channels are given in the methodology file.\n")
 
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
@@ -71,14 +71,13 @@ def main(argv):
 	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 6)):
 		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), argv[5])
 		exit(1)
-	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == (4 + int(argv[2]) * 2)) and (int(argv[2]) != 0)):
-		a = argv[3 : -1]
+	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 3)):
 		if(cbmng_exp_start.check() == True):
-			cbmng_exp_start.assign_sniffer(int(argv[2]), a, argv[-1])
+			cbmng_exp_start.assign_sniffer(argv[2])
 		exit(0)
-	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 5)):
+	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 3)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
-			cbmng_exp_start.collect_data(argv[4], argv[2], argv[3])
+			cbmng_exp_start.collect_data(argv[2])
 		exit(0)
 	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 3)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
