@@ -264,16 +264,18 @@ def collect_data(com_port, start_addr, end_addr):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
+			 	# print(line)
 			 	# if (line == "Input initiator task:"):
 			 	#  	time.sleep(2)
 			 	#  	print('Input task_index')
 			 	# 	ser.write(str(task_index).encode()) # send commands
 			 	#	timeout_cnt = 0
 			 	if (line == "Waiting for parameter(s)..."):
-			 	 	para = "%08x" % int(start_addr, 16) + "," + "%08x" % int(end_addr, 16)
+			 	 	para = "%08X" % int(start_addr, 16) + "," + "%08X" % int(end_addr, 16)
 			 	 	print(para)
 			 	 	ser.write(str(para).encode()) # send commands
 			 	 	timeout_cnt = 0
+			 	 	break
 			if(timeout_cnt > 1000):
 				break
 		except:
@@ -288,14 +290,15 @@ def collect_data(com_port, start_addr, end_addr):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
-					f.write(line + "\r")
-				 	# if (line == "Input initiator task:"):
+					# if (line == "Input initiator task:"):
 				 	#  	time.sleep(2)
 				 	#  	print('Input task_index')
 					#   ser.write(str(task_index).encode()) # send commands
-				if (line == "Input initiator task:"):
-					timeout_cnt = 0
-					break
+					if (line == "Task list:"):
+						timeout_cnt = 0
+						break
+					# print(line)
+					f.write(line + "\r")
 				if(timeout_cnt > 60000):
 					break
 			except:
@@ -328,14 +331,15 @@ def collect_topology(com_port):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
-					f.write(line + "\r")
+					
 				 	# if (line == "Input initiator task:"):
 				 	#  	time.sleep(2)
 				 	#  	print('Input task_index')
 					#   ser.write(str(task_index).encode()) # send commands
-				if (line == "Input initiator task:"):
-					timeout_cnt = 0
-					break
+					if (line == "Task list:"):
+						timeout_cnt = 0
+						break
+					f.write(line + "\r")
 				if(timeout_cnt > 60000):
 					break
 			except:
