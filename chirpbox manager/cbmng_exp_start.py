@@ -18,6 +18,14 @@ expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
 
+EXPERIMENT_START = 0
+EXPERIMENT_DISSEMINATE = 1
+EXPERIMENT_COLDATA = 2
+EXPERIMENT_CONNECT = 3
+EXPERIMENT_COLTOPO = 4
+EXPERIMENT_ASSIGNSNF = 5
+
+
 def check():
 	try:
 		f = open(exp_conf, mode = 'r')
@@ -79,7 +87,7 @@ def start(com_port):
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	task_index = 0
+	task_index = EXPERIMENT_START
 
 	timeout_cnt = 0
 
@@ -144,7 +152,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	task_index = 3
+	task_index = EXPERIMENT_CONNECT
 
 	timeout_cnt = 0
 
@@ -191,7 +199,7 @@ def assign_sniffer(num, pairs, com_port):
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	task_index = 5
+	task_index = EXPERIMENT_ASSIGNSNF
 
 	timeout_cnt = 0
 	sniffer_cnt = 0
@@ -235,21 +243,107 @@ def assign_sniffer(num, pairs, com_port):
 	print("Done!")
 	return True
 
-def collect_data():
+def collect_data(com_port, start_addr, end_addr):
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
-		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ")"
+		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 	print("Collecting ...")
-	# TODO: Serial commands here...
-	print("Results of " + filename + " have been collected!" )
-	return True
 
-def collect_topology():
+	# config and open the serial port
+	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
+	# corresponded task number
+	task_index = EXPERIMENT_COLDATA
+
+	timeout_cnt = 0
+	sniffer_cnt = 0
+
+	ser.write(str(task_index).encode()) # send commands
+
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+			 	# if (line == "Input initiator task:"):
+			 	#  	time.sleep(2)
+			 	#  	print('Input task_index')
+			 	# 	ser.write(str(task_index).encode()) # send commands
+			 	#	timeout_cnt = 0
+			 	if (line == "Waiting for parameter(s)..."):
+			 	 	para = "%08x" % int(start_addr, 16) + "," + "%08x" % int(end_addr, 16)
+			 	 	print(para)
+			 	 	ser.write(str(para).encode()) # send commands
+			 	 	timeout_cnt = 0
+			if(timeout_cnt > 1000):
+				break
+		except:
+			pass
+	if(timeout_cnt > 1000):
+		print("Timeout...")
+		return False
+
+	with open(filename, 'w+') as f:
+		while True:
+			try:
+				line = ser.readline().decode('ascii').strip() # skip the empty data
+				timeout_cnt = timeout_cnt + 1
+				if line:
+					f.write(line + "\r")
+				 	# if (line == "Input initiator task:"):
+				 	#  	time.sleep(2)
+				 	#  	print('Input task_index')
+					#   ser.write(str(task_index).encode()) # send commands
+				if (line == "Input initiator task:"):
+					timeout_cnt = 0
+					break
+				if(timeout_cnt > 60000):
+					break
+			except:
+				pass
+	if(timeout_cnt > 60000):
+		print("Timeout...")
+		return False
+
+	print("Results of " + filename + " have been collected!" )
+	return True	
+
+def collect_topology(com_port):
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
-		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ")"
+		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 	print("Collecting ...")
-	# TODO: Serial commands here...
+	
+	# config and open the serial port
+	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
+	# corresponded task number
+	task_index = EXPERIMENT_COLTOPO
+
+	timeout_cnt = 0
+	sniffer_cnt = 0
+
+	ser.write(str(task_index).encode()) # send commands
+	with open(filename, 'w+') as f:
+		while True:
+			try:
+				line = ser.readline().decode('ascii').strip() # skip the empty data
+				timeout_cnt = timeout_cnt + 1
+				if line:
+					f.write(line + "\r")
+				 	# if (line == "Input initiator task:"):
+				 	#  	time.sleep(2)
+				 	#  	print('Input task_index')
+					#   ser.write(str(task_index).encode()) # send commands
+				if (line == "Input initiator task:"):
+					timeout_cnt = 0
+					break
+				if(timeout_cnt > 60000):
+					break
+			except:
+				pass
+	if(timeout_cnt > 60000):
+		print("Timeout...")
+		return False
+
 	print("Results of " + filename + " have been collected!" )
 	return True	
 
@@ -257,7 +351,7 @@ def disseminate(com_port):
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	task_index = 1
+	task_index = EXPERIMENT_DISSEMINATE
 
 	timeout_cnt = 0
 
