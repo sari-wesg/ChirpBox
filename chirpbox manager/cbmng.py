@@ -69,7 +69,7 @@ def main(argv):
 			print("The testbed is idle...")
 			exit(0)
 	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 6)):
-		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]))
+		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), argv[5])
 		exit(1)
 	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == (4 + int(argv[2]) * 2)) and (int(argv[2]) != 0)):
 		a = argv[3 : -1]

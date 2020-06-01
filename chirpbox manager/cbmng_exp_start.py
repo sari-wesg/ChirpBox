@@ -108,6 +108,44 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 	# TODO: Add the serial command to start	
+	# config and open the serial port
+	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
+	# corresponded task number
+	task_index = 3
+
+	timeout_cnt = 0
+
+	ser.write(str(task_index).encode()) # send commands
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+			 	# if (line == "Input initiator task:"):
+			 	#  	time.sleep(2)
+			 	#  	print('Input task_index')
+				#   ser.write(str(task_index).encode()) # send commands
+			 	if (line == "Waiting for parameter(s)..."):
+			 		if(tx_power >= 0):
+			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power))
+			 		if(tx_power < 0):
+			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',-{0:02}'.format(int(tx_power) * (-1))
+			 		print(para)
+			 		ser.write(str(para).encode()) # send commands
+			 		timeout_cnt = 0
+			 		break
+			if(timeout_cnt > 1000):
+				break
+		except:
+			pass
+	if(timeout_cnt > 1000):
+		print("Timeout...")
+		return False
+
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+		return False
+
+	print("Done!")
 	return True
 
 def assign_sniffer(num, pairs, com_port):
@@ -120,12 +158,12 @@ def assign_sniffer(num, pairs, com_port):
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	disseminate_task = 5
+	task_index = 5
 
 	timeout_cnt = 0
 	sniffer_cnt = 0
 
-	ser.write(str(disseminate_task).encode()) # send commands
+	ser.write(str(task_index).encode()) # send commands
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
@@ -133,8 +171,8 @@ def assign_sniffer(num, pairs, com_port):
 			if line:
 			 	# if (line == "Input initiator task:"):
 			 	#  	time.sleep(2)
-			 	#  	print('Input disseminate_task')
-					# ser.write(str(disseminate_task).encode()) # send commands
+			 	#  	print('Input task_index')
+				#   ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 	 	if(num == 1):
 			 	 		print("There is one sniffer.")
@@ -147,9 +185,9 @@ def assign_sniffer(num, pairs, com_port):
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		sniffer_cnt = sniffer_cnt + 2
+			 		timeout_cnt = 0
 			 		if(sniffer_cnt >= len(pairs)):
 			 			break
-			 		timeout_cnt = 0
 			if(timeout_cnt > 1000):
 				break
 		except:
@@ -157,6 +195,11 @@ def assign_sniffer(num, pairs, com_port):
 	if(timeout_cnt > 1000):
 		print("Timeout...")
 		return False
+
+	if(waiting_for_the_execution_timeout(ser, 10) == False): # timeout: 10 seconds
+		return False
+
+	print("Done!")
 	return True
 
 def collect_data():
@@ -181,11 +224,11 @@ def disseminate(com_port):
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	disseminate_task = 1
+	task_index = 1
 
 	timeout_cnt = 0
 
-	ser.write(str(disseminate_task).encode()) # send commands
+	ser.write(str(task_index).encode()) # send commands
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
@@ -193,10 +236,12 @@ def disseminate(com_port):
 			if line:
 			 	# if (line == "Input initiator task:"):
 			 	#  	time.sleep(2)
-			 	#  	print('Input disseminate_task')
-			 	# 	ser.write(str(disseminate_task).encode()) # send commands	
+			 	#  	print('Input task_index')
+			 	# 	ser.write(str(task_index).encode()) # send commands
+			 	#	timeout_cnt = 0
 			 	if (line == "C"):
 			 	 	print("*YMODEM* send\n")
+			 	 	timeout_cnt = 0
 			 	 	break
 			if(timeout_cnt > 1000):
 				break
@@ -209,24 +254,31 @@ def disseminate(com_port):
 	transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
 
-	# switch bank
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+		return False
+
+	print("Done!")
+	return True
+
+def waiting_for_the_execution_timeout(ser, timeout_value):
+	# Wait for the execution...
+	timeout_value = timeout_value * 100
 	timeout_cnt = 0
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-				print (line)
+				#print (line)
 				if (line == "Input initiator task:"):
-	 				time.sleep(2)
-	# 				print(line)
+	 				timeout_cnt = 0
 	 				break
-			if(timeout_cnt > 1000):
+			if(timeout_cnt > timeout_value):
 				break
 		except:
 	 		pass
 
-	if(timeout_cnt > 1000):
+	if(timeout_cnt > timeout_value):
 		print("Timeout...")
 		return False
 
