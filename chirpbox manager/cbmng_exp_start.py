@@ -95,7 +95,7 @@ def is_running():
 		else:
 			return False
 
-def connectivity_evaluation(sf, channel, tx_power):
+def connectivity_evaluation(sf, channel, tx_power, com_port):
 	time_now = datetime.datetime.now()
 	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -110,15 +110,54 @@ def connectivity_evaluation(sf, channel, tx_power):
 	# TODO: Add the serial command to start	
 	return True
 
-def assign_sniffer():
+def assign_sniffer(num, pairs, com_port):
 	if(expmethapp.experiment_methodology(exp_meth) == True):
 		expmethapp.read_configuration()
 		time_now = datetime.datetime.now()
 		print("The sniffer(s): " + str(expmethapp.sniffer))
-		# TODO: Add the serial command to start
-		return True
 	else:
 		return False
+	# config and open the serial port
+	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
+	# corresponded task number
+	disseminate_task = 5
+
+	timeout_cnt = 0
+	sniffer_cnt = 0
+
+	ser.write(str(disseminate_task).encode()) # send commands
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+			 	# if (line == "Input initiator task:"):
+			 	#  	time.sleep(2)
+			 	#  	print('Input disseminate_task')
+					# ser.write(str(disseminate_task).encode()) # send commands
+			 	if (line == "Waiting for parameter(s)..."):
+			 	 	if(num == 1):
+			 	 		print("There is one sniffer.")
+			 	 	if(num > 1):
+			 	 		print("There is " + str(num) + " sniffers.")
+			 	 	ser.write(str(num).encode()) # send commands
+			 	 	timeout_cnt = 0			 	
+			 	if (line == "Sniffer config..."):
+			 		para = '{0:03}'.format(int(pairs[sniffer_cnt])) + ',{0:06}'.format(int(pairs[sniffer_cnt + 1]))
+			 		print(para)
+			 		ser.write(str(para).encode()) # send commands
+			 		sniffer_cnt = sniffer_cnt + 2
+			 		if(sniffer_cnt >= len(pairs)):
+			 			break
+			 		timeout_cnt = 0
+			if(timeout_cnt > 1000):
+				break
+		except:
+			pass
+	if(timeout_cnt > 1000):
+		print("Timeout...")
+		return False
+	return True
 
 def collect_data():
 	with open(running_status,'r') as load_f:
@@ -138,23 +177,24 @@ def collect_topology():
 	print("Results of " + filename + " have been collected!" )
 	return True	
 
-def disseminate():
+def disseminate(com_port):
 	# config and open the serial port
-	ser = transfer_to_initiator.myserial.serial_send.config_port('COM10')
+	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	disseminate_task = 2
+	disseminate_task = 1
 
 	timeout_cnt = 0
 
+	ser.write(str(disseminate_task).encode()) # send commands
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	if (line == "Input initiator task:"):
-			 	 	time.sleep(2)
-			 	 	print('Input disseminate_task')
-			 	 	ser.write(str(disseminate_task).encode()) # send commands
+			 	# if (line == "Input initiator task:"):
+			 	#  	time.sleep(2)
+			 	#  	print('Input disseminate_task')
+			 	# 	ser.write(str(disseminate_task).encode()) # send commands	
 			 	if (line == "C"):
 			 	 	print("*YMODEM* send\n")
 			 	 	break
@@ -164,7 +204,7 @@ def disseminate():
 			pass
 	if(timeout_cnt > 1000):
 		print("Timeout...")
-		return
+		return False
 	# transmit the file
 	transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
@@ -188,4 +228,6 @@ def disseminate():
 
 	if(timeout_cnt > 1000):
 		print("Timeout...")
-		return
+		return False
+
+	return True

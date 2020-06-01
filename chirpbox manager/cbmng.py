@@ -1,6 +1,7 @@
 # Chirpbox procedure manager
 import sys
 import os
+import copy
 import cbmng_exp_config
 import cbmng_exp_firm
 import cbmng_exp_method
@@ -28,11 +29,11 @@ As soon as all the steps mentioned above have been configured properly, then one
 3) \"python cbmng.py -em [filename]\" to configure methodology\n\
 4) \"python cbmng.py -start\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem\n\
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
-6) \"python cbmng.py -dissem\" to disseminate the file, e.g., the firmware\n\
+6) \"python cbmng.py -dissem [com_port]\" to disseminate the file, e.g., the firmware\n\
 7) \"python cbmng.py -coldata\" to collect the results\n\
-8) \"python cbmng.py -connect [SF] [Channel] [Tx_power]\" to evaluate connectivity of the network with a given SF, a given Channel (MHz), and a given Tx_power (dBm).\n\
+8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [com_port]\" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
 9) \"python cbmng.py -coltopo\" to obtain the topology\n\
-10) \"python cbmng.py -assignsnf\" to assign nodes to work as sniffers\n")
+10) \"python cbmng.py -assignsnf [node_id] [channel] [com_port]\" to assign a node to work as a sniffer at a given channel (KHz)\n")
 
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
@@ -67,12 +68,13 @@ def main(argv):
 		else:
 			print("The testbed is idle...")
 			exit(0)
-	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 5)):
-		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]))
+	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 6)):
+		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]))
 		exit(1)
-	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 2)):
+	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == (4 + int(argv[2]) * 2)) and (int(argv[2]) != 0)):
+		a = argv[3 : -1]
 		if(cbmng_exp_start.check() == True):
-			cbmng_exp_start.assign_sniffer()
+			cbmng_exp_start.assign_sniffer(int(argv[2]), a, argv[-1])
 		exit(0)
 	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 2)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == True)):
@@ -82,14 +84,13 @@ def main(argv):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == True)):
 			cbmng_exp_start.collect_topology()
 		exit(0)
-	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 2)):
+	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 3)):
 		if(cbmng_exp_start.check() == True):
-			cbmng_exp_start.disseminate()
+			cbmng_exp_start.disseminate(argv[2])
 		exit(0)		
 	elif(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):
 		print_help_text()
 		exit(0)
-
 	else:
 		print("Please input a valid command")
     
