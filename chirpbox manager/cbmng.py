@@ -57,9 +57,9 @@ def main(argv):
 			expmethapp.read_configuration()
 		else:
 	 	 	exit(0)
-	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 2)):
+	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 3)):
 	 	if(cbmng_exp_start.check() == True):
-	 		cbmng_exp_start.start()
+	 		cbmng_exp_start.start(argv[2])
 	 	exit(0)
 	elif(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
 		if(cbmng_exp_start.is_running() == True):

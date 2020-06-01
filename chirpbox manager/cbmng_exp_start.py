@@ -59,7 +59,7 @@ def check_finished():
 		return False
 	return True
 
-def start():
+def start(com_port):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		time_now = datetime.datetime.now()
@@ -73,10 +73,43 @@ def start():
 		running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
 		with open(running_status, "w") as f:
 			json.dump(running_dict, f)
-		# TODO: Add the serial command to start
-		return True
 	else:
 		return False
+
+	# config and open the serial port
+	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
+	# corresponded task number
+	task_index = 0
+
+	timeout_cnt = 0
+
+	ser.write(str(task_index).encode()) # send commands
+	
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+			 	# if (line == "Input initiator task:"):
+			 	#  	time.sleep(2)
+			 	#  	print('Input task_index')
+				#   ser.write(str(task_index).encode()) # send commands
+			 	if (line == "Waiting for parameter(s)..."):
+			 		para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S")
+			 		print(para)
+			 		ser.write(str(para).encode()) # send commands
+			 		timeout_cnt = 0
+			 		break
+			if(timeout_cnt > 1000):
+				break
+		except:
+			pass
+	if(timeout_cnt > 1000):
+		print("Timeout...")
+		return False
+
+	print("Done!")
+	return True
 
 def is_running():
 	try:
@@ -107,7 +140,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
-	# TODO: Add the serial command to start	
+	
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
