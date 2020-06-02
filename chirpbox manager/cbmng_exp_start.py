@@ -6,6 +6,7 @@ import datetime
 import time
 import json
 import transfer_to_initiator.myserial.serial_send
+import statistics_process.topo_parser
 
 import serial
 
@@ -186,6 +187,10 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
 		return False
 
+	time_now1 = datetime.datetime.now()
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
 	print("Done!")
 	return True
 
@@ -296,20 +301,19 @@ def collect_data(com_port):
 		return False
 
 	with open(filename, 'w+') as f:
+		start_read = 0
 		while True:
 			try:
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
-					# if (line == "Input initiator task:"):
-				 	#  	time.sleep(2)
-				 	#  	print('Input task_index')
-					#   ser.write(str(task_index).encode()) # send commands
+					if (line == "output from initiator (topology):"):
+						start_read = 1
 					if (line == "Task list:"):
 						timeout_cnt = 0
 						break
-					# print(line)
-					f.write(line + "\r")
+					if(start_read == 1):
+						f.write(line + "\r")
 				if(timeout_cnt > 60000):
 					break
 			except:
@@ -321,7 +325,7 @@ def collect_data(com_port):
 	print("Results of " + filename + " have been collected!" )
 	return True	
 
-def collect_topology(com_port):
+def collect_topology(com_port, using_pos):
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
@@ -337,29 +341,39 @@ def collect_topology(com_port):
 
 	ser.write(str(task_index).encode()) # send commands
 	with open(filename, 'w+') as f:
+		start_read = 0
 		while True:
 			try:
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
-					
-				 	# if (line == "Input initiator task:"):
-				 	#  	time.sleep(2)
-				 	#  	print('Input task_index')
-					#   ser.write(str(task_index).encode()) # send commands
-					if (line == "Task list:"):
-						timeout_cnt = 0
-						break
-					f.write(line + "\r")
+				 	if (line == "output from initiator (topology):"):
+				 		start_read = 1
+	 			 	#  	time.sleep(2)
+	 			 	#  	print('Input task_index')
+	 				#   ser.write(str(task_index).encode()) # send commands
+	 				if (line == "Task list:"):
+	 					timeout_cnt = 0
+	 					break
+	 				if(start_read == 1):
+	 					f.write(line + "\r")
 				if(timeout_cnt > 60000):
-					break
+	 				break
 			except:
-				pass
+	 			pass
 	if(timeout_cnt > 60000):
-		print("Timeout...")
-		return False
+	 	print("Timeout...")
+	 	return False
 
 	print("Results of " + filename + " have been collected!" )
+	results = statistics_process.topo_parser.topo_parser(filename, using_pos)
+	#max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
+	print("Max_hop: " + str(results[0]))
+	print("Mean_degree: " + str(results[1]))
+	print("Std_dev_degree: " + str(results[2]))
+	print("Min_degree: " + str(results[3]))
+	print("Max_degree: " + str(results[4]))
+	print("Symmetry: " + str(results[5]))
 	return True	
 
 def disseminate(com_port):

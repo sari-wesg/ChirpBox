@@ -32,7 +32,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 6) \"python cbmng.py -dissem [com_port]\" to disseminate the file, e.g., the firmware\n\
 7) \"python cbmng.py -coldata [com_port]\" to collect the results in the given area of the flash (from [start_addr] to [end_addr]). These addresses are assigned in the methodology file.\n\
 8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [com_port]\" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
-9) \"python cbmng.py -coltopo [com_port]\" to obtain the topology\n\
+9) \"python cbmng.py -coltopo [using_pos] [com_port]\" to obtain the topology. The using_pos is used to show whether a position layout is used. \n\
 10) \"python cbmng.py -assignsnf [com_port]\" to assign a node to work as a sniffer at a given channel (KHz). Sniffers and channels are given in the methodology file.\n")
 
 expconfapp = cbmng_exp_config.myExpConfApproach()
@@ -79,9 +79,9 @@ def main(argv):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_data(argv[2])
 		exit(0)
-	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 3)):
+	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 4)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
-			cbmng_exp_start.collect_topology(argv[2])
+			cbmng_exp_start.collect_topology(argv[3], argv[2])
 		exit(0)
 	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 3)):
 		if(cbmng_exp_start.check() == True):
