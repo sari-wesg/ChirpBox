@@ -68,7 +68,7 @@ def check_finished():
 		return False
 	return True
 
-def start(com_port):
+def start(com_port, flash_protection):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		time_now = datetime.datetime.now()
@@ -93,7 +93,7 @@ def start(com_port):
 	timeout_cnt = 0
 
 	ser.write(str(task_index).encode()) # send commands
-	
+
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
@@ -104,7 +104,10 @@ def start(com_port):
 			 	#  	print('Input task_index')
 				#   ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
-			 		para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S")
+			 		if(flash_protection == "True") or (flash_protection == "true"):
+			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",1"
+			 		else:
+			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",0"
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
