@@ -9,11 +9,14 @@ import transfer_to_initiator.myserial.serial_send
 import statistics_process.topo_parser
 
 import serial
+import os
 
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
+firmware_burned = "tmp_exp_firm_burned.bin"
 exp_meth = "tmp_exp_meth.json"
 running_status = "tmp_exp_running.json"
+
 
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
@@ -380,6 +383,33 @@ def collect_topology(com_port, using_pos):
 	return True	
 
 def disseminate(com_port):
+
+	try:
+		f = open(firmware_burned, mode = 'r')
+		f.close()
+		firmware_burned_existing = 1
+	except FileNotFoundError:
+		firmware_burned_existing = 0
+	except PermissionError:
+		firmware_burned_existing = 0
+
+	if(firmware_burned_existing == 1):
+		jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_burned + " " + firmware + " patch.bin"
+		print(jdiff)
+		r_v = os.system(jdiff) 
+		print (r_v)
+		print ("Patch size: " + str(cbmng_common.get_FileSize('patch.bin')))
+		print ("The updated firmware size: " + str(cbmng_common.get_FileSize(firmware)))
+		if(cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)):
+			using_patch = 1
+			print("disseminate the patch...")
+		else:
+			using_patch = 0
+			print("disseminate the updated firmware...")
+	else:
+		using_patch = 0
+		print("disseminate the updated firmware...")
+
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
@@ -388,6 +418,35 @@ def disseminate(com_port):
 	timeout_cnt = 0
 
 	ser.write(str(task_index).encode()) # send commands
+
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+			 	# print(line)
+			 	# if (line == "Input initiator task:"):
+			 	#  	time.sleep(2)
+			 	#  	print('Input task_index')
+			 	# 	ser.write(str(task_index).encode()) # send commands
+			 	#	timeout_cnt = 0
+			 	if (line == "Waiting for parameter(s)..."):
+			 		if(using_patch == 1):
+			 	 		para = "1"
+			 	 	else:
+			 	 		para = "0"
+			 	 	print(para)
+			 	 	ser.write(str(para).encode()) # send commands
+			 	 	timeout_cnt = 0
+			 	 	break
+			if(timeout_cnt > 1000):
+				break
+		except:
+			pass
+	if(timeout_cnt > 1000):
+		print("Timeout...")
+		return False
+
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
@@ -410,11 +469,16 @@ def disseminate(com_port):
 		print("Timeout...")
 		return False
 	# transmit the file
-	transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
+	if(using_patch == 1):
+		transfer_to_initiator.myserial.serial_send.YMODEM_send('patch.bin')
+	else:
+		transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)		
 	print("*YMODEM* done\n")
 
 	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
 		return False
+	
+	os.system('copy ' + firmware + ' ' + firmware_burned)
 
 	print("Done!")
 	return True

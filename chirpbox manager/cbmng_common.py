@@ -1,4 +1,5 @@
 import datetime
+import os
 
 class ExpConfApproach:
 	conf_json = ''
@@ -50,3 +51,10 @@ class ExpMethodApproach:
 
 def tid_maker():
 	return '{0:%Y%m%d%H%M%S%f}'.format(datetime.datetime.now())
+
+def get_FileSize(filePath):
+	#filePath = unicode(filePath,'utf8')
+	fsize = os.path.getsize(filePath)
+	#fsize = fsize/float(1024*1024)
+	#return round(fsize,2)	
+	return fsize
