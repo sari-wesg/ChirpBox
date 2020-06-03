@@ -104,7 +104,7 @@ def start(com_port, flash_protection):
 			 	#  	print('Input task_index')
 				#   ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
-			 		if(flash_protection == "True") or (flash_protection == "true"):
+			 		if(flash_protection == 1):
 			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",1"
 			 		else:
 			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",0"

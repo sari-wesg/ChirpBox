@@ -27,7 +27,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 1) \"python cbmng.py -ec [filename]\" to configure experiments\n\
 2) \"python cbmng.py -ef [filename]\" to configure firmware\n\
 3) \"python cbmng.py -em [filename]\" to configure methodology\n\
-4) \"python cbmng.py -start [flash_protection] [com_port]\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem\n\
+4) \"python cbmng.py -start [flash_protection] [com_port]\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem. If flash_protection is 1, daemon protects BANK 1 before switching to BANK 2; if flash_protection is 0, daemon does nothing before switching to BANK 2.\n\
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
 6) \"python cbmng.py -dissem [com_port]\" to disseminate the file, e.g., the firmware\n\
 7) \"python cbmng.py -coldata [com_port]\" to collect the results in the given area of the flash (from [start_addr] to [end_addr]). These addresses are assigned in the methodology file.\n\
