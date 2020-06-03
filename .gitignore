@@ -78,3 +78,5 @@ dkms.conf
 !*.c
 !*.ioc
 !*.axf
+!jdiff.exe
+!jptch.exe

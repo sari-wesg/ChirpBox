@@ -30,4 +30,7 @@ bin/
 !*.bin
 !*.hex
 
+!jdiff.exe
+!jptch.exe
+
 .vscode
