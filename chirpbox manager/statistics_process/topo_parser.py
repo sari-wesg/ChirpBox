@@ -9,6 +9,8 @@ import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
 
+import mplleaflet
+
 current_node_id = 0
 node_num = 0
 class STATE(enum.Enum):
@@ -233,10 +235,10 @@ def topo_parser(filename, using_pos):
 	conf = tmp[0]
 	sequence_num = tmp[1]
 
-	ax.set_title("Connectivity matrix --" + conf + " (" + sequence_num + ")", fontsize=30)
+	ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
 	fig.tight_layout()
 	im.set_clim(0, 100)
-	plt.savefig("Connectivity matrix --" + conf + " (" + sequence_num + ").pdf", bbox_inches='tight')
+	plt.savefig("Connectivity matrix -- " + conf + " (" + sequence_num + ").pdf", bbox_inches='tight')
 	#plt.show()
 
 	# 5. draw the topology
@@ -262,20 +264,34 @@ def topo_parser(filename, using_pos):
 	topo_drawing_mapping = dict(zip(tmp_key, node_list))
 	G_UNDIR_MAPPING = nx.relabel_nodes(G_UNDIR, topo_drawing_mapping)
 	# if os.path.exists(data_dir + posfilepath):
-	if (using_pos == 'True') or (using_pos == 'true'):
+	if (using_pos == 1):
 		print(data_dir + posfilepath)
 		txt = np.load(data_dir + posfilepath, allow_pickle = True)
 		fixed_pos = txt.item()
 		fixed_nodes = fixed_pos.keys()
 		pos = nx.spring_layout(G_UNDIR_MAPPING, pos = fixed_pos, fixed = fixed_nodes, scale=3)
 	else:
-		pos = nx.spring_layout(G_UNDIR_MAPPING)
+		if (using_pos == 0):
+			pos = nx.spring_layout(G_UNDIR_MAPPING)
+		if (using_pos == 2):
+			pos = {0: [373, 338], 1: [230, 319], 2: [352, 175], 3: [409, 256]}
+		# pos = {0: [373, 338], 1: [230, 319], 2: [352, 175], 3: [409, 256], 4: [249, 132], 5: [466, 184], 6: [545, 272], 7: [673, 283], 8: [217, 408], 18: [803, 267], 24: [296, 309]}
 		np.save(data_dir + posfilepath, pos)
-	nx.draw(G_UNDIR_MAPPING, pos = pos, node_color = '#ADDD8E', with_labels = True)
-	plt.title('Network topology --' + conf + ' (' + sequence_num + ')', fontsize=30)
-	plt.savefig('Network topology --' + conf + ' (' + sequence_num + ").pdf", bbox_inches='tight')
-	# plt.show()
+	if (using_pos == 2):		
+		img = matplotlib.image.imread("area1.png")
+		#plt.scatter(x,y,zorder=1)
+		plt.imshow(img, zorder = 0)
 
+	nx.draw(G_UNDIR_MAPPING, pos = pos, node_color = '#ADDD8E', with_labels = True)
+	nx.draw_networkx_edges(G_UNDIR_MAPPING, pos = pos, edge_color = 'black', alpha = .1)
+	nx.draw_networkx_labels(G_UNDIR_MAPPING, pos = pos, label_pos = 10.3)
+	plt.title('Network topology -- ' + conf + ' (' + sequence_num + ')', fontsize=30)
+	plt.savefig('Network topology -- ' + conf + ' (' + sequence_num + ").pdf", bbox_inches='tight')
+	#plt.show()
+	#mplleaflet.show(fig=ax.figure)
+	#area = smopy.Map((30.0, 119.8, 30.55, 120.5),z=10)
+	
+	
  	# 6 Get the maximal hop
 	max_hop = 0
 	no_path = 0
