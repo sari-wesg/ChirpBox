@@ -384,6 +384,8 @@ def collect_topology(com_port, using_pos):
 
 def disseminate(com_port):
 
+	BANK2_SIZE = 512 * 1024
+	
 	try:
 		f = open(firmware_burned, mode = 'r')
 		f.close()
@@ -400,7 +402,8 @@ def disseminate(com_port):
 		print (r_v)
 		print ("Patch size: " + str(cbmng_common.get_FileSize('patch.bin')))
 		print ("The updated firmware size: " + str(cbmng_common.get_FileSize(firmware)))
-		if(cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)):
+		print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))
+		if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
 			using_patch = 1
 			print("disseminate the patch...")
 		else:
@@ -433,12 +436,12 @@ def disseminate(com_port):
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
 			 	 		para = "1"
-			 	 	else:
+			 		else:
 			 	 		para = "0"
-			 	 	print(para)
-			 	 	ser.write(str(para).encode()) # send commands
-			 	 	timeout_cnt = 0
-			 	 	break
+			 		print(para)
+			 		ser.write(str(para).encode()) # send commands
+			 		timeout_cnt = 0
+			 		break
 			if(timeout_cnt > 1000):
 				break
 		except:
