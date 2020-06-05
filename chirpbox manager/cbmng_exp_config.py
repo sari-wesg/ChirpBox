@@ -21,7 +21,7 @@ class myExpConfApproach(cbmng_common.ExpConfApproach):
 			print("payload_length: " + str(myExpConfApproach.payload_length) + " Byte(s)")
 			# Experiment duration:
 			myExpConfApproach.experiment_duration = load_dict['experiment_duration']
-			print("experiment_duration: " + str(myExpConfApproach.experiment_duration) + " Minute(s)")
+			print("experiment_duration: " + str(myExpConfApproach.experiment_duration) + " Second(s)")
 		with open("tmp_exp_conf.json","w") as dump_f:
 			json.dump(load_dict,dump_f)
 		# TODO: Add some codes here

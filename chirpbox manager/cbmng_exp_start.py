@@ -14,6 +14,7 @@ import os
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
 firmware_burned = "tmp_exp_firm_burned.bin"
+firmware_daemon_burned = "daemon_firm_burned.bin"
 exp_meth = "tmp_exp_meth.json"
 running_status = "tmp_exp_running.json"
 
@@ -75,9 +76,9 @@ def start(com_port, flash_protection):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		time_now = datetime.datetime.now()
-		start_time_t = time_now + datetime.timedelta(minutes = 2)
+		start_time_t = time_now + datetime.timedelta(seconds = 50)
 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-		end_time_t = start_time_t + datetime.timedelta(minutes = expconfapp.experiment_duration)
+		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 		exp_no = cbmng_common.tid_maker()
 		exp_name = expconfapp.experiment_name
@@ -373,7 +374,7 @@ def collect_topology(com_port, using_pos):
 
 	print("Results of " + filename + " have been collected!" )
 	results = statistics_process.topo_parser.topo_parser(filename, using_pos)
-	#max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
+	# max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
 	print("Max_hop: " + str(results[0]))
 	print("Mean_degree: " + str(results[1]))
 	print("Std_dev_degree: " + str(results[2]))
@@ -382,12 +383,15 @@ def collect_topology(com_port, using_pos):
 	print("Symmetry: " + str(results[5]))
 	return True	
 
-def disseminate(com_port):
+def disseminate(com_port, daemon_patch):
 
 	BANK2_SIZE = 512 * 1024
-	
+
 	try:
-		f = open(firmware_burned, mode = 'r')
+		if(daemon_patch == 1):
+			f = open(firmware_daemon_burned, mode = 'r')
+		if(daemon_patch == 0):
+			f = open(firmware_burned, mode = 'r')
 		f.close()
 		firmware_burned_existing = 1
 	except FileNotFoundError:
@@ -396,19 +400,33 @@ def disseminate(com_port):
 		firmware_burned_existing = 0
 
 	if(firmware_burned_existing == 1):
-		jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_burned + " " + firmware + " patch.bin"
+		if(daemon_patch == 1):
+			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_daemon_burned + " " + firmware + " patch.bin"	
+		if(daemon_patch == 0):
+			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_burned + " " + firmware + " patch.bin"
 		print(jdiff)
 		r_v = os.system(jdiff) 
 		print (r_v)
 		print ("Patch size: " + str(cbmng_common.get_FileSize('patch.bin')))
 		print ("The updated firmware size: " + str(cbmng_common.get_FileSize(firmware)))
-		print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))
-		if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
-			using_patch = 1
-			print("disseminate the patch...")
-		else:
-			using_patch = 0
-			print("disseminate the updated firmware...")
+		if(daemon_patch == 1):	
+			print ("The burned daemon firmware size: " + str(cbmng_common.get_FileSize(firmware_daemon_burned)))
+		if(daemon_patch == 0):
+			print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))		
+		if(daemon_patch == 1):
+			if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_daemon_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
+				using_patch = 1
+				print("disseminate the patch...")
+			else:
+				using_patch = 0
+				print("disseminate the updated firmware...")
+		if(daemon_patch == 0):
+			if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
+				using_patch = 1
+				print("disseminate the patch...")
+			else:
+				using_patch = 0
+				print("disseminate the updated firmware...")		
 	else:
 		using_patch = 0
 		print("disseminate the updated firmware...")
@@ -435,9 +453,9 @@ def disseminate(com_port):
 			 	#	timeout_cnt = 0
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
-			 	 		para = "1"
+			 	 		para = "1," + str(daemon_patch)
 			 		else:
-			 	 		para = "0"
+			 	 		para = "0," + str(daemon_patch)
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0

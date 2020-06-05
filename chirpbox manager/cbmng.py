@@ -29,7 +29,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 3) \"python cbmng.py -em [filename]\" to configure methodology\n\
 4) \"python cbmng.py -start [flash_protection] [com_port]\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem. If flash_protection is 1, daemon protects BANK 1 before switching to BANK 2; if flash_protection is 0, daemon does nothing before switching to BANK 2.\n\
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
-6) \"python cbmng.py -dissem [com_port]\" to disseminate the file, e.g., the firmware\n\
+6) \"python cbmng.py -dissem [upgrading_daemon] [com_port]\" to disseminate the file, e.g., the firmware. A patch for daemon is generated if upgrading_daemon is 1.\n\
 7) \"python cbmng.py -coldata [com_port]\" to collect the results in the given area of the flash (from [start_addr] to [end_addr]). These addresses are assigned in the methodology file.\n\
 8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [com_port]\" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
 9) \"python cbmng.py -coltopo [using_pos] [com_port]\" to obtain the topology. If using_pos is 0, the layout of topology is generated randomly; if using_pos is 1, the previously generated layout is used; if using_pos is 2, a specific layout for SARI is used.\n\
@@ -83,9 +83,9 @@ def main(argv):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_topology(argv[3], int(argv[2]))
 		exit(0)
-	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 3)):
+	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 4)):
 		if(cbmng_exp_start.check() == True):
-			cbmng_exp_start.disseminate(argv[2])
+			cbmng_exp_start.disseminate(argv[3], int(argv[2]))
 		exit(0)		
 	elif(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):
 		print_help_text()
