@@ -72,6 +72,25 @@ def check_finished():
 		return False
 	return True
 
+def generate_json_for_upgrade():
+	upgrade_dict = {
+		"experiment_name": "Upgrade_daemon",
+		"experiment_description": "Upgrade_daemon",
+		"payload_length": 0, 
+		"experiment_duration": 30,
+		"num_generated_packets": "False",
+		"num_received_packets": "False",
+		"e2e_latency": "False",
+		"tx_energy": "False",
+		"rx_energy": "False",
+		"sniffer_and_channels": [],
+		"start_address": "00000000",
+		"end_address": "00000000"
+	}
+	with open("tmp.json", "w") as f:
+		json.dump(upgrade_dict, f)
+
+
 def start(com_port, flash_protection):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
@@ -445,7 +464,7 @@ def disseminate(com_port, daemon_patch):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	# print(line)
+			 	print(line)
 			 	# if (line == "Input initiator task:"):
 			 	#  	time.sleep(2)
 			 	#  	print('Input task_index')
@@ -453,18 +472,24 @@ def disseminate(com_port, daemon_patch):
 			 	#	timeout_cnt = 0
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
-			 	 		para = "1," + str(daemon_patch)
+			 			if(daemon_patch == 1):
+			 	 			para = "1,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
+			 			else:
+			 	 			para = "1,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
 			 		else:
-			 	 		para = "0," + str(daemon_patch)
+			 	 		if(daemon_patch == 1):
+			 	 			para = "0,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
+			 	 		else:
+			 	 			para = "0,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 1000):
+			if(timeout_cnt > 6000):
 				break
 		except:
 			pass
-	if(timeout_cnt > 1000):
+	if(timeout_cnt > 6000):
 		print("Timeout...")
 		return False
 
@@ -478,6 +503,7 @@ def disseminate(com_port, daemon_patch):
 			 	#  	print('Input task_index')
 			 	# 	ser.write(str(task_index).encode()) # send commands
 			 	#	timeout_cnt = 0
+			 	print(line)
 			 	if (line == "C"):
 			 	 	print("*YMODEM* send\n")
 			 	 	timeout_cnt = 0
@@ -499,7 +525,10 @@ def disseminate(com_port, daemon_patch):
 	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
 		return False
 	
-	os.system('copy ' + firmware + ' ' + firmware_burned)
+	if(daemon_patch == 1):
+		os.system('copy ' + firmware + ' ' + firmware_daemon_burned)
+	else:
+		os.system('copy ' + firmware + ' ' + firmware_burned)
 
 	print("Done!")
 	return True
