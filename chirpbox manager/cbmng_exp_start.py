@@ -135,11 +135,11 @@ def start(com_port, flash_protection):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 1000):
+			if(timeout_cnt > 5000):
 				break
 		except:
 			pass
-	if(timeout_cnt > 1000):
+	if(timeout_cnt > 5000):
 		print("Timeout...")
 		return False
 
@@ -189,6 +189,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
+			 	print(line)
 			 	# if (line == "Input initiator task:"):
 			 	#  	time.sleep(2)
 			 	#  	print('Input task_index')
@@ -202,11 +203,11 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 1000):
+			if(timeout_cnt > 5000):
 				break
 		except:
 			pass
-	if(timeout_cnt > 1000):
+	if(timeout_cnt > 5000):
 		print("Timeout...")
 		return False
 

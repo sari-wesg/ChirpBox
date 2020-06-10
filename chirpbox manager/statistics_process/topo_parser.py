@@ -9,7 +9,7 @@ import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
 
-import mplleaflet
+# import mplleaflet
 
 current_node_id = 0
 node_num = 0
