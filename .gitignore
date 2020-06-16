@@ -80,3 +80,12 @@ dkms.conf
 !*.axf
 !jdiff.exe
 !jptch.exe
+
+# python
+*.pyc
+*.npy
+*.json
+
+# output
+*.pdf
+*.txt
