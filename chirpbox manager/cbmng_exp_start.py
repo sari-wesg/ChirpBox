@@ -95,7 +95,7 @@ def start(com_port, flash_protection):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		time_now = datetime.datetime.now()
-		start_time_t = time_now + datetime.timedelta(seconds = 50)
+		start_time_t = time_now + datetime.timedelta(seconds = 60 * 2)
 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -135,11 +135,11 @@ def start(com_port, flash_protection):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 6500):
+			if(timeout_cnt > 6000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6500):
+	if(timeout_cnt > 6000 * 3):
 		print("Timeout...")
 		return False
 

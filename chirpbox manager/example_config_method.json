@@ -9,6 +9,6 @@
 	"tx_energy": "True",
 	"rx_energy": "True",
 	"sniffer_and_channels": [102, 470000, 304, 480000],
-	"start_address": "0000001f",
-	"end_address": "0000002f"
+	"start_address": "080FF800",
+	"end_address": "080FF900"
 }
