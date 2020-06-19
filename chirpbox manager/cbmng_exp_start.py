@@ -135,11 +135,11 @@ def start(com_port, flash_protection):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 5000):
+			if(timeout_cnt > 6500):
 				break
 		except:
 			pass
-	if(timeout_cnt > 5000):
+	if(timeout_cnt > 6500):
 		print("Timeout...")
 		return False
 
@@ -203,11 +203,11 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 5000):
+			if(timeout_cnt > (6000 * 3)):
 				break
 		except:
 			pass
-	if(timeout_cnt > 5000):
+	if(timeout_cnt > (6000 * 3)):
 		print("Timeout...")
 		return False
 
@@ -374,6 +374,7 @@ def collect_topology(com_port, using_pos):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
+				 	print(line)
 				 	if (line == "output from initiator (topology):"):
 				 		start_read = 1
 	 			 	#  	time.sleep(2)
@@ -384,11 +385,11 @@ def collect_topology(com_port, using_pos):
 	 					break
 	 				if(start_read == 1):
 	 					f.write(line + "\r")
-				if(timeout_cnt > 60000):
+				if(timeout_cnt > 60000 * 3):
 	 				break
 			except:
 	 			pass
-	if(timeout_cnt > 60000):
+	if(timeout_cnt > 60000 * 3):
 	 	print("Timeout...")
 	 	return False
 
@@ -486,11 +487,11 @@ def disseminate(com_port, daemon_patch):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 6000):
+			if(timeout_cnt > 6000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6000):
+	if(timeout_cnt > 6000 * 3):
 		print("Timeout...")
 		return False
 
