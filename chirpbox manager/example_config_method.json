@@ -8,6 +8,7 @@
 	"e2e_latency": "True",
 	"tx_energy": "True",
 	"rx_energy": "True",
+	"sniffer_type": 1,
 	"sniffer_and_channels": [102, 470000, 304, 480000],
 	"start_address": "080FF800",
 	"end_address": "080FF900"
