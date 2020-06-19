@@ -29,6 +29,7 @@ EXPERIMENT_COLDATA = 2
 EXPERIMENT_CONNECT = 3
 EXPERIMENT_COLTOPO = 4
 EXPERIMENT_ASSIGNSNF = 5
+EXPERIMENT_COLVER = 6
 
 
 def check():
@@ -115,17 +116,13 @@ def start(com_port, flash_protection):
 
 	timeout_cnt = 0
 
-	ser.write(str(task_index).encode()) # send commands
-
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	# if (line == "Input initiator task:"):
-			 	#  	time.sleep(2)
-			 	#  	print('Input task_index')
-				#   ser.write(str(task_index).encode()) # send commands
+			 	if (line == "Input initiator task:"):
+			 		ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(flash_protection == 1):
 			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",1"
@@ -183,17 +180,13 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 
 	timeout_cnt = 0
 
-	ser.write(str(task_index).encode()) # send commands
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	print(line)
-			 	# if (line == "Input initiator task:"):
-			 	#  	time.sleep(2)
-			 	#  	print('Input task_index')
-				#   ser.write(str(task_index).encode()) # send commands
+			 	if (line == "Input initiator task:"):
+			 		ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(tx_power >= 0):
 			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power))
@@ -203,11 +196,11 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > (6000 * 3)):
+			if(timeout_cnt > 6000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > (6000 * 3)):
+	if(timeout_cnt > 6000 * 3):
 		print("Timeout...")
 		return False
 
@@ -238,23 +231,24 @@ def assign_sniffer(com_port):
 	timeout_cnt = 0
 	sniffer_cnt = 0
 
-	ser.write(str(task_index).encode()) # send commands
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	# if (line == "Input initiator task:"):
-			 	#  	time.sleep(2)
-			 	#  	print('Input task_index')
-				#   ser.write(str(task_index).encode()) # send commands
+			 	if (line == "Input initiator task:"):
+			 		ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
+			 		ser.write(str(expmethapp.sniffer_type).encode()) # send commands
+			 	if (line == "Input num_nodes:"):
 			 	 	if(num == 1):
 			 	 		print("There is one sniffer.")
 			 	 	if(num > 1):
 			 	 		print("There are " + str(int(num)) + " sniffers.")
-			 	 	ser.write(str(num).encode()) # send commands
-			 	 	timeout_cnt = 0			 	
+			 	 	ser.write(str('{0:03}'.format(int(num))).encode()) # send commands
+			 	 	timeout_cnt = 0
+			 	 	if(num == 0):
+			 	 		break
 			 	if (line == "Sniffer config..."):
 			 		para = '{0:03}'.format(int(pairs[sniffer_cnt])) + ',{0:06}'.format(int(pairs[sniffer_cnt + 1]))
 			 		print(para)
@@ -263,11 +257,11 @@ def assign_sniffer(com_port):
 			 		timeout_cnt = 0
 			 		if(sniffer_cnt >= len(pairs)):
 			 			break
-			if(timeout_cnt > 1000):
+			if(timeout_cnt > 6000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > 1000):
+	if(timeout_cnt > 6000 * 3):
 		print("Timeout...")
 		return False
 
@@ -300,30 +294,24 @@ def collect_data(com_port):
 	timeout_cnt = 0
 	sniffer_cnt = 0
 
-	ser.write(str(task_index).encode()) # send commands
-
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	# print(line)
-			 	# if (line == "Input initiator task:"):
-			 	#  	time.sleep(2)
-			 	#  	print('Input task_index')
-			 	# 	ser.write(str(task_index).encode()) # send commands
-			 	#	timeout_cnt = 0
+			 	if (line == "Input initiator task:"):
+			 	 	ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 	 	para = "%08X" % int(start_addr, 16) + "," + "%08X" % int(end_addr, 16)
 			 	 	print(para)
 			 	 	ser.write(str(para).encode()) # send commands
 			 	 	timeout_cnt = 0
 			 	 	break
-			if(timeout_cnt > 1000):
+			if(timeout_cnt > 6000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > 1000):
+	if(timeout_cnt > 6000 * 3):
 		print("Timeout...")
 		return False
 
@@ -341,16 +329,17 @@ def collect_data(com_port):
 						break
 					if(start_read == 1):
 						f.write(line + "\r")
-				if(timeout_cnt > 60000):
+				if(timeout_cnt > 60000 * 3):
 					break
 			except:
 				pass
-	if(timeout_cnt > 60000):
+	if(timeout_cnt > 60000 * 3):
 		print("Timeout...")
 		return False
 
 	print("Results of " + filename + " have been collected!" )
 	return True	
+
 
 def collect_topology(com_port, using_pos):
 	with open(running_status,'r') as load_f:
@@ -366,7 +355,6 @@ def collect_topology(com_port, using_pos):
 	timeout_cnt = 0
 	sniffer_cnt = 0
 
-	ser.write(str(task_index).encode()) # send commands
 	with open(filename, 'w+') as f:
 		start_read = 0
 		while True:
@@ -374,12 +362,10 @@ def collect_topology(com_port, using_pos):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
-				 	print(line)
+				 	if (line == "Input initiator task:"):
+				 		ser.write(str(task_index).encode()) # send commands
 				 	if (line == "output from initiator (topology):"):
 				 		start_read = 1
-	 			 	#  	time.sleep(2)
-	 			 	#  	print('Input task_index')
-	 				#   ser.write(str(task_index).encode()) # send commands
 	 				if (line == "Task list:"):
 	 					timeout_cnt = 0
 	 					break
@@ -403,6 +389,46 @@ def collect_topology(com_port, using_pos):
 	print("Max_degree: " + str(results[4]))
 	print("Symmetry: " + str(results[5]))
 	return True	
+
+
+def collect_version(com_port):
+	filename = "version.txt"
+		
+	# config and open the serial port
+	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
+	# corresponded task number
+	task_index = EXPERIMENT_COLTOPO
+
+	timeout_cnt = 0
+	sniffer_cnt = 0
+
+	with open(filename, 'w+') as f:
+		start_read = 0
+		while True:
+			try:
+				line = ser.readline().decode('ascii').strip() # skip the empty data
+				timeout_cnt = timeout_cnt + 1
+				if line:
+				 	if (line == "Input initiator task:"):
+				 		ser.write(str(task_index).encode()) # send commands
+				 	if (line == "output from initiator (version):"):
+				 		start_read = 1
+	 				if (line == "Task list:"):
+	 					timeout_cnt = 0
+	 					break
+	 				if(start_read == 1):
+	 					f.write(line + "\r")
+				if(timeout_cnt > 60000 * 3):
+	 				break
+			except:
+	 			pass
+	if(timeout_cnt > 60000 * 3):
+	 	print("Timeout...")
+	 	return False
+
+	print("Version has been collected!" )
+	return True	
+
 
 def disseminate(com_port, daemon_patch):
 
@@ -459,19 +485,14 @@ def disseminate(com_port, daemon_patch):
 
 	timeout_cnt = 0
 
-	ser.write(str(task_index).encode()) # send commands
 
 	while True:
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	print(line)
-			 	# if (line == "Input initiator task:"):
-			 	#  	time.sleep(2)
-			 	#  	print('Input task_index')
-			 	# 	ser.write(str(task_index).encode()) # send commands
-			 	#	timeout_cnt = 0
+			 	if (line == "Input initiator task:"):
+			 	 	ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
 			 			if(daemon_patch == 1):
@@ -487,11 +508,11 @@ def disseminate(com_port, daemon_patch):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 6000 * 3):
+			if(timeout_cnt > 60000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6000 * 3):
+	if(timeout_cnt > 60000 * 3):
 		print("Timeout...")
 		return False
 
@@ -500,21 +521,16 @@ def disseminate(com_port, daemon_patch):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-			 	# if (line == "Input initiator task:"):
-			 	#  	time.sleep(2)
-			 	#  	print('Input task_index')
-			 	# 	ser.write(str(task_index).encode()) # send commands
-			 	#	timeout_cnt = 0
 			 	print(line)
 			 	if (line == "C"):
 			 	 	print("*YMODEM* send\n")
 			 	 	timeout_cnt = 0
 			 	 	break
-			if(timeout_cnt > 1000):
+			if(timeout_cnt > 6000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > 1000):
+	if(timeout_cnt > 6000 * 3):
 		print("Timeout...")
 		return False
 	# transmit the file
