@@ -77,7 +77,7 @@ def generate_json_for_upgrade():
 	upgrade_dict = {
 		"experiment_name": "Upgrade_daemon",
 		"experiment_description": "Upgrade_daemon",
-		"payload_length": 0, 
+		"payload_length": 0,
 		"experiment_duration": 30,
 		"num_generated_packets": "False",
 		"num_received_packets": "False",
@@ -85,6 +85,7 @@ def generate_json_for_upgrade():
 		"tx_energy": "False",
 		"rx_energy": "False",
 		"sniffer_and_channels": [],
+		"sniffer_type": [],
 		"start_address": "00000000",
 		"end_address": "00000000"
 	}
@@ -95,17 +96,17 @@ def generate_json_for_upgrade():
 def start(com_port, flash_protection):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
-		time_now = datetime.datetime.now()
-		start_time_t = time_now + datetime.timedelta(seconds = 60 * 2)
-		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
-		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
-		exp_no = cbmng_common.tid_maker()
-		exp_name = expconfapp.experiment_name
-		print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
-		running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
-		with open(running_status, "w") as f:
-			json.dump(running_dict, f)
+		# time_now = datetime.datetime.now()
+		# start_time_t = time_now + datetime.timedelta(seconds = 60 * 2)
+		# start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+		# end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
+		# end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+		# exp_no = cbmng_common.tid_maker()
+		# exp_name = expconfapp.experiment_name
+		# print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
+		# running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
+		# with open(running_status, "w") as f:
+		# 	json.dump(running_dict, f)
 	else:
 		return False
 
@@ -121,9 +122,22 @@ def start(com_port, flash_protection):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
+			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
+			 		time_now = datetime.datetime.now()
+			 		start_time_t = time_now + datetime.timedelta(seconds = 60)
+			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
+			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+			 		exp_no = cbmng_common.tid_maker()
+			 		exp_name = expconfapp.experiment_name
+					# print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
+					# running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
+					# with open(running_status, "w") as f:
+					# 	json.dump(running_dict, f)
+
 			 		if(flash_protection == 1):
 			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",1"
 			 		else:
@@ -141,6 +155,15 @@ def start(com_port, flash_protection):
 		return False
 
 	print("Done!")
+
+	print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
+
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+		return False
+
 	return True
 
 def is_running():
@@ -172,7 +195,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
-	
+
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
@@ -185,6 +208,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
+			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 		ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -212,6 +236,9 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 	print("Done!")
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+		return False
+
 	return True
 
 def assign_sniffer(com_port):
@@ -236,6 +263,7 @@ def assign_sniffer(com_port):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
+			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -269,6 +297,9 @@ def assign_sniffer(com_port):
 		return False
 
 	print("Done!")
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+		return False
+
 	return True
 
 def collect_data(com_port):
@@ -299,8 +330,12 @@ def collect_data(com_port):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
+			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 	 	ser.write(str(task_index).encode()) # send commands
+			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	# print(task)
+			 	 	# ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 	 	para = "%08X" % int(start_addr, 16) + "," + "%08X" % int(end_addr, 16)
 			 	 	print(para)
@@ -338,7 +373,7 @@ def collect_data(com_port):
 		return False
 
 	print("Results of " + filename + " have been collected!" )
-	return True	
+	return True
 
 
 def collect_topology(com_port, using_pos):
@@ -346,7 +381,7 @@ def collect_topology(com_port, using_pos):
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 	print("Collecting ...")
-	
+
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
@@ -362,6 +397,7 @@ def collect_topology(com_port, using_pos):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
+				 	print (line)
 				 	if (line == "Input initiator task:"):
 				 		ser.write(str(task_index).encode()) # send commands
 				 	if (line == "output from initiator (topology):"):
@@ -388,16 +424,16 @@ def collect_topology(com_port, using_pos):
 	print("Min_degree: " + str(results[3]))
 	print("Max_degree: " + str(results[4]))
 	print("Symmetry: " + str(results[5]))
-	return True	
+	return True
 
 
 def collect_version(com_port):
 	filename = "version.txt"
-		
+
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
-	task_index = EXPERIMENT_COLTOPO
+	task_index = EXPERIMENT_COLVER
 
 	timeout_cnt = 0
 	sniffer_cnt = 0
@@ -409,6 +445,7 @@ def collect_version(com_port):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
+				 	print (line)
 				 	if (line == "Input initiator task:"):
 				 		ser.write(str(task_index).encode()) # send commands
 				 	if (line == "output from initiator (version):"):
@@ -427,7 +464,7 @@ def collect_version(com_port):
 	 	return False
 
 	print("Version has been collected!" )
-	return True	
+	return True
 
 
 def disseminate(com_port, daemon_patch):
@@ -448,18 +485,18 @@ def disseminate(com_port, daemon_patch):
 
 	if(firmware_burned_existing == 1):
 		if(daemon_patch == 1):
-			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_daemon_burned + " " + firmware + " patch.bin"	
+			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_daemon_burned + " " + firmware + " patch.bin"
 		if(daemon_patch == 0):
 			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_burned + " " + firmware + " patch.bin"
 		print(jdiff)
-		r_v = os.system(jdiff) 
+		r_v = os.system(jdiff)
 		print (r_v)
 		print ("Patch size: " + str(cbmng_common.get_FileSize('patch.bin')))
 		print ("The updated firmware size: " + str(cbmng_common.get_FileSize(firmware)))
-		if(daemon_patch == 1):	
+		if(daemon_patch == 1):
 			print ("The burned daemon firmware size: " + str(cbmng_common.get_FileSize(firmware_daemon_burned)))
 		if(daemon_patch == 0):
-			print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))		
+			print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))
 		if(daemon_patch == 1):
 			if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_daemon_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
 				using_patch = 1
@@ -473,7 +510,7 @@ def disseminate(com_port, daemon_patch):
 				print("disseminate the patch...")
 			else:
 				using_patch = 0
-				print("disseminate the updated firmware...")		
+				print("disseminate the updated firmware...")
 	else:
 		using_patch = 0
 		print("disseminate the updated firmware...")
@@ -491,6 +528,7 @@ def disseminate(com_port, daemon_patch):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
+			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 	 	ser.write(str(task_index).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -534,21 +572,27 @@ def disseminate(com_port, daemon_patch):
 		print("Timeout...")
 		return False
 	# transmit the file
+	YMODEM_result = False
 	if(using_patch == 1):
-		transfer_to_initiator.myserial.serial_send.YMODEM_send('patch.bin')
+		while(YMODEM_result != True):
+			YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send('patch.bin')
 	else:
-		transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)		
+		while(YMODEM_result != True):
+			YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
 
 	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
 		return False
-	
+
 	if(daemon_patch == 1):
 		os.system('copy ' + firmware + ' ' + firmware_daemon_burned)
 	else:
 		os.system('copy ' + firmware + ' ' + firmware_burned)
 
 	print("Done!")
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+		return False
+
 	return True
 
 def waiting_for_the_execution_timeout(ser, timeout_value):
@@ -560,7 +604,7 @@ def waiting_for_the_execution_timeout(ser, timeout_value):
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
 			if line:
-				#print (line)
+				print (line)
 				if (line == "Input initiator task:"):
 	 				timeout_cnt = 0
 	 				break
