@@ -78,7 +78,7 @@ def generate_json_for_upgrade():
 		"experiment_name": "Upgrade_daemon",
 		"experiment_description": "Upgrade_daemon",
 		"payload_length": 0,
-		"experiment_duration": 30,
+		"experiment_duration": 15,
 		"num_generated_packets": "False",
 		"num_received_packets": "False",
 		"e2e_latency": "False",
@@ -124,10 +124,13 @@ def start(com_port, flash_protection):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 		ser.write(str(task_index).encode()) # send commands
+			 		# ser.write(str(task_index).encode()) # send commands
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	print(task)
+			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 60)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 40)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -210,7 +213,10 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			if line:
 			 	print(line)
 			 	if (line == "Input initiator task:"):
-			 		ser.write(str(task_index).encode()) # send commands
+			 		# ser.write(str(task_index).encode()) # send commands
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	print(task)
+			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(tx_power >= 0):
 			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power))
@@ -265,7 +271,10 @@ def assign_sniffer(com_port):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 		ser.write(str(task_index).encode()) # send commands
+			 		# ser.write(str(task_index).encode()) # send commands
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	print(task)
+			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		ser.write(str(expmethapp.sniffer_type).encode()) # send commands
 			 	if (line == "Input num_nodes:"):
@@ -332,10 +341,10 @@ def collect_data(com_port):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 	 	ser.write(str(task_index).encode()) # send commands
-			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
-			 	 	# print(task)
-			 	 	# ser.write(str(task).encode()) # send commands
+			 	 	# ser.write(str(task_index).encode()) # send commands
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	print(task)
+			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 	 	para = "%08X" % int(start_addr, 16) + "," + "%08X" % int(end_addr, 16)
 			 	 	print(para)
@@ -399,8 +408,12 @@ def collect_topology(com_port, using_pos):
 				if line:
 				 	print (line)
 				 	if (line == "Input initiator task:"):
-				 		ser.write(str(task_index).encode()) # send commands
-				 	if (line == "output from initiator (topology):"):
+				 		# ser.write(str(task_index).encode()) # send commands
+				 		# print(task_index)
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+				 		print(task)
+				 		ser.write(str(task).encode()) # send commands
+	 				if (line == "output from initiator (topology):"):
 				 		start_read = 1
 	 				if (line == "Task list:"):
 	 					timeout_cnt = 0
@@ -447,7 +460,10 @@ def collect_version(com_port):
 				if line:
 				 	print (line)
 				 	if (line == "Input initiator task:"):
-				 		ser.write(str(task_index).encode()) # send commands
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+				 		print(task)
+				 		ser.write(str(task).encode()) # send commands
+				 		# ser.write(str(task_index).encode()) # send commands
 				 	if (line == "output from initiator (version):"):
 				 		start_read = 1
 	 				if (line == "Task list:"):
@@ -530,7 +546,10 @@ def disseminate(com_port, daemon_patch):
 			if line:
 			 	print(line)
 			 	if (line == "Input initiator task:"):
-			 	 	ser.write(str(task_index).encode()) # send commands
+			 	 	# ser.write(str(task_index).encode()) # send commands
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	print(task)
+			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
 			 			if(daemon_patch == 1):
