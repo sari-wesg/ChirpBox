@@ -88,6 +88,7 @@ def generate_json_for_upgrade():
 		"sniffer_type": [],
 		"start_address": "00000000",
 		"end_address": "00000000"
+		"command_sf": 7
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
@@ -125,7 +126,7 @@ def start(com_port, flash_protection):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
 			 	 	print(task)
 			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -214,7 +215,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(12))
 			 	 	print(task)
 			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -256,6 +257,10 @@ def assign_sniffer(com_port):
 		print("Sniffers and channels: " + str(pairs))
 	else:
 		return False
+	if(expconfapp.experiment_configuration(exp_conf) == True):
+		expconfapp.read_configuration()
+	else:
+		return False
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
@@ -272,7 +277,7 @@ def assign_sniffer(com_port):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
 			 	 	print(task)
 			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -320,6 +325,10 @@ def collect_data(com_port):
 		print("end address: " + str(end_addr))
 	else:
 		return False
+	if(expconfapp.experiment_configuration(exp_conf) == True):
+		expconfapp.read_configuration()
+	else:
+		return False
 
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
@@ -342,7 +351,7 @@ def collect_data(com_port):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 	 	# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
 			 	 	print(task)
 			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -385,7 +394,7 @@ def collect_data(com_port):
 	return True
 
 
-def collect_topology(com_port, using_pos):
+def collect_topology(com_port, using_pos, command_sf):
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
@@ -410,7 +419,7 @@ def collect_topology(com_port, using_pos):
 				 	if (line == "Input initiator task:"):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 		# print(task_index)
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 	 				if (line == "output from initiator (topology):"):
@@ -440,7 +449,7 @@ def collect_topology(com_port, using_pos):
 	return True
 
 
-def collect_version(com_port):
+def collect_version(com_port, command_sf):
 	filename = "version.txt"
 
 	# config and open the serial port
@@ -460,7 +469,7 @@ def collect_version(com_port):
 				if line:
 				 	print (line)
 				 	if (line == "Input initiator task:"):
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 				 		# ser.write(str(task_index).encode()) # send commands
@@ -498,6 +507,11 @@ def disseminate(com_port, daemon_patch):
 		firmware_burned_existing = 0
 	except PermissionError:
 		firmware_burned_existing = 0
+
+	if(expconfapp.experiment_configuration(exp_conf) == True):
+		expconfapp.read_configuration()
+	else:
+		return False
 
 	if(firmware_burned_existing == 1):
 		if(daemon_patch == 1):
@@ -547,7 +561,7 @@ def disseminate(com_port, daemon_patch):
 			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 	 	# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(7))
+			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
 			 	 	print(task)
 			 	 	ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):

@@ -11,5 +11,6 @@
 	"sniffer_type": 1,
 	"sniffer_and_channels": [1, 470000],
 	"start_address": "080FF800",
-	"end_address": "080FF900"
+	"end_address": "080FF900",
+	"command_sf": 7
 }
