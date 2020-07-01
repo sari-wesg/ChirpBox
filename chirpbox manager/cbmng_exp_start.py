@@ -78,7 +78,7 @@ def generate_json_for_upgrade():
 		"experiment_name": "Upgrade_daemon",
 		"experiment_description": "Upgrade_daemon",
 		"payload_length": 0,
-		"experiment_duration": 15,
+		"experiment_duration": 20,
 		"num_generated_packets": "False",
 		"num_received_packets": "False",
 		"e2e_latency": "False",
@@ -87,8 +87,8 @@ def generate_json_for_upgrade():
 		"sniffer_and_channels": [],
 		"sniffer_type": [],
 		"start_address": "00000000",
-		"end_address": "00000000"
-		"command_sf": 7
+		"end_address": "00000000",
+		"command_sf": 10
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
@@ -127,8 +127,8 @@ def start(com_port, flash_protection):
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
 			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 	 	print(task)
-			 	 	ser.write(str(task).encode()) # send commands
+			 		print(task)
+			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
 			 		start_time_t = time_now + datetime.timedelta(seconds = 40)
@@ -375,7 +375,8 @@ def collect_data(com_port):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
-					if (line == "output from initiator (topology):"):
+					print (line)
+					if (line == "output from initiator (collect):"):
 						start_read = 1
 					if (line == "Task list:"):
 						timeout_cnt = 0
