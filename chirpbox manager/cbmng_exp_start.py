@@ -88,7 +88,7 @@ def generate_json_for_upgrade():
 		"sniffer_type": [],
 		"start_address": "00000000",
 		"end_address": "00000000",
-		"command_sf": 10
+		"command_sf": 7
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
@@ -126,7 +126,8 @@ def start(com_port, flash_protection):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
+			 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -215,9 +216,10 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(12))
-			 	 	print(task)
-			 	 	ser.write(str(task).encode()) # send commands
+			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(12))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(12))+ ',{0:03}'.format(int(120))
+			 		print(task)
+			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(tx_power >= 0):
 			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power))
@@ -277,9 +279,10 @@ def assign_sniffer(com_port):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 	 	print(task)
-			 	 	ser.write(str(task).encode()) # send commands
+			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
+			 		print(task)
+			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		ser.write(str(expmethapp.sniffer_type).encode()) # send commands
 			 	if (line == "Input num_nodes:"):
@@ -351,9 +354,10 @@ def collect_data(com_port):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 	 	# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 	 	print(task)
-			 	 	ser.write(str(task).encode()) # send commands
+			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
+			 		print(task)
+			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 	 	para = "%08X" % int(start_addr, 16) + "," + "%08X" % int(end_addr, 16)
 			 	 	print(para)
@@ -420,7 +424,8 @@ def collect_topology(com_port, using_pos, command_sf):
 				 	if (line == "Input initiator task:"):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 		# print(task_index)
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
+				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 	 				if (line == "output from initiator (topology):"):
@@ -470,7 +475,8 @@ def collect_version(com_port, command_sf):
 				if line:
 				 	print (line)
 				 	if (line == "Input initiator task:"):
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
+				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 				 		# ser.write(str(task_index).encode()) # send commands
@@ -493,7 +499,7 @@ def collect_version(com_port, command_sf):
 	return True
 
 
-def disseminate(com_port, daemon_patch):
+def disseminate(com_port, daemon_patch, version_hash):
 
 	BANK2_SIZE = 512 * 1024
 
@@ -562,20 +568,21 @@ def disseminate(com_port, daemon_patch):
 			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 	 	# ser.write(str(task_index).encode()) # send commands
-			 	 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 	 	print(task)
-			 	 	ser.write(str(task).encode()) # send commands
+			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
+				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(40))
+			 		print(task)
+			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
 			 			if(daemon_patch == 1):
-			 	 			para = "1,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
+			 	 			para = "1,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
 			 			else:
-			 	 			para = "1,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
+			 	 			para = "1,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
 			 		else:
 			 	 		if(daemon_patch == 1):
-			 	 			para = "0,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
+			 	 			para = "0,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
 			 	 		else:
-			 	 			para = "0,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin')
+			 	 			para = "0,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
