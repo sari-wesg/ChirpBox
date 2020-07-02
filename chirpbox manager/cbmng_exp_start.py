@@ -88,7 +88,7 @@ def generate_json_for_upgrade():
 		"sniffer_type": [],
 		"start_address": "00000000",
 		"end_address": "00000000",
-		"command_sf": 7
+		"command_sf": 10
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
@@ -319,7 +319,7 @@ def assign_sniffer(com_port):
 
 	return True
 
-def collect_data(com_port):
+def collect_data(com_port, command_len):
 	if(expmethapp.experiment_methodology(exp_meth) == True):
 		expmethapp.read_configuration()
 		start_addr = expmethapp.start_address
@@ -353,10 +353,8 @@ def collect_data(com_port):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 	 	# ser.write(str(task_index).encode()) # send commands
-			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
-			 		print(task)
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
+			 		# print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 	 	para = "%08X" % int(start_addr, 16) + "," + "%08X" % int(end_addr, 16)
@@ -399,7 +397,7 @@ def collect_data(com_port):
 	return True
 
 
-def collect_topology(com_port, using_pos, command_sf):
+def collect_topology(com_port, using_pos, command_sf, command_len):
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
@@ -425,7 +423,7 @@ def collect_topology(com_port, using_pos, command_sf):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 		# print(task_index)
 				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 	 				if (line == "output from initiator (topology):"):
@@ -499,7 +497,7 @@ def collect_version(com_port, command_sf):
 	return True
 
 
-def disseminate(com_port, daemon_patch, version_hash):
+def disseminate(com_port, daemon_patch, version_hash, command_len):
 
 	BANK2_SIZE = 512 * 1024
 
@@ -567,11 +565,9 @@ def disseminate(com_port, daemon_patch, version_hash):
 			if line:
 			 	print(line)
 			 	if (line == "Input initiator task:"):
-			 	 	# ser.write(str(task_index).encode()) # send commands
-			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(40))
-			 		print(task)
+				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
 			 		ser.write(str(task).encode()) # send commands
+			 		# print(task)
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
 			 			if(daemon_patch == 1):
