@@ -88,13 +88,13 @@ def generate_json_for_upgrade():
 		"sniffer_type": [],
 		"start_address": "00000000",
 		"end_address": "00000000",
-		"command_sf": 10
+		"command_sf": 7
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
 
 
-def start(com_port, flash_protection):
+def start(com_port, flash_protection, version_hash):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		# time_now = datetime.datetime.now()
@@ -144,9 +144,9 @@ def start(com_port, flash_protection):
 					# 	json.dump(running_dict, f)
 
 			 		if(flash_protection == 1):
-			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",1"
+			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",1" + "," + "%04X" % int(version_hash, 16)
 			 		else:
-			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",0"
+			 			para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",0" + "," + "%04X" % int(version_hash, 16)
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
@@ -284,16 +284,21 @@ def assign_sniffer(com_port):
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
-			 		ser.write(str(expmethapp.sniffer_type).encode()) # send commands
-			 	if (line == "Input num_nodes:"):
-			 	 	if(num == 1):
-			 	 		print("There is one sniffer.")
-			 	 	if(num > 1):
-			 	 		print("There are " + str(int(num)) + " sniffers.")
-			 	 	ser.write(str('{0:03}'.format(int(num))).encode()) # send commands
-			 	 	timeout_cnt = 0
-			 	 	if(num == 0):
+			 		para = '{0:01}'.format(int(expmethapp.sniffer_type)) + ',' + '{0:03}'.format(int(num))
+			 		# para = ser.write(str(expmethapp.sniffer_type).encode()) # send commands
+			 		ser.write(str(para).encode()) # send commands
+			 		print(para)
+			 		if(num == 0):
 			 	 		break
+			 	# if (line == "Input num_nodes:"):
+			 	#  	if(num == 1):
+			 	#  		print("There is one sniffer.")
+			 	#  	if(num > 1):
+			 	#  		print("There are " + str(int(num)) + " sniffers.")
+			 	#  	ser.write(str('{0:03}'.format(int(num))).encode()) # send commands
+			 	#  	timeout_cnt = 0
+			 	#  	if(num == 0):
+			 	#  		break
 			 	if (line == "Sniffer config..."):
 			 		para = '{0:03}'.format(int(pairs[sniffer_cnt])) + ',{0:06}'.format(int(pairs[sniffer_cnt + 1]))
 			 		print(para)
@@ -310,7 +315,7 @@ def assign_sniffer(com_port):
 		print("Timeout...")
 		return False
 
-	if(waiting_for_the_execution_timeout(ser, 10) == False): # timeout: 10 seconds
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 10 seconds
 		return False
 
 	print("Done!")

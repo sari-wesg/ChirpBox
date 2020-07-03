@@ -27,7 +27,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 1) \"python cbmng.py -ec [filename]\" to configure experiments\n\
 2) \"python cbmng.py -ef [filename]\" to configure firmware\n\
 3) \"python cbmng.py -em [filename]\" to configure methodology\n\
-4) \"python cbmng.py -start [flash_protection] [com_port]\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem. If flash_protection is 1, daemon protects BANK 1 before switching to BANK 2; if flash_protection is 0, daemon does nothing before switching to BANK 2.\n\
+4) \"python cbmng.py -start [flash_protection] [version_hash] [com_port]\" to start an experiment. The duration of the experiment is defined with -ec and the firmware should be disseminated in advance with -dissem. If flash_protection is 1, daemon protects BANK 1 before switching to BANK 2; if flash_protection is 0, daemon does nothing before switching to BANK 2.\n\
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
 6) \"python cbmng.py -dissem [upgrading_daemon] [ver_hash] [payload_len] [com_port]\" to disseminate the file, e.g., the firmware. A patch for daemon is generated if upgrading_daemon is 1.\n\
 7) \"python cbmng.py -coldata [payload_len] [com_port]\" to collect the results in the given area of the flash (from [start_addr] to [end_addr]). These addresses are assigned in the methodology file.\n\
@@ -59,9 +59,9 @@ def main(argv):
 			expmethapp.read_configuration()
 		else:
 	 	 	exit(0)
-	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 4)):
+	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 5)):
 	 	if(cbmng_exp_start.check() == True):
-	 		cbmng_exp_start.start(argv[3], int(argv[2]))
+	 		cbmng_exp_start.start(argv[4], int(argv[2]), argv[3])
 	 	exit(0)
 	elif(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
 		if(cbmng_exp_start.is_running() == True):
@@ -102,7 +102,7 @@ def main(argv):
 		if(expmethapp.experiment_methodology("tmp.json") == True):
 			expmethapp.read_configuration()
 		cbmng_exp_start.disseminate(argv[5], 1, argv[3], int(argv[4]))
-		cbmng_exp_start.start(argv[5], 0)
+		cbmng_exp_start.start(argv[5], 0, argv[3])
 		exit(0)		
 	elif(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):
 		print_help_text()
