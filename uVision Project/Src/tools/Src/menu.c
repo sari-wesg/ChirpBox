@@ -1198,7 +1198,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 {
 	Chirp_Outl chirp_outl;
   memset(&chirp_outl, 0, sizeof(Chirp_Outl));
-  chirp_outl.default_freq = 470000;
+  chirp_outl.default_freq = 440000;
 
 	while (1)
 	{
@@ -1217,7 +1217,6 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
     chirp_outl.hash_header = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
     chirp_config.packet_hash = chirp_outl.hash_header;
-    // printf("gps_time_str:%x, %x, %x, %x, %x, %x\n", gps_time_str[0], gps_time_str[1], gps_time_str[2], gps_time_str[3], chirp_outl.hash_header, gpi_bitswap_16(chirp_outl.hash_header));
 
 		/* default mode is MX_ARRANGE (task arrangement) */
 		chirp_outl.task = MX_ARRANGE;
@@ -1248,7 +1247,6 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       #endif
     }
 
-		// chirp_mx_round(node_id, &chirp_outl);
 		free(payload_distribution);
 
 		/* into the assigned task */

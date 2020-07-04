@@ -57,7 +57,7 @@ uint8_t aRxBuffer[UNIX_TIME_LENGTH];
 volatile time_t pps_count = 0;
 volatile uint8_t gps_done = 0;
 
-Chirp_Time chirp_time;
+static Chirp_Time chirp_time;
 GPS_State gps_state;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
@@ -195,6 +195,7 @@ void GPS_Init()
 void GPS_Uart_Irq()
 {
     change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
+    printf("aRxBuffer:%s\n", aRxBuffer);
     gps_done = 1;
 
     /* Disable usart, stop receiving data */
@@ -214,6 +215,7 @@ Chirp_Time GPS_Get_Time()
     memset(&chirp_time, 0, sizeof(chirp_time));
 
     HAL_UART_Receive_IT(&huart3, (uint8_t *)aRxBuffer, sizeof(aRxBuffer));
+    printf("0 aRxBuffer:%s\n", aRxBuffer);
 
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
     MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(1000000);

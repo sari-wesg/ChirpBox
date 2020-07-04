@@ -212,16 +212,16 @@ void topo_dio0_isr()
         volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
         if(( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) != RFLR_IRQFLAGS_PAYLOADCRCERROR )
         {
-            memset(Rx_Buffer, 0, (size_t)packet_len);
+            // memset(Rx_Buffer, 0, BUFFER_SIZE);
             // read rx packet from start address (in data buffer) of last packet received
-            SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
-            SX1276ReadFifo(Rx_Buffer, packet_len );
+            // SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
+            // SX1276ReadFifo(Rx_Buffer, packet_len );
             // count++;
             rx_receive_num++;
             // add_rx_topology_count();
 
             #if DEBUG
-                PRINTF("RX: %d\n", Rx_Buffer[0]);
+                PRINTF("RX: %d\n", rx_receive_num);
             #endif
             SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
         }
