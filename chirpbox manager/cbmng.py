@@ -79,7 +79,7 @@ def main(argv):
 		exit(0)
 	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 4)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
-			cbmng_exp_start.collect_data(argv[3], int(argv[1]))
+			cbmng_exp_start.collect_data(argv[3], int(argv[2]))
 		exit(0)
 	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 6)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):

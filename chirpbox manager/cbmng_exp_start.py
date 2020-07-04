@@ -132,7 +132,7 @@ def start(com_port, flash_protection, version_hash):
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 40)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 120)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -479,7 +479,7 @@ def collect_version(com_port, command_sf):
 				 	print (line)
 				 	if (line == "Input initiator task:"):
 				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 				 		# ser.write(str(task_index).encode()) # send commands
