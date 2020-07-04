@@ -962,7 +962,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                     rece_dissem_index = (receive_payload[ROUND_HEADER_LENGTH] << 8 | receive_payload[ROUND_HEADER_LENGTH + 1]);
                     if (rece_dissem_index >= chirp_outl->disem_file_max + 1)
                         chirp_outl->disem_file_index++;
-                    printf("rece_dissem_index:%lu, %lu\n", rece_dissem_index, chirp_outl->disem_file_index);
+                    printf("dissem_index:%lu, %lu\n", rece_dissem_index, chirp_outl->disem_file_index);
                     round_hash++;
                 }
             }
