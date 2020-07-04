@@ -78,7 +78,7 @@ dkms.conf
 .mxproject
 
 RTE/
-# bin/
+!*.bin
 
 !*.uvprojx
 !*.h
