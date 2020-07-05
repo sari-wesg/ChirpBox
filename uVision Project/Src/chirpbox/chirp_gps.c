@@ -195,7 +195,6 @@ void GPS_Init()
 void GPS_Uart_Irq()
 {
     change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
-    printf("aRxBuffer:%s\n", aRxBuffer);
     gps_done = 1;
 
     /* Disable usart, stop receiving data */
@@ -215,7 +214,6 @@ Chirp_Time GPS_Get_Time()
     memset(&chirp_time, 0, sizeof(chirp_time));
 
     HAL_UART_Receive_IT(&huart3, (uint8_t *)aRxBuffer, sizeof(aRxBuffer));
-    printf("0 aRxBuffer:%s\n", aRxBuffer);
 
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
     MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(1000000);
@@ -253,7 +251,7 @@ time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, 
     now = GPS_Conv(gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec);
     start = GPS_Conv(start_year, start_month, start_date, start_hour, start_min, start_sec);
     diff = start - now;
-    PRINTF("seconds difference = %ld\n", diff);
+    printf("seconds difference = %ld\n", diff);
     return diff;
 }
 

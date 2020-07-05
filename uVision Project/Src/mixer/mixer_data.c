@@ -1141,6 +1141,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             if (chirp_outl->round <= chirp_outl->round_setup)
                             {
                                 /* MX_COLLECT */
+                                /* only initiator indicates the file information */
                                 if ((chirp_outl->task == MX_COLLECT) && (node_id) && (i == 0))
                                 {
                                     printf("MX_COLLECT\n");
