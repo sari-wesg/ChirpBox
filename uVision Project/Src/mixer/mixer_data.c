@@ -957,7 +957,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, chirp_config.matrix_payload_8.len - 2);
                 rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
                 printf("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
-                if (((uint16_t)calu_payload_hash == rece_hash) && (calu_payload_hash))
+                if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                 {
                     rece_dissem_index = (receive_payload[ROUND_HEADER_LENGTH] << 8 | receive_payload[ROUND_HEADER_LENGTH + 1]);
                     if (rece_dissem_index >= chirp_outl->disem_file_max + 1)
@@ -994,7 +994,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
                 if ((data[0] == data[ROUND_HEADER_LENGTH - 1]) && (data[DATA_HEADER_LENGTH - 1] == chirp_outl->task))
                 {
-                    if ((chirp_outl->task != MX_DISSEMINATE) && ((uint16_t)calu_payload_hash == rece_hash) && (calu_payload_hash))
+                    if ((chirp_outl->task != MX_DISSEMINATE) && ((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                         packet_correct = 1;
                     else if (chirp_outl->task == MX_DISSEMINATE)
                         packet_correct = 1;
