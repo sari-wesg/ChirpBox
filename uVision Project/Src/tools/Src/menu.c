@@ -718,7 +718,7 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t default_payload_len;
   uint8_t task_wait = 0;
 
-  uint8_t task[4];
+  uint8_t task[8];
   PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_SNIFF\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_SNIFF, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
@@ -1237,7 +1237,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 8, ((chirp_outl.packet_time + 100000) * (chirp_outl.num_nodes * 8)) + 500000);
 		chirp_mx_payload_distribution(chirp_outl.task);
 
-		if (!node_id)
+    if (!node_id)
 			menu_wait_task(&chirp_outl);
 
 		if (!chirp_mx_round(node_id, &chirp_outl))
