@@ -1246,15 +1246,30 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     }
     else
     {
-        if (round_inc)
+        if (chirp_outl->task == MX_DISSEMINATE)
         {
-            chirp_outl->round++;
-            return 1;
+            if (round_hash)
+            {
+                chirp_outl->round++;
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
         }
-        /* not received any packet */
         else
         {
-            return 0;
+            if (round_inc)
+            {
+                chirp_outl->round++;
+                return 1;
+            }
+            /* not received any packet */
+            else
+            {
+                return 0;
+            }
         }
     }
 }
