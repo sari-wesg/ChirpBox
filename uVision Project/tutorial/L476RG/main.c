@@ -108,12 +108,12 @@ uint8_t test_round;
 #if MX_PSEUDO_CONFIG
 /* TODO: */
 // static const uint32_t nodes[256] = {0x4B0023, 0x530045, 0x210027, 0x260057, 0x520049, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E};
-// static const uint32_t nodes[256] = {0x4B0023, 0x530045, 0x210027, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E};
-static const uint32_t nodes[256] = {0x4B0023, 0x440038, 0x360017, 0x1C0040, 0x1E0030, 0x4A002D, 0x440032, 0x26003E};
+static const uint32_t nodes[256] = {0x4B0023, 0x530045, 0x210027, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E};
+// static const uint32_t nodes[256] = {0x4B0023, 0x440038, 0x360017, 0x1C0040, 0x1E0030, 0x4A002D, 0x440032, 0x26003E};
 // static const uint32_t nodes[256] = {0x4B0023, 0x440038, 0x360017, 0x1C0040};
 
 #endif
-const uint8_t VERSION_MAJOR = 0x74, VERSION_NODE = 0x40;
+const uint8_t VERSION_MAJOR = 0x07, VERSION_NODE = 0x58;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
