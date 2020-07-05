@@ -993,7 +993,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 }
                 PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
                 packet_correct = 0;
-                if ((data[0] == data[ROUND_HEADER_LENGTH - 1]) && (data[DATA_HEADER_LENGTH - 1] == chirp_outl->task))
+                if ((data[DATA_HEADER_LENGTH - 1] == chirp_outl->task))
                 {
                     if ((chirp_outl->task != MX_DISSEMINATE) && ((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                         packet_correct = 1;

@@ -88,7 +88,7 @@ def generate_json_for_upgrade():
 		"sniffer_type": [],
 		"start_address": "00000000",
 		"end_address": "00000000",
-		"command_sf": 9
+		"command_sf": 7
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
