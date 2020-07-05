@@ -992,6 +992,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                     printf("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
                 }
                 PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
+                packet_correct = 0;
                 if ((data[0] == data[ROUND_HEADER_LENGTH - 1]) && (data[DATA_HEADER_LENGTH - 1] == chirp_outl->task))
                 {
                     if ((chirp_outl->task != MX_DISSEMINATE) && ((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
