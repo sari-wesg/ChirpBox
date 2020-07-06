@@ -1261,6 +1261,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		{
 			case CHIRP_START:
 			{
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+
 				PRINTF("---------CHIRP_START---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
@@ -1280,6 +1282,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				free(payload_distribution);
 
 				#if GPS_DATA
+          time_t diff = GPS_Diff(&gps_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+          assert_reset(diff > 5);
 					if (!chirp_outl.sniff_flag)
 					{
             if ((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE))))
@@ -1289,8 +1293,6 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               printf("date:%lu, %lu, %lu, %lu\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
               DS3231_ShowTime();
               gps_time = GPS_Get_Time();
-              time_t diff = GPS_Diff(&gps_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-              assert_reset(diff > 3);
               DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
               /* Waiting for bank switch */
               GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
@@ -1422,6 +1424,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_CONNECTIVITY:
 			{
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+
 				PRINTF("---------CHIRP_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;

@@ -1364,7 +1364,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             {
                 failed_round++;
                 printf("failed:%lu\n", failed_round);
-                if (failed_round >= 2)
+                if (failed_round >= 1)
                 {
                     if ((chirp_outl->task == MX_DISSEMINATE) && (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1))))
                         return 1;

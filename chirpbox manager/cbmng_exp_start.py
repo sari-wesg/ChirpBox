@@ -88,7 +88,7 @@ def generate_json_for_upgrade():
 		"sniffer_type": [],
 		"start_address": "00000000",
 		"end_address": "00000000",
-		"command_sf": 9
+		"command_sf": 12
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
@@ -132,7 +132,7 @@ def start(com_port, flash_protection, version_hash):
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 240)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 360)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -151,11 +151,11 @@ def start(com_port, flash_protection, version_hash):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 6000 * 3):
+			if(timeout_cnt > 6000 * 10):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6000 * 3):
+	if(timeout_cnt > 6000 * 10):
 		print("Timeout...")
 		return False
 
@@ -570,7 +570,9 @@ def disseminate(com_port, daemon_patch, version_hash, command_len):
 			if line:
 			 	print(line)
 			 	if (line == "Input initiator task:"):
-				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
+				 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
+				 	# TODO:
+				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(9))+ ',{0:03}'.format(int(command_len))
 			 		ser.write(str(task).encode()) # send commands
 			 		# print(task)
 			 	if (line == "Waiting for parameter(s)..."):
@@ -606,11 +608,11 @@ def disseminate(com_port, daemon_patch, version_hash, command_len):
 			 	 	print("*YMODEM* send\n")
 			 	 	timeout_cnt = 0
 			 	 	break
-			if(timeout_cnt > 6000 * 3):
+			if(timeout_cnt > 6000 * 10):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6000 * 3):
+	if(timeout_cnt > 6000 * 10):
 		print("Timeout...")
 		return False
 	# transmit the file
