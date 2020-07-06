@@ -229,15 +229,15 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 6000 * 3):
+			if(timeout_cnt > 6000 * 10):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6000 * 3):
+	if(timeout_cnt > 6000 * 10):
 		print("Timeout...")
 		return False
 
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 1200) == False): # timeout: 800 seconds
 		return False
 
 	time_now1 = datetime.datetime.now()
@@ -245,7 +245,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 	print("Done!")
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 1200) == False): # timeout: 800 seconds
 		return False
 
 	return True
@@ -428,7 +428,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 		# print(task_index)
 				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 	 				if (line == "output from initiator (topology):"):
@@ -438,11 +438,11 @@ def collect_topology(com_port, using_pos, command_sf, command_len):
 	 					break
 	 				if(start_read == 1):
 	 					f.write(line + "\r")
-				if(timeout_cnt > 60000 * 3):
+				if(timeout_cnt > 60000 * 20):
 	 				break
 			except:
 	 			pass
-	if(timeout_cnt > 60000 * 3):
+	if(timeout_cnt > 60000 * 20):
 	 	print("Timeout...")
 	 	return False
 

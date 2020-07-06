@@ -1047,6 +1047,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 chirp_outl->version_hash = (task_data[15] << 8) | (task_data[16]);
                                 printf("\t receive, START at %lu-%lu-%lu, %lu:%lu:%lu\n\tEnd at %lu-%lu-%lu, %lu:%lu:%lu\n, flash_protection:%lu, v:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
                             }
+                            break;
                         }
                         case MX_DISSEMINATE:
                         {
@@ -1177,8 +1178,8 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 chirp_outl->sf = task_data[0];
                                 chirp_outl->freq = (task_data[1] << 24) | (task_data[2] << 16) | (task_data[3] << 8) | (task_data[4]);
                                 chirp_outl->tx_power = task_data[5];
-
                             }
+                            break;
                         }
                         case CHIRP_SNIFF:
                         {
@@ -1365,7 +1366,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 printf("failed:%lu\n", failed_round);
                 if (failed_round >= 2)
                 {
-                    if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
+                    if ((chirp_outl->task == MX_DISSEMINATE) && (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1))))
                         return 1;
                     else
                     {
