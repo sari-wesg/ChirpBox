@@ -1269,6 +1269,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.payload_len = offsetof(Chirp_Outl, num_nodes) - offsetof(Chirp_Outl, start_year) + DATA_HEADER_LENGTH + 2;
 				chirp_outl.round_setup = 1;
 				chirp_outl.round_max = chirp_outl.round_setup;
+        chirp_outl.version_hash = 0;
 				if (!node_id)
 				{
 					menu_initiator_read_command(&chirp_outl);
@@ -1283,7 +1284,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
 				#if GPS_DATA
           time_t diff = GPS_Diff(&gps_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-          assert_reset(diff > 5);
+          assert_reset((diff > 5) && (diff < 1800));
 					if (!chirp_outl.sniff_flag)
 					{
             if ((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE))))
@@ -1322,7 +1323,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.disem_file_index = 0;
         chirp_outl.disem_file_max = UINT16_MAX / 2;
         chirp_outl.disem_file_index_stay = 0;
-
+        chirp_outl.version_hash = 0;
 				PRINTF("---------MX_DISSEMINATE---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
