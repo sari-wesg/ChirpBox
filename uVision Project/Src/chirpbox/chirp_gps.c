@@ -16,7 +16,7 @@
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +54,7 @@ const unsigned char g_day_per_mon[MONTH_PER_YEAR] = {31, 28, 31, 30, 31, 30, 31,
 /* to receive data from uart */
 uint8_t aRxBuffer[UNIX_TIME_LENGTH];
 
-volatile time_t pps_count = 0;
+volatile uint32_t pps_count = 0;
 volatile uint8_t gps_done = 0;
 
 static Chirp_Time chirp_time;
@@ -194,7 +194,7 @@ void GPS_Init()
 
 void GPS_Uart_Irq()
 {
-    change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
+    // change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     gps_done = 1;
 
     /* Disable usart, stop receiving data */
@@ -215,15 +215,16 @@ Chirp_Time GPS_Get_Time()
 
     HAL_UART_Receive_IT(&huart3, (uint8_t *)aRxBuffer, sizeof(aRxBuffer));
 
+    HAL_GPIO_WritePin(GPS_TRIGGER_Port, GPS_TRIGGER_Pin, GPIO_PIN_SET);
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
     MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(1000000);
     __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC1);
-
-    HAL_GPIO_WritePin(GPS_TRIGGER_Port, GPS_TRIGGER_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPS_TRIGGER_Port, GPS_TRIGGER_Pin, GPIO_PIN_RESET);
     gps_done = 0;
     while (gps_done == 0)
         ;
+    PRINTF("chirp_time:%s\n", aRxBuffer);
+    change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     return chirp_time;
 }
 

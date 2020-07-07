@@ -1283,8 +1283,9 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				free(payload_distribution);
 
 				#if GPS_DATA
+          gps_time = GPS_Get_Time();
           time_t diff = GPS_Diff(&gps_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-          assert_reset((diff > 5) && (diff < 1800));
+          assert_reset(diff > 5);
 					if (!chirp_outl.sniff_flag)
 					{
             if ((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE))))
@@ -1293,7 +1294,6 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               /* Set alarm */
               printf("date:%lu, %lu, %lu, %lu\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
               DS3231_ShowTime();
-              gps_time = GPS_Get_Time();
               DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
               /* Waiting for bank switch */
               GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);

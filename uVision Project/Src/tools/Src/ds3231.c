@@ -86,7 +86,6 @@ void DS3231_GetTime(void)
 void DS3231_ShowTime(void)
 {
   char buffer[50], buff[20];
-  printf("DS3231_ShowTime:%lu\n",DS3231.flag);
 
   if (DS3231.flag == 1)
   {
