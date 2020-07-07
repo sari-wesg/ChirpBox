@@ -86,6 +86,7 @@ void DS3231_GetTime(void)
 void DS3231_ShowTime(void)
 {
   char buffer[50], buff[20];
+  printf("DS3231_ShowTime:%lu\n",DS3231.flag);
 
   if (DS3231.flag == 1)
   {
@@ -118,6 +119,12 @@ void DS3231_ShowTime(void)
             DS3231.Month, DS3231.Date, buff, DS3231.Hour, DS3231.Minute, DS3231.Second);
     printf("%s", buffer);
   }
+}
+void DS3231_ReadAlarm1_Time()
+{
+  while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.alarm1_sec, I2C_MEMADD_SIZE_8BIT,
+                           &(DS3231_Buff[DS3231_memaddr.alarm1_sec]), DS3231_ALARM1_LENGTH, 0xffff) != HAL_OK);
+  printf("time:%lu, %lu, %lu, %lu\n", BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_dydt]), BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_hour]), BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_min]), BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_sec]));
 }
 
 /**

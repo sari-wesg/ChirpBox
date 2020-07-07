@@ -110,14 +110,15 @@ uint8_t test_round;
 // static const uint32_t nodes[256] = {0x4B0023, 0x530045, 0x210027, 0x260057, 0x520049, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E};
 // static const uint32_t nodes[256] = {0x4B0023, 0x550033, 0x210027, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E, 0x350017, 0x420020, 0x260057, 0x520049};
 // static const uint32_t nodes[256] = {0x4B0023, 0x550033, 0x210027, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E, 0x350017, 0x420020, 0x260057, 0x530045};
-static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x1C0040, 0x440038, 0x260057, 0x550033, 0x360017};
+// static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x1C0040, 0x440038, 0x260057, 0x550033, 0x360017};
+static const uint32_t nodes[256] = {0x4B0023, 0x360017, 0x550033};
 // static const uint32_t nodes[256] = {0x4B0023, 0x360017};
 // static const uint32_t nodes[256] = {0x4B0023, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E};
 // static const uint32_t nodes[256] = {0x4B0023, 0x440038, 0x360017, 0x1C0040, 0x1E0030, 0x4A002D, 0x440032, 0x26003E};
 // static const uint32_t nodes[256] = {0x550033, 0x420020, 0x350017};
 
 #endif
-const uint8_t VERSION_MAJOR = 0xd1, VERSION_NODE = 0x24;
+const uint8_t VERSION_MAJOR = 0x15, VERSION_NODE = 0x12;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -284,6 +285,7 @@ int main(void)
 	// 	;
 
 	/************************************ Chirpbox ************************************/
+	DS3231_ReadAlarm1_Time();
 	#if ((MX_PSEUDO_CONFIG) && (CHIRP_OUTLINE))
 		chirp_start(node_id, MX_NUM_NODES_CONF);
 	#endif
