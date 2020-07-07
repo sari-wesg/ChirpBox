@@ -94,7 +94,7 @@ def generate_json_for_upgrade():
 		json.dump(upgrade_dict, f)
 
 
-def start(com_port, flash_protection, version_hash):
+def start(com_port, flash_protection, version_hash, command_sf):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		# time_now = datetime.datetime.now()
@@ -110,6 +110,7 @@ def start(com_port, flash_protection, version_hash):
 		# 	json.dump(running_dict, f)
 	else:
 		return False
+	print("SF: ", command_sf)
 
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
@@ -127,7 +128,7 @@ def start(com_port, flash_protection, version_hash):
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
 			 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -188,7 +189,7 @@ def is_running():
 		else:
 			return False
 
-def connectivity_evaluation(sf, channel, tx_power, com_port):
+def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port):
 	time_now = datetime.datetime.now()
 	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -217,7 +218,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
 			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(12))
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(12))+ ',{0:03}'.format(int(120))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -250,7 +251,7 @@ def connectivity_evaluation(sf, channel, tx_power, com_port):
 
 	return True
 
-def assign_sniffer(com_port):
+def assign_sniffer(command_sf, com_port):
 	if(expmethapp.experiment_methodology(exp_meth) == True):
 		expmethapp.read_configuration()
 		time_now = datetime.datetime.now()
@@ -280,7 +281,7 @@ def assign_sniffer(com_port):
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
 			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(120))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -324,7 +325,7 @@ def assign_sniffer(com_port):
 
 	return True
 
-def collect_data(com_port, command_len):
+def collect_data(com_port, command_len, command_sf):
 	if(expmethapp.experiment_methodology(exp_meth) == True):
 		expmethapp.read_configuration()
 		start_addr = expmethapp.start_address
@@ -358,7 +359,7 @@ def collect_data(com_port, command_len):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len))
 			 		# print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -502,7 +503,7 @@ def collect_version(com_port, command_sf):
 	return True
 
 
-def disseminate(com_port, daemon_patch, version_hash, command_len):
+def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf):
 
 	BANK2_SIZE = 512 * 1024
 
@@ -572,7 +573,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len):
 			 	if (line == "Input initiator task:"):
 				 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
 				 	# TODO:
-				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(9))+ ',{0:03}'.format(int(command_len))
+				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len))
 			 		ser.write(str(task).encode()) # send commands
 			 		# print(task)
 			 	if (line == "Waiting for parameter(s)..."):
