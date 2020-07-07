@@ -766,21 +766,24 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 }
             }
             /* collect setup: initiator sends start and end collect address in flash */
-            else if ((chirp_outl->arrange_task == MX_COLLECT) && (chirp_outl->round <= chirp_outl->round_setup) && (!node_id))
+            else if ((chirp_outl->arrange_task == MX_COLLECT) && (chirp_outl->round <= chirp_outl->round_setup))
             {
                 data[k++] = chirp_outl->round_max >> 8;
                 data[k++] = chirp_outl->round_max;
                 printf("set99:%lu\n", chirp_outl->round_max);
 
                 memcpy(file_data, data, DATA_HEADER_LENGTH);
-                file_data[DATA_HEADER_LENGTH + 0] = chirp_outl->collect_addr_start >> 24;
-                file_data[DATA_HEADER_LENGTH + 1] = chirp_outl->collect_addr_start >> 16;
-                file_data[DATA_HEADER_LENGTH + 2] = chirp_outl->collect_addr_start >> 8;
-                file_data[DATA_HEADER_LENGTH + 3] = chirp_outl->collect_addr_start;
-                file_data[DATA_HEADER_LENGTH + 4] = chirp_outl->collect_addr_end >> 24;
-                file_data[DATA_HEADER_LENGTH + 5] = chirp_outl->collect_addr_end >> 16;
-                file_data[DATA_HEADER_LENGTH + 6] = chirp_outl->collect_addr_end >> 8;
-                file_data[DATA_HEADER_LENGTH + 7] = chirp_outl->collect_addr_end;
+                if (!node_id)
+                {
+                    file_data[DATA_HEADER_LENGTH + 0] = chirp_outl->collect_addr_start >> 24;
+                    file_data[DATA_HEADER_LENGTH + 1] = chirp_outl->collect_addr_start >> 16;
+                    file_data[DATA_HEADER_LENGTH + 2] = chirp_outl->collect_addr_start >> 8;
+                    file_data[DATA_HEADER_LENGTH + 3] = chirp_outl->collect_addr_start;
+                    file_data[DATA_HEADER_LENGTH + 4] = chirp_outl->collect_addr_end >> 24;
+                    file_data[DATA_HEADER_LENGTH + 5] = chirp_outl->collect_addr_end >> 16;
+                    file_data[DATA_HEADER_LENGTH + 6] = chirp_outl->collect_addr_end >> 8;
+                    file_data[DATA_HEADER_LENGTH + 7] = chirp_outl->collect_addr_end;
+                }
             }
             break;
         }
