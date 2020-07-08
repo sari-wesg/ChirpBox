@@ -195,7 +195,7 @@ void GPS_Init()
 void GPS_Uart_Irq()
 {
     // change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
-    gps_done = 1;
+    gps_done = 2;
 
     /* Disable usart, stop receiving data */
     __HAL_UART_DISABLE_IT(&huart3, UART_IT_RXNE);
@@ -223,8 +223,11 @@ Chirp_Time GPS_Get_Time()
     gps_done = 0;
     while (gps_done == 0)
         ;
-    PRINTF("chirp_time:%s\n", aRxBuffer);
-    change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
+    if (gps_done == 2)
+    {
+        PRINTF("chirp_time:%s\n", aRxBuffer);
+        change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
+    }
     return chirp_time;
 }
 
@@ -267,6 +270,24 @@ void GPS_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, u
     {
         pps_count = 0;
         while (pps_count <= diff)
+            ;
+    }
+    pps_count = 0;
+    HAL_NVIC_DisableIRQ( EXTI0_IRQn );
+}
+
+/**
+  * @brief  wait until PPS is normal, then we can read the gps time
+  * @param  none
+  * @retval none
+  */
+void GPS_Waiting_PPS(uint32_t PPS_wait)
+{
+    __HAL_GPIO_EXTI_CLEAR_FLAG(GPS_PPS_Pin);
+    HAL_NVIC_EnableIRQ( EXTI0_IRQn );
+    {
+        pps_count = 0;
+        while (pps_count <= PPS_wait)
             ;
     }
     pps_count = 0;

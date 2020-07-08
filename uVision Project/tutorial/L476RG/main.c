@@ -113,14 +113,15 @@ uint8_t test_round;
 // static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x1C0040, 0x440038, 0x260057, 0x550033, 0x360017};
 // local:
 // static const uint32_t nodes[256] = {0x4B0023, 0x360017, 0x350017, 0x420020, 0x550033, 0x4a002d, 0x530045, 0x440032, 0x26003E};
-static const uint32_t nodes[256] = {0x4B0023, 0x360017, 0x350017, 0x420020};
+static const uint32_t nodes[256] = {0x4B0023, 0x360017};
+// static const uint32_t nodes[256] = {0x4B0023, 0x360017, 0x350017, 0x420020};
 // static const uint32_t nodes[256] = {0x4B0023, 0x360017};
 // static const uint32_t nodes[256] = {0x4B0023, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E};
 // static const uint32_t nodes[256] = {0x4B0023, 0x440038, 0x360017, 0x1C0040, 0x1E0030, 0x4A002D, 0x440032, 0x26003E};
 // static const uint32_t nodes[256] = {0x550033, 0x420020, 0x350017};
 
 #endif
-const uint8_t VERSION_MAJOR = 0xdc, VERSION_NODE = 0x9f;
+const uint8_t VERSION_MAJOR = 0xa1, VERSION_NODE = 0xd5;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -184,6 +185,7 @@ static uint8_t hardware_init()
 
 #if GPS_DATA
 	GPS_Init();
+	GPS_Waiting_PPS(3);
 	Chirp_Time gps_time;
     memset(&gps_time, 0, sizeof(gps_time));
 	while(!gps_time.chirp_year)
@@ -197,6 +199,8 @@ static uint8_t hardware_init()
 	{
 		printf("chirp_month:%lu, %lu\n", gps_time.chirp_month, gps_time.chirp_date);
 		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
+		// DS3231_GetTime();
+		// DS3231_ShowTime();
 	}
 #endif
 	gpi_int_enable();

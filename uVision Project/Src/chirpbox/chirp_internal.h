@@ -199,6 +199,7 @@ Chirp_Time GPS_Get_Time();
 time_t GPS_Conv(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t min, uint8_t sec);
 time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
 void GPS_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
+void GPS_Waiting_PPS(uint32_t PPS_wait);
 void GPS_Wakeup(uint32_t interval_sec);
 void GPS_Sleep(uint32_t interval_sec);
 void gps_main_timer_isr(void);
