@@ -78,7 +78,7 @@ def generate_json_for_upgrade():
 		"experiment_name": "Upgrade_daemon",
 		"experiment_description": "Upgrade_daemon",
 		"payload_length": 0,
-		"experiment_duration": 20,
+		"experiment_duration": 10,
 		"num_generated_packets": "False",
 		"num_received_packets": "False",
 		"e2e_latency": "False",
@@ -133,7 +133,7 @@ def start(com_port, flash_protection, version_hash, command_sf):
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 360)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 300)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
