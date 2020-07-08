@@ -1196,7 +1196,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 {
 	Chirp_Outl chirp_outl;
   memset(&chirp_outl, 0, sizeof(Chirp_Outl));
-  chirp_outl.default_freq = 470000;
+  chirp_outl.default_freq = 440000;
 
 	while (1)
 	{
