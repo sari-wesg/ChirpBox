@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2020-04-28 23:50:54
- *    @date                  2020-07-08 19:16:30
+ *    @date                  2020-07-08 19:56:54
  * LastEditors               Please set LastEditors
  * @Description: In User Settings Edit
  * FilePath                  \uVision Project\Src\tools\Inc\ds3231.h
@@ -76,6 +76,7 @@ void DS3231_ModifyTime(uint8_t year, uint8_t month, uint8_t date,
 					   uint8_t day, uint8_t hour, uint8_t mintue, uint8_t second);
 void DS3231_GetTime(void);
 Chirp_Time DS3231_ShowTime();
+void DS3231_ClearAlarm1_Time();
 void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t second);
 void DS3231_SetAlarm2_Time(uint8_t date, uint8_t hour, uint8_t mintue);
 void DS3231_SetAlarm1_Duration(uint8_t hour, uint8_t mintue, uint8_t second);

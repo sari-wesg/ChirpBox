@@ -128,6 +128,24 @@ Chirp_Time DS3231_ShowTime()
   return RTC_Time;
 }
 
+void DS3231_ClearAlarm1_Time()
+{
+  uint8_t alarm_flag = 0;
+  while (!alarm_flag)
+  {
+    printf("clear alarm\n");
+    // Clear the AF1 and AF2 in Status (0Fh)
+    DS3231.Status &= 0xFC;
+    while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.status, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231.Status), 1, 0xffff) != HAL_OK)
+      ;
+    /* read alarm Status */
+    while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.status, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231.Status), 1, 0xffff) != HAL_OK);
+    if (!(DS3231.Status & 0x03))
+      alarm_flag = 1;
+  }
+}
 /**
   * @brief  Set the alarm1 time and enable the alarm
   * @param  date: 01–31

@@ -184,6 +184,7 @@ static uint8_t hardware_init()
 	menu_bank();
 
 #if GPS_DATA
+	DS3231_ClearAlarm1_Time();
 	GPS_Init();
 	GPS_Waiting_PPS(3);
 	Chirp_Time gps_time;
