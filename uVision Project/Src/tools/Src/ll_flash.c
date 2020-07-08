@@ -162,6 +162,55 @@ uint8_t STMFLASH_BankSwitch(void)
 	return result;
 }
 
+uint8_t menu_to_bank2(void)
+{
+	uint8_t result;
+	uint32_t usr_conf;
+
+	LL_FLASH_Lock(FLASH);
+	/* Clear OPTVERR bit set on virgin samples */
+	if((FLASH_SR_OPTVERR) & (FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))
+  { SET_BIT(FLASH->ECCR, ((FLASH_SR_OPTVERR) & (FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))); }
+
+  if((FLASH_SR_OPTVERR) & ~(FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))
+  { WRITE_REG(FLASH->SR, ((FLASH_SR_OPTVERR) & ~(FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))); }
+
+	usr_conf = READ_REG(FLASH->OPTR);
+  result = LL_Flash_Unlock();
+
+	if( result == LL_OK)
+	{
+		  result = LL_FLASH_OB_Unlock();
+		  if((READ_BIT(FLASH->CR, FLASH_CR_OPTLOCK) == RESET))
+			{
+				  while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
+					{
+					}
+					if(!(usr_conf & FLASH_OPTR_BFB2))
+					{
+						SET_BIT(FLASH->OPTR, FLASH_OPTR_BFB2);
+					}
+			}
+			/* Set OPTSTRT Bit */
+			SET_BIT(FLASH->CR, FLASH_CR_OPTSTRT);
+			while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
+			{
+			}
+			/* If the option byte program operation is completed, disable the OPTSTRT Bit */
+			CLEAR_BIT(FLASH->CR, FLASH_CR_OPTSTRT);
+
+			/* Set the bit to force the option byte reloading */
+			if (result == LL_OK)
+			{
+				LL_FLASH_SET_OBL_Launch(FLASH);
+			}
+			while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
+			{
+			}
+	}
+	return result;
+}
+
 uint8_t LL_Flash_Unlock(void)
 {
 	while (LL_FLASH_IsActiveFlag_BSY(FLASH))

@@ -70,6 +70,7 @@ uint32_t STMFLASH_Read32( uint32_t faddr );
 uint8_t LL_FLASH_Program64s(uint32_t destination, uint32_t* pData,uint16_t DataLen);
 uint8_t LL_FLASH_Program64(uint32_t faddr,uint32_t* pData);
 uint8_t STMFLASH_BankSwitch(void);
+uint8_t menu_to_bank2(void);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
