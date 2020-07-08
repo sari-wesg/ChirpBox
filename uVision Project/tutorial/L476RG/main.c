@@ -113,7 +113,8 @@ uint8_t test_round;
 // static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x1C0040, 0x440038, 0x260057, 0x550033, 0x360017};
 // local:
 // static const uint32_t nodes[256] = {0x4B0023, 0x360017, 0x350017, 0x420020, 0x550033, 0x4a002d, 0x530045, 0x440032, 0x26003E};
-static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x360017, 0x550033};
+// static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x360017, 0x550033};
+static const uint32_t nodes[256] = {0x4B0023, 0x360017};
 // static const uint32_t nodes[256] = {0x4B0023, 0x360017, 0x350017, 0x420020};
 // static const uint32_t nodes[256] = {0x4B0023, 0x360017};
 // static const uint32_t nodes[256] = {0x4B0023, 0x1E0030, 0x38001E, 0x440038, 0x360017, 0x4A002D, 0x440032, 0x1C0040, 0x26003E};
@@ -121,7 +122,7 @@ static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x36
 // static const uint32_t nodes[256] = {0x550033, 0x420020, 0x350017};
 
 #endif
-const uint8_t VERSION_MAJOR = 0x65, VERSION_NODE = 0x80;
+const uint8_t VERSION_MAJOR = 0xc4, VERSION_NODE = 0xc3;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -195,9 +196,12 @@ static uint8_t hardware_init()
 	}
 
 	time_t rtc_diff = 0x05;
+	uint8_t count = 0;
 	/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
 	while((rtc_diff < 0) || (rtc_diff >= 0x05))
 	{
+		count++;
+		assert_reset(count < 10);
 		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
 		DS3231_GetTime();
 		Chirp_Time RTC_Time = DS3231_ShowTime();

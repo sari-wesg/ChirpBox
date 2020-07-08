@@ -415,10 +415,8 @@ void menu_bank(void)
     uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_1);
     Flash_Bank_Copy_Bank(FLASH_START_BANK1, FLASH_START_BANK2, firmware_size, 1);
     DS3231_GetTime();
-    while(1)
-    {
-      DS3231_ShowTime();
-    }
+    DS3231_ShowTime();
+    while(1);
   }
 
   if ( OBConfig.USERConfig & OB_BFB2_ENABLE ) /* BANK2 active for boot */
@@ -1198,7 +1196,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 {
 	Chirp_Outl chirp_outl;
   memset(&chirp_outl, 0, sizeof(Chirp_Outl));
-  chirp_outl.default_freq = 460000;
+  chirp_outl.default_freq = 470000;
 
 	while (1)
 	{

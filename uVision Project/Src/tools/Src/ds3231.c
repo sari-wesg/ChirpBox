@@ -3,6 +3,7 @@
 //***** Includes ***********************************************************************************
 #include "ds3231.h"
 // #include "iic.h"
+#include "gpi/tools.h" /* STRINGIFY(), LSB(), ASSERT_CT() */
 
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
@@ -88,8 +89,13 @@ Chirp_Time DS3231_ShowTime()
   char buffer[50], buff[20];
   Chirp_Time RTC_Time;
   memset(&RTC_Time, 0, sizeof(RTC_Time));
+  uint16_t count = 0;
 
-  while (DS3231.flag == 0);
+  while (DS3231.flag == 0)
+  {
+    count++;
+    assert_reset(count < 0xFFFF);
+  }
   DS3231.flag = 0;
   switch (DS3231.Day)
   {
@@ -131,8 +137,11 @@ Chirp_Time DS3231_ShowTime()
 void DS3231_ClearAlarm1_Time()
 {
   uint8_t alarm_flag = 0;
+  uint8_t count = 0;
   while (!alarm_flag)
   {
+    count++;
+    assert_reset(count < 10);
     printf("clear alarm\n");
     // Clear the AF1 and AF2 in Status (0Fh)
     DS3231.Status &= 0xFC;
@@ -157,8 +166,11 @@ void DS3231_ClearAlarm1_Time()
 void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t second)
 {
   uint8_t alarm_flag = 0;
+  uint8_t count = 0;
   while (!alarm_flag)
   {
+    count++;
+    assert_reset(count < 10);
     printf("set alarm\n");
     /* write alarm time */
     DS3231_Buff[DS3231_memaddr.alarm1_dydt] = DEC2BCD(date);
@@ -194,65 +206,6 @@ void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t s
   }
 }
 
-/**
-  * @brief  Set the alarm2 time and enable the alarm
-  * @param  date: 01–31
-  * @param  hour: 00–23 (default)
-  * @param  mintue: 00–59
-  * @retval None
-  */
-void DS3231_SetAlarm2_Time(uint8_t date, uint8_t hour, uint8_t mintue)
-{
-  DS3231_Buff[DS3231_memaddr.alarm2_dydt] = DEC2BCD(date);
-  DS3231_Buff[DS3231_memaddr.alarm2_hour] = DEC2BCD(hour);
-  DS3231_Buff[DS3231_memaddr.alarm2_min] = DEC2BCD(mintue);
-  while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.alarm2_min, I2C_MEMADD_SIZE_8BIT,
-                           &(DS3231_Buff[DS3231_memaddr.alarm2_min]), DS3231_ALARM2_LENGTH, 0xffff) != HAL_OK)
-    ;
-  // Enable the A1IE and INTCN in Control (0Eh)
-  DS3231.Control |= 0x06;
-  // Clear the AF1 and AF2 in Status (0Fh)
-  DS3231.Status &= 0xFC;
-  while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
-                           &(DS3231.Control), 2, 0xffff) != HAL_OK)
-    ;
-}
-
-/**
-  * @brief  Set the duration of alarm1 time
-  * @param  hour: 00–23 (default)
-  * @param  mintue: 00–59
-  * @param  second: 00–59
-  * @retval None
-  */
-void DS3231_SetAlarm1_Duration(uint8_t hour, uint8_t mintue, uint8_t second)
-{
-  uint8_t alarm_hour, alarm_min, alarm_sec;
-  DS3231_GetTime();
-  while (!DS3231.flag)
-    ;
-  alarm_sec = (DS3231.Second + second) % 60;
-  alarm_min = (DS3231.Second + second) / 60 + (DS3231.Minute + mintue) % 60;
-  alarm_hour = (DS3231.Minute + mintue) / 60 + (DS3231.Hour + hour) % 60;
-  DS3231_SetAlarm1_Time(DS3231.Date, alarm_hour, alarm_min, alarm_sec);
-}
-
-/**
-  * @brief  Set the duration of alarm2 time
-  * @param  hour: 00–23 (default)
-  * @param  mintue: 00–59
-  * @retval None
-  */
-void DS3231_SetAlarm2_Duration(uint8_t hour, uint8_t mintue)
-{
-  uint8_t alarm_hour, alarm_min;
-  DS3231_GetTime();
-  while (!DS3231.flag)
-    ;
-  alarm_min = (DS3231.Minute + mintue) % 60;
-  alarm_hour = (DS3231.Minute + mintue) / 60 + (DS3231.Hour + hour) % 60;
-  DS3231_SetAlarm2_Time(DS3231.Date, alarm_hour, alarm_min);
-}
 //**************************************************************************************************
 
 /**
