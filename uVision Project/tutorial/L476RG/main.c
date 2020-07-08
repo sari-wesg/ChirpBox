@@ -193,14 +193,14 @@ static uint8_t hardware_init()
 		gps_time = GPS_Get_Time();
 	}
 
-	uint32_t BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
+	time_t rtc_diff = 0x05;
 	/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
-	if (BankActive == 0)
+	while((rtc_diff < 0) || (rtc_diff >= 0x05))
 	{
-		printf("chirp_month:%lu, %lu\n", gps_time.chirp_month, gps_time.chirp_date);
 		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
-		// DS3231_GetTime();
-		// DS3231_ShowTime();
+		DS3231_GetTime();
+		Chirp_Time RTC_Time = DS3231_ShowTime();
+		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
 	}
 #endif
 	gpi_int_enable();
@@ -291,7 +291,6 @@ int main(void)
 	// 	;
 
 	/************************************ Chirpbox ************************************/
-	DS3231_ReadAlarm1_Time();
 	#if ((MX_PSEUDO_CONFIG) && (CHIRP_OUTLINE))
 		chirp_start(node_id, MX_NUM_NODES_CONF);
 	#endif

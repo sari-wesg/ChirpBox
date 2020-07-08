@@ -83,47 +83,49 @@ void DS3231_GetTime(void)
   // HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_REG_LENGTH, 0xFFFF);
 }
 
-void DS3231_ShowTime(void)
+Chirp_Time DS3231_ShowTime()
 {
   char buffer[50], buff[20];
+  Chirp_Time RTC_Time;
+  memset(&RTC_Time, 0, sizeof(RTC_Time));
 
-  if (DS3231.flag == 1)
+  while (DS3231.flag == 0);
+  DS3231.flag = 0;
+  switch (DS3231.Day)
   {
-    DS3231.flag = 0;
-    switch (DS3231.Day)
-    {
-    case 1:
-      sprintf(buff, "MONDAY");
-      break;
-    case 2:
-      sprintf(buff, "TUESDAY");
-      break;
-    case 3:
-      sprintf(buff, "WEDNESDAY");
-      break;
-    case 4:
-      sprintf(buff, "THURSDAY");
-      break;
-    case 5:
-      sprintf(buff, "FRIDAY");
-      break;
-    case 6:
-      sprintf(buff, "SATURDAY");
-      break;
-    case 7:
-      sprintf(buff, "SUNDAY");
-      break;
-    }
-    sprintf(buffer, "%02d:%02d:%02d %s %02d:%02d:%02d\r\n", 2000 + DS3231.Year,
-            DS3231.Month, DS3231.Date, buff, DS3231.Hour, DS3231.Minute, DS3231.Second);
-    printf("%s", buffer);
+  case 1:
+    sprintf(buff, "MONDAY");
+    break;
+  case 2:
+    sprintf(buff, "TUESDAY");
+    break;
+  case 3:
+    sprintf(buff, "WEDNESDAY");
+    break;
+  case 4:
+    sprintf(buff, "THURSDAY");
+    break;
+  case 5:
+    sprintf(buff, "FRIDAY");
+    break;
+  case 6:
+    sprintf(buff, "SATURDAY");
+    break;
+  case 7:
+    sprintf(buff, "SUNDAY");
+    break;
   }
-}
-void DS3231_ReadAlarm1_Time()
-{
-  while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.alarm1_sec, I2C_MEMADD_SIZE_8BIT,
-                           &(DS3231_Buff[DS3231_memaddr.alarm1_sec]), DS3231_ALARM1_LENGTH, 0xffff) != HAL_OK);
-  printf("time:%lu, %lu, %lu, %lu\n", BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_dydt]), BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_hour]), BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_min]), BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_sec]));
+  sprintf(buffer, "%02d:%02d:%02d %s %02d:%02d:%02d\r\n", 2000 + DS3231.Year,
+          DS3231.Month, DS3231.Date, buff, DS3231.Hour, DS3231.Minute, DS3231.Second);
+  printf("%s", buffer);
+  RTC_Time.chirp_year = 2000 + DS3231.Year;
+  RTC_Time.chirp_month = DS3231.Month;
+  RTC_Time.chirp_date = DS3231.Date;
+  RTC_Time.chirp_day = DS3231.Day;
+  RTC_Time.chirp_hour = DS3231.Hour;
+  RTC_Time.chirp_min = DS3231.Minute;
+  RTC_Time.chirp_sec = DS3231.Second;
+  return RTC_Time;
 }
 
 /**
@@ -136,20 +138,42 @@ void DS3231_ReadAlarm1_Time()
   */
 void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t second)
 {
-  DS3231_Buff[DS3231_memaddr.alarm1_dydt] = DEC2BCD(date);
-  DS3231_Buff[DS3231_memaddr.alarm1_hour] = DEC2BCD(hour);
-  DS3231_Buff[DS3231_memaddr.alarm1_min] = DEC2BCD(mintue);
-  DS3231_Buff[DS3231_memaddr.alarm1_sec] = DEC2BCD(second);
-  while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.alarm1_sec, I2C_MEMADD_SIZE_8BIT,
-                           &(DS3231_Buff[DS3231_memaddr.alarm1_sec]), DS3231_ALARM1_LENGTH, 0xffff) != HAL_OK)
-    ;
-  // Enable the A1IE and INTCN in Control (0Eh)
-  DS3231.Control |= 0x05;
-  // Clear the AF1 and AF2 in Status (0Fh)
-  DS3231.Status &= 0xFC;
-  while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
-                           &(DS3231.Control), 2, 0xffff) != HAL_OK)
-    ;
+  uint8_t alarm_flag = 0;
+  while (!alarm_flag)
+  {
+    printf("set alarm\n");
+    /* write alarm time */
+    DS3231_Buff[DS3231_memaddr.alarm1_dydt] = DEC2BCD(date);
+    DS3231_Buff[DS3231_memaddr.alarm1_hour] = DEC2BCD(hour);
+    DS3231_Buff[DS3231_memaddr.alarm1_min] = DEC2BCD(mintue);
+    DS3231_Buff[DS3231_memaddr.alarm1_sec] = DEC2BCD(second);
+    while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.alarm1_sec, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231_Buff[DS3231_memaddr.alarm1_sec]), DS3231_ALARM1_LENGTH, 0xffff) != HAL_OK)
+      ;
+    /* read alarm time */
+    while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.alarm1_sec, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231_Buff[DS3231_memaddr.alarm1_sec]), DS3231_ALARM1_LENGTH, 0xffff) != HAL_OK);
+    /* if alarm time set right, flag as 1 */
+    if ((BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_dydt]) == date) && (BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_hour]) == hour) && (BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_min]) == mintue) && (BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_sec]) == second))
+      alarm_flag = 1;
+  }
+  alarm_flag = 0;
+  while (!alarm_flag)
+  {
+    printf("Enable alarm\n");
+    // Enable the A1IE and INTCN in Control (0Eh)
+    DS3231.Control |= 0x05;
+    // Clear the AF1 and AF2 in Status (0Fh)
+    DS3231.Status &= 0xFC;
+    while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231.Control), 2, 0xffff) != HAL_OK)
+      ;
+    /* read alarm enable */
+    while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231.Control), 2, 0xffff) != HAL_OK);
+    if ((DS3231.Control & 0x05) && (!(DS3231.Status & 0x03)))
+      alarm_flag = 1;
+  }
 }
 
 /**

@@ -1,10 +1,10 @@
 /*
  * @Author: your name
  * @Date: 2020-04-28 23:50:54
- * @LastEditTime: 2020-05-03 01:14:17
- * @LastEditors: Please set LastEditors
+ *    @date                  2020-07-08 19:16:30
+ * LastEditors               Please set LastEditors
  * @Description: In User Settings Edit
- * @FilePath: \mixer_dutycycle\Src\tools\Inc\ds3231.h
+ * FilePath                  \uVision Project\Src\tools\Inc\ds3231.h
  */
 #ifndef __RTC_H__
 #define __RTC_H__
@@ -12,6 +12,7 @@
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
 #include "stm32l4xx.h"
+#include "chirp_internal.h"
 
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
@@ -74,7 +75,7 @@ extern DS3231_TypeDef DS3231;
 void DS3231_ModifyTime(uint8_t year, uint8_t month, uint8_t date,
 					   uint8_t day, uint8_t hour, uint8_t mintue, uint8_t second);
 void DS3231_GetTime(void);
-void DS3231_ShowTime(void);
+Chirp_Time DS3231_ShowTime();
 void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t second);
 void DS3231_SetAlarm2_Time(uint8_t date, uint8_t hour, uint8_t mintue);
 void DS3231_SetAlarm1_Duration(uint8_t hour, uint8_t mintue, uint8_t second);
