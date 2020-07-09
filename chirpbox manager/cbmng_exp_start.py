@@ -133,7 +133,7 @@ def start(com_port, flash_protection, version_hash, command_sf):
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 30)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 20)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")

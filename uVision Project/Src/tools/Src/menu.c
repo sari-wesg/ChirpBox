@@ -413,7 +413,9 @@ void menu_bank(void)
   {
     Serial_PutString((uint8_t *)"\tSystem running from STM32L476 *Bank 2*  \r\n\n");
     uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_1);
-    Flash_Bank_Copy_Bank(FLASH_START_BANK1, FLASH_START_BANK2, firmware_size, 1);
+    printf("firmware_size:%lu\n", firmware_size);
+    if ((firmware_size < 0x100000) && (firmware_size))
+      Flash_Bank_Copy_Bank(FLASH_START_BANK1, FLASH_START_BANK2, firmware_size, 1);
     DS3231_GetTime();
     DS3231_ShowTime();
     while(1);
@@ -1302,7 +1304,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               else
                 Bank1_nWRP();
               /* switch to bank2 */
-              menu_to_bank2();
+              STMFLASH_BankSwitch();
             }
 					}
 					else
