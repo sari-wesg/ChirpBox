@@ -429,7 +429,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 		# print(task_index)
 				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 	 				if (line == "output from initiator (topology):"):
@@ -480,7 +480,7 @@ def collect_version(com_port, command_sf):
 				 	print (line)
 				 	if (line == "Input initiator task:"):
 				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 				 		# ser.write(str(task_index).encode()) # send commands
