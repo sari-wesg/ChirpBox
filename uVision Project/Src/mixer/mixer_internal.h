@@ -853,6 +853,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint32_t			default_sf;
 	uint32_t			default_freq;
 	uint8_t				default_payload_len;
+	uint8_t				default_generate_size;
 
 	uint32_t			hash_header;
 

@@ -833,6 +833,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             /* Only sniff add parameter in the arrange packet, since the length of its packet is related to the num nodes parameter */
             if (chirp_outl->arrange_task == CHIRP_SNIFF)
                 data[5] = chirp_outl->sniff_nodes_num;
+            data[ROUND_HEADER_LENGTH - 1] = chirp_outl->default_generate_size;
             break;
         }
         default:
@@ -849,8 +850,8 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
     {
         if (payload_distribution[i] == node_id)
         {
-            data[ROUND_HEADER_LENGTH - 1] = i;
-            file_data[ROUND_HEADER_LENGTH - 1] = i;
+            // data[ROUND_HEADER_LENGTH - 1] = i;
+            // file_data[ROUND_HEADER_LENGTH - 1] = i;
             switch (chirp_outl->task)
             {
                 case CHIRP_START:
@@ -1215,6 +1216,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             chirp_outl->default_payload_len = data[k++];
                             // chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
                             chirp_outl->arrange_task = data[k++];
+                            chirp_outl->default_generate_size = data[ROUND_HEADER_LENGTH - 1];
                             if (chirp_outl->arrange_task == CHIRP_SNIFF)
                             {
                                 chirp_outl->sniff_nodes_num = data[5];

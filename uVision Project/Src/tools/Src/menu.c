@@ -716,9 +716,10 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   Mixer_Task mx_task;
   uint8_t default_sf;
   uint8_t default_payload_len;
+  uint8_t default_generate_size;
   uint8_t task_wait = 0;
 
-  uint8_t task[8];
+  uint8_t task[12];
   PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_SNIFF\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_SNIFF, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
@@ -744,13 +745,13 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
       #endif
       PRINTF("Input initiator task:\n");
       // 0,07,100
-      status = HAL_UART_Receive(&UART_Handle, &task, 8, DOWNLOAD_TIMEOUT);
+      status = HAL_UART_Receive(&UART_Handle, &task, 12, DOWNLOAD_TIMEOUT);
       while (UART_Handle.RxState == HAL_UART_STATE_BUSY_RX);
     }
     mx_task = task[0] - '0';
     default_sf = (task[2] - '0') * 10 + task[3] - '0';
     default_payload_len = (task[5] - '0') * 100 + (task[6] - '0') * 10 + task[7] - '0';
-    // default_sf = 7;
+    default_generate_size = (task[9] - '0') * 100 + (task[10] - '0') * 10 + task[11] - '0';
   } while ((mx_task > MX_TASK_LAST) || (mx_task < MX_TASK_FIRST));
 
   SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
@@ -760,8 +761,8 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   chirp_outl->arrange_task = (Mixer_Task )mx_task;
   chirp_outl->default_sf = default_sf;
   chirp_outl->default_payload_len = default_payload_len;
-  PRINTF("default sf:%lu, %lu\n", chirp_outl->default_sf, chirp_outl->default_payload_len);
-
+  chirp_outl->default_generate_size = default_generate_size;
+  PRINTF("default sf:%lu, %lu, %lu\n", chirp_outl->default_sf, chirp_outl->default_payload_len, chirp_outl->default_generate_size);
   switch (mx_task)
   {
     case CHIRP_START:
@@ -1327,7 +1328,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				PRINTF("---------MX_DISSEMINATE---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
-				chirp_outl.generation_size = 4;
+				chirp_outl.generation_size = chirp_outl.default_generate_size;
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
         assert_reset(chirp_outl.payload_len > DATA_HEADER_LENGTH + 12);
 				assert_reset(!((chirp_outl.payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
