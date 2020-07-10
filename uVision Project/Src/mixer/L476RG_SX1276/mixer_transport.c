@@ -2429,13 +2429,13 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					#elif MX_REQUEST
 						#if MX_PSEUDO_CONFIG
 						if (mx.tx_packet->flags.request_column)
+							ps = &(mx.request->mask[chirp_config.my_column_mask.pos]);
+						else ps = &(mx.request->mask[chirp_config.my_row_mask.pos]);
 						#else
 						if (mx.tx_packet.flags.request_column)
-						#endif
-						{
 							ps = &mx.request.my_column_mask[0];
-						}
 						else ps = &mx.request.my_row_mask[0];
+						#endif
 					#else
 						#error inconsistent code
 					#endif

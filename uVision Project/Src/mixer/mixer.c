@@ -256,8 +256,9 @@ void mixer_init(uint8_t node_id)
 	mx_absent_head = mx.history[chirp_config.mx_num_nodes + 3 - 3];
 	mx_present_head = mx.history[chirp_config.mx_num_nodes + 3 - 2];
 	mx_finished_head = mx.history[chirp_config.mx_num_nodes + 3 - 1];
-
+	#if MX_SMART_SHUTDOWN
 	mx.full_rank_map = (Full_Rank_Map *)malloc(chirp_config.map.len + chirp_config.hash.len);
+	#endif
 
 	mx.request = (Request_Data *)malloc(offsetof(Request_Data, mask) + 6 * chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 	#endif
@@ -857,7 +858,9 @@ Gpi_Fast_Tick_Extended mixer_start()
 		#endif
 		free(mx.tx_packet);
 		free(mx.history[0]);
+		#if MX_SMART_SHUTDOWN
 		free(mx.full_rank_map);
+		#endif
 		free(mx.request);
 	#endif
 
