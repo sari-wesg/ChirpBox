@@ -1377,15 +1377,13 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                             return 1;
                         else
                         {
-                            __disable_fault_irq();
-                            NVIC_SystemReset();
+                            return 0;
                         }
                     }
                 }
                 else if ((failed_round >= 1) && (chirp_outl->task != MX_DISSEMINATE))
                 {
-                    __disable_fault_irq();
-                    NVIC_SystemReset();
+                    return 0;
                 }
             }
         }
@@ -1408,8 +1406,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     }
                     else
                     {
-                        __disable_fault_irq();
-                        NVIC_SystemReset();
+                        return 0;
                     }
                 }
                 /* dissemination session: disseminate files to all nodes */

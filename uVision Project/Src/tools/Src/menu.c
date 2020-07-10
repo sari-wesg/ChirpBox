@@ -1203,6 +1203,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
 	while (1)
 	{
+		PRINTF("---------Chirpbox---------\n");
     memset(gps_time_str, 1, sizeof(gps_time_str));
 
     #if GPS_DATA
@@ -1280,7 +1281,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 8, ((chirp_outl.packet_time + 100000) * (chirp_outl.num_nodes * 8)) + 500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				chirp_mx_round(node_id, &chirp_outl);
+				// chirp_mx_round(node_id, &chirp_outl);
+        if (!chirp_mx_round(node_id, &chirp_outl))
+        {
+          free(payload_distribution);
+          break;
+        }
 				free(payload_distribution);
 
 				#if GPS_DATA
@@ -1362,7 +1368,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.generation_size * 3 + chirp_outl.num_nodes, ((chirp_outl.packet_time + 100000) * (chirp_outl.generation_size * 3 + chirp_outl.num_nodes)) + 2000000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				chirp_mx_round(node_id, &chirp_outl);
+				// chirp_mx_round(node_id, &chirp_outl);
+        if (!chirp_mx_round(node_id, &chirp_outl))
+        {
+          free(payload_distribution);
+          break;
+        }
 				free(payload_distribution);
         free(chirp_outl.disem_file_memory);
 				if (chirp_outl.patch_update)
@@ -1420,7 +1431,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
         printf("set88:%lu\n", chirp_outl.round_max);
 
-				chirp_mx_round(node_id, &chirp_outl);
+				// chirp_mx_round(node_id, &chirp_outl);
+        if (!chirp_mx_round(node_id, &chirp_outl))
+        {
+          free(payload_distribution);
+          break;
+        }
 				free(payload_distribution);
 				break;
 			}
@@ -1441,7 +1457,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 8, ((chirp_outl.packet_time + 100000) * (chirp_outl.num_nodes * 8)) + 500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				chirp_mx_round(node_id, &chirp_outl);
+				// chirp_mx_round(node_id, &chirp_outl);
+        if (!chirp_mx_round(node_id, &chirp_outl))
+        {
+          free(payload_distribution);
+          break;
+        }
         chirp_mx_radio_config(chirp_outl.sf, 7, 1, 8, chirp_outl.tx_power, chirp_outl.freq);
         topo_init(network_num_nodes, node_id, chirp_outl.sf);
         uint8_t i;
@@ -1478,7 +1499,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 8, ((chirp_outl.packet_time + 100000) * (chirp_outl.num_nodes * 8)) + 500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				chirp_mx_round(node_id, &chirp_outl);
+				// chirp_mx_round(node_id, &chirp_outl);
+        if (!chirp_mx_round(node_id, &chirp_outl))
+        {
+          free(payload_distribution);
+          break;
+        }
 				free(payload_distribution);
 				break;
 			}
@@ -1500,7 +1526,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 8, ((chirp_outl.packet_time + 100000) * (chirp_outl.num_nodes * 8)) + 500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				chirp_mx_round(node_id, &chirp_outl);
+				// chirp_mx_round(node_id, &chirp_outl);
+        if (!chirp_mx_round(node_id, &chirp_outl))
+        {
+          free(payload_distribution);
+          break;
+        }
 				free(payload_distribution);
 				break;
 			}
@@ -1523,7 +1554,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 6, ((chirp_outl.packet_time + 100000) * (chirp_outl.num_nodes * 6)) + 500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				chirp_mx_round(node_id, &chirp_outl);
+				// chirp_mx_round(node_id, &chirp_outl);
+        if (!chirp_mx_round(node_id, &chirp_outl))
+        {
+          free(payload_distribution);
+          break;
+        }
 				free(payload_distribution);
 				break;
 			}
