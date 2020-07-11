@@ -698,6 +698,9 @@ uint8_t menu_pre_patch(uint8_t patch_bank, uint32_t old_firmware_size, uint32_t 
  */
 uint32_t menu_initiator_read_file(void)
 {
+  /* initiator needs to erase bank2 */
+  /* erase bank2 */
+  FLASH_If_Erase(0);
   /* write file to bank2 */
   uint32_t size = menu_serialDownload(0, 1);
   CheckOtherBank();
@@ -1357,6 +1360,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					chirp_outl.firmware_size = flash_length;
 					uint32_t firmware_size[1];
 					firmware_size[0] = chirp_outl.firmware_size;
+          FLASH_If_Erase_Pages(0, 253);
 					FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
 
           chirp_outl.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
@@ -1387,7 +1391,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					if (new_firmware_size)
 						printf("Patch success!:%lu\n", new_firmware_size);
 					else printf("Patch failed!\n");
-					if (!chirp_outl.patch_bank)
+					if (chirp_outl.patch_update)
 					{
 						uint32_t firmware_size_buffer[1];
 						firmware_size_buffer[0] = new_firmware_size;
