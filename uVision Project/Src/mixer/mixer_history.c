@@ -140,7 +140,7 @@ static void append_node(uint16_t node_id, Node *list_head)
 	if (IS_POWER_OF_2(chirp_config.history_len_8))
 		head_index = ARRAY_INDEX_SIZE_ADD(list_head, &(mx.history[0]->prev), chirp_config.history_len_8);
 	else if (chirp_config.history_len_8 < 0x100)
-		head_index = gpi_divu_16x8((uintptr_t)list_head - (uintptr_t)&mx.history, chirp_config.history_len_8, 1);
+		head_index = gpi_divu_16x8((uintptr_t)list_head - (uintptr_t)&(mx.history[0]->prev), chirp_config.history_len_8, 1);
 //	else assert_reset(0, "inefficient program, see source code comments");
 	assert_reset(IS_POWER_OF_2(chirp_config.history_len_8) || chirp_config.history_len_8 < 0x100);
 
