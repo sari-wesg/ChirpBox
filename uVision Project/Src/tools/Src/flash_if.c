@@ -352,7 +352,7 @@ size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE* file)
   uint32_t flash_bank_address = (bank_active == 1)? FLASH_START_BANK1 : FLASH_START_BANK2;
 
   memcpy((uint32_t *)ptr, (uint32_t *)(flash_bank_address + file->now_page * FLASH_PAGE), count);
-  uint32_t left_count = file->file_size - (file->now_page - file->origin_page) * FLASH_PAGE;
+  uint32_t left_count = file->file_size - (file->now_page - file->origin_page + file->page_offset) * FLASH_PAGE;
   // Ensure the real useful bytes are no larger than left bytes
   if ((count > left_count) && (file->file_size))
     count = left_count;
@@ -368,12 +368,18 @@ static void the_flash_copy(Flash_FILE* file)
   uint32_t BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
   uint32_t flash_bank_address = (BankActive == 1)? FLASH_START_BANK1 : FLASH_START_BANK2;
 
-  FLASH_If_Erase_Pages(BankActive, file->now_page + 2);
+  uint32_t firmware_size = file->file_size - (file->now_page - file->page_offset) * FLASH_PAGE;
+  /* processed page num */
+  uint32_t processed_page = file->now_page - file->page_offset;
+  file->page_offset += processed_page;
 
-  uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_2) - file->now_page * FLASH_PAGE;
-  // firmware_size = 2339 - (file->now_page + 1 - copy_count) * FLASH_PAGE;
-
-  Flash_Bank_Copy_Bank(FLASH_START_BANK2 + (file->now_page + 1) * FLASH_PAGE, FLASH_START_BANK2 + (file->now_page + 2) * FLASH_PAGE, firmware_size, 0);
+  /* move pages one by one */
+  uint32_t copy_page_num = (firmware_size + FLASH_PAGE - 1) / FLASH_PAGE + 1;
+  for (uint32_t i = copy_page_num; i > 0; i--)
+  {
+    FLASH_If_Erase_Pages(BankActive, file->now_page + i);
+    Flash_Bank_Copy_Bank(FLASH_START_BANK2 + (file->now_page + i - 1) * FLASH_PAGE, FLASH_START_BANK2 + (file->now_page + i) * FLASH_PAGE, FLASH_PAGE, 0);
+  }
   copy_count++;
 }
 
@@ -394,8 +400,8 @@ uint32_t Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t origina
       &the_flash_copy
   };
 
-  Flash_FILE originalFile = {originalBank, originalPage, 0, originalSize};
-  Flash_FILE patchFile = {patchBank, patchPage, 0, patchSize};
+  Flash_FILE originalFile = {originalBank, originalPage, 0, originalPage, originalSize};
+  Flash_FILE patchFile = {patchBank, patchPage, 0, 0, patchSize};
   Flash_FILE newFile = {newBank, newPage};
 
   int jpr = janpatch(ctx, &originalFile, &patchFile, &newFile);

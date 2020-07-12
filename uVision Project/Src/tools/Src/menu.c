@@ -359,7 +359,7 @@ void Flash_Bank_Copy_Bank(uint32_t FLASH_SRC, uint32_t FLASH_DEST, uint32_t firm
   // uint32_t firmware_size;
   uint32_t n, round;
   // uint32_t FLASH_SRC, FLASH_DEST, FIRMWARE_SIZE;
-  uint32_t firmware_file[64];
+  uint32_t firmware_file_buffer[64];
 
   /* erase another bank */
   if (bank)
@@ -367,14 +367,14 @@ void Flash_Bank_Copy_Bank(uint32_t FLASH_SRC, uint32_t FLASH_DEST, uint32_t firm
   // else
   //   menu_preSend(0);
 
-  round = (firmware_size + sizeof(firmware_file) - 1) / sizeof(firmware_file);
+  round = (firmware_size + sizeof(firmware_file_buffer) - 1) / sizeof(firmware_file_buffer);
   printf("copy round:%lu, %lu\n", round, firmware_size);
   for (n = round; n > 0; n--)
   {
     printf("%lu, ", (n - 1));
-    memcpy(firmware_file, (__IO uint32_t*)(FLASH_SRC + (n - 1) * sizeof(firmware_file)), sizeof(firmware_file));
+    memcpy(firmware_file_buffer, (__IO uint32_t*)(FLASH_SRC + (n - 1) * sizeof(firmware_file_buffer)), sizeof(firmware_file_buffer));
 
-    FLASH_If_Write(FLASH_DEST + (n - 1) * sizeof(firmware_file), (uint32_t *)(firmware_file), sizeof(firmware_file) / sizeof(uint32_t));
+    FLASH_If_Write(FLASH_DEST + (n - 1) * sizeof(firmware_file_buffer), (uint32_t *)(firmware_file_buffer), sizeof(firmware_file_buffer) / sizeof(uint32_t));
   }
   printf("\n");
 

@@ -78,6 +78,7 @@ typedef struct Flash_FILE_tag
   uint8_t  bank;
   uint32_t origin_page;
   uint32_t now_page;
+  uint32_t page_offset;
   uint32_t file_size;
 } Flash_FILE;
 

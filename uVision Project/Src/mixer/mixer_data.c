@@ -1087,11 +1087,6 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             /* patch firmware */
                                             else if ((chirp_outl->patch_update) && (i == 0))
                                             {
-                                                /* patch file needs the patch file size */
-                                                file_data[0] = chirp_outl->firmware_size;
-                                                // printf("whole firmware_size:%lu\n", chirp_outl->firmware_size);
-                                                FLASH_If_Erase_Pages(0, 253);
-                                                FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)file_data, 2);
                                                 memcpy(data, &(chirp_outl->disem_file_memory[2]), 4);
                                                 k = 0;
 
