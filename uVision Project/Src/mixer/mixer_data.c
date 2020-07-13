@@ -743,13 +743,16 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                         file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->version_hash >> 8;
                         file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->version_hash;
                         /* k = 8 */
+                        memcpy(&(file_data[DATA_HEADER_LENGTH + 8]), &(chirp_outl->firmware_md5[0]), 16);
+                        /* k = 24 */
                         if (chirp_outl->patch_update)
                         {
+                            k = 24;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 24;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 16;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 8;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size;
-                            /* k = 12 */
+                            /* k = 28 */
                         }
                         k = 0;
                     }
@@ -929,7 +932,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO))
     {
         assert_reset(!((chirp_outl->payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
-        assert_reset(chirp_outl->payload_len > DATA_HEADER_LENGTH + 12);
+        assert_reset(chirp_outl->payload_len > DATA_HEADER_LENGTH + 28);
     }
     uint32_t file_data[(chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t)];
     uint16_t file_round;
@@ -1067,7 +1070,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
                                         if (i == 0)
                                         {
-                                            memcpy(data, &(chirp_outl->disem_file_memory[0]), DATA_HEADER_LENGTH);
+                                            memcpy(data, &(chirp_outl->disem_file_memory[0]), 24);
                                             chirp_outl->firmware_size = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
                                             chirp_outl->patch_update = data[4];
                                             chirp_outl->patch_bank = data[5];
@@ -1076,6 +1079,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             printf("version_hash:%x, %x, %x\n", chirp_outl->version_hash, data[6], data[7]);
                                             printf("MX_DISSEMINATE: %lu, %lu, %lu, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len);
 
+                                            memcpy(&(chirp_outl->firmware_md5[0]), &(chirp_outl->disem_file_memory[2]), 16);
                                             /* update whole firmware */
                                             if ((!chirp_outl->patch_update) && (i == 0))
                                             {
@@ -1087,12 +1091,11 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             /* patch firmware */
                                             else if ((chirp_outl->patch_update) && (i == 0))
                                             {
-                                                memcpy(data, &(chirp_outl->disem_file_memory[2]), 4);
+                                                memcpy(data, &(chirp_outl->disem_file_memory[6]), 4);
                                                 k = 0;
 
                                                 chirp_outl->old_firmware_size = (data[k++] << 24) | (data[k++] << 16) | (data[k++] << 8) | (data[k++]);
                                                 k = 0;
-                                                printf("patch1:%lu, %lu, %lu, %lu, %lu, %lu\n", chirp_outl->old_firmware_size, chirp_outl->firmware_size, data[k++], data[k++], data[k++], data[k++]);
                                                 chirp_outl->patch_page = menu_pre_patch(chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size);
                                                 printf("patch:%lu, %lu\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
                                             }
@@ -1422,7 +1425,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     PRINTF("next: disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size);
-                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->generation_size * 3 + chirp_outl->num_nodes, ((chirp_outl->packet_time + 100000) * (chirp_outl->generation_size * 3 + chirp_outl->num_nodes)) + 2000000);
+                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->generation_size * 4 + chirp_outl->num_nodes, ((chirp_outl->packet_time + 100000) * (chirp_outl->generation_size * 4 + chirp_outl->num_nodes)) + 2000000);
                     chirp_mx_payload_distribution(chirp_outl->task);
                     chirp_outl->disem_flag = 1;
                 }

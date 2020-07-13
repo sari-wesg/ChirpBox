@@ -341,7 +341,6 @@ size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file)
 
 size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE* file)
 {
-  // uint32_t BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
   uint8_t bank_active = 0;
   /* self update or another bank */
   if (!(file->bank))
@@ -409,7 +408,7 @@ uint32_t Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t origina
   if (!jpr)
     return newFile.file_size;
     // return 0;
-  else return -1;
+  else return 0;
 }
 //**************************************************************************************************
 //**************************************************************************************************

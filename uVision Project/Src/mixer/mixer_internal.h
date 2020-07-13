@@ -882,6 +882,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	/* MX_DISSEMINATE */
 	uint32_t			firmware_size;
+	uint8_t				firmware_md5[16];
 	uint16_t			version_hash;
 
 	uint8_t				patch_update;

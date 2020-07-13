@@ -54,6 +54,7 @@
 #include "mixer/mixer_internal.h"
 #include "ds3231.h"
 // #include "gpi/interrupts.h"
+#include "md5.h"
 
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
@@ -834,7 +835,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
       }
       case MX_DISSEMINATE:
       {
-          rxbuffer_len = 20;
+          rxbuffer_len = 53;
           break;
       }
       case MX_COLLECT:
@@ -973,6 +974,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
       {
         /* ("0,0,00000,00000,6A75": update whole firmware, "1,0,7f800,7f500,6A75": patch firmware of bank1, "1,1,7f800,7f500,6A75": patch firmware of bank2) */
         /* hash code is 0x6A75 */
+        /* 87BA9B1B68BFE39666AAB255A1049CC7, md5 of the new file */
         memset(&(chirp_outl->firmware_size), 0, offsetof(Chirp_Outl, collect_addr_start) - offsetof(Chirp_Outl, firmware_size));
         for (i = 0; i < rxbuffer_len; i++)
         {
@@ -1018,9 +1020,22 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
                 data = 10 + data - 'A';
               chirp_outl->version_hash += data * pow(16,(pow_num-i));
             }
+            else if (i < 53)
+            {
+              if ((data >= '0') && (data <= '9'))
+                data = data - '0';
+              else
+                data = 10 + data - 'A';
+              chirp_outl->firmware_md5[(i - 21) / 2] += data * pow(16,((i - 20) % 2));
+            }
           }
         }
         printf("MX_DISSEMINATE:%lu, %lu, %lu, %lu, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash);
+        for (i = 0; i < 16; i++)
+        {
+          printf("%02X", chirp_outl->firmware_md5[i]);
+        }
+        printf("\n");
         if (!chirp_outl->patch_update)
         {
           menu_preSend(1);
@@ -1334,12 +1349,13 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.disem_file_max = UINT16_MAX / 2;
         chirp_outl.disem_file_index_stay = 0;
         chirp_outl.version_hash = 0;
+        memset(chirp_outl.firmware_md5, 0, sizeof(chirp_outl.firmware_md5));
 				PRINTF("---------MX_DISSEMINATE---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = chirp_outl.default_generate_size;
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
-        assert_reset(chirp_outl.payload_len > DATA_HEADER_LENGTH + 12);
+        assert_reset(chirp_outl.payload_len > DATA_HEADER_LENGTH + 28);
 				assert_reset(!((chirp_outl.payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
 				chirp_outl.round_setup = 1;
 				chirp_outl.round_max = UINT16_MAX;
@@ -1369,7 +1385,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.disem_flag = 1;
 				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size);
-        chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.generation_size * 3 + chirp_outl.num_nodes, ((chirp_outl.packet_time + 100000) * (chirp_outl.generation_size * 3 + chirp_outl.num_nodes)) + 2000000);
+        chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.generation_size * 4 + chirp_outl.num_nodes, ((chirp_outl.packet_time + 100000) * (chirp_outl.generation_size * 4 + chirp_outl.num_nodes)) + 2000000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 				// chirp_mx_round(node_id, &chirp_outl);
@@ -1390,21 +1406,39 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					uint32_t new_firmware_size = Filepatch(source_bank, 0, chirp_outl.old_firmware_size, patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, dest_bank, 0);
 					if (new_firmware_size)
 						printf("Patch success!:%lu\n", new_firmware_size);
-					else printf("Patch failed!\n");
-					if (chirp_outl.patch_update)
-					{
-						uint32_t firmware_size_buffer[1];
-						firmware_size_buffer[0] = new_firmware_size;
-						FLASH_If_Erase_Pages(0, 253);
-						FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size_buffer, 2);
-					}
+					else
+          {
+            printf("Patch failed!\n");
+            FLASH_If_Erase(0);
+            break;
+          }
+          uint32_t firmware_size_buffer[1];
+          firmware_size_buffer[0] = new_firmware_size;
+          FLASH_If_Erase_Pages(0, 253);
+          FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size_buffer, 2);
+          chirp_outl.firmware_size = new_firmware_size;
 				}
+        uint8_t i;
+        printf("Md5 check: %lu\n", chirp_outl.firmware_size);
+        for (i = 0; i < 16; i++)
+        {
+          printf("%02X", chirp_outl.firmware_md5[i]);
+        }
+        printf("\n");
+        if (!MD5_File(1, 0, chirp_outl.firmware_size, chirp_outl.firmware_md5))
+        {
+          printf("md5 error\n");
+          FLASH_If_Erase(0);
+          break;
+        }
         printf("version_hash:%lu, %lu\n", ((VERSION_MAJOR << 8) | (VERSION_NODE)), chirp_outl.version_hash);
         if (chirp_outl.version_hash != ((VERSION_MAJOR << 8) | (VERSION_NODE)))
         {
-          printf("not version right\n");
+          printf("version wrong\n");
           FLASH_If_Erase(0);
         }
+        else
+          printf("version right\n");
 				break;
 			}
 			case MX_COLLECT:
