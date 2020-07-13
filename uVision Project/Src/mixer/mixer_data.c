@@ -1066,11 +1066,11 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                     /* compare / increase the index */
                                     if (chirp_outl->disem_file_index == (data[ROUND_HEADER_LENGTH] << 8 | data[ROUND_HEADER_LENGTH + 1]))
                                     {
-                                        memcpy(&(chirp_outl->disem_file_memory[i * sizeof(file_data) / sizeof(uint32_t)]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
-
                                         if (i == 0)
                                         {
-                                            memcpy(data, &(chirp_outl->disem_file_memory[0]), 24);
+                                            memcpy(&(chirp_outl->disem_file_memory[0]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
+
+                                            memcpy(data, &(chirp_outl->disem_file_memory[0]), DATA_HEADER_LENGTH);
                                             chirp_outl->firmware_size = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
                                             chirp_outl->patch_update = data[4];
                                             chirp_outl->patch_bank = data[5];
@@ -1079,7 +1079,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             printf("version_hash:%x, %x, %x\n", chirp_outl->version_hash, data[6], data[7]);
                                             printf("MX_DISSEMINATE: %lu, %lu, %lu, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len);
 
-                                            memcpy(&(chirp_outl->firmware_md5[0]), &(chirp_outl->disem_file_memory[2]), 16);
+                                            memcpy(&(chirp_outl->firmware_md5[0]), (uint8_t *)(p + 16), 16);
                                             /* update whole firmware */
                                             if ((!chirp_outl->patch_update) && (i == 0))
                                             {
@@ -1415,6 +1415,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 /* dissemination session: disseminate files to all nodes */
                 if (!chirp_outl->disem_flag)
                 {
+                    free(payload_distribution);
                     /* If now is confirm, the initiator collect all nodes information about whether they are full rank last round, if so, then send the next file chunk, file index++, else do not increase file index */
                     if ((!node_id) && (chirp_config.full_column == 0))
                     {
@@ -1432,6 +1433,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 /* confirm session: collect all nodes condition (if full rank in last mixer round) */
                 else
                 {
+                    free(payload_distribution);
                     PRINTF("next: collect disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL);

@@ -404,6 +404,11 @@ uint32_t Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t origina
   Flash_FILE newFile = {newBank, newPage};
 
   int jpr = janpatch(ctx, &originalFile, &patchFile, &newFile);
+
+  free(ctx.source_buffer.buffer);
+  free(ctx.patch_buffer.buffer);
+  free(ctx.target_buffer.buffer);
+
   printf("size:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", newFile.file_size, originalBank, originalPage, originalSize, patchBank, patchSize, newBank, newPage);
   if (!jpr)
     return newFile.file_size;

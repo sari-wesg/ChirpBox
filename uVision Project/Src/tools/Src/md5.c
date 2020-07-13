@@ -4,6 +4,7 @@
 #include "md5.h"
 #include <memory.h>
 #include "flash_if.h"
+#include <stdlib.h>
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -208,7 +209,8 @@ int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value)
 	int i;
 	int fd;
 	size_t ret;
-	uint8_t data[FLASH_PAGE];
+	uint8_t *data;
+    data = (uint8_t *)malloc(FLASH_PAGE);
 	MD5_CTX md5;
 
 	// init md5
@@ -223,6 +225,7 @@ int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value)
 
 		if (0 == ret || ret < FLASH_PAGE)
 		{
+			free(data);
 			break;
 		}
 	}
