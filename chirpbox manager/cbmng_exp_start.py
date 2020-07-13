@@ -11,6 +11,9 @@ import statistics_process.topo_parser
 import serial
 import os
 
+""" Md5 """
+import hashlib
+
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
 firmware_burned = "tmp_exp_firm_burned.bin"
@@ -93,6 +96,12 @@ def generate_json_for_upgrade():
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
 
+def md5(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 def start(com_port, flash_protection, version_hash, command_sf):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
@@ -133,7 +142,7 @@ def start(com_port, flash_protection, version_hash, command_sf):
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 60)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 50)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -562,6 +571,8 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 
 	timeout_cnt = 0
 
+	hash_md5 = md5(firmware)
+	print("hash_md5:", "%16X" % int(hash_md5, 16))
 
 	while True:
 		try:
@@ -578,14 +589,14 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(using_patch == 1):
 			 			if(daemon_patch == 1):
-			 	 			para = "1,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
+			 	 			para = "1,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%16X" % int(hash_md5, 16)
 			 			else:
-			 	 			para = "1,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
+			 	 			para = "1,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%16X" % int(hash_md5, 16)
 			 		else:
 			 	 		if(daemon_patch == 1):
-			 	 			para = "0,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
+			 	 			para = "0,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%16X" % int(hash_md5, 16)
 			 	 		else:
-			 	 			para = "0,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16)
+			 	 			para = "0,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%16X" % int(hash_md5, 16)
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
