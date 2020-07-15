@@ -215,6 +215,7 @@ static const uint8_t set_packet[SENSOR_NUM * GROUP_NUM][MAX_GENERATE_LENGTH] = {
 #define DATA_HEADER_LENGTH     	        8   /* Reservation section to transmit commands, real data is written behind that section */
 #define HASH_HEADER            	        4
 #define HASH_TAIL            	        2
+#define HASH_TAIL_CODE            	    2
 /*********************************************************/
 #define MX_GENERATION_SIZE_MAX  0xFF /* 255 packets */
 #define MX_NUM_NODES_MAX        0xFF /* 255 nodes */
