@@ -1437,7 +1437,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     PRINTF("next: collect disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL);
-                    chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, DATA_HEADER_LENGTH + HASH_TAIL);
+                    chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size);
                     chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->num_nodes * 8, ((chirp_outl->packet_time + 100000) * (chirp_outl->num_nodes * 8)) + 500000);
                     chirp_mx_payload_distribution(MX_COLLECT);
                     chirp_outl->disem_flag = 0;

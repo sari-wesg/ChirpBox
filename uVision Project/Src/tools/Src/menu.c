@@ -1315,6 +1315,9 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					{
             if ((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE))))
             {
+              /* erase the user flash page */
+              FLASH_If_Erase_Pages(0, 255);
+
               DS3231_GetTime();
               /* Set alarm */
               printf("date:%lu, %lu, %lu, %lu\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
