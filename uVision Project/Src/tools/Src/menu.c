@@ -1271,6 +1271,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
 		/* into the assigned task */
 		chirp_outl.task = chirp_outl.arrange_task;
+    memset(&chirp_stats_all, 0, sizeof(chirp_stats_all));
 
 		Gpi_Fast_Tick_Native deadline;
     if (chirp_outl.task == MX_DISSEMINATE)
@@ -1395,6 +1396,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         if (!chirp_mx_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
+          FLASH_If_Erase(0);
           break;
         }
 				free(payload_distribution);
@@ -1442,6 +1444,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         }
         else
           printf("version right\n");
+        Stats_to_Flash(chirp_outl.task);
 				break;
 			}
 			case MX_COLLECT:

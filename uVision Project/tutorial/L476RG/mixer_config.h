@@ -193,7 +193,7 @@ static const uint8_t set_packet[SENSOR_NUM * GROUP_NUM][MAX_GENERATE_LENGTH] = {
 
 // turn verbose log messages on or off
 #define MX_VERBOSE_CONFIG		0
-#define MX_VERBOSE_STATISTICS	0
+#define MX_VERBOSE_STATISTICS	1
 #define MX_VERBOSE_PACKETS		1
 
 #if (!PSEUDO_CONF)

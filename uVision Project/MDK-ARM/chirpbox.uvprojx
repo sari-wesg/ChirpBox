@@ -545,6 +545,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\tools\Src\toggle.c</FilePath>
             </File>
+            <File>
+              <FileName>md5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\tools\Src\md5.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

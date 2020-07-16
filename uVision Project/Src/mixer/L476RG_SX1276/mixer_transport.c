@@ -1155,8 +1155,11 @@ void LED_ISR(mixer_dio3_isr, LED_DIO3_ISR)
 						s.grid_timer_flag = 0;
 
 						#if MX_HEADER_CHECK
+						if (RESYNC != s.slot_state)
+						{
 							s.valid_header = 1;
 							MAIN_TIMER_CC_REG = r.fast_capture + radio.after_header_hybrid * FAST_HYBRID_RATIO;
+						}
 						#endif
 					}
 				unmask_main_timer(1);

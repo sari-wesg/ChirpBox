@@ -172,6 +172,32 @@ typedef struct __attribute__((packed)) Sniff_Config_tag
 	uint8_t	sniff_id;
 	uint32_t sniff_freq_khz;
 } Sniff_Config;
+
+//Stats ********************************************************************************************
+
+typedef enum Chirp_Stats_Type_tag
+{
+	SLOT_STATS,
+	RX_STATS,
+	TX_STATS
+} Chirp_Stats_Type;
+
+typedef struct Chirp_Stats_tag
+{
+	uint32_t		stats_sum;
+	uint32_t		stats_count;
+	uint32_t		stats_min;
+	uint32_t		stats_max;
+	uint32_t		stats_none;
+} Chirp_Stats;
+
+typedef struct Chirp_Stats_All_tag
+{
+	Chirp_Stats		slot;
+	Chirp_Stats		rx_on;
+	Chirp_Stats		tx_on;
+} Chirp_Stats_All;
+
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 /* main */
@@ -186,6 +212,10 @@ extern uint8_t node_id_allocate;
 
 /* sniff */
 extern Sniff_stat expired_node;
+
+/* stats */
+extern Chirp_Stats_All chirp_stats_all;
+
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
 void SX1276OnDio0Irq();
@@ -217,6 +247,10 @@ void sniff_rx();
 void sniff_tx(uint32_t node_id);
 void chirp_dio0_isr();
 void chirp_dio3_isr();
+
+/* Stats */
+void Stats_value(uint8_t stats_type, uint32_t value);
+void Stats_to_Flash(Mixer_Task task);
 
 //**************************************************************************************************
 /* Topology */

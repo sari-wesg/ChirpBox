@@ -2,6 +2,7 @@
 //**** Includes ************************************************************************************
 
 #include "mixer_internal.h"
+#include "chirp_internal.h"
 
 #if MX_DATA_SET
 
@@ -17,6 +18,9 @@
 	#include "flash_if.h"
 #endif
 
+#if ENERGEST_CONF_ON
+#include GPI_PLATFORM_PATH(energest.h)
+#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #define DEBUG 1
@@ -977,6 +981,10 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
         if (round_hash == chirp_config.mx_generation_size)
             chirp_config.full_rank = 1;
+        else
+        {
+            mx.stat_counter.slot_decoded = 0;
+        }
     }
 
     if (((chirp_config.full_rank) && (chirp_outl->task == MX_DISSEMINATE)) || (chirp_outl->task != MX_DISSEMINATE))
@@ -1361,8 +1369,15 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
         __HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);
 
+        if (chirp_outl->task != MX_DISSEMINATE)
+        {
+            Stats_value(RX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)));
+            Stats_value(TX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
+        }
+
         if (!chirp_recv(node_id, chirp_outl))
         {
+            mx.stat_counter.slot_decoded = 0;
             /* If in arrange state, none packet has been received, break loop */
             if (chirp_outl->task == MX_ARRANGE)
             {
@@ -1376,6 +1391,8 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 {
                     if (failed_round >= 2)
                     {
+                        Stats_value(SLOT_STATS, mx.stat_counter.slot_decoded);
+                        Stats_to_Flash(chirp_outl->task);
                         if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
                             return 1;
                         else
@@ -1386,12 +1403,17 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 }
                 else if ((failed_round >= 1) && (chirp_outl->task != MX_DISSEMINATE))
                 {
+                    Stats_value(SLOT_STATS, mx.stat_counter.slot_decoded);
+                    Stats_to_Flash(chirp_outl->task);
                     return 0;
                 }
             }
         }
         else
             failed_round = 0;
+
+        if (chirp_outl->task != MX_DISSEMINATE)
+            Stats_value(SLOT_STATS, mx.stat_counter.slot_decoded);
 
 		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
 
@@ -1433,6 +1455,10 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 /* confirm session: collect all nodes condition (if full rank in last mixer round) */
                 else
                 {
+                    Stats_value(RX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)));
+                    Stats_value(TX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
+                    Stats_value(SLOT_STATS, mx.stat_counter.slot_decoded);
+
                     free(payload_distribution);
                     PRINTF("next: collect disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
@@ -1455,6 +1481,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         /* once the round num expired, quit loop */
         if ((chirp_outl->round > chirp_outl->round_max) && (chirp_outl->task != MX_DISSEMINATE))
         {
+            Stats_to_Flash(chirp_outl->task);
             return 1;
         }
         /* in collection, break when file is done */

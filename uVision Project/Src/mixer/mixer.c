@@ -783,60 +783,60 @@ Gpi_Fast_Tick_Extended mixer_start()
 
 	// GPI_TRACE_MSG(TRACE_INFO, "mixer stopped");
 
-	#if MX_VERBOSE_STATISTICS
+	// #if MX_VERBOSE_STATISTICS
 
-		mx.stat_counter.radio_on_time /= FAST_HYBRID_RATIO;
+	// 	mx.stat_counter.radio_on_time /= FAST_HYBRID_RATIO;
 
-		// #ifdef PRINT
-		// 	#error change macro name
-		// #endif
+	// 	// #ifdef PRINT
+	// 	// 	#error change macro name
+	// 	// #endif
 
-		// printf("statistics:\n");
+	// 	// printf("statistics:\n");
 
-		// #define PRINT(n)	\
-		// 	ASSERT_CT(sizeof(mx.stat_counter.n) == sizeof(uint16_t), n);	\
-		// 	printf(#n ": %" PRIu16 "\n", mx.stat_counter.n)
+	// 	// #define PRINT(n)	\
+	// 	// 	ASSERT_CT(sizeof(mx.stat_counter.n) == sizeof(uint16_t), n);	\
+	// 	// 	printf(#n ": %" PRIu16 "\n", mx.stat_counter.n)
 
-		// PRINT(num_sent);
-		// PRINT(num_received);
-		// PRINT(num_resync);
-		// PRINT(num_grid_drift_overflow);
-		// PRINT(num_rx_window_overflow);
-		// PRINT(num_rx_success);
-		// PRINT(num_rx_broken);
-		// PRINT(num_rx_timeout);
-		// PRINT(num_rx_dma_timeout);
-		// PRINT(num_rx_dma_late);
-		// PRINT(num_rx_late);
-		// PRINT(num_tx_late);
-		// PRINT(num_tx_zero_packet);
-		// PRINT(num_tx_fifo_late);
-		// PRINT(num_grid_late);
-		// PRINT(num_rx_slot_mismatch);
-		// PRINT(num_rx_queue_overflow);
-		// PRINT(num_rx_queue_overflow_full_rank);
-		// PRINT(num_rx_queue_processed);
-		// PRINT(slot_full_rank);
-		// PRINT(slot_decoded);
-		// PRINT(slot_off);
+	// 	// PRINT(num_sent);
+	// 	// PRINT(num_received);
+	// 	// PRINT(num_resync);
+	// 	// PRINT(num_grid_drift_overflow);
+	// 	// PRINT(num_rx_window_overflow);
+	// 	// PRINT(num_rx_success);
+	// 	// PRINT(num_rx_broken);
+	// 	// PRINT(num_rx_timeout);
+	// 	// PRINT(num_rx_dma_timeout);
+	// 	// PRINT(num_rx_dma_late);
+	// 	// PRINT(num_rx_late);
+	// 	// PRINT(num_tx_late);
+	// 	// PRINT(num_tx_zero_packet);
+	// 	// PRINT(num_tx_fifo_late);
+	// 	// PRINT(num_grid_late);
+	// 	// PRINT(num_rx_slot_mismatch);
+	// 	// PRINT(num_rx_queue_overflow);
+	// 	// PRINT(num_rx_queue_overflow_full_rank);
+	// 	// PRINT(num_rx_queue_processed);
+	// 	// PRINT(slot_full_rank);
+	// 	// PRINT(slot_decoded);
+	// 	// PRINT(slot_off);
 
-		// #undef PRINT
-		// #define PRINT(n)	\
-		// 	ASSERT_CT(sizeof(Gpi_Hybrid_Tick) <= sizeof(long), n);		\
-		// 	printf(#n ": %lu us\n", (unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.n))
+	// 	// #undef PRINT
+	// 	// #define PRINT(n)	\
+	// 	// 	ASSERT_CT(sizeof(Gpi_Hybrid_Tick) <= sizeof(long), n);		\
+	// 	// 	printf(#n ": %lu us\n", (unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.n))
 
-		// PRINT(radio_on_time);
-		// PRINT(low_power_time);
+	// 	// PRINT(radio_on_time);
+	// 	// PRINT(low_power_time);
 
-		// #undef PRINT
-	#if MX_PSEUDO_CONFIG
-	unsigned long avg_energy = ((unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.radio_on_time) * 1e3) / (unsigned long)(((chirp_config.mx_period_time_s * 1000) / 1));
-	#else
-	unsigned long avg_energy = ((unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.radio_on_time) * 1e3) / (unsigned long)(MIXER_PERIOD);
-	printf("E 1:%lu.%03lu \n", avg_energy / 1000, avg_energy % 1000);
-	#endif
+	// 	// #undef PRINT
+	// #if MX_PSEUDO_CONFIG
+	// unsigned long avg_energy = ((unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.radio_on_time) * 1e3) / (unsigned long)(((chirp_config.mx_period_time_s * 1000) / 1));
+	// #else
+	// unsigned long avg_energy = ((unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.radio_on_time) * 1e3) / (unsigned long)(MIXER_PERIOD);
+	// printf("E 1:%lu.%03lu \n", avg_energy / 1000, avg_energy % 1000);
+	// #endif
 
-	#endif
+	// #endif
 
 	#if ENERGEST_CONF_ON
 

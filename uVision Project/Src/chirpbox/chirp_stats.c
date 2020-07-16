@@ -1,0 +1,108 @@
+//**************************************************************************************************
+//**** Includes ************************************************************************************
+#include "mixer_internal.h"
+#include "chirp_internal.h"
+#include "stm32l4xx_hal.h"
+
+#ifdef MX_CONFIG_FILE
+#include STRINGIFY(MX_CONFIG_FILE)
+#endif
+
+//**************************************************************************************************
+//***** Local Defines and Consts *******************************************************************
+#define DEBUG 1
+#if DEBUG
+#include <stdio.h>
+#include <stdlib.h>
+
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+#if MX_FLASH_FILE
+	#include "flash_if.h"
+#endif
+
+//**************************************************************************************************
+//***** Local Typedefs and Class Declarations ******************************************************
+
+
+
+//**************************************************************************************************
+//***** Forward Declarations ***********************************************************************
+
+
+
+//**************************************************************************************************
+//***** Local (Static) Variables *******************************************************************
+
+
+//**************************************************************************************************
+//***** Global Variables ***************************************************************************
+/* As events come in, buffer them completely, and calculate a running sum, count, min, max. */
+/* statistics */
+Chirp_Stats_All chirp_stats_all;
+
+//**************************************************************************************************
+//***** Global Functions ***************************************************************************
+
+void Stats_value(uint8_t stats_type, uint32_t value)
+{
+    Chirp_Stats *chirp_stats_temp;
+    switch (stats_type)
+    {
+    case SLOT_STATS:
+        chirp_stats_temp = &(chirp_stats_all.slot);
+        break;
+    case RX_STATS:
+        chirp_stats_temp = &(chirp_stats_all.rx_on);
+        break;
+    case TX_STATS:
+        chirp_stats_temp = &(chirp_stats_all.tx_on);
+        break;
+    default:
+        break;
+    }
+
+    if (value)
+    {
+        if (!chirp_stats_temp->stats_count)
+        {
+            chirp_stats_temp->stats_min = value;
+            chirp_stats_temp->stats_max = value;
+        }
+        chirp_stats_temp->stats_sum += value;
+        chirp_stats_temp->stats_count ++;
+        chirp_stats_temp->stats_min = (chirp_stats_temp->stats_min <= value)? chirp_stats_temp->stats_min : value;
+        chirp_stats_temp->stats_max = (chirp_stats_temp->stats_max >= value)? chirp_stats_temp->stats_max : value;
+    }
+    else
+    {
+        chirp_stats_temp->stats_none ++;
+    }
+}
+
+void Stats_to_Flash(Mixer_Task task)
+{
+    uint16_t stats_len = 2 * ((sizeof(chirp_stats_all) + sizeof(uint64_t) - 1) / sizeof(uint64_t));
+    uint32_t stats_array[stats_len];
+    assert_reset(sizeof(stats_array) >= sizeof(chirp_stats_all));
+    memset((uint32_t *)stats_array, 0, sizeof(stats_array));
+    memcpy((uint32_t *)stats_array, (uint32_t *)&chirp_stats_all.slot.stats_sum, sizeof(chirp_stats_all));
+    uint8_t k = 0;
+
+    if ((task != MX_ARRANGE) && (task != MX_COLLECT))
+    {
+        FLASH_If_Erase_Pages(0, 255);
+        FLASH_If_Write(USER_FLASH_ADDRESS, (uint32_t *)stats_array, sizeof(stats_array) / sizeof(uint32_t));
+    }
+    else if (task == MX_COLLECT)
+    {
+        uint32_t flash_data = *(__IO uint32_t*)(USER_FLASH_ADDRESS + sizeof(stats_array));
+        if (flash_data == 0xFFFFFFFF)
+        {
+            FLASH_If_Write(USER_FLASH_ADDRESS + sizeof(stats_array), (uint32_t *)stats_array, sizeof(stats_array) / sizeof(uint32_t));
+        }
+    }
+}
