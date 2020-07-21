@@ -582,13 +582,17 @@ void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
 /* slot length is mx_slot_length_in_us microseconds,
 needed slot number is mx_round_length,
 round is last for mx_period_time_us seconds */
-void chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t mx_period_time_us)
+void chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus)
 {
+    uint32_t mx_period_time_us;
     memset(&chirp_config + offsetof(Chirp_Config, mx_slot_length_in_us), 0, offsetof(Chirp_Config, lora_sf) - offsetof(Chirp_Config, mx_slot_length_in_us));
     chirp_config.mx_slot_length_in_us = mx_slot_length_in_us;
-    // chirp_config.mx_slot_length = GPI_TICK_US_TO_HYBRID2(chirp_config.mx_slot_length_in_us);
+    #if MX_LBT_ACCESS
+    chirp_config.mx_slot_length_in_us += chirp_config.lbt_detect_duration_us * CHANNEL_ALTER;
+    #endif
     chirp_config.mx_slot_length = GPI_TICK_US_TO_FAST2(chirp_config.mx_slot_length_in_us);
     chirp_config.mx_round_length = mx_round_length;
+    mx_period_time_us =  chirp_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
     chirp_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
 }
 
@@ -602,6 +606,10 @@ void chirp_mx_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth
     chirp_config.lora_tx_pwr = tx_output_power;
     chirp_config.lora_freq = lora_frequency * 1e3; /* kHz -> Hz */
     gpi_radio_init();
+	#if MX_LBT_ACCESS
+    uint32_t symbol_time_us = SX1276GetSymbolTime(chirp_config.lora_sf, chirp_config.lora_bw);
+    chirp_config.lbt_detect_duration_us = (6 * symbol_time_us >= LBT_DELAY_IN_US) ? 6 * symbol_time_us : LBT_DELAY_IN_US;
+    #endif
 }
 
 /**
@@ -1356,6 +1364,12 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         deadline_dog = (chirp_config.mx_period_time_s + 60 - 1) / DOG_PERIOD + 60 / DOG_PERIOD;
         count_dog = 0;
         printf("dg:%lu\n", deadline_dog);
+        #if MX_LBT_ACCESS
+            lbt_check_time();
+            chirp_isr.state = ISR_MIXER;
+            chirp_config.lbt_channel_primary = (chirp_outl->round - 1) % LBT_CHANNEL_NUM;
+            SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
+        #endif
 		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
 
         /* used in mixer_write, and revalue before mixer round */
@@ -1448,7 +1462,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     PRINTF("next: disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->generation_size * 4 + chirp_outl->num_nodes, ((chirp_outl->packet_time + 100000) * (chirp_outl->generation_size * 4 + chirp_outl->num_nodes)) + 2000000);
+                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->generation_size * 6 + chirp_outl->num_nodes, 2000000);
                     chirp_mx_payload_distribution(chirp_outl->task);
                     chirp_outl->disem_flag = 1;
                 }
@@ -1464,7 +1478,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->num_nodes * 8, ((chirp_outl->packet_time + 100000) * (chirp_outl->num_nodes * 8)) + 500000);
+                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->num_nodes * 8, 1500000);
                     chirp_mx_payload_distribution(MX_COLLECT);
                     chirp_outl->disem_flag = 0;
                     /* in confirm, all nodes sends packets */

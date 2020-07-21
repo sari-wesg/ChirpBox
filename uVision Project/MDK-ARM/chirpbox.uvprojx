@@ -575,6 +575,16 @@
               <FileType>1</FileType>
               <FilePath>..\Src\chirpbox\chirp_gps.c</FilePath>
             </File>
+            <File>
+              <FileName>chirp_stats.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\chirpbox\chirp_stats.c</FilePath>
+            </File>
+            <File>
+              <FileName>chirp_lbt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\chirpbox\chirp_lbt.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

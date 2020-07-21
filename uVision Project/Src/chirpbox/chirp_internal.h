@@ -67,7 +67,7 @@ typedef enum Sniff_Trigger_tag  /* Trigger that jump out of sniff */
 #define LP_TIMER_ISR_NAME LPTIM1_IRQHandler
 
 #define LP_TIMER_CMP_REG (LP_TIMER->CMP)  /* compare interrupt count */
-#define LP_TIMER_CNT_REG (LP_TIMER->CNT)  /* timer2 now count */
+#define LP_TIMER_CNT_REG (LP_TIMER->CNT)  /* lptim1 now count */
 
  /* TIMER3 */
 #define DOG_TIMER htim5.Instance
@@ -252,6 +252,10 @@ void chirp_dio3_isr();
 void Stats_value(uint8_t stats_type, uint32_t value);
 void Stats_to_Flash(Mixer_Task task);
 
+/* LBT */
+uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available);
+uint32_t lbt_update_channel(uint32_t tx_us, uint8_t tx_channel);
+void lbt_check_time();
 //**************************************************************************************************
 /* Topology */
 

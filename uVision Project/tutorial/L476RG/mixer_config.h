@@ -222,4 +222,15 @@ static const uint8_t set_packet[SENSOR_NUM * GROUP_NUM][MAX_GENERATE_LENGTH] = {
 
 #define DOG_PERIOD            	20
 
+#define LBT_CHANNEL_NUM         10
+
+#define LBT_DELAY_IN_US         10000
+#define CHANNEL_ALTER           2
+#define LBT_CCA_TIME            5000
+#define LBT_CCA_STEP            500
+#define LBT_CCA_STEP_NUM        10
+
+#define LBT_TX_TIME_S           3600
+
+
 #endif /* __MIXER_CONFIG_H__ */

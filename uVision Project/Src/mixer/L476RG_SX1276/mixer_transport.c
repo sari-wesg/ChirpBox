@@ -237,6 +237,14 @@ typedef enum Slot_State_tag
 
 } Slot_State;
 
+#if MX_LBT_ACCESS
+typedef enum CCA_State_tag
+{
+	CCA_NONE,
+	CCA_ON,
+	CCA_DONE,
+} CCA_State;
+#endif
 //**************************************************************************************************
 //***** Forward Declarations ***********************************************************************
 
@@ -283,10 +291,6 @@ static struct
 	Gpi_Hybrid_Tick			hybrid_trigger;
 	uint8_t					grid_timer_flag;
 
-	Gpi_Slow_Tick_Native 	event_tick_nominal_slow;
-	Gpi_Slow_Tick_Native 	next_grid_tick_slow;
-	Gpi_Slow_Tick_Native 	next_trigger_tick_slow;
-
 	int32_t					grid_drift;
 	int32_t					grid_drift_cumulative;
 	uint32_t				rx_trigger_offset;
@@ -319,6 +323,19 @@ static struct
 
 #if MX_HEADER_CHECK
 	uint8_t					valid_header;
+#endif
+
+#if MX_LBT_ACCESS
+	int16_t					lbt_sensitivity_in_dbm;
+	uint8_t					lbt_rx_on;
+	uint8_t					lbt_tx_on;
+
+	uint8_t					lbt_channel_seq_no;
+
+	Gpi_Hybrid_Tick			next_grid_tick_last;
+
+	Gpi_Fast_Tick_Native	tx_on_time;
+	uint8_t					tx_now_channel;
 #endif
 } s;
 
@@ -368,13 +385,17 @@ static void mixer_transport_initiate_radio()
 
 	radio.max_propagation_delay = GPI_TICK_US_TO_HYBRID(2);
 
-	radio.packet_air_time = GPI_TICK_US_TO_HYBRID2(payload_air_time + 712);
+	radio.packet_air_time = GPI_TICK_US_TO_HYBRID2(payload_air_time);
 	radio.rx_to_grid_offset = (0 + GPI_TICK_US_TO_HYBRID(37));
 	radio.tx_to_grid_offset = (0 + GPI_TICK_US_TO_HYBRID(130));
 
 	radio.rx_window_increment = 2 * drift_tolerance;
 	#if MX_PSEUDO_CONFIG
-	radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (chirp_config.mx_slot_length - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
+		#if (!MX_LBT_ACCESS)
+			radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (chirp_config.mx_slot_length - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
+		#else
+			radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (GPI_TICK_US_TO_HYBRID(symbol_time)) / 2));
+		#endif
 	#else
 	radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (MX_SLOT_LENGTH - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
 	#endif
@@ -398,6 +419,14 @@ static void mixer_transport_initiate_radio()
 	uint32_t after_header_us = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, chirp_config.lora_cr, 0, chirp_config.lora_plen, HASH_HEADER) - radio.header_time + 2 * symbol_time;
 	// printf("after_header_us:%lu\n", after_header_us);
 	radio.after_header_hybrid = GPI_TICK_US_TO_HYBRID2(after_header_us);
+	#endif
+
+	#if MX_LBT_ACCESS
+		s.lbt_sensitivity_in_dbm = 3 * (chirp_config.lora_bw - 7) - 81;
+		s.lbt_rx_on = 0;
+		s.lbt_tx_on = CCA_NONE;
+
+		s.lbt_channel_seq_no = 0;
 	#endif
 }
 
@@ -425,7 +454,9 @@ static inline void trigger_lowpower_timer(int use_int_lock)
 	if (use_int_lock)
 		ie = gpi_int_lock();
 
-	LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 3;
+	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+	LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 3 + GPI_TICK_US_TO_HYBRID(radio.isr_latency_buffer) / HYBRID_SLOW_RATIO;
+	while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 
 	if (use_int_lock)
 		gpi_int_unlock(ie);
@@ -522,10 +553,7 @@ static void start_grid_timer()
 {
 	Gpi_Hybrid_Reference	r;
 	Gpi_Hybrid_Tick			d, t;
-	// Gpi_Slow_Tick_Native	t_slow;
-	// gpi_led_on(GPI_LED_6);
 	r = gpi_tick_hybrid_reference();
-	// gpi_led_off(GPI_LED_6);
 
 	d = s.next_trigger_tick - r.hybrid_tick;
 	s.hybrid_trigger = s.next_trigger_tick;
@@ -533,26 +561,17 @@ static void start_grid_timer()
 	t = s.next_trigger_tick - GPI_TICK_US_TO_HYBRID(radio.isr_latency_buffer);
 	s.slow_trigger = s.next_trigger_tick;
 
-	// t_slow = s.next_trigger_tick_slow - ((Gpi_Slow_Tick_Native)ISR_LATENCY_SLOW / HYBRID_SLOW_RATIO);
-	// t = r.hybrid_tick + (Gpi_Slow_Tick_Native)(t_slow - LP_TIMER_CNT_REG) * HYBRID_SLOW_RATIO;
 	mask_main_timer();
 	__HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 	mask_slow_timer();
 	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
-	// printf("s8:%lu, %lu\n", s.next_grid_tick - r.hybrid_tick, s.next_grid_tick);
-
-
 	// if we are late
 	s.grid_timer_flag = 0;
 	// note: signed comparison is important
-	// if (gpi_tick_compare_hybrid(r.hybrid_tick, t) >= 0)
 	if ((int32_t)(d) < (int32_t)(GPI_TICK_US_TO_HYBRID(1000000 / GPI_SLOW_CLOCK_RATE + 50) + GPI_TICK_US_TO_HYBRID(radio.isr_latency_buffer)))
 	{
-		// printf("s6\n");
 		// trigger grid timer immediately
 		// NOTE: capture register is updated implicitly
-		// mask_main_timer();
-		// __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 		trigger_main_timer(0);
 		unmask_main_timer(0);
 
@@ -572,13 +591,11 @@ static void start_grid_timer()
 		if (d > 0xF000ul * HYBRID_SLOW_RATIO)
 			d = r.hybrid_tick + 0xE000ul * HYBRID_SLOW_RATIO;
 		else d = s.next_trigger_tick - radio.max_tb_interval / 2;
-
+		__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
 		LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + (d - r.hybrid_tick) / HYBRID_SLOW_RATIO;
-
-		// LP_TIMER_CMP_REG += MAX_TB_INTERVAL / HYBRID_SLOW_RATIO;
+		while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 
 		s.grid_timer_flag = 1;
-		// printf("s3:%lu, %lu\n", s.next_grid_tick - r.hybrid_tick, s.next_grid_tick);
 		unmask_slow_timer(1);
     }
 
@@ -627,7 +644,6 @@ static inline __attribute__((always_inline)) void enter_resync(int mode)
 	mask_slow_timer();
 	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
 	trigger_main_timer(1);
-	trigger_lowpower_timer(1);
 
 	// if quick (and dirty): don't update s.next_grid_tick to save time
 	// ATTENTION: this expects s.next_grid_tick to be initialized and causes the first RESYNC timeout
@@ -646,13 +662,11 @@ static inline __attribute__((always_inline)) void enter_resync(int mode)
 			GPI_TICK_US_TO_HYBRID(20) +
 			GPI_TICK_US_TO_HYBRID(radio.isr_latency_buffer) +
 			radio.tx_to_grid_offset;
-		// s.next_grid_tick_slow = LP_TIMER_CMP_REG + (uint16_t)((uint32_t)(ISR_LATENCY_SLOW + TX_TO_GRID_OFFSET) / (uint32_t)HYBRID_SLOW_RATIO);
 
 		// add some time buffer covering the remaining execution time from here until interrupt
 		// gets unlocked
 		// ATTENTION: don't do that before calling gpi_tick_fast_to_hybrid() because then
 		// gpi_tick_fast_to_hybrid() would work on a future value.
-		// MAIN_TIMER_CC_REG += GPI_TICK_US_TO_FAST(20);
 		mask_main_timer();
 		__HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 		MAIN_TIMER_CC_REG += GPI_TICK_US_TO_FAST(20);
@@ -673,12 +687,9 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 	ENERGEST_ON(ENERGEST_TYPE_IRQ);
 #endif
 #if defined( USE_MODEM_LORA )
-	// Gpi_Slow_Tick_Native dio0_event_tick_slow = LP_TIMER_CNT_REG;
-	// Gpi_Hybrid_Tick dio0_event_tick_slow = gpi_tick_hybrid();
 	Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
 
 	Gpi_Hybrid_Tick dio0_event_tick_slow = r.hybrid_tick;
-	// printf("s4:%lu, %lu\n", s.next_grid_tick - r.hybrid_tick, s.next_grid_tick);
 
     // if Rx
 	// NOTE: s.slot_state = RX_RUNNING or RESYNC
@@ -805,7 +816,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				// update slot timing control values
 				{
 					// Gpi_Hybrid_Tick	event_tick;
-					// Gpi_Slow_Tick_Native event_tick_slow = dio0_event_tick_slow;
 					// Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow;
 					/* see "Longshot", ipsn 2019 */
 					uint32_t rx_processing_time[6] = {682, 1372, 2850, 5970, 12800, 27000};
@@ -817,8 +827,10 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					// if RESYNC requested: realign slot grid based on capture value
 					if (RESYNC == s.slot_state)
 					{
-						// s.next_grid_tick_slow = event_tick_slow - (Gpi_Slow_Tick_Native)(PACKET_AIR_TIME / HYBRID_SLOW_RATIO) + (Gpi_Slow_Tick_Native)MX_SLOT_LENGTH_SLOW;
-						// s.next_grid_tick = MAIN_TIMER_CNT_REG + (Gpi_Slow_Tick_Native)(s.next_grid_tick_slow - LP_TIMER_CNT_REG) * HYBRID_SLOW_RATIO;
+						#if MX_LBT_ACCESS
+							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
+						#endif
+
 						#if MX_PSEUDO_CONFIG
 						s.next_grid_tick = event_tick - radio.packet_air_time + chirp_config.mx_slot_length;
 						#else
@@ -848,6 +860,11 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					// else use phase-lock control loop to track grid
 					else
 					{
+						#if MX_LBT_ACCESS
+							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US + s.lbt_channel_seq_no * chirp_config.lbt_detect_duration_us);
+							s.lbt_channel_seq_no = 0;
+						#endif
+
 						int32_t	gd;
 
 						if (mx.slot_number != packet->slot_number)
@@ -866,8 +883,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 						// compute SFD event deviation
 						// NOTE: result is bounded by Rx window size
-						// event_tick_slow = (int16_t)event_tick_slow - (int16_t)s.event_tick_nominal_slow;
-						// event_tick = (int16_t)(event_tick_slow) * HYBRID_SLOW_RATIO;
 						event_tick -= s.event_tick_nominal;
 
 						// keep Rx window in this range (with some margin)
@@ -880,7 +895,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 						// restore nominal grid tick (i.e. remove previously added control value)
 						// TODO:
-						// s.next_grid_tick_slow -= (int16_t)((s.grid_drift) / (int32_t)(HYBRID_SLOW_RATIO) / (int32_t)(GRID_DRIFT_FILTER_DIV * GRID_TICK_UPDATE_DIV));
 						s.next_grid_tick -= s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
 
 						// update grid drift:
@@ -890,7 +904,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 						gd = s.grid_drift;
 						gd += (int32_t)event_tick;
 						s.grid_drift = gd;
-						// printf("gd:%ld, %lu\n", gd, 5 * GRID_DRIFT_MAX);
+						// printf("gd:%ld, %lu\n", gd, 500 * radio.grid_drift_max);
 
 						// if drift exceeds limit: start RESYNC
 						// NOTE: saturation could also help since obviously we are still able to receive
@@ -913,8 +927,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 							// update grid tick
 							// NOTE: this realizes the proportional term of a PID controller
 							// TODO:
-							// s.next_grid_tick_slow += (int16_t)((s.grid_drift) / (int32_t)(HYBRID_SLOW_RATIO) / (int32_t)(GRID_DRIFT_FILTER_DIV * GRID_TICK_UPDATE_DIV));
-							// s.next_grid_tick = MAIN_TIMER_CNT_REG + (Gpi_Slow_Tick_Native)((s.next_grid_tick_slow - LP_TIMER_CNT_REG) * HYBRID_SLOW_RATIO);
 							s.next_grid_tick += s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
 
 							// keep cumulative grid drift
@@ -974,11 +986,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 							#endif
 						}
 					#endif
-
-					// s.next_trigger_tick = s.next_grid_tick -
-					// 	((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
-					// s.next_trigger_tick_slow = s.next_grid_tick_slow -
-					// 	(Gpi_Slow_Tick_Native)(((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset)) / HYBRID_SLOW_RATIO;
 
 					s.next_trigger_tick = s.next_grid_tick -
 						((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
@@ -1082,7 +1089,10 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		#if ENERGEST_CONF_ON
 			ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
 		#endif
-
+		#if MX_LBT_ACCESS
+			s.tx_on_time = gpi_tick_fast_native() - s.tx_on_time;
+			lbt_update_channel((uint32_t)gpi_tick_hybrid_to_us(s.tx_on_time), s.tx_now_channel);
+		#endif
 		GPI_TRACE_MSG_FAST(TRACE_INFO, "Tx done");
 	}
 
@@ -1151,7 +1161,10 @@ void LED_ISR(mixer_dio3_isr, LED_DIO3_ISR)
 						// s.slow_trigger = r.hybrid_tick + GPI_TICK_US_TO_HYBRID2(AFTER_HEADER_TIME);
 						s.slow_trigger = r.hybrid_tick + radio.packet_air_time;
 						MAIN_TIMER_CC_REG = r.fast_capture + (s.slow_trigger - r.hybrid_tick) * FAST_HYBRID_RATIO;
-						LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 5 * radio.max_tb_interval;
+						__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+						LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 5 * radio.max_tb_interval / HYBRID_SLOW_RATIO;
+						while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
+
 						s.grid_timer_flag = 0;
 
 						#if MX_HEADER_CHECK
@@ -1190,7 +1203,6 @@ void LED_ISR(LP_TIMER_ISR_NAME, GPI_LED_5)
 	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
 	if (s.grid_timer_flag)
 	{
-		// printf("s7:%lu, %lu\n", s.next_grid_tick - r.hybrid_tick, s.next_grid_tick);
 		start_grid_timer();
 	}
 	else
@@ -1204,13 +1216,17 @@ void LED_ISR(LP_TIMER_ISR_NAME, GPI_LED_5)
 		if (d > 0xF000ul * HYBRID_SLOW_RATIO)
 		{
 			d = r.hybrid_tick + 0xE000ul * HYBRID_SLOW_RATIO;
+			__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
 			LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + (d - r.hybrid_tick) / HYBRID_SLOW_RATIO;
+			while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 			unmask_slow_timer(0);
 		}
 		else if (d > radio.max_tb_interval)
 		{
 			d = s.slow_trigger - radio.max_tb_interval / 2;
+			__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
 			LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + (d - r.hybrid_tick) / HYBRID_SLOW_RATIO;
+			while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 			unmask_slow_timer(0);
 		}
 	}
@@ -1271,6 +1287,59 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 
 	ASSERT_CT(~(MX_PREAMBLE_UPDATE & MX_LBT_AFA), inconsistent_program);
 
+	#if MX_LBT_ACCESS
+	if (s.lbt_rx_on)
+	{
+		/* Bit 0: Signal Detected, see SX1276/77/78/79 - 137 MHz to 1020 MHz, Rev. 5, Page 46 */
+		if (SX1276Read( REG_LR_MODEMSTAT ) & RFLR_MODEMSTAT_MODEM_STATUS_SIGNAL_MASK)
+		{
+			s.lbt_rx_on = 0;
+			/* waiting for a valid header time */
+			MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(radio.header_time) + 4 * radio.grid_drift_offset * FAST_HYBRID_RATIO;
+			unmask_main_timer(1);
+
+#if	ENERGEST_CONF_ON
+	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+#endif
+			GPI_TRACE_RETURN_FAST();
+		}
+		else
+		{
+			s.lbt_channel_seq_no ++;
+			SX1276SetOpMode(RFLR_OPMODE_SLEEP);
+			if (s.lbt_channel_seq_no < CHANNEL_ALTER)
+			{
+				Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
+				/* hop to another channel, random seed is related to round seq, slot number and channel seq */
+				uint8_t now_channel = lbt_pesudo_channel(chirp_config.lbt_channel_total, chirp_config.lbt_channel_primary, mx.slot_number + chirp_config.lbt_channel_primary + s.lbt_channel_seq_no, chirp_config.lbt_channel_mask);
+
+				SX1276SetChannel(chirp_config.lora_freq + now_channel * CHANNEL_STEP);
+				SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+				/* waiting for a valid header time */
+				Gpi_Hybrid_Tick t = s.next_grid_tick_last + s.rx_trigger_offset - radio.rx_to_grid_offset + GPI_TICK_US_TO_FAST2(chirp_config.lbt_detect_duration_us * (s.lbt_channel_seq_no + 1) - radio.isr_latency_buffer + LBT_DELAY_IN_US);
+				MAIN_TIMER_CC_REG = r.fast_capture + (t - r.hybrid_tick) * FAST_HYBRID_RATIO;
+
+				unmask_main_timer(1);
+#if	ENERGEST_CONF_ON
+	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+#endif
+				GPI_TRACE_RETURN_FAST();
+			}
+			else
+			{
+				s.lbt_rx_on = 0;
+				s.lbt_channel_seq_no = 0;
+				gpi_led_off(LED_RX);
+				#if ENERGEST_CONF_ON
+					ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+				#endif
+				/* no packets in this slot */
+				SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
+			}
+		}
+	}
+	#endif
+
 	#if MX_HEADER_CHECK
 	if (s.valid_header)
 	{
@@ -1285,11 +1354,13 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 			Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
 			s.slow_trigger = r.hybrid_tick + radio.packet_air_time;
 			MAIN_TIMER_CC_REG = r.fast_capture + (s.slow_trigger - r.hybrid_tick) * FAST_HYBRID_RATIO;
-			LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 5 * radio.max_tb_interval;
+			__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+			LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 5 * radio.max_tb_interval / HYBRID_SLOW_RATIO;
 			s.grid_timer_flag = 0;
 			__HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
 			unmask_main_timer(1);
+			while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 			unmask_slow_timer(1);
 
 #if	ENERGEST_CONF_ON
@@ -1554,9 +1625,6 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 			s.next_trigger_tick = s.next_grid_tick -
 				((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
 
-			// s.next_trigger_tick_slow = s.next_grid_tick_slow -
-			// 	(Gpi_Slow_Tick_Native)((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset) / HYBRID_SLOW_RATIO;
-
 			// handover to grid timer
 			// NOTE: this is done automatically while RESYNC is running
 			// (more precisely: if RESYNC was active before entering current function)
@@ -1684,6 +1752,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		if (RESYNC != s.slot_state)
 		{
+			#if MX_LBT_ACCESS
+			trigger_tick += GPI_TICK_US_TO_FAST2(LBT_DELAY_IN_US);
+			#endif
 			// wait until trigger time has been reached
 			PROFILE_ISR();
 
@@ -1751,11 +1822,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		// SX1276Write( REG_LR_FIFOADDRPTR, 0 );
 
 		mx.rx_queue_num_writing = mx.rx_queue_num_written + 1;
-		// s.event_tick_nominal_slow = s.next_grid_tick_slow + (Gpi_Slow_Tick_Native)((PACKET_AIR_TIME) / HYBRID_SLOW_RATIO);
 		s.event_tick_nominal = s.next_grid_tick + radio.packet_air_time;
-		// GPI_TICK_US_TO_HYBRID2(42734‬)
-		// GPI_TICK_MS_TO_HYBRID(42734‬)
-		// printf("l2:%lu\n", s.event_tick_nominal);
 
 		#if MX_LBT_AFA
 			s.event_tick_nominal += (CHANNEL_DURATION * s.rx_time + CHANNEL_DURATION - BITMAP_TIME_SLOW) * HYBRID_SLOW_RATIO;
@@ -1775,15 +1842,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// -> grid timer) and hence current time might be far away from s.next_grid_tick. With
 			// s.next_grid_tick += MX_SLOT_LENGTH_RESYNC, s.next_grid_tick could end up in the far
 			// future if it gets incremented frequently.
-			// s.next_grid_tick = r.hybrid_tick + MX_SLOT_LENGTH_RESYNC;
-
-			// s.next_trigger_tick = s.next_grid_tick - RX_TO_GRID_OFFSET;
-			// s.next_trigger_tick_slow = s.next_grid_tick_slow - ((Gpi_Slow_Tick_Native)RX_TO_GRID_OFFSET / HYBRID_SLOW_RATIO);
-
-			// MAIN_TIMER_CC_REG = s.next_trigger_tick - ISR_LATENCY_SLOW;
-			// LP_TIMER_CMP_REG = s.next_trigger_tick_slow - ((Gpi_Slow_Tick_Native)ISR_LATENCY_SLOW / HYBRID_SLOW_RATIO);
-
-			// unmask_main_timer(1);
 			#if MX_PSEUDO_CONFIG
 			s.next_grid_tick = r.hybrid_tick + ((chirp_config.mx_slot_length * 5) / 2);
 			#else
@@ -1796,18 +1854,37 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		// else start timeout timer
 		else
 		{
-			// MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + s.rx_trigger_offset - RX_TO_GRID_OFFSET +
-			// GPI_TICK_US_TO_HYBRID2(HEADER_TIME + 712) + 1 * GRID_DRIFT_OFFSET;
 			Gpi_Hybrid_Tick		t;
-			t = s.next_grid_tick + s.rx_trigger_offset - radio.rx_to_grid_offset +
-			GPI_TICK_US_TO_HYBRID2(radio.header_time) + 4 * radio.grid_drift_offset;
-			MAIN_TIMER_CC_REG = r.fast_capture + (t - r.hybrid_tick) * FAST_HYBRID_RATIO;
+			#if MX_LBT_ACCESS
+				s.lbt_rx_on = 1;
+				s.lbt_channel_seq_no = 0;
+				SX1276Write( REG_LR_MODEMSTAT, SX1276Read( REG_LR_MODEMSTAT ) & ~ RFLR_MODEMSTAT_MODEM_STATUS_SIGNAL_MASK);
+				t = s.next_grid_tick + s.rx_trigger_offset - radio.rx_to_grid_offset +
+				GPI_TICK_US_TO_HYBRID2(chirp_config.lbt_detect_duration_us) * CHANNEL_ALTER + 4 * radio.grid_drift_offset + GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
+			#else
+				/* waiting for a valid header time */
+				t = s.next_grid_tick + s.rx_trigger_offset - radio.rx_to_grid_offset +
+				GPI_TICK_US_TO_HYBRID2(radio.header_time) + 4 * radio.grid_drift_offset;
+			#endif
+
 			s.slow_trigger = t;
-			LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 5 * radio.max_tb_interval;
+
+			#if MX_LBT_ACCESS
+				/* reserve the current slot tick */
+				s.next_grid_tick_last = s.next_grid_tick;
+				t = s.next_grid_tick_last + s.rx_trigger_offset - radio.rx_to_grid_offset +
+				GPI_TICK_US_TO_HYBRID2(chirp_config.lbt_detect_duration_us - radio.isr_latency_buffer + LBT_DELAY_IN_US);
+			#endif
+
+			MAIN_TIMER_CC_REG = r.fast_capture + (t - r.hybrid_tick) * FAST_HYBRID_RATIO;
+
+			__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+			LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 10 * radio.max_tb_interval / HYBRID_SLOW_RATIO;
 			s.grid_timer_flag = 0;
 			__HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
 			unmask_main_timer(1);
+			while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 			unmask_slow_timer(1);
 			s.slot_state = RX_RUNNING;
 
@@ -1930,6 +2007,139 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			}
 		#endif
 
+		#if MX_LBT_ACCESS
+			Gpi_Hybrid_Reference r_lbt;
+			Gpi_Hybrid_Tick		 t_lbt;
+			uint32_t			 t_ps_us;
+			RadioLoRaPacketHandler_t read_value;
+
+			lbt_cca_:
+
+			if (s.lbt_tx_on == CCA_NONE)
+			{
+				t_ps_us = (mixer_rand() % LBT_CCA_STEP_NUM) * LBT_CCA_STEP;
+				if (!s.lbt_channel_seq_no)
+				{
+					s.next_grid_tick_last = s.next_grid_tick;
+					s.tx_now_channel = chirp_config.lbt_channel_primary;
+
+					SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
+
+					t_ps_us = 0;
+					trigger_tick = MAIN_TIMER_CC_REG + GPI_TICK_US_TO_FAST(radio.isr_latency_buffer);
+					PROFILE_ISR();
+					while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), trigger_tick) < 0);
+				}
+
+				/* channel is full, skip that channel */
+				if (!(lbt_update_channel(0, s.tx_now_channel) & (1 << s.tx_now_channel)))
+				{
+					s.lbt_channel_seq_no ++;
+
+					s.tx_now_channel = lbt_pesudo_channel(chirp_config.lbt_channel_total, chirp_config.lbt_channel_primary, mx.slot_number + 1 + chirp_config.lbt_channel_primary + s.lbt_channel_seq_no, chirp_config.lbt_channel_mask);
+					SX1276SetChannel(chirp_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
+
+					if (s.lbt_channel_seq_no < CHANNEL_ALTER)
+					{
+						s.lbt_tx_on = CCA_NONE;
+						MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(chirp_config.lbt_detect_duration_us - radio.isr_latency_buffer);
+						unmask_main_timer(1);
+
+						#if	ENERGEST_CONF_ON
+						ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+						#endif
+						GPI_TRACE_RETURN_FAST();
+					}
+					else
+					{
+						goto tx_failed_;
+					}
+				}
+
+				SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+				gpi_led_on(LED_RX);
+
+				#if ENERGEST_CONF_ON
+					ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+				#endif
+
+				s.lbt_tx_on = CCA_ON;
+				MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(LBT_CCA_TIME + t_ps_us - radio.isr_latency_buffer);
+
+				unmask_main_timer(1);
+
+#if	ENERGEST_CONF_ON
+	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+#endif
+				GPI_TRACE_RETURN_FAST();
+			}
+			else if (s.lbt_tx_on == CCA_ON)
+			{
+				s.lbt_tx_on = CCA_NONE;
+				SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+				gpi_led_off(LED_RX);
+				#if ENERGEST_CONF_ON
+					ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+				#endif
+				s.lbt_channel_seq_no ++;
+				read_value = gpi_read_rssi(0);
+				if (read_value.RssiValue > s.lbt_sensitivity_in_dbm)
+				{
+					if (s.lbt_channel_seq_no < CHANNEL_ALTER)
+					{
+						s.tx_now_channel = lbt_pesudo_channel(chirp_config.lbt_channel_total, chirp_config.lbt_channel_primary, mx.slot_number + 1 + chirp_config.lbt_channel_primary + s.lbt_channel_seq_no, chirp_config.lbt_channel_mask);
+
+						SX1276SetChannel(chirp_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
+
+						t_lbt = s.next_grid_tick_last + s.tx_trigger_offset - radio.tx_to_grid_offset + GPI_TICK_US_TO_HYBRID2(chirp_config.lbt_detect_duration_us * s.lbt_channel_seq_no - radio.isr_latency_buffer);
+						r_lbt = gpi_tick_hybrid_reference();
+
+						MAIN_TIMER_CC_REG = r_lbt.fast_capture + (t_lbt - r_lbt.hybrid_tick) * FAST_HYBRID_RATIO;
+
+						if (gpi_tick_compare_fast_native(MAIN_TIMER_CC_REG, MAIN_TIMER_CNT_REG) <= 0)
+						{
+							goto lbt_cca_;
+						}
+
+						unmask_main_timer(1);
+
+#if	ENERGEST_CONF_ON
+	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+#endif
+						GPI_TRACE_RETURN_FAST();
+					}
+					else
+					{
+						/* cannot send packet */
+						goto tx_failed_;
+					}
+				}
+				else
+				{
+					s.lbt_tx_on = CCA_DONE;
+					t_lbt = s.next_grid_tick_last + s.tx_trigger_offset - radio.tx_to_grid_offset + GPI_TICK_US_TO_HYBRID2((s.lbt_channel_seq_no - 1) * chirp_config.lbt_detect_duration_us + LBT_DELAY_IN_US - radio.isr_latency_buffer);
+					s.lbt_channel_seq_no = 0;
+					r_lbt = gpi_tick_hybrid_reference();
+
+					MAIN_TIMER_CC_REG = r_lbt.fast_capture + (t_lbt - r_lbt.hybrid_tick) * FAST_HYBRID_RATIO;
+
+					if (gpi_tick_compare_fast_native(MAIN_TIMER_CC_REG, MAIN_TIMER_CNT_REG) > 0)
+					{
+						unmask_main_timer(1);
+
+#if	ENERGEST_CONF_ON
+	ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+#endif
+						GPI_TRACE_RETURN_FAST();
+					}
+				}
+			}
+			else
+			{
+				s.lbt_tx_on = CCA_NONE;
+				s.lbt_channel_seq_no = 0;
+			}
+		#endif
 		// compute exact trigger time
 		// if(!gpi_tick_compare_slow_native(LP_TIMER_CNT_REG, LP_TIMER_CMP_REG))
 		// 	trigger_tick = MAIN_TIMER_CNT_REG + (Gpi_Slow_Tick_Native)(LP_TIMER_CMP_REG - LP_TIMER_CNT_REG + (Gpi_Slow_Tick_Native)ISR_LATENCY_SLOW / HYBRID_SLOW_RATIO) * HYBRID_SLOW_RATIO;
@@ -1989,6 +2199,10 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		#if ENERGEST_CONF_ON
 			ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
+		#endif
+
+		#if MX_LBT_ACCESS
+			s.tx_on_time = gpi_tick_fast_native();
 		#endif
 
 		// finalize header
@@ -2466,6 +2680,11 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		// if zero packet: abort transmission
 		if (NULL == p)
 		{
+			#if MX_LBT_ACCESS
+				tx_failed_:
+				s.lbt_tx_on = CCA_NONE;
+				s.lbt_channel_seq_no = 0;
+			#endif
 			PRINTF("NULL == p\n");
 
 			// turn radio off
@@ -2481,6 +2700,11 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 			#if ENERGEST_CONF_ON
 				ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
+			#endif
+
+			#if MX_LBT_ACCESS
+				s.tx_on_time = gpi_tick_fast_native() - s.tx_on_time;
+				lbt_update_channel((uint32_t)gpi_tick_hybrid_to_us(s.tx_on_time), s.tx_now_channel);
 			#endif
 
 			GPI_TRACE_MSG_FAST(TRACE_INFO, "sideload produced zero-packet -> Tx aborted");
@@ -2576,16 +2800,18 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		#endif
 		s.hybrid_trigger = s.next_grid_tick;
 
-		// s.next_trigger_tick_slow = s.next_grid_tick_slow -
-		// 	(Gpi_Slow_Tick_Native)((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset) / HYBRID_SLOW_RATIO;
-
 		s.next_trigger_tick = s.next_grid_tick -
 			((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
 		Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
-		// printf("s1:%lu, %lu\n", s.next_grid_tick - r.hybrid_tick, s.next_grid_tick);
 
 		if (TX_RUNNING == s.slot_state)
 		{
+
+			#if MX_LBT_ACCESS
+				s.lbt_tx_on = CCA_NONE;
+				s.lbt_channel_seq_no = 0;
+			#endif
+
 			#if MX_LBT_AFA
 				s.tx_guard_flag = 0;
 				s.tx_dead_flag = 0;
@@ -2718,7 +2944,6 @@ int mixer_transport_set_next_slot_task(Slot_Activity next_task)
 
 				s.next_slot_task = next_task;
 				s.next_trigger_tick = s.next_grid_tick - s.tx_trigger_offset;	// also ok for STOP
-				s.next_trigger_tick_slow = s.next_grid_tick_slow - (uint16_t)((uint32_t)s.tx_trigger_offset / (uint32_t)HYBRID_SLOW_RATIO);
 
 				// if IDLE or RESYNC (RESYNC only if next_task == STOP)
 				if (RX_RUNNING != s.slot_state)

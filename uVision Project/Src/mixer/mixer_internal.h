@@ -189,6 +189,10 @@
 	#define MX_HEADER_CHECK							1
 #endif
 
+#ifndef MX_LBT_ACCESS
+	#define MX_LBT_ACCESS							1
+#endif
+
 #if (!MX_PSEUDO_CONFIG)
 // internal settings
 #define MX_SLOT_LENGTH_RESYNC						((MX_SLOT_LENGTH * 5) / 2)
@@ -321,8 +325,7 @@
 #elif GPI_ARCH_IS_BOARD(NUCLEOL476RG)
 
 	#define LED_GRID_TIMER_ISR	GPI_LED_1
-	#define LED_TIMEOUT_ISR		GPI_LED_NONE
-	// #define LED_TIMEOUT_ISR		GPI_LED_2
+	#define LED_TIMEOUT_ISR		GPI_LED_2
 	#define LED_DIO0_ISR		GPI_LED_3
 	#define LED_DIO3_ISR		GPI_LED_3
 	#define LED_RX				GPI_LED_4
@@ -464,6 +467,19 @@ typedef struct __attribute__((packed)) Chirp_Config_tag
 	uint8_t		update_slot;
 
 	uint32_t	packet_hash;
+
+	#if MX_LBT_ACCESS
+		uint8_t		lbt_channel_primary;
+		uint8_t 	lbt_channel_total;
+		uint32_t 	lbt_channel_mask;
+
+		Gpi_Fast_Tick_Native lbt_detect_duration_us;
+
+		uint32_t 	lbt_channel_available;
+		Chirp_Time	lbt_init_time;
+		uint32_t 	lbt_channel_time_us[LBT_CHANNEL_NUM];
+		uint32_t 	lbt_channel_time_stats_us[LBT_CHANNEL_NUM];
+	#endif
 } Chirp_Config;
 
 #if INFO_VECTOR_QUEUE
@@ -1213,7 +1229,7 @@ void 			wrap_chunk(uint8_t *p);
 		void 		uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 	#if MX_PSEUDO_CONFIG
 		void 		chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size);
-		void 		chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t mx_period_time_us);
+		void 		chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
 		void 		chirp_mx_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency);
 		void 		chirp_mx_payload_distribution(Mixer_Task mx_task);
 

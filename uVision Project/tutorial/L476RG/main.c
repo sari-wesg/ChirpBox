@@ -111,7 +111,7 @@ static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x1C
 // static const uint32_t nodes[256] = {0x4B0023, 0x1C0040};
 
 #endif
-const uint8_t VERSION_MAJOR = 0x87, VERSION_NODE = 0xcf;
+const uint8_t VERSION_MAJOR = 0x25, VERSION_NODE = 0xdd;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -173,30 +173,6 @@ static uint8_t hardware_init()
 
 	menu_bank();
 
-#if GPS_DATA
-	DS3231_ClearAlarm1_Time();
-	GPS_Init();
-	GPS_Waiting_PPS(3);
-	Chirp_Time gps_time;
-    memset(&gps_time, 0, sizeof(gps_time));
-	while(!gps_time.chirp_year)
-	{
-		gps_time = GPS_Get_Time();
-	}
-
-	time_t rtc_diff = 0x05;
-	uint8_t count = 0;
-	/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
-	while((rtc_diff < 0) || (rtc_diff >= 0x05))
-	{
-		count++;
-		assert_reset(count < 10);
-		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
-		DS3231_GetTime();
-		Chirp_Time RTC_Time = DS3231_ShowTime();
-		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
-	}
-#endif
 	gpi_int_enable();
 
 // enable SysTick timer if needed
@@ -252,6 +228,31 @@ static uint8_t hardware_init()
 	// init RNG with randomized seed
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
 
+#if GPS_DATA
+	DS3231_ClearAlarm1_Time();
+	GPS_Init();
+	GPS_Waiting_PPS(3);
+	Chirp_Time gps_time;
+    memset(&gps_time, 0, sizeof(gps_time));
+	while(!gps_time.chirp_year)
+	{
+		gps_time = GPS_Get_Time();
+	}
+
+	time_t rtc_diff = 0x05;
+	uint8_t count = 0;
+	/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
+	while((rtc_diff < 0) || (rtc_diff >= 0x05))
+	{
+		count++;
+		assert_reset(count < 10);
+		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
+		DS3231_GetTime();
+		Chirp_Time RTC_Time = DS3231_ShowTime();
+		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
+	}
+#endif
+
 	return node_id;
 }
 
@@ -295,7 +296,7 @@ int main(void)
 		chirp_mx_radio_config(7, 7, 1, 8, 14, 470000);
 		uint32_t packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size);
 		printf("packet_time:%lu\n", packet_time);
-		chirp_mx_slot_config(packet_time + 100000, MX_NUM_NODES_CONF * 6, ((packet_time + 100000) * (MX_NUM_NODES_CONF * 6)) + 500000);
+		chirp_mx_slot_config(packet_time + 100000, MX_NUM_NODES_CONF * 6, 1500000);
 		chirp_mx_payload_distribution(MX_COLLECT);
 	#endif
 
