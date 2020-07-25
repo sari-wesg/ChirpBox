@@ -32,6 +32,7 @@
 #endif
 
 extern uint8_t VERSION_MAJOR, VERSION_NODE;
+extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -838,6 +839,10 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         {
             data[k++] = VERSION_MAJOR;
             data[k++] = VERSION_NODE;
+            memcpy(file_data, data, DATA_HEADER_LENGTH);
+            file_data[DATA_HEADER_LENGTH] = TOS_NODE_ID >> 16;
+            file_data[DATA_HEADER_LENGTH + 1] = TOS_NODE_ID >> 8;
+            file_data[DATA_HEADER_LENGTH + 2] = TOS_NODE_ID;
             break;
         }
         case MX_ARRANGE:
@@ -918,7 +923,8 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 }
                 case CHIRP_VERSION:
                 {
-                    mixer_write(i, data, MIN(sizeof(data), chirp_outl->payload_len));
+                    mixer_write(i, file_data, chirp_outl->payload_len);
+                    // mixer_write(i, data, MIN(sizeof(data), chirp_outl->payload_len));
                     break;
                 }
                 case MX_ARRANGE:
@@ -1224,6 +1230,12 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                     }
                                 }
                             }
+                            break;
+                        }
+                        case CHIRP_VERSION:
+                        {
+                            memcpy(data, p + DATA_HEADER_LENGTH, chirp_outl->payload_len - DATA_HEADER_LENGTH);
+                            PRINT_PACKET(data, chirp_outl->payload_len - DATA_HEADER_LENGTH, 0);
                             break;
                         }
                         case MX_ARRANGE:

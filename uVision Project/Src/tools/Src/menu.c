@@ -1600,7 +1600,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = chirp_outl.num_nodes;
-				chirp_outl.payload_len = DATA_HEADER_LENGTH;
+				chirp_outl.payload_len = DATA_HEADER_LENGTH + 3;
 				chirp_outl.round_setup = 1;
 
 				uint16_t file_size = (((chirp_outl.num_nodes + 1) / 2) * 2) * sizeof(uint32_t);
