@@ -1278,7 +1278,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_mx_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
 		chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL);
     chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-    chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 6, 1500000);
+    chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 4, 1500000);
 		chirp_mx_payload_distribution(chirp_outl.task);
 
     if (!node_id)
