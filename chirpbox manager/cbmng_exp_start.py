@@ -103,7 +103,7 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
-def start(com_port, flash_protection, version_hash, command_sf):
+def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		# time_now = datetime.datetime.now()
@@ -135,14 +135,14 @@ def start(com_port, flash_protection, version_hash, command_sf):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 		# ser.write(str(task_index).encode()) # send commands
-			 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1))
+			 		slot_num = 100
+					# ser.write(str(task_index).encode()) # send commands
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 70)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 100)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -198,7 +198,8 @@ def is_running():
 		else:
 			return False
 
-def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port):
+def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_num):
+	bitmap = "0"
 	time_now = datetime.datetime.now()
 	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -226,8 +227,7 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port):
 			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(12))
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -260,7 +260,8 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port):
 
 	return True
 
-def assign_sniffer(command_sf, com_port):
+def assign_sniffer(command_sf, com_port, slot_num):
+	bitmap = "0"
 	if(expmethapp.experiment_methodology(exp_meth) == True):
 		expmethapp.read_configuration()
 		time_now = datetime.datetime.now()
@@ -289,8 +290,7 @@ def assign_sniffer(command_sf, com_port):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 	 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -334,7 +334,8 @@ def assign_sniffer(command_sf, com_port):
 
 	return True
 
-def collect_data(com_port, command_len, command_sf):
+def collect_data(com_port, command_len, command_sf, slot_num):
+	bitmap = "0"
 	if(expmethapp.experiment_methodology(exp_meth) == True):
 		expmethapp.read_configuration()
 		start_addr = expmethapp.start_address
@@ -368,7 +369,7 @@ def collect_data(com_port, command_len, command_sf):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		# print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -412,7 +413,8 @@ def collect_data(com_port, command_len, command_sf):
 	return True
 
 
-def collect_topology(com_port, using_pos, command_sf, command_len):
+def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
+	bitmap = "0"
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
@@ -437,8 +439,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len):
 				 	if (line == "Input initiator task:"):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 		# print(task_index)
-				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 	 				if (line == "output from initiator (topology):"):
@@ -457,6 +458,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len):
 	 	return False
 
 	print("Results of " + filename + " have been collected!" )
+	# filename = "Chirpbox_connectivity_sf7ch440000tp14(20200727172250329366).txt"
 	results = statistics_process.topo_parser.topo_parser(filename, using_pos)
 	# max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
 	print("Max_hop: " + str(results[0]))
@@ -468,7 +470,8 @@ def collect_topology(com_port, using_pos, command_sf, command_len):
 	return True
 
 
-def collect_version(com_port, command_sf):
+def collect_version(com_port, command_sf, slot_num):
+	bitmap = "0"
 	filename = "version.txt"
 
 	# config and open the serial port
@@ -488,8 +491,8 @@ def collect_version(com_port, command_sf):
 				if line:
 				 	print (line)
 				 	if (line == "Input initiator task:"):
-				 		# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1))
+				 		print("Input")
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 				 		# ser.write(str(task_index).encode()) # send commands
@@ -512,7 +515,7 @@ def collect_version(com_port, command_sf):
 	return True
 
 
-def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size):
+def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num):
 	BANK2_SIZE = 512 * 1024
 
 	try:
@@ -581,9 +584,8 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 			if line:
 			 	print(line)
 			 	if (line == "Input initiator task:"):
-				 	# task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(expconfapp.command_sf))+ ',{0:03}'.format(int(command_len))
 				 	# TODO:
-				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf)) + ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(command_size))
+				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf)) + ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(command_size)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		ser.write(str(task).encode()) # send commands
 			 		# print(task)
 			 	if (line == "Waiting for parameter(s)..."):
