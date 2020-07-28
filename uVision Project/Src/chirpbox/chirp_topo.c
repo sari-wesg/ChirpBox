@@ -223,8 +223,15 @@ void topo_dio0_isr()
             #if DEBUG
                 PRINTF("RX: %d\n", rx_receive_num);
             #endif
-            SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
         }
+        else
+        {
+			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
+            PRINTF("RX wrong: %d\n", rx_receive_num);
+        }
+        SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+        SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+
         gpi_led_off(GPI_LED_1);
     }
     else if (topology_state == TX_RUNNING)

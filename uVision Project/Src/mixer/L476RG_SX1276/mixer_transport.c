@@ -733,6 +733,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		#endif
 		)
 		{
+			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
 			// printf("wrong:%lu, %lu, %lu\n", packet_len, irqFlags, chirp_config.phy_payload_size);
 			GPI_TRACE_MSG_FAST(TRACE_INFO, "broken packet received, LEN: %d, CRC:error", (int)(packet_len));
 
