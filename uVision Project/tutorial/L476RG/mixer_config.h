@@ -232,5 +232,7 @@ static const uint8_t set_packet[SENSOR_NUM * GROUP_NUM][MAX_GENERATE_LENGTH] = {
 
 #define LBT_TX_TIME_S           3600
 
+#define DISSEM_MAX              32
+#define DISSEM_BITMAP_32        ((DISSEM_MAX + 32 - 1) / 32)
 
 #endif /* __MIXER_CONFIG_H__ */

@@ -861,7 +861,7 @@ Gpi_Fast_Tick_Extended mixer_start()
 		#if MX_SMART_SHUTDOWN
 		free(mx.full_rank_map);
 		#endif
-		free(mx.request);
+		// free(mx.request);
 	#endif
 
 	GPI_TRACE_RETURN(mx.round_deadline);

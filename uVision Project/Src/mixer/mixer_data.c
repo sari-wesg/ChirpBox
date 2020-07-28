@@ -847,6 +847,8 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         case MX_ARRANGE:
         {
+            data[1] = chirp_outl->default_slot_num >> 8;
+            data[2] = chirp_outl->default_slot_num;
             data[k++] = chirp_outl->default_sf;
             data[k++] = chirp_outl->default_payload_len;
             data[k++] = chirp_outl->arrange_task;
@@ -854,6 +856,13 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             if (chirp_outl->arrange_task == CHIRP_SNIFF)
                 data[5] = chirp_outl->sniff_nodes_num;
             data[ROUND_HEADER_LENGTH - 1] = chirp_outl->default_generate_size;
+            memcpy(file_data, data, DATA_HEADER_LENGTH);
+            k = 0;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 24;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 16;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 8;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0];
+            k = 0;
             break;
         }
         default:
@@ -929,7 +938,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 }
                 case MX_ARRANGE:
                 {
-                    mixer_write(i, data, MIN(sizeof(data), chirp_outl->payload_len));
+                    mixer_write(i, file_data, chirp_outl->payload_len);
                     break;
                 }
                 default:
@@ -947,6 +956,9 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     Mixer_Task arrange_task;
     uint8_t k = 0;
     uint8_t packet_correct = 0;
+    uint32_t mask_negative[chirp_config.my_column_mask.len];
+    uint32_t firmware_bitmap_temp[DISSEM_BITMAP_32];
+    uint16_t pending;
     if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO))
     {
         assert_reset(!((chirp_outl->payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
@@ -969,6 +981,15 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     if  (chirp_outl->task == MX_DISSEMINATE)
     {
+        if ((!node_id) && (!chirp_outl->disem_flag))
+        {
+            memcpy((uint32_t *)&(firmware_bitmap_temp[0]), (uint32_t *)&(chirp_outl->firmware_bitmap[0]), DISSEM_BITMAP_32 * sizeof(uint32_t));
+            for (i = 0; i < chirp_config.my_column_mask.len; i++)
+                mask_negative[i] = ~mx.request->mask[chirp_config.my_column_mask.pos + i];
+            pending = mx_request_clear((uint32_t *)&(firmware_bitmap_temp[0]), (uint_fast_t *)&(mask_negative[0]), DISSEM_BITMAP_32 * sizeof(uint32_t));
+            if (pending == 0)
+                chirp_config.full_column = 0;
+        }
         #if MX_PSEUDO_CONFIG
         for (i = 0; i < chirp_config.mx_generation_size; i++)
         #else
@@ -1000,6 +1021,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             mx.stat_counter.slot_decoded = 0;
         }
     }
+    free(mx.request);
 
     if (((chirp_config.full_rank) && (chirp_outl->task == MX_DISSEMINATE)) || (chirp_outl->task != MX_DISSEMINATE))
     {
@@ -1033,23 +1055,24 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 {
                     /* print packet */
                     PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
-
-                    /* check/adapt round number by message 0 (initiator) */
-                    #if MX_PSEUDO_CONFIG
-                    if ((0 == i) && (chirp_outl->payload_len >= 7))
-                    #else
-                    if ((0 == i) && (MX_PAYLOAD_SIZE >= 7))
-                    #endif
+                    if (chirp_outl->task != MX_ARRANGE)
                     {
-                        Generic32	r;
-                        r.u8_ll = data[2];
-                        r.u8_lh = data[1];
-                        r.u8_hl = 0;
-                        r.u8_hh = 0;
-                        if (chirp_outl->round != r.u32)
-                            chirp_outl->round = r.u32;
+                        /* check/adapt round number by message 0 (initiator) */
+                        #if MX_PSEUDO_CONFIG
+                        if ((0 == i) && (chirp_outl->payload_len >= 7))
+                        #else
+                        if ((0 == i) && (MX_PAYLOAD_SIZE >= 7))
+                        #endif
+                        {
+                            Generic32	r;
+                            r.u8_ll = data[2];
+                            r.u8_lh = data[1];
+                            r.u8_hl = 0;
+                            r.u8_hh = 0;
+                            if (chirp_outl->round != r.u32)
+                                chirp_outl->round = r.u32;
+                        }
                     }
-
                     if (chirp_outl->task != MX_DISSEMINATE)
                         k = ROUND_HEADER_LENGTH;
                     switch (chirp_outl->task)
@@ -1241,6 +1264,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         case MX_ARRANGE:
                         {
                             printf("MX_ARRANGE\n");
+                            chirp_outl->default_slot_num = data[1] << 8 | data[2];
                             /* reconfig chirp_outl (except the initiator) */
                             chirp_outl->default_sf = data[k++];
                             // chirp_outl->round_max = data[k++];
@@ -1253,6 +1277,11 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 chirp_outl->sniff_nodes_num = data[5];
                                 chirp_outl->default_payload_len = 40;
                                 printf("sniff_nodes_num:%lu\n", chirp_outl->sniff_nodes_num);
+                            }
+                            if (node_id)
+                            {
+                                memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
+                                chirp_outl->firmware_bitmap[0] = (task_data[0] << 24) | (task_data[1] << 16) | (task_data[2] << 8) | (task_data[3]);
                             }
                             break;
                         }
@@ -1448,18 +1477,18 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         {
                 chirp_outl->disem_file_index_stay++;
                 printf("disem_file_index_stay:%lu\n", chirp_outl->disem_file_index_stay);
-                if (chirp_outl->disem_file_index_stay > 5 * 2)
-                {
-                    if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
-                    {
-                        printf("full\n");
-                        return 1;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                }
+                // if (chirp_outl->disem_file_index_stay > 5 * 2)
+                // {
+                //     if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
+                //     {
+                //         printf("full\n");
+                //         return 1;
+                //     }
+                //     else
+                //     {
+                //         return 0;
+                //     }
+                // }
                 /* dissemination session: disseminate files to all nodes */
                 if (!chirp_outl->disem_flag)
                 {
@@ -1474,7 +1503,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     PRINTF("next: disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->generation_size * 6 + chirp_outl->num_nodes, 2000000);
+                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
                     chirp_mx_payload_distribution(chirp_outl->task);
                     chirp_outl->disem_flag = 1;
                 }
