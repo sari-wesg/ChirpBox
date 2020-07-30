@@ -2178,8 +2178,8 @@ PT_THREAD(mixer_process_rx_data())
 					#if MX_PSEUDO_CONFIG
 					// TP TODO:
 					// printf("tx_sideload:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", mx.tx_sideload, mx.rx_queue[0], sizeof(mx.rx_queue), sizeof(Packet), chirp_config.coding_vector.pos, chirp_config.phy_payload_size, chirp_config.packet_len, (uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0]);
-						// if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= sizeof_member(mx.rx_queue) * chirp_config.packet_len)
-						if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= sizeof(mx.rx_queue))
+						// if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= sizeof(mx.rx_queue))
+						if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= 4 * chirp_config.packet_len)
 							mx.tx_sideload = &(p->packet_chunk[chirp_config.coding_vector.pos]);
 					#else
 						if ((uintptr_t)mx.tx_sideload - (uintptr_t)&mx.rx_queue >= sizeof(mx.rx_queue))
