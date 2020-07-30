@@ -193,6 +193,10 @@
 	#define MX_LBT_ACCESS							1
 #endif
 
+#ifndef BANK_1_RUN
+	#define BANK_1_RUN								1
+#endif
+
 #if (!MX_PSEUDO_CONFIG)
 // internal settings
 #define MX_SLOT_LENGTH_RESYNC						((MX_SLOT_LENGTH * 5) / 2)

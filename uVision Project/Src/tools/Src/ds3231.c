@@ -4,6 +4,7 @@
 #include "ds3231.h"
 // #include "iic.h"
 #include "gpi/tools.h" /* STRINGIFY(), LSB(), ASSERT_CT() */
+#include "mixer_internal.h"
 
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
@@ -57,6 +58,7 @@ uint8_t DEC2BCD(uint8_t temp)
 void DS3231_ModifyTime(uint8_t year, uint8_t month, uint8_t date,
                        uint8_t day, uint8_t hour, uint8_t mintue, uint8_t second)
 {
+  #if BANK_1_RUN
   uint8_t DS3231_Databuff[DS3231_TIME_LENGTH];
   uint8_t i;
   DS3231_Databuff[DS3231_memaddr.year] = year;
@@ -70,6 +72,7 @@ void DS3231_ModifyTime(uint8_t year, uint8_t month, uint8_t date,
     DS3231_Buff[i] = DEC2BCD(DS3231_Databuff[i]);
   while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_TIME_LENGTH, 0x01) != HAL_OK)
     ;
+  #endif
 }
 
 /**
@@ -79,13 +82,16 @@ void DS3231_ModifyTime(uint8_t year, uint8_t month, uint8_t date,
   */
 void DS3231_GetTime(void)
 {
+  #if BANK_1_RUN
   DS3231.flag = 0;
   HAL_I2C_Mem_Read_IT(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_REG_LENGTH);
   // HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_REG_LENGTH, 0xFFFF);
+  #endif
 }
 
 Chirp_Time DS3231_ShowTime()
 {
+  #if BANK_1_RUN
   char buffer[50], buff[20];
   Chirp_Time RTC_Time;
   memset(&RTC_Time, 0, sizeof(RTC_Time));
@@ -132,10 +138,12 @@ Chirp_Time DS3231_ShowTime()
   RTC_Time.chirp_min = DS3231.Minute;
   RTC_Time.chirp_sec = DS3231.Second;
   return RTC_Time;
+  #endif
 }
 
 void DS3231_ClearAlarm1_Time()
 {
+  #if BANK_1_RUN
   uint8_t alarm_flag = 0;
   uint8_t count = 0;
   while (!alarm_flag)
@@ -154,6 +162,7 @@ void DS3231_ClearAlarm1_Time()
     if (!(DS3231.Status & 0x03))
       alarm_flag = 1;
   }
+  #endif
 }
 /**
   * @brief  Set the alarm1 time and enable the alarm
@@ -165,6 +174,7 @@ void DS3231_ClearAlarm1_Time()
   */
 void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t second)
 {
+  #if BANK_1_RUN
   uint8_t alarm_flag = 0;
   uint8_t count = 0;
   while (!alarm_flag)
@@ -204,6 +214,7 @@ void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t s
     if ((DS3231.Control & 0x05) && (!(DS3231.Status & 0x03)))
       alarm_flag = 1;
   }
+  #endif
 }
 
 //**************************************************************************************************

@@ -768,17 +768,11 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				PRINTF("%d ", RxPacketBuffer[j]);
 			}
 			PRINTF("\ncoding:\n");
-
+			#if MX_PSEUDO_CONFIG
 			uint16_t code_tail_hash_rx = Chirp_RSHash((uint8_t *)RxPacketBuffer, chirp_config.phy_payload_size);
 			uint16_t hash_code_rx = RxPacketBuffer[packet_len - 2] << 8 | RxPacketBuffer[packet_len - 1];
-			if ((hash_code_rx != code_tail_hash_rx) || (!hash_code_rx))
-			{
-				// trigger timeout timer (immediately) -> do error handling there
-				// NOTE: don't need to unmask timer here because it already is
-				trigger_main_timer(0);
-				unmask_main_timer(1);
-			}
-			else
+			if ((hash_code_rx == code_tail_hash_rx) && (hash_code_rx))
+			#endif
 			{
 				#if MX_DOUBLE_BITMAP
 				for(j = 0; j < BITMAP_BYTE ; j++){
@@ -1065,6 +1059,15 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 				PROFILE_ISR("radio ISR process Rx packet end");
 			}
+			#if MX_PSEUDO_CONFIG
+			else
+			{
+				// trigger timeout timer (immediately) -> do error handling there
+				// NOTE: don't need to unmask timer here because it already is
+				trigger_main_timer(0);
+				unmask_main_timer(1);
+			}
+			#endif
 		}
     }
 
@@ -2208,7 +2211,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		// finalize header
 		{
+			#if MX_PSEUDO_CONFIG
 			mx.tx_packet->app_header = chirp_config.packet_hash;
+			#endif
 			uint16_t slot_number = mx.slot_number + 1;
 
 			#if MX_PSEUDO_CONFIG
@@ -2736,13 +2741,14 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// }
 			// printf("\n");
 			SX1276Write( REG_LR_FIFOADDRPTR, 0);
-
+			#if MX_PSEUDO_CONFIG
 			uint16_t code_tail_hash_tx = Chirp_RSHash((uint8_t *)Buffer2, chirp_config.phy_payload_size);
 			uint8_t hash_code_tx[2];
 			hash_code_tx[0] = code_tail_hash_tx >> 8;
 			hash_code_tx[1] = code_tail_hash_tx;
 			SX1276Write( REG_LR_FIFOADDRPTR, chirp_config.phy_payload_size );
 			write_tx_fifo(hash_code_tx, NULL, HASH_TAIL_CODE);
+			#endif
 
 			// unmask IRQ
 			SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |

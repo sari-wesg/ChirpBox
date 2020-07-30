@@ -495,9 +495,11 @@ size_t mixer_write(unsigned int i, const void *msg, size_t size)
 	gpi_memcpy_dma(mx.matrix[i].payload_8, msg, size);
 	#endif
 
+	#if MX_PSEUDO_CONFIG
 	uint32_t payload_hash = Chirp_RSHash((uint8_t *)&(mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos]), chirp_config.matrix_payload_8.len - 2);
 	mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos + chirp_config.mx_payload_size - 2] = payload_hash >> 8;
 	mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos + chirp_config.mx_payload_size - 1] = payload_hash;
+	#endif
 
 	unwrap_row(i);
 

@@ -398,8 +398,9 @@ void menu_bank(void)
 {
 	/* Get the current configuration */
   HAL_FLASHEx_OBGetConfig( &OBConfig );
-
+  #if BANK_1_RUN
   FLASH_If_WriteProtectionClear();
+  #endif
 
   /* Test from which bank the program runs */
   BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
@@ -413,6 +414,7 @@ void menu_bank(void)
   else
   {
     Serial_PutString((uint8_t *)"\tSystem running from STM32L476 *Bank 2*  \r\n\n");
+    #if BANK_1_RUN
     uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_1);
     printf("firmware_size:%lu\n", firmware_size);
     if ((firmware_size < 0x100000) && (firmware_size))
@@ -420,6 +422,7 @@ void menu_bank(void)
     DS3231_GetTime();
     DS3231_ShowTime();
     while(1);
+    #endif
   }
 
   if ( OBConfig.USERConfig & OB_BFB2_ENABLE ) /* BANK2 active for boot */
@@ -1354,11 +1357,13 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               /* Waiting for bank switch */
               GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
               PRINTF("---------CHIRP_BANK---------\n");
+              #if BANK_1_RUN
               /* flash protect */
               if (chirp_outl.flash_protection)
                 Bank1_WRP(0, 255);
               else
                 Bank1_nWRP();
+              #endif
               /* switch to bank2 */
               STMFLASH_BankSwitch();
             }

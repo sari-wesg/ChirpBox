@@ -786,6 +786,18 @@ PT_THREAD(mixer_update_slot())
 				#else
 				TRACE_PACKET(&mx.tx_packet);
 				#endif
+				// #if (!BANK_1_RUN)
+				// if (chirp_config.task == CHIRP_VERSION)
+				// {
+				// 	uint_fast32_t tx_flash[2];
+				// 	memset(tx_flash, 0, sizeof(tx_flash));
+				// 	tx_flash[0] |= 1 << 24;
+				// 	memcpy(&(tx_flash[0]), &(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.coding_vector.len);
+				// 	memcpy(&(tx_flash[1]), &(mx.tx_packet->packet_chunk[chirp_config.payload.pos + 8]), 3);
+				// 	tx_flash[1] |= mx.slot_number << 24;
+				// 	FLASH_If_Write(TOPO_FLASH_ADDRESS + mx.slot_number * 8, (uint32_t *)(&(tx_flash[0])), sizeof(tx_flash) / sizeof(uint32_t));
+				// }
+				// #endif
 			}
 		#endif
 
@@ -1750,11 +1762,14 @@ PT_THREAD(mixer_update_slot())
 					// role and is temporarily used by rx processing. mx.tx_sideload pointing to
 					// mx.empty_row is the same as pointing to rx queue.
 					#if MX_PSEUDO_CONFIG
+					// printf("uintptr_t:%02x, %02x, %02x, %02x, %02x\n", mx.tx_sideload, (uintptr_t)&(mx.matrix[0]->birth_slot), chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)), mx.tx_sideload - 1 * sizeof(uint_fast_t), mx.empty_row);
+					// if (((uintptr_t)mx.tx_sideload - (uintptr_t)&(mx.matrix[0]->birth_slot) < chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t))) && ((Matrix_Row *)(mx.tx_sideload - 1 * sizeof(uint_fast_t)) != mx.empty_row))
 					if (((uintptr_t)mx.tx_sideload - (uintptr_t)&(mx.matrix[0]->birth_slot) < chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t))) && ((Matrix_Row *)(mx.tx_sideload - chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t)) != mx.empty_row))
 					#else
 					if (((uintptr_t)mx.tx_sideload - (uintptr_t)&mx.matrix < sizeof(mx.matrix)) &&(Matrix_Row *)(mx.tx_sideload - offsetof(Matrix_Row, coding_vector)) != mx.empty_row)
 					#endif
 						{
+							// TP TODO:
 							PRINTF("NULL 2\n");
 							mx.tx_sideload = NULL;
 						}
@@ -1872,6 +1887,17 @@ PT_THREAD(mixer_process_rx_data())
 			PRINTF_decode("Rx: ");
 
 			TRACE_PACKET(p);
+			// #if (!BANK_1_RUN)
+			// if (chirp_config.task == CHIRP_VERSION)
+			// {
+			// 	uint_fast32_t rx_flash[2];
+			// 	memset(rx_flash, 0, sizeof(rx_flash));
+			// 	memcpy(&(rx_flash[0]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.coding_vector.len);
+			// 	memcpy(&(rx_flash[1]), &(p->packet_chunk[chirp_config.payload.pos + 8]), 3);
+			// 	rx_flash[1] |= mx.slot_number << 24;
+			// 	FLASH_If_Write(TOPO_FLASH_ADDRESS + mx.slot_number * 8, (uint32_t *)(&(rx_flash[0])), sizeof(rx_flash) / sizeof(uint32_t));
+			// }
+			// #endif
 
 			/* when receive a packet at first time */
 			if ((!mx.rank) && (chirp_config.disem_copy))
@@ -2150,6 +2176,9 @@ PT_THREAD(mixer_process_rx_data())
 						int ie = gpi_int_lock();
 
 					#if MX_PSEUDO_CONFIG
+					// TP TODO:
+					// printf("tx_sideload:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", mx.tx_sideload, mx.rx_queue[0], sizeof(mx.rx_queue), sizeof(Packet), chirp_config.coding_vector.pos, chirp_config.phy_payload_size, chirp_config.packet_len, (uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0]);
+						// if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= sizeof_member(mx.rx_queue) * chirp_config.packet_len)
 						if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= sizeof(mx.rx_queue))
 							mx.tx_sideload = &(p->packet_chunk[chirp_config.coding_vector.pos]);
 					#else

@@ -112,11 +112,10 @@ uint8_t test_round;
 // static const uint32_t nodes[256] = {0x4B0023, 0x38001E, 0x1E0030, 0x210027, 0x1C0040, 0x440038, 0x260057, 0x520049, 0x360017, 0x420020};
 // static const uint32_t nodes[256] = {0x4B0023, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x1C0040, 0x440038};
 static const uint32_t nodes[256] = {0x4B0023, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x260057, 0X20003D, 0x360017, 0X30003C, 0x210027};
-// static const uint32_t nodes[256] = {0x4B0023, 0x1c0040, 0x550033};
 // static const uint32_t nodes[256] = {0x4B0023, 0x4B0027};
 
 #endif
-const uint8_t VERSION_MAJOR = 0xb2, VERSION_NODE = 0xd1;
+const uint8_t VERSION_MAJOR = 0x38, VERSION_NODE = 0xb8;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -234,7 +233,9 @@ static uint8_t hardware_init()
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
 
 #if GPS_DATA
+	#if BANK_1_RUN
 	DS3231_ClearAlarm1_Time();
+	#endif
 	GPS_Init();
 	GPS_Waiting_PPS(3);
 	Chirp_Time gps_time;
@@ -243,7 +244,7 @@ static uint8_t hardware_init()
 	{
 		gps_time = GPS_Get_Time();
 	}
-
+	#if BANK_1_RUN
 	time_t rtc_diff = 0x05;
 	uint8_t count = 0;
 	/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
@@ -256,6 +257,7 @@ static uint8_t hardware_init()
 		Chirp_Time RTC_Time = DS3231_ShowTime();
 		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
 	}
+	#endif
 #endif
 
 	return node_id;
