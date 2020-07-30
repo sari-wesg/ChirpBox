@@ -378,11 +378,11 @@ def collect_data(com_port, command_len, command_sf, slot_num):
 			 	 	ser.write(str(para).encode()) # send commands
 			 	 	timeout_cnt = 0
 			 	 	break
-			if(timeout_cnt > 6000 * 3):
+			if(timeout_cnt > 60000 * 3):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6000 * 3):
+	if(timeout_cnt > 60000 * 3):
 		print("Timeout...")
 		return False
 
@@ -458,7 +458,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 	 	return False
 
 	print("Results of " + filename + " have been collected!" )
-	# filename = "Chirpbox_connectivity_sf7ch440000tp14(20200727172250329366).txt"
+	# filename = "Chirpbox_connectivity_sf7ch470000tp14(305829877).txt"
 	results = statistics_process.topo_parser.topo_parser(filename, using_pos)
 	# max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
 	print("Max_hop: " + str(results[0]))
