@@ -876,7 +876,8 @@ PT_THREAD(mixer_update_slot())
 
 				#if INFO_VECTOR_QUEUE
 					#if MX_PSEUDO_CONFIG
-					gpi_memcpy_dma_inline((uint8_t *)&(mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)]->packet_chunk[chirp_config.coding_vector.pos]), (uint8_t *)&(mx.code_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.info_queue)]->vector[0]), chirp_config.coding_vector.len);
+					// TP TODO:
+					// gpi_memcpy_dma_inline((uint8_t *)&(mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)]->packet_chunk[chirp_config.coding_vector.pos]), (uint8_t *)&(mx.code_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.info_queue)]->vector[0]), chirp_config.coding_vector.len);
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)]->packet_chunk[chirp_config.info_vector.pos]), (uint8_t *)&(mx.info_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.info_queue)]->vector[0]), chirp_config.info_vector.len);
 
 					#else
