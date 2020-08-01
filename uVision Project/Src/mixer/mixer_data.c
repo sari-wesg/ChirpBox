@@ -972,6 +972,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     if (!node_id)
     {
+        printf("-----column_pending = %lu-----\n", mx.request->my_column_pending);
         if ((chirp_outl->task == MX_COLLECT) && (chirp_outl->round > chirp_outl->round_setup))
             printf("output from initiator (collect):\n");
         else if (chirp_outl->task == CHIRP_TOPO)
