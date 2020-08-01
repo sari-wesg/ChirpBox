@@ -34,7 +34,7 @@
 #define PRINTF(...)
 #endif
 
-#define BUFFER_SIZE                 1
+#define BUFFER_SIZE                 200
 
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -59,7 +59,7 @@ uint8_t Rx_Buffer[BUFFER_SIZE];
 uint16_t tx_send_num;
 uint16_t rx_receive_num;
 static uint8_t tx_num_max;
-
+static uint8_t tx_payload_len;
 Topology_State topology_state;
 
 uint32_t packet_time_us;
@@ -79,10 +79,12 @@ void packet_prepare(uint8_t node_id)
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf)
+uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len)
 {
     tx_num_max = 20;
-    packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, BUFFER_SIZE) + 50000;
+    tx_payload_len = payload_len;
+    assert_reset(tx_payload_len <= BUFFER_SIZE);
+    packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, tx_payload_len) + 50000;
     node_topology = (Topology_result *)malloc(nodes_num * sizeof(Topology_result));
     memset(node_topology, 0, nodes_num * sizeof(Topology_result));
     round_length_us = packet_time_us * (tx_num_max + 3) + 2000000;
@@ -139,7 +141,7 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
         /* delay more than receivers */
         deadline = gpi_tick_fast_extended() + GPI_TICK_US_TO_FAST2(packet_time_us * 3) + GPI_TICK_US_TO_FAST2(1000000);
 
-        SX1276WriteFIFO(Tx_Buffer, BUFFER_SIZE);
+        SX1276WriteFIFO(Tx_Buffer, tx_payload_len);
 		SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 											RFLR_IRQFLAGS_RXDONE |
 											RFLR_IRQFLAGS_PAYLOADCRCERROR |
@@ -150,7 +152,7 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
 											RFLR_IRQFLAGS_CADDETECTED );
         SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
 
-		SX1276Write( REG_LR_PAYLOADLENGTH, BUFFER_SIZE );
+		SX1276Write( REG_LR_PAYLOADLENGTH, tx_payload_len );
 		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
 		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 		// Full buffer used for Tx

@@ -235,7 +235,7 @@ void GPS_Sleep(uint32_t interval_sec);
 void gps_main_timer_isr(void);
 
 /* Topology */
-uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf);
+uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len);
 Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i, Gpi_Fast_Tick_Extended deadline);
 void topo_result(uint8_t nodes_num);
 void topo_dio0_isr();

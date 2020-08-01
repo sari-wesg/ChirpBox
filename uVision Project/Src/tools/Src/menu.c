@@ -862,7 +862,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
       }
       case CHIRP_CONNECTIVITY:
       {
-          rxbuffer_len = 13;
+          rxbuffer_len = 17;
           break;
       }
       case CHIRP_SNIFF:
@@ -1125,13 +1125,18 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
               else
                 chirp_outl->tx_power += data * pow(10,(pow_num-i));
             }
+            else if (i < 17) /* Frequency */
+            {
+              pow_num = 16;
+              chirp_outl->topo_payload_len += data * pow(10,(pow_num-i));
+            }
           }
         }
 
         if (!tx_sign)
           chirp_outl->tx_power = 0 - chirp_outl->tx_power;
 
-        printf("Spreading factor: %lu, Frequency at: %lu kHz, Tx power: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power);
+        printf("Spreading factor: %lu, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
         break;
       }
       case CHIRP_SNIFF:
@@ -1530,7 +1535,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				PRINTF("---------CHIRP_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
-				chirp_outl.payload_len = DATA_HEADER_LENGTH + 6;
+				chirp_outl.payload_len = DATA_HEADER_LENGTH + 7;
 				chirp_outl.round_setup = 1;
 				chirp_outl.round_max = chirp_outl.round_setup;
 				if (!node_id)
@@ -1547,7 +1552,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           break;
         }
         chirp_mx_radio_config(chirp_outl.sf, 7, 1, 8, chirp_outl.tx_power, chirp_outl.freq);
-        topo_init(network_num_nodes, node_id, chirp_outl.sf);
+        topo_init(network_num_nodes, node_id, chirp_outl.sf, chirp_outl.topo_payload_len);
         uint8_t i;
         for (i = 0; i < network_num_nodes; i++)
         {

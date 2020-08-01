@@ -928,6 +928,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				sf;
 	uint32_t			freq;
 	int8_t				tx_power;
+	uint8_t				topo_payload_len;
 
 	/* CHIRP_SNIFF */
 	uint8_t				sniff_nodes_num; /* number of sniff nodes */

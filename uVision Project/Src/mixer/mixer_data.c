@@ -815,6 +815,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             file_data[DATA_HEADER_LENGTH + 3] = chirp_outl->freq >> 8;
             file_data[DATA_HEADER_LENGTH + 4] = chirp_outl->freq;
             file_data[DATA_HEADER_LENGTH + 5] = chirp_outl->tx_power;
+            file_data[DATA_HEADER_LENGTH + 6] = chirp_outl->topo_payload_len;
             break;
         }
         case CHIRP_SNIFF:
@@ -1230,6 +1231,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 chirp_outl->sf = task_data[0];
                                 chirp_outl->freq = (task_data[1] << 24) | (task_data[2] << 16) | (task_data[3] << 8) | (task_data[4]);
                                 chirp_outl->tx_power = task_data[5];
+                                chirp_outl->topo_payload_len = task_data[6];
                             }
                             break;
                         }

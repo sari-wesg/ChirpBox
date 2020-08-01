@@ -31,7 +31,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 5) \"python cbmng.py -rstatus\" to know the running status of testbed, i.e., whether the testbed is busy or idle\n\
 6) \"python cbmng.py -dissem [upgrading_daemon] [ver_hash] [payload_len] [generate_size_in_round] [used_SF] [com_port] [bitmap] [slot_num]\" to disseminate the file, e.g., the firmware. A patch for daemon is generated if upgrading_daemon is 1.\n\
 7) \"python cbmng.py -coldata [payload_len] [used_SF] [com_port] [slot_num] \" to collect the results in the given area of the flash (from [start_addr] to [end_addr]). These addresses are assigned in the methodology file.\n\
-8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [used_SF] [com_port] [slot_num] \" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
+8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [used_SF] [com_port] [slot_num] [topo_payload_len]\" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
 9) \"python cbmng.py -coltopo [using_pos] [used_SF] [payload_len] [com_port] [slot_num] \" to obtain the topology. If using_pos is 0, the layout of topology is generated randomly; if using_pos is 1, the previously generated layout is used; if using_pos is 2, a specific layout for SARI is used.\n\
 10) \"python cbmng.py -colver [used_SF] [com_port] [slot_num] \" to obtain the daemon version.\n\
 11) \"python cbmng.py -assignsnf [used_SF] [com_port] [slot_num] \" to assign a node to work as a sniffer at a given channel (KHz). Sniffers and channels are given in the methodology file.\n\
@@ -70,8 +70,8 @@ def main(argv):
 		else:
 			print("The testbed is idle...")
 			exit(0)
-	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 8)):
-		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), argv[6], int(argv[7]))
+	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 9)):
+		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), argv[6], int(argv[7]), int(argv[8]))
 		exit(1)
 	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 5)):
 		if(cbmng_exp_start.check() == True):

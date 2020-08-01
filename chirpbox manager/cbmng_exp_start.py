@@ -135,14 +135,14 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 		slot_num = 100
+			 		slot_num = 80
 					# ser.write(str(task_index).encode()) # send commands
 			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 100)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 60)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -198,7 +198,7 @@ def is_running():
 		else:
 			return False
 
-def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_num):
+def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_num, topo_payload_len):
 	bitmap = "0"
 	time_now = datetime.datetime.now()
 	start_time_t = time_now + datetime.timedelta(minutes = 2)
@@ -207,7 +207,7 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 	exp_name = "Chirpbox_connectivity_sf" + str(sf) + "ch" + str(channel) + "tp" + str(tx_power)
-	print("Connectivity evaluation (SF " + str(sf) + ", Channel " + str(channel) + " MHz, " + str(tx_power) + " dBm) is going to start at " + start_time + ", and stop at " + end_time)
+	print("Connectivity evaluation (SF " + str(sf) + ", Channel " + str(channel) + " MHz, " + str(tx_power) + " dBm, "  + "topo_len at " + str(topo_payload_len) + ") is going to start at " + start_time + ", and stop at " + end_time)
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
@@ -232,9 +232,9 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		if(tx_power >= 0):
-			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power))
+			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power)) + ',{0:03}'.format(int(topo_payload_len))
 			 		if(tx_power < 0):
-			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',-{0:02}'.format(int(tx_power) * (-1))
+			 			para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',-{0:02}'.format(int(tx_power) * (-1)) + ',{0:03}'.format(int(topo_payload_len))
 			 		print(para)
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
@@ -458,7 +458,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 	 	return False
 
 	print("Results of " + filename + " have been collected!" )
-	# filename = "Chirpbox_connectivity_sf7ch470000tp14(305829877).txt"
+	# filename = "Chirpbox_connectivity_sf7ch470000tp0(20200801141355709008).txt"
 	results = statistics_process.topo_parser.topo_parser(filename, using_pos)
 	# max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
 	print("Max_hop: " + str(results[0]))
