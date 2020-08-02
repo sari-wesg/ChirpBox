@@ -134,22 +134,28 @@ static void change_unix(long ts, Chirp_Time *gps_time)
         hour -= 24;
         date++;
         dayTmp = applib_dt_last_day_of_mon(monthTmp, year);
-        if (date >= dayTmp)
+        if (date > dayTmp)
         {
             date -= dayTmp;
-            month = (month + 1) % MONTH_PER_YEAR;
+            if (month == 12)
+                yearTmp = yearTmp + 1;
+
+            monthTmp = (monthTmp + 1) % MONTH_PER_YEAR;
         }
     }
+    year = yearTmp;
+    month = monthTmp;
+
     secs %= SEC_PER_HOUR;
     minute = secs / SEC_PER_MIN;
     second = secs % SEC_PER_MIN;
 
-    if (month == 1 || month == 2)
+    if (monthTmp == 1 || monthTmp == 2)
     {
-        month += 12;
+        monthTmp += 12;
         yearTmp--;
     }
-    day =  (date + 2 * month + 3 * (month + 1) / 5 + yearTmp + yearTmp / 4 - yearTmp / 100 + yearTmp / 400) % 7 + 1;
+    day =  (date + 2 * monthTmp + 3 * (monthTmp + 1) / 5 + yearTmp + yearTmp / 4 - yearTmp / 100 + yearTmp / 400) % 7 + 1;
 
     gps_time->chirp_year = (uint16_t)year;
     gps_time->chirp_month = (uint8_t)month;
