@@ -324,6 +324,7 @@ double SX1276GetPreambleDetect();
 void SX1276SetRxSF( uint8_t datarate );
 uint32_t SX1276GetPacketTime(uint8_t sf, uint8_t bandwidth, uint8_t cr, uint8_t header, uint8_t preamble_len, uint8_t pktLen);
 uint32_t SX1276GetSymbolTime(uint8_t sf, uint8_t bandwidth);
+uint8_t SX1276GetRawTemp();
 
 /*sx1276-arch---------------------------------------------------------------------------*/
 

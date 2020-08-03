@@ -1707,6 +1707,56 @@ uint32_t SX1276GetSymbolTime(uint8_t sf, uint8_t bandwidth)
     return ts;
 }
 
+uint8_t SX1276GetRawTemp()
+{
+    int8_t temp = 0;
+
+    uint8_t previousOpMode = SX1276Read( REG_OPMODE );
+
+    if ((previousOpMode & RFLR_OPMODE_LONGRANGEMODE_ON) == RFLR_OPMODE_LONGRANGEMODE_ON)
+    {
+        SX1276Write( REG_OPMODE, RFLR_OPMODE_SLEEP );
+    }
+
+    SX1276Write( REG_OPMODE, RFLR_OPMODE_STANDBY );
+    // Delay 150 us
+    Gpi_Fast_Tick_Native deadline = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST(150);
+    while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
+
+    SX1276Write( REG_OPMODE, RF_OPMODE_SYNTHESIZER_RX );
+    uint8_t RegImageCal = SX1276Read( REG_IMAGECAL);
+    RegImageCal = (RegImageCal & RF_IMAGECAL_TEMPMONITOR_MASK) | RF_IMAGECAL_TEMPMONITOR_ON;
+    SX1276Write( REG_IMAGECAL, RegImageCal );
+
+    // Delay 150 us
+    deadline = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST(150);
+    while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
+
+    RegImageCal = SX1276Read( REG_IMAGECAL);
+    RegImageCal = (RegImageCal & RF_IMAGECAL_TEMPMONITOR_MASK) | RF_IMAGECAL_TEMPMONITOR_OFF;
+    SX1276Write( REG_IMAGECAL, RegImageCal );
+
+    SX1276Write( REG_OPMODE, RFLR_OPMODE_STANDBY );
+
+    uint8_t RegTemp = SX1276Read( REG_TEMP);
+
+    if ((RegTemp & 0x80) == 0x80)
+        temp = 255 - RegTemp;
+    else
+    {
+        temp = RegTemp;
+        temp *= (-1);
+    }
+
+    if ((previousOpMode & RFLR_OPMODE_LONGRANGEMODE_ON) == RFLR_OPMODE_LONGRANGEMODE_ON)
+    {
+        SX1276Write( REG_OPMODE, RFLR_OPMODE_SLEEP );
+    }
+
+    SX1276Write( REG_OPMODE, previousOpMode );
+    // return temp;
+    return RegTemp;
+}
 //sx1276-arch***************************************************************************************
 
 //**************************************************************************************************

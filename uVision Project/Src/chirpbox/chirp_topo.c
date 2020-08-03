@@ -192,10 +192,15 @@ void topo_result(uint8_t nodes_num)
         PRINTF("r:%d, %lu, %x\n", i, node_topology[i].reliability, topo_result[i]);
     }
 
+    uint8_t temp_raw = SX1276GetRawTemp();
+    uint32_t temp_flash[2];
+    temp_flash[0] = (uint32_t)(temp_raw);
+
     #if MX_FLASH_FILE
         // menu_preSend(0);
         FLASH_If_Erase_Pages(1, 255);
         FLASH_If_Write(TOPO_FLASH_ADDRESS, (uint32_t *)(topo_result), sizeof(topo_result) / sizeof(uint32_t));
+        FLASH_If_Write(TOPO_FLASH_ADDRESS + sizeof(topo_result) + 8, (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
     #endif
 
     free(node_topology);

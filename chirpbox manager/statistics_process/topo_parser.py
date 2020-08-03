@@ -206,6 +206,8 @@ def topo_parser(filename, using_pos):
     for cnt in range(node_num):
         con_mat[cnt, cnt] = 100
 
+    # temperature of each nodes
+    node_temp = []
     # 3. update the connectivity matrix
     with open(filename, 'r') as f:
         for line in f:
@@ -234,13 +236,21 @@ def topo_parser(filename, using_pos):
             if(line.startswith('f ')):
                 if(state == STATE.WAITING_FOR_F):
                     tmp = line.split()
-                    for cnt in range(node_num_row):
+                    node_num_row_temp = int((node_num_row + 1) / 2) * 2 + 3
+                    for cnt in range(node_num_row_temp):
                         reliability = 0
                         tx_id = int(tmp[cnt * 4 + 1], base = 16) + int(tmp[cnt * 4 + 2], base = 16) * 256
                         if (not (((cnt != 0) and (tx_id == 0)) or (tx_id > node_num - 1))):
                             reliability = (int(tmp[cnt * 4 + 3], base = 16) + int(tmp[cnt * 4 + 4], base = 16) * 256) / 100
                             if(int(node_list.index(current_node_id)) != int(node_list.index(tx_id))):
                                 con_mat[node_list.index(current_node_id), node_list.index(tx_id)] = reliability
+                        elif (cnt == node_num_row_temp - 1):
+                            temperature = int(tmp[cnt * 4 + 1], base = 16)
+                            if  ((temperature & int("0x80", 0)) == int("0x80", 0)):
+                                temperature = 255 - temperature
+                            else:
+                                temperature = temperature * (-1)
+                            node_temp.append([current_node_id, temperature])
 
     # 4. draw the connectivity matrix
     plt.rcParams["figure.figsize"] = (20, 20)
@@ -330,8 +340,8 @@ def topo_parser(filename, using_pos):
             if (max_hop < hop):
                 max_hop = hop
                 print("So far, the maximal hop is from " + str(node_list[cnt_degrees_tx]) + " to " + str(node_list[cnt_degrees_rx]))
-        if (no_path == 1):
-            max_hop = max_hop + 100
+        # if (no_path == 1):
+        #     max_hop = max_hop + 100
 
     # 7 Get the Degree information of the network:
     degrees = np.zeros(node_num)
@@ -362,4 +372,4 @@ def topo_parser(filename, using_pos):
     sym = (norm_c_sym - norm_c_anti) / (norm_c_sym + norm_c_anti)
     # print(sym)
 
-    return [max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0]]
+    return [max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp]
