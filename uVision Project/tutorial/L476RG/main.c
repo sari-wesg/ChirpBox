@@ -115,7 +115,7 @@ static const uint32_t nodes[256] = {0x4B0023, 0x420029, 0x38001E, 0x1E0030, 0x26
 // static const uint32_t nodes[256] = {0x4B0023, 0x550033};
 
 #endif
-const uint8_t VERSION_MAJOR = 0x09, VERSION_NODE = 0x93;
+const uint8_t VERSION_MAJOR = 0x5a, VERSION_NODE = 0x05;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -257,6 +257,9 @@ static uint8_t hardware_init()
 		Chirp_Time RTC_Time = DS3231_ShowTime();
 		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
 	}
+	#endif
+	#if BANK_1_RUN
+	FLASH_If_WriteProtectionClear();
 	#endif
 #endif
 

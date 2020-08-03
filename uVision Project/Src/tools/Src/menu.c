@@ -397,10 +397,10 @@ void Flash_Bank_Copy_Bank(uint32_t FLASH_SRC, uint32_t FLASH_DEST, uint32_t firm
 void menu_bank(void)
 {
 	/* Get the current configuration */
-  HAL_FLASHEx_OBGetConfig( &OBConfig );
-  #if BANK_1_RUN
-  FLASH_If_WriteProtectionClear();
-  #endif
+  // HAL_FLASHEx_OBGetConfig( &OBConfig );
+  // #if BANK_1_RUN
+  // FLASH_If_WriteProtectionClear();
+  // #endif
 
   /* Test from which bank the program runs */
   BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
@@ -425,10 +425,10 @@ void menu_bank(void)
     #endif
   }
 
-  if ( OBConfig.USERConfig & OB_BFB2_ENABLE ) /* BANK2 active for boot */
-    Serial_PutString((uint8_t *)"\tSystem ROM bank selection active  \r\n\n");
-  else
-    Serial_PutString((uint8_t *)"\tSystem ROM bank selection deactivated \r\n\n");
+  // if ( OBConfig.USERConfig & OB_BFB2_ENABLE ) /* BANK2 active for boot */
+  //   Serial_PutString((uint8_t *)"\tSystem ROM bank selection active  \r\n\n");
+  // else
+  //   Serial_PutString((uint8_t *)"\tSystem ROM bank selection deactivated \r\n\n");
 }
 
 /**
