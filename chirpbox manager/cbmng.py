@@ -72,7 +72,7 @@ def main(argv):
 			exit(0)
 	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 9)):
 		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), argv[6], int(argv[7]), int(argv[8]))
-		exit(1)
+		# exit(1)
 	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 5)):
 		if(cbmng_exp_start.check() == True):
 			cbmng_exp_start.assign_sniffer(int(argv[2]), argv[3], int(argv[4]))
@@ -84,7 +84,7 @@ def main(argv):
 	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 7)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_topology(argv[5], int(argv[2]), int(argv[3]), int(argv[4]), int(argv[6]))
-		exit(0)
+		# exit(0)
 	elif(((argv[1] == "collect_version") or (argv[1] == "-colver")) and (len(argv) == 5)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_version(argv[3], int(argv[2]), int(argv[4]))
