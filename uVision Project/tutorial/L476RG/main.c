@@ -115,7 +115,7 @@ static const uint32_t nodes[256] = {0x4B0023, 0x420029, 0x38001E, 0x1E0030, 0x26
 // static const uint32_t nodes[256] = {0x4B0023, 0x550033};
 
 #endif
-const uint8_t VERSION_MAJOR = 0xb8, VERSION_NODE = 0x10;
+const uint8_t VERSION_MAJOR = 0x99, VERSION_NODE = 0xc1;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -261,6 +261,10 @@ static uint8_t hardware_init()
 	#if BANK_1_RUN
 	FLASH_If_WriteProtectionClear();
 	#endif
+    uint32_t reset_time_flash[sizeof(Chirp_Time) / sizeof(uint32_t)];
+	memcpy(reset_time_flash, (uint32_t *)&gps_time, sizeof(reset_time_flash));
+	FLASH_If_Erase_Pages(1, RESET_PAGE);
+	FLASH_If_Write(RESET_FLASH_ADDRESS, (uint32_t *)reset_time_flash, sizeof(reset_time_flash) / sizeof(uint32_t));
 #endif
 
 	return node_id;

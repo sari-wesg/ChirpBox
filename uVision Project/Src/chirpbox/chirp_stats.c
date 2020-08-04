@@ -97,7 +97,7 @@ void Stats_to_Flash(Mixer_Task task)
 
     if ((task != MX_ARRANGE) && (task != MX_COLLECT))
     {
-        FLASH_If_Erase_Pages(1, 252);
+        FLASH_If_Erase_Pages(1, DAEMON_PAGE);
         FLASH_If_Write(DAEMON_FLASH_ADDRESS, (uint32_t *)stats_array, sizeof(stats_array) / sizeof(uint32_t));
         #if MX_LBT_ACCESS
         stats_lbt_len = (LBT_CHANNEL_NUM + 1) / 2;
