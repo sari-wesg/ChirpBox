@@ -77,6 +77,7 @@ uint8_t copy_count = 0;
   */
 uint32_t FLASH_If_Erase(uint32_t bank_active)
 {
+  gpi_watchdog_periodic();
   uint32_t bank_to_erase, error = 0;
   FLASH_EraseInitTypeDef pEraseInit;
   HAL_StatusTypeDef status = HAL_OK;
@@ -117,6 +118,7 @@ uint32_t FLASH_If_Erase(uint32_t bank_active)
 
 uint32_t FLASH_If_Erase_Pages(uint32_t bank_active, uint32_t page)
 {
+  gpi_watchdog_periodic();
   uint32_t bank_to_erase, error = 0;
   FLASH_EraseInitTypeDef pEraseInit;
   HAL_StatusTypeDef status = HAL_OK;
@@ -183,6 +185,7 @@ uint32_t FLASH_If_Check_old(uint32_t start)
   */
 uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t length)
 {
+  gpi_watchdog_periodic();
   uint32_t status = FLASHIF_OK;
   uint32_t i = 0;
 
@@ -229,6 +232,7 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
   */
 uint32_t FLASH_If_WriteProtectionClear( void )
 {
+  gpi_watchdog_periodic();
   FLASH_OBProgramInitTypeDef OptionsBytesStruct1;
   HAL_StatusTypeDef retr;
 

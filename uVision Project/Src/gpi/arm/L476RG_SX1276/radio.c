@@ -1719,9 +1719,6 @@ uint8_t SX1276GetRawTemp()
     }
 
     SX1276Write( REG_OPMODE, RFLR_OPMODE_STANDBY );
-    // Delay 150 us
-    Gpi_Fast_Tick_Native deadline = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST(150);
-    while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 
     SX1276Write( REG_OPMODE, RF_OPMODE_SYNTHESIZER_RX );
     uint8_t RegImageCal = SX1276Read( REG_IMAGECAL);
@@ -1729,7 +1726,7 @@ uint8_t SX1276GetRawTemp()
     SX1276Write( REG_IMAGECAL, RegImageCal );
 
     // Delay 150 us
-    deadline = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST(150);
+    Gpi_Fast_Tick_Native deadline = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST(150);
     while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 
     RegImageCal = SX1276Read( REG_IMAGECAL);

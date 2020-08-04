@@ -97,6 +97,7 @@ UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 RTC_HandleTypeDef hrtc;
 I2C_HandleTypeDef hi2c2;
+IWDG_HandleTypeDef hiwdg;
 
 #if MX_FLASH_FILE
   CRC_HandleTypeDef CrcHandle;
@@ -448,6 +449,20 @@ void MX_I2C2_Init(void)
   }
 }
 
+/* IWDG init function */
+static void MX_IWDG_Init(void)
+{
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_256;
+  hiwdg.Init.Window = 4095;
+  hiwdg.Init.Reload = 4095;
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 void gpi_platform_init(void)
 {
     ASSERT_CT(GPI_ARCH_IS_OS(NONE));
@@ -472,6 +487,7 @@ void gpi_platform_init(void)
 
 		MX_LPTIM1_Init();
 		HAL_LPTIM_Start(&hlptim1);
+    MX_IWDG_Init();
 }
 
 void gpi_sleep()
@@ -495,6 +511,13 @@ void gpi_sleep()
     // restore standard behavior
     // NOTE: PRIMASK = 0 reenables interrupts. In consequence, pending IRQ(s) will be taken.
     __set_PRIMASK(0);
+}
+
+void gpi_watchdog_periodic()
+{
+  /* This function is called periodically to restart the watchdog
+     timer. */
+	HAL_IWDG_Refresh(&hiwdg);
 }
 //**************************************************************************************************
 //**************************************************************************************************

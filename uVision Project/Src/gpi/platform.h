@@ -99,6 +99,7 @@ void			gpi_led_toggle(int id);
 uint_fast8_t	gpi_button_read(int id);
 
 void			gpi_sleep(void);
+void			gpi_watchdog_periodic(void);
 	// some universal sleep mode. platform may provide more detailed platform-specific functions
 	// gpi_[<platform>]_enter_low_power_mode(...)
 

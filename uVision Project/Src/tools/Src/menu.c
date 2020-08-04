@@ -452,6 +452,7 @@ void menu_preSend(uint8_t bank)
   */
 uint32_t menu_serialDownload(uint32_t offset_page, uint8_t bank_update)
 {
+  gpi_watchdog_periodic();
   uint8_t number[11] = {0};
   uint32_t size = 0;
   COM_StatusTypeDef result;
@@ -502,6 +503,7 @@ uint32_t menu_serialDownload(uint32_t offset_page, uint8_t bank_update)
   */
 COM_StatusTypeDef menu_ymodem_receive( uint32_t *p_size, uint32_t bank, uint32_t offset)
 {
+  gpi_watchdog_periodic();
   uint32_t i, packet_length, session_done = 0, file_done, errors = 0, session_begin = 0;
   uint32_t flashdestination, ramsource, filesize;
   uint8_t *file_ptr;
@@ -738,6 +740,7 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
     status = HAL_TIMEOUT;
     while(status != HAL_OK)
     {
+      gpi_watchdog_periodic();
       #if GPS_DATA
       /* initiator sleep for 60 s after 5 seconds not receiving any task */
       task_wait++;
@@ -1237,6 +1240,7 @@ uint32_t Chirp_RSHash(uint8_t* str, uint32_t len)
 
 void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 {
+  gpi_watchdog_periodic();
 	Chirp_Outl chirp_outl;
   memset(&chirp_outl, 0, sizeof(Chirp_Outl));
   chirp_outl.default_freq = 440000;
@@ -1315,6 +1319,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
 		switch (chirp_outl.task)
 		{
+      gpi_watchdog_periodic();
 			case CHIRP_START:
 			{
 				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);

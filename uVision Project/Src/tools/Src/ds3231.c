@@ -151,15 +151,19 @@ void DS3231_ClearAlarm1_Time()
     count++;
     assert_reset(count < 10);
     printf("clear alarm\n");
+    /* read control and status */
+    while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231.Control), 2, 0xffff) != HAL_OK);
     // Clear the AF1 and AF2 in Status (0Fh)
+    DS3231.Control &= 0xFC;
     DS3231.Status &= 0xFC;
-    while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.status, I2C_MEMADD_SIZE_8BIT,
-                            &(DS3231.Status), 1, 0xffff) != HAL_OK)
+    while (HAL_I2C_Mem_Write(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231.Control), 2, 0xffff) != HAL_OK)
       ;
     /* read alarm Status */
-    while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.status, I2C_MEMADD_SIZE_8BIT,
-                            &(DS3231.Status), 1, 0xffff) != HAL_OK);
-    if (!(DS3231.Status & 0x03))
+    while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231.Control), 2, 0xffff) != HAL_OK);
+    if ((!(DS3231.Control & 0x03)) && (!(DS3231.Status & 0x03)))
       alarm_flag = 1;
   }
   #endif

@@ -1346,6 +1346,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
 uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 {
+    gpi_watchdog_periodic();
 	// Gpi_Fast_Tick_Native deadline;
     Gpi_Fast_Tick_Extended deadline;
     Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((chirp_config.mx_period_time_s * 1000) / 1) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));

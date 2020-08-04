@@ -239,6 +239,7 @@ uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t paylo
 Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i, Gpi_Fast_Tick_Extended deadline);
 void topo_result(uint8_t nodes_num);
 void topo_dio0_isr();
+void topo_main_timer_isr();
 
 /* Sniff */
 void sniff_init(Sniff_Net LoRa_Net, uint32_t lora_frequency, uint16_t end_year, uint8_t end_month, uint8_t end_date, uint8_t end_hour, uint8_t end_min, uint8_t end_sec);

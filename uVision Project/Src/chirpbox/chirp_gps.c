@@ -169,6 +169,7 @@ static void change_unix(long ts, Chirp_Time *gps_time)
 
 void gps_pps_IRQ()
 {
+    gpi_watchdog_periodic();
     pps_count++;
     printf("pps:%lu\n", pps_count);
 }
@@ -348,6 +349,7 @@ void GPS_Sleep(uint32_t interval_sec)
 
 void gps_main_timer_isr(void)
 {
+    gpi_watchdog_periodic();
     #if GPS_DATA
     if (gps_state == GPS_GET_TIME)
     {

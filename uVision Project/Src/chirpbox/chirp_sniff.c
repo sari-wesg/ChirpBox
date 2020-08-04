@@ -468,6 +468,7 @@ void chirp_sniff_main_timer_isr()
 //**************************************************************************************************
 void chirp_dio0_isr()
 {
+    gpi_watchdog_periodic();
     if (sniff.radio == SNIFF_RX) /* RxDone */
     {
         gpi_led_on(RX_DONE_LED);
@@ -527,6 +528,7 @@ void chirp_dio0_isr()
 
 void chirp_dio3_isr()
 {
+    gpi_watchdog_periodic();
     if (sniff.radio == SNIFF_RX)
     {
         gpi_led_on(HEADER_LED);

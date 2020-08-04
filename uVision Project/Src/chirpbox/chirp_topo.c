@@ -128,6 +128,11 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
 
         deadline = gpi_tick_fast_extended() + GPI_TICK_US_TO_FAST2(round_length_us);
 
+        __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
+        __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
+        MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(16000000);
+        __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC1);
+
         while(1)
         {
             if (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) >= 0)
@@ -173,12 +178,15 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
                 break;
         }
     }
+    __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
+    __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
     SX1276SetOpMode( RFLR_OPMODE_SLEEP );
     return deadline;
 }
 
 void topo_result(uint8_t nodes_num)
 {
+    gpi_watchdog_periodic();
     uint8_t i;
     /* 64 bit length */
     uint32_t topo_result[((nodes_num + 1) / 2) * 2];
@@ -208,6 +216,7 @@ void topo_result(uint8_t nodes_num)
 
 void topo_dio0_isr()
 {
+    gpi_watchdog_periodic();
     /* must be periodically called */
     gpi_tick_hybrid_reference();
 
@@ -260,4 +269,13 @@ void topo_dio0_isr()
         }
         gpi_led_off(GPI_LED_2);
     }
+}
+
+void topo_main_timer_isr()
+{
+    gpi_watchdog_periodic();
+    __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
+    __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
+    MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(16000000);
+    __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC1);
 }

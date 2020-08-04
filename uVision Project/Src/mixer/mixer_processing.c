@@ -776,7 +776,7 @@ PT_THREAD(mixer_update_slot())
 	{
 		PT_WAIT_UNTIL(pt, mx.events & BV(SLOT_UPDATE));
 		clear_event(SLOT_UPDATE);
-
+		gpi_watchdog_periodic();
 		#if MX_VERBOSE_PACKETS
 			if (mx.events & BV(TX_READY))
 			{
@@ -2728,6 +2728,7 @@ PT_THREAD(mixer_maintenance())
 		PT_WAIT_UNTIL(pt, mx.events & BV(TRIGGER_TICK));
 
 		clear_event(TRIGGER_TICK);
+		gpi_watchdog_periodic();
 
 		// Gpi_Fast_Tick_Native now = gpi_tick_fast_native();
 		Gpi_Fast_Tick_Extended now = gpi_tick_fast_extended();
