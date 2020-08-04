@@ -268,7 +268,9 @@ def topo_parser(filename, using_pos):
                         cbarlabel="Receiving Packet Number")
 
     tmp = re.split(r'[().]', filename)
-    conf = tmp[0]
+    # conf = tmp[0]
+    txt_len = len("Chirpbox_connectivity_")
+    conf = tmp[0][txt_len:]
     sequence_num = tmp[1]
 
     ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
