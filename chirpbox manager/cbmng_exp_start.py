@@ -239,11 +239,11 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 			 		ser.write(str(para).encode()) # send commands
 			 		timeout_cnt = 0
 			 		break
-			if(timeout_cnt > 6000 * 10):
+			if(timeout_cnt > 60000 * 10):
 				break
 		except:
 			pass
-	if(timeout_cnt > 6000 * 10):
+	if(timeout_cnt > 60000 * 10):
 		print("Timeout...")
 		return False
 
@@ -286,6 +286,7 @@ def assign_sniffer(command_sf, com_port, slot_num):
 		try:
 			line = ser.readline().decode('ascii').strip() # skip the empty data
 			timeout_cnt = timeout_cnt + 1
+			para = '{0:01}'.format(int(expmethapp.sniffer_type)) + ',' + '{0:03}'.format(int(num))
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
@@ -294,7 +295,7 @@ def assign_sniffer(command_sf, com_port, slot_num):
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
-			 		para = '{0:01}'.format(int(expmethapp.sniffer_type)) + ',' + '{0:03}'.format(int(num))
+			 		# para = '{0:01}'.format(int(expmethapp.sniffer_type)) + ',' + '{0:03}'.format(int(num))
 			 		# para = ser.write(str(expmethapp.sniffer_type).encode()) # send commands
 			 		ser.write(str(para).encode()) # send commands
 			 		print(para)
@@ -417,7 +418,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 	bitmap = "0"
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
-		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
+		filename = "topo\\" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 	print("Collecting ...")
 
 	# config and open the serial port
@@ -467,6 +468,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 	print("Min_degree: " + str(results[3]))
 	print("Max_degree: " + str(results[4]))
 	print("Symmetry: " + str(results[5]))
+	print("Temperature of nodes: " + str(results[6]))
 	filename_hop = "hop_" + filename
 	with open(filename_hop, 'w+') as f:
 		line = ("Max_hop: " + str(results[0]))
@@ -480,6 +482,8 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 		line = ("Max_degree: " + str(results[4]))
 		f.write(line + "\r")
 		line = ("Symmetry: " + str(results[5]))
+		f.write(line + "\r")
+		line = ("Temperature of nodes: " + str(results[6]))
 		f.write(line + "\r")
 	return True
 

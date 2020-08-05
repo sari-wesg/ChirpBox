@@ -10,7 +10,7 @@
 	"rx_energy": "True",
 	"sniffer_type": 1,
 	"sniffer_and_channels": [1, 460000],
-	"start_address": "080FF800",
-	"end_address": "080FFB30",
+	"start_address": "08080000",
+	"end_address": "08080010",
 	"command_sf": 7
 }
