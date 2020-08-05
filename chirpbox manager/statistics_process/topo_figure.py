@@ -23,7 +23,7 @@ def topo_process():
         topo_parser.topo_parser(filename, 2)
 
 
-filename = "Chirpbox_connectivity_sf7ch470000tp0topo_payload_len120(20200804115733350503).txt"
-topo_parser.topo_parser(filename, 2)
+# filename = "Chirpbox_connectivity_sf7ch470000tp0topo_payload_len120(20200804115733350503).txt"
+# topo_parser.topo_parser(filename, 2)
 
-# topo_process()
+topo_process()
