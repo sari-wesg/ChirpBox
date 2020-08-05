@@ -553,37 +553,56 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	else:
 		return False
 
-	if(firmware_burned_existing == 1):
-		if(daemon_patch == 1):
-			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_daemon_burned + " " + firmware + " patch.bin"
-		if(daemon_patch == 0):
-			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_burned + " " + firmware + " patch.bin"
-		print(jdiff)
-		r_v = os.system(jdiff)
-		print (r_v)
-		print ("Patch size: " + str(cbmng_common.get_FileSize('patch.bin')))
-		print ("The updated firmware size: " + str(cbmng_common.get_FileSize(firmware)))
-		if(daemon_patch == 1):
-			print ("The burned daemon firmware size: " + str(cbmng_common.get_FileSize(firmware_daemon_burned)))
-		if(daemon_patch == 0):
-			print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))
-		if(daemon_patch == 1):
-			if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_daemon_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
-				using_patch = 1
-				print("disseminate the patch...")
-			else:
-				using_patch = 0
-				print("disseminate the updated firmware...")
-		if(daemon_patch == 0):
-			if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
-				using_patch = 1
-				print("disseminate the patch...")
-			else:
-				using_patch = 0
-				print("disseminate the updated firmware...")
+	time_now = datetime.datetime.now()
+	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	exp_no = cbmng_common.tid_maker()
+
+	FileSize = cbmng_common.get_FileSize(firmware)
+	exp_name = "disseminate_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "_generate_size" + str(command_size) + "_slot_num" + str(slot_num) + "_bitmap" + str(bitmap) + "_FileSize" + str(FileSize)
+	print(exp_name)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
+
+	# !!!!!TODO:
+	test_dissem = True
+	if (test_dissem == False):
+		if(firmware_burned_existing == 1):
+			if(daemon_patch == 1):
+				jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_daemon_burned + " " + firmware + " patch.bin"
+			if(daemon_patch == 0):
+				jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_burned + " " + firmware + " patch.bin"
+			print(jdiff)
+			r_v = os.system(jdiff)
+			print (r_v)
+			print ("Patch size: " + str(cbmng_common.get_FileSize('patch.bin')))
+			print ("The updated firmware size: " + str(cbmng_common.get_FileSize(firmware)))
+			if(daemon_patch == 1):
+				print ("The burned daemon firmware size: " + str(cbmng_common.get_FileSize(firmware_daemon_burned)))
+			if(daemon_patch == 0):
+				print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))
+			if(daemon_patch == 1):
+				if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_daemon_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
+					using_patch = 1
+					print("disseminate the patch...")
+				else:
+					using_patch = 0
+					print("disseminate the updated firmware...")
+			if(daemon_patch == 0):
+				if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
+					using_patch = 1
+					print("disseminate the patch...")
+				else:
+					using_patch = 0
+					print("disseminate the updated firmware...")
+		else:
+			using_patch = 0
+			print("disseminate the updated firmware...")
 	else:
 		using_patch = 0
-		print("disseminate the updated firmware...")
 
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
