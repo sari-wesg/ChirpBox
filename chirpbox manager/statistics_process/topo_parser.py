@@ -9,6 +9,22 @@ import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
 
+from PIL import Image
+
+# Function to change the image size
+def changeImageSize(maxWidth,
+                    maxHeight,
+                    image):
+
+    widthRatio  = maxWidth/image.size[0]
+    heightRatio = maxHeight/image.size[1]
+
+    newWidth    = int(widthRatio*image.size[0])
+    newHeight   = int(heightRatio*image.size[1])
+
+    newImage    = image.resize((newWidth, newHeight))
+    return newImage
+
 current_node_id = 0
 node_num = 0
 node_num_row = 0
@@ -33,6 +49,7 @@ def heatmap(data,
         ax=None,
         cbar_kw={},
         cbarlabel="",
+        cbar_flag=False,
         **kwargs):
     """
     Create a heatmap from a numpy array and two lists of labels.
@@ -63,14 +80,16 @@ def heatmap(data,
     im = ax.imshow(data, **kwargs)
 
     # Adjust the size of the color bar
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
+    if (cbar_flag == True):
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
 
-    # Create colorbar
-    cbar = ax.figure.colorbar(im, cax=cax, **cbar_kw)
-    cbar.ax.tick_params(labelsize = 23)
-    cbar.ax.set_ylabel(cbarlabel, rotation = -90, va = "bottom", fontsize = 23)
-
+        # Create colorbar
+        cbar = ax.figure.colorbar(im, cax=cax, **cbar_kw)
+        cbar.ax.tick_params(labelsize = 23)
+        cbar.ax.set_ylabel(cbarlabel, rotation = -90, va = "bottom", fontsize = 23)
+    else:
+        cbar = False
     # We want to show all ticks...
     ax.set_xticks(np.arange(data.shape[1]))
     ax.set_yticks(np.arange(data.shape[0]))
@@ -203,6 +222,7 @@ def topo_parser(filename, using_pos):
 
     # 2. generate connectivity matrix
     con_mat = np.zeros((node_num, node_num))
+    con_mat_temp = np.zeros((node_num, node_num))
     for cnt in range(node_num):
         con_mat[cnt, cnt] = 100
 
@@ -265,6 +285,7 @@ def topo_parser(filename, using_pos):
                         node_list,
                         ax=ax,
                         cmap="YlGn",
+                        cbar_flag = False,
                         cbarlabel="Receiving Packet Number")
 
     tmp = re.split(r'[().]', filename)
@@ -278,6 +299,8 @@ def topo_parser(filename, using_pos):
     im.set_clim(0, 100)
     plt.savefig("Connectivity matrix -- " + conf + " (" + sequence_num + ").pdf", bbox_inches='tight')
     #plt.show()
+    Connectivity_png = "Connectivity matrix -- " + conf + " (" + sequence_num + ").png"
+    plt.savefig(Connectivity_png, bbox_inches='tight')
 
     # 5. draw the topology
     # 5.1 Get a adjacent matrix, i.e., remove weight information
@@ -373,5 +396,65 @@ def topo_parser(filename, using_pos):
     # print(norm_c_anti)
     sym = (norm_c_sym - norm_c_anti) / (norm_c_sym + norm_c_anti)
     # print(sym)
+
+    # 9 draw temperature
+    for node_id in range(node_num):
+        for node_id_temp in range(node_num):
+            con_mat_temp[node_id][node_id_temp] = node_temp[node_id][1]
+
+    plt.rcParams["figure.figsize"] = (20, 20)
+    fig, ax = plt.subplots()
+    plt.tick_params(labelsize=23)
+
+    plt.xlabel('TX Node ID', fontsize=23)
+    plt.ylabel('RX Node ID', fontsize=23)
+
+    im, cbar = heatmap(con_mat_temp,
+                        node_list,
+                        node_list,
+                        ax=ax,
+                        cbar_flag = False,
+                        cmap="RdPu")
+    fig.tight_layout()
+
+    tmp = re.split(r'[().]', filename)
+    # conf = tmp[0]
+    txt_len = len("Chirpbox_connectivity_")
+    conf = tmp[0][txt_len:]
+    sequence_num = tmp[1]
+
+    ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
+    fig.tight_layout()
+    im.set_clim(15, 35)
+    temperature_png = "temperature -- " + conf + " (" + sequence_num + ").png"
+    plt.savefig(temperature_png, bbox_inches='tight')
+
+    # Take two images for blending them together
+    image1 = Image.open(temperature_png)
+    image2 = Image.open(Connectivity_png)
+
+    # Make the images of uniform size
+    image3 = changeImageSize(2000, 2000, image1)
+    image4 = changeImageSize(2000, 2000, image2)
+
+    # Make sure images got an alpha channel
+    image5 = image3.convert("RGBA")
+    image6 = image4.convert("RGBA")
+
+    # alpha-blend the images with varying values of alpha
+    alphaBlended2 = Image.blend(image6, image5, alpha=.3)
+
+    # Display the alpha-blended images
+    # alphaBlended2.show()
+    alphaBlended_name = Connectivity_png
+    alphaBlended2.save(alphaBlended_name)
+
+    # max_hop = 0
+    # mean_degree = 0
+    # std_dev_degree = 0
+    # min_degree = 0
+    # max_degree = 0
+    # sym = [[0]*3]*3
+    # node_temp = 0
 
     return [max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp]
