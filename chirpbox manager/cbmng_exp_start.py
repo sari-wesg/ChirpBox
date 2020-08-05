@@ -418,7 +418,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 	bitmap = "0"
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
-		filename = "topo\\" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
+		filename = "topo//" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 	print("Collecting ...")
 
 	# config and open the serial port
