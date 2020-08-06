@@ -252,7 +252,7 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 		print("Timeout...")
 		return False
 
-	if(waiting_for_the_execution_timeout(ser, 1200) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
 		return False
 
 	time_now1 = datetime.datetime.now()
@@ -260,7 +260,7 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 	print("Done!")
-	if(waiting_for_the_execution_timeout(ser, 1200) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
 		return False
 
 	return True
@@ -584,7 +584,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		json.dump(running_dict, f)
 
 	# !!!!!TODO:
-	test_dissem = False
+	test_dissem = True
 	if (test_dissem == False):
 		if(firmware_burned_existing == 1):
 			if(daemon_patch == 1):
@@ -619,6 +619,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 			print("disseminate the updated firmware...")
 	else:
 		using_patch = 0
+		daemon_patch = 1
 
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
@@ -691,7 +692,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 			YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
 
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 360) == False): # timeout: 800 seconds
 		return False
 
 	if(daemon_patch == 1):
@@ -700,7 +701,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		os.system('copy ' + firmware + ' ' + firmware_burned)
 
 	print("Done!")
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 360) == False): # timeout: 800 seconds
 		return False
 
 	return True
