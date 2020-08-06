@@ -877,6 +877,10 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				default_generate_size;
 	uint32_t			firmware_bitmap[DISSEM_BITMAP_32];
 
+	// send back the results in dissem
+	uint8_t				dissem_back_sf;
+	uint8_t				dissem_back_slot_num;
+
 	uint32_t			hash_header;
 
 	/* CHIRP_START: mixer config */

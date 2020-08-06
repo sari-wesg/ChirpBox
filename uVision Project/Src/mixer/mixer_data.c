@@ -850,6 +850,11 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         {
             data[1] = chirp_outl->default_slot_num >> 8;
             data[2] = chirp_outl->default_slot_num;
+            if (chirp_outl->arrange_task == MX_DISSEMINATE)
+            {
+                data[0] = chirp_outl->dissem_back_sf;
+                data[1] = chirp_outl->dissem_back_slot_num;
+            }
             data[k++] = chirp_outl->default_sf;
             data[k++] = chirp_outl->default_payload_len;
             data[k++] = chirp_outl->arrange_task;
@@ -1267,13 +1272,21 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         case MX_ARRANGE:
                         {
                             printf("MX_ARRANGE\n");
-                            chirp_outl->default_slot_num = data[1] << 8 | data[2];
+                            chirp_outl->arrange_task = data[6];
+                            if (chirp_outl->arrange_task == MX_DISSEMINATE)
+                            {
+                                chirp_outl->dissem_back_sf = data[0];
+                                chirp_outl->dissem_back_slot_num = data[1];
+                                chirp_outl->default_slot_num = data[2];
+                            }
+                            else
+                                chirp_outl->default_slot_num = data[1] << 8 | data[2];
                             /* reconfig chirp_outl (except the initiator) */
                             chirp_outl->default_sf = data[k++];
                             // chirp_outl->round_max = data[k++];
                             chirp_outl->default_payload_len = data[k++];
                             // chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
-                            chirp_outl->arrange_task = data[k++];
+                            // chirp_outl->arrange_task = data[k++];
                             chirp_outl->default_generate_size = data[ROUND_HEADER_LENGTH - 1];
                             if (chirp_outl->arrange_task == CHIRP_SNIFF)
                             {
@@ -1497,6 +1510,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 if (!chirp_outl->disem_flag)
                 {
                     free(payload_distribution);
+                    chirp_mx_radio_config(chirp_outl->default_sf, 7, 1, 8, 14, chirp_outl->default_freq);
                     /* If now is confirm, the initiator collect all nodes information about whether they are full rank last round, if so, then send the next file chunk, file index++, else do not increase file index */
                     if ((!node_id) && (chirp_config.full_column == 0))
                     {
@@ -1519,11 +1533,15 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     Stats_value(SLOT_STATS, mx.stat_counter.slot_decoded);
 
                     free(payload_distribution);
+                    if (chirp_outl->dissem_back_sf)
+                        chirp_mx_radio_config(chirp_outl->dissem_back_sf, 7, 1, 8, 14, chirp_outl->default_freq);
                     PRINTF("next: collect disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->num_nodes * 8, 1500000);
+                    if (chirp_outl->dissem_back_slot_num == 0)
+                        chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
+                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
                     chirp_mx_payload_distribution(MX_COLLECT);
                     chirp_outl->disem_flag = 0;
                     /* in confirm, all nodes sends packets */

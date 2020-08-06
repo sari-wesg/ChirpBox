@@ -727,9 +727,11 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t default_payload_len;
   uint8_t default_generate_size;
   uint16_t default_slot_num;
+  uint8_t dissem_back_sf;
+  uint8_t dissem_back_slot_num;
   uint8_t task_wait = 0;
 
-  uint8_t task[18 + DISSEM_BITMAP_32 * 8];
+  uint8_t task[25 + DISSEM_BITMAP_32 * 8];
   PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_SNIFF\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_SNIFF, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
@@ -764,16 +766,18 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
     default_payload_len = (task[5] - '0') * 100 + (task[6] - '0') * 10 + task[7] - '0';
     default_generate_size = (task[9] - '0') * 100 + (task[10] - '0') * 10 + task[11] - '0';
     default_slot_num = (task[13] - '0') * 1000 + (task[14] - '0') * 100 + (task[15] - '0') * 10 + (task[16] - '0');
+    dissem_back_sf = (task[18] - '0') * 10 + task[19] - '0';
+    dissem_back_slot_num = (task[21] - '0') * 100 + (task[22] - '0') * 10 + task[23] - '0';
     uint8_t i, data;
     memset((uint32_t *)&(chirp_outl->firmware_bitmap[0]), 0, DISSEM_BITMAP_32 * sizeof(uint32_t));
-    for (i = 18; i < 18 + DISSEM_BITMAP_32 * sizeof(uint32_t) * 2; i++)
+    for (i = 25; i < 25 + DISSEM_BITMAP_32 * sizeof(uint32_t) * 2; i++)
     {
       data = task[i];
       if ((data >= '0') && (data <= '9'))
         data = data - '0';
       else
         data = 10 + data - 'A';
-      chirp_outl->firmware_bitmap[(i - 18) / 8] += data * pow(0x10, sizeof(uint32_t) * 2 - 1 - ((i - 18) % (sizeof(uint32_t) * 2)));
+      chirp_outl->firmware_bitmap[(i - 25) / 8] += data * pow(0x10, sizeof(uint32_t) * 2 - 1 - ((i - 25) % (sizeof(uint32_t) * 2)));
     }
   } while ((mx_task > MX_TASK_LAST) || (mx_task < MX_TASK_FIRST));
 
@@ -786,7 +790,9 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   chirp_outl->default_payload_len = default_payload_len;
   chirp_outl->default_generate_size = default_generate_size;
   chirp_outl->default_slot_num = default_slot_num;
-  PRINTF("default sf:%lu, %lu, %lu, %lu, %02x\n", chirp_outl->default_sf, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->firmware_bitmap[0]);
+  chirp_outl->dissem_back_sf = dissem_back_sf;
+  chirp_outl->dissem_back_slot_num = dissem_back_slot_num;
+  PRINTF("default sf:%lu, %lu, %lu, %lu, %lu, %lu, %02x\n", chirp_outl->default_sf, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0]);
   switch (mx_task)
   {
     case CHIRP_START:
