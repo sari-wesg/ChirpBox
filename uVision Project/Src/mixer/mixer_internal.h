@@ -921,6 +921,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint16_t			disem_file_index;
 	uint16_t			disem_file_max;
 	uint16_t			disem_file_index_stay;
+	uint8_t				disem_flag_full_rank;
 	uint32_t			*disem_file_memory;
 
 	/* MX_COLLECT */

@@ -779,6 +779,11 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                         data[k++] = chirp_outl->disem_file_index >> 8;
                         data[k++] = chirp_outl->disem_file_index;
                     }
+                    else
+                    {
+                        data[6] = chirp_outl->disem_flag_full_rank;
+                        chirp_config.disem_copy = 0;
+                    }
                 }
             }
             /* collect setup: initiator sends start and end collect address in flash */
@@ -901,7 +906,8 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                     else
                     {
                         gpi_memcpy_dma((uint8_t *)(file_data), data, DATA_HEADER_LENGTH);
-                        gpi_memcpy_dma((uint32_t *)(file_data + DATA_HEADER_LENGTH), flash_data + i * (chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t), (chirp_outl->payload_len - DATA_HEADER_LENGTH));
+                        if (chirp_outl->disem_flag)
+                            gpi_memcpy_dma((uint32_t *)(file_data + DATA_HEADER_LENGTH), flash_data + i * (chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t), (chirp_outl->payload_len - DATA_HEADER_LENGTH));
                         mixer_write(i, (uint8_t *)file_data, chirp_outl->payload_len);
                         // PRINT_PACKET(file_data + DATA_HEADER_LENGTH, sizeof(file_data) - 8, 0);
                     }
@@ -1017,6 +1023,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         chirp_outl->disem_file_index++;
                     printf("dissem_index:%lu, %lu\n", rece_dissem_index, chirp_outl->disem_file_index);
                     round_hash++;
+                    PRINT_PACKET(p, DATA_HEADER_LENGTH, 1);
                 }
             }
         }
@@ -1049,7 +1056,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                     rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
                     printf("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
                 }
-                PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
+                // PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
                 packet_correct = 0;
                 if ((data[DATA_HEADER_LENGTH - 1] == chirp_outl->task))
                 {
@@ -1392,7 +1399,9 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         /* except these two task that all nodes need to upload data, others only initiator transmit data */
         if ((chirp_outl->task != MX_COLLECT) && (chirp_outl->task != CHIRP_TOPO) && (chirp_outl->task != CHIRP_VERSION))
         {
-            if (!node_id)
+            if ((chirp_outl->task == MX_DISSEMINATE) && (!chirp_outl->disem_flag) && (chirp_config.disem_copy))
+                chirp_write(node_id, chirp_outl);
+            else if (!node_id)
                 chirp_write(node_id, chirp_outl);
         }
         else
@@ -1551,6 +1560,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     {
                         printf("full disem_copy\n");
                         chirp_config.disem_copy = 1;
+                        chirp_outl->disem_flag_full_rank = mx.stat_counter.slot_full_rank;
                     }
                 }
         }
