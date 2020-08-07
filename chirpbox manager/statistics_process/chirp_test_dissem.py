@@ -21,7 +21,7 @@ def generate_command_dissem(com_serial):
     for i in range(0, len(config_list)):
         generation_size = config_list[i][0]
         slot_number = config_list[i][1]
-        task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "ac2f " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + "3FFFFF " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " "
+        task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "ac2f " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + "1FFFFF " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " "
         print(generation_size, slot_number, used_sf, count)
         print(task_dissem_run)
         cbmng.main(task_dissem_run.split())

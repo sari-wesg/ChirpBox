@@ -79,10 +79,10 @@ def plot_with_node_num_list_len(stats_list, node_num, list_len, string_name):
 
     # colors = ['red','yellow', 'blue']
     # labels = ['red flowers', 'yellow flowers', 'blue flowers']
-
+    plt.figure(figsize=(16,9))
     for i, groupdata in enumerate(binned_data):
         bar_positions = x_positions - number_of_groups*bar_width/2 + (i + 0.2)*bar_width
-        plt.bar(bar_positions, groupdata, bar_width,
+        fig = plt.bar(bar_positions, groupdata, bar_width,
                 align='center',
                 linewidth=1, edgecolor='k', alpha=0.8)
         # plt.bar(bar_positions, groupdata, bar_width,
@@ -90,14 +90,13 @@ def plot_with_node_num_list_len(stats_list, node_num, list_len, string_name):
         #         linewidth=1, edgecolor='k',
         #         color=colors[i], alpha=0.7,
         #         label=labels[i])
-
     plt.xticks(x_positions)
     # plt.legend()
     plt.xlabel('channel length')
     plt.ylabel('time in us')
     figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.png'
     plt.tight_layout()
-    plt.savefig(figure_name)
+    plt.savefig(figure_name, dpi = 300)
     plt.show()
 
 
@@ -174,21 +173,21 @@ def print_in_hex(matrix_data):
         print('\n')
 
 
-
+# const:
 node_num = 22
 f_data_len = 120
-filename = "disseminate_command_len_200_used_sf7_generate_size12_slot_num90_bitmap3FFFFF_FileSize2048(20200806214427249798).txt"
+filename = "disseminate_command_len_200_used_sf7_generate_size4_slot_num40_bitmap3FFFFF_FileSize2048_dissem_back_sf7_dissem_back_slot120(20200806220358213616).txt"
 Matrix_data = coldata_to_list(filename, int(node_num), int(f_data_len - 8))
 
 # print_in_hex(Matrix_data)
 
 task_payload_len = 200
-task_slot_num = 90
+task_slot_num = 40
 task_sf = 7
-task_generate_size = 12
+task_generate_size = 4
 task_back_sf = 7
-task_back_slot = 80
-task_try_num = 4
+task_back_slot = 120
+task_try_num = 7
 
 task_time = dissem_total_time(task_sf, task_payload_len, task_slot_num, task_generate_size, task_back_sf, task_back_slot, task_try_num, node_num)
 time_in_round = task_time[0]
