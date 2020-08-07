@@ -5,6 +5,7 @@ import numpy as np
 import pandas
 import datetime
 from cal_task_time import dissem_total_time
+import seaborn as sns
 
 class STATE(enum.Enum):
     WAITING_FOR_R = 1
@@ -67,7 +68,7 @@ def plot_with_node_num(stats_list, node_num, string_name):
     plt.show()
 
 
-def plot_with_node_num_list_len(stats_list, node_num, list_len, string_name):
+def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, string_name):
 
     binned_data = np.array(stats_list).T
 
@@ -90,10 +91,30 @@ def plot_with_node_num_list_len(stats_list, node_num, list_len, string_name):
         #         linewidth=1, edgecolor='k',
         #         color=colors[i], alpha=0.7,
         #         label=labels[i])
-    plt.xticks(x_positions)
+    plt.xticks(x_positions, fontsize=28)
+    plt.yticks(fontsize=28)
+
     # plt.legend()
-    plt.xlabel('channel length')
-    plt.ylabel('time in us')
+    plt.xlabel('channel length',fontsize=28)
+    plt.ylabel('time in duty cycle',fontsize=28)
+
+    plt.ylim(0,3)
+
+    # add vertical line
+    # yposition = 2.77
+    # plt.axvline(y=yposition, color='k', linestyle='-.',linewidth=0.5)
+
+    plt.axhline(y=2.77, color='r', linestyle='--')
+    plt.text(7.5, 2.6, r'Effective Duty Cycle',fontsize=18,fontname="Arial")
+
+    ax = plt.gca()
+    ax.set_aspect('auto')
+    ax.spines['bottom'].set_linewidth(1.5)
+    ax.spines['top'].set_linewidth(1.5)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['right'].set_linewidth(1.5)
+    ax.tick_params(direction='out', length=10, width=2)
+
     figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.png'
     plt.tight_layout()
     plt.savefig(figure_name, dpi = 300)
@@ -148,13 +169,13 @@ def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_
     channel_data_1_array = channel_data_1_array / (time_in_task * 1e6) * 1e2
     channel_data_1 = channel_data_1_array.tolist()
     # print(channel_data_1)
-    plot_with_node_num_list_len(channel_data_1, node_num, stats_lbt, filename + "channel_1")
+    plot_with_node_num_list_len_duty_cycle(channel_data_1, node_num, stats_lbt, filename + "channel_1")
 
     # plot_with_node_num(slot_data_2[0], node_num, filename + "slot1_2")
     # plot_with_node_num(slot_data_2[4], node_num, filename + "slot_fail_2")
     # plot_with_node_num(rx_data_2[0], node_num, filename + "rx_2")
     # plot_with_node_num(tx_data_2[0], node_num, filename + "tx_2")
-    # plot_with_node_num_list_len(channel_data_2, node_num, stats_lbt, filename + "channel_2")
+    # plot_with_node_num_list_len_duty_cycle(channel_data_2, node_num, stats_lbt, filename + "channel_2")
 
     # print(slot_data_1)
     # print(rx_data_1)
