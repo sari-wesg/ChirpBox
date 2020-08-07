@@ -473,32 +473,32 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 	 	return False
 
 	print("Results of " + filename + " have been collected!" )
-	# filename = "Chirpbox_connectivity_sf7ch470000tp0(20200801141355709008).txt"
-	results = statistics_process.topo_parser.topo_parser(filename, using_pos)
-	# max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
-	print("Max_hop: " + str(results[0]))
-	print("Mean_degree: " + str(results[1]))
-	print("Std_dev_degree: " + str(results[2]))
-	print("Min_degree: " + str(results[3]))
-	print("Max_degree: " + str(results[4]))
-	print("Symmetry: " + str(results[5]))
-	print("Temperature of nodes: " + str(results[6]))
-	filename_hop = "hop_" + filename
-	with open(filename_hop, 'w+') as f:
-		line = ("Max_hop: " + str(results[0]))
-		f.write(line + "\r")
-		line = ("Mean_degree: " + str(results[1]))
-		f.write(line + "\r")
-		line = ("Std_dev_degree: " + str(results[2]))
-		f.write(line + "\r")
-		line = ("Min_degree: " + str(results[3]))
-		f.write(line + "\r")
-		line = ("Max_degree: " + str(results[4]))
-		f.write(line + "\r")
-		line = ("Symmetry: " + str(results[5]))
-		f.write(line + "\r")
-		line = ("Temperature of nodes: " + str(results[6]))
-		f.write(line + "\r")
+	# # filename = "Chirpbox_connectivity_sf7ch470000tp0(20200801141355709008).txt"
+	# results = statistics_process.topo_parser.topo_parser(filename, using_pos)
+	# # max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
+	# print("Max_hop: " + str(results[0]))
+	# print("Mean_degree: " + str(results[1]))
+	# print("Std_dev_degree: " + str(results[2]))
+	# print("Min_degree: " + str(results[3]))
+	# print("Max_degree: " + str(results[4]))
+	# print("Symmetry: " + str(results[5]))
+	# print("Temperature of nodes: " + str(results[6]))
+	# filename_hop = "hop_" + filename
+	# with open(filename_hop, 'w+') as f:
+	# 	line = ("Max_hop: " + str(results[0]))
+	# 	f.write(line + "\r")
+	# 	line = ("Mean_degree: " + str(results[1]))
+	# 	f.write(line + "\r")
+	# 	line = ("Std_dev_degree: " + str(results[2]))
+	# 	f.write(line + "\r")
+	# 	line = ("Min_degree: " + str(results[3]))
+	# 	f.write(line + "\r")
+	# 	line = ("Max_degree: " + str(results[4]))
+	# 	f.write(line + "\r")
+	# 	line = ("Symmetry: " + str(results[5]))
+	# 	f.write(line + "\r")
+	# 	line = ("Temperature of nodes: " + str(results[6]))
+	# 	f.write(line + "\r")
 	return True
 
 
@@ -584,7 +584,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		json.dump(running_dict, f)
 
 	# !!!!!TODO:
-	test_dissem = True
+	test_dissem = False
 	if (test_dissem == False):
 		if(firmware_burned_existing == 1):
 			if(daemon_patch == 1):

@@ -15,7 +15,7 @@ def generate_command_dissem(com_serial):
     count = 0
     payload_len = 200
     dissem_back_sf = 7
-    dissem_back_slot = 80
+    dissem_back_slot = 120
     used_sf = 7
     config_list = [[4, 40], [4, 50], [8, 50], [8, 70], [12, 70], [12, 90]]
     for i in range(0, len(config_list)):
