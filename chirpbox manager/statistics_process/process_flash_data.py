@@ -7,6 +7,7 @@ import datetime
 from cal_task_time import dissem_total_time
 import seaborn as sns
 import pandas as pd
+import statistics
 
 class STATE(enum.Enum):
     WAITING_FOR_R = 1
@@ -140,7 +141,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         plt.yticks(fontsize=28)
 
         plt.xlabel('Channels',fontsize=28)
-        plt.ylabel('Tx Total Time (s)',fontsize=28)
+        plt.ylabel('Tx total time (s)',fontsize=28)
 
         plt.ylim(0,100)
 
@@ -205,7 +206,7 @@ def rx_tx_one_dissem(node_num, rx_time, tx_time, string_name):
     ax.yaxis.offsetText.set_fontsize(24)
 
     plt.xlabel('Channels',fontsize=28)
-    plt.ylabel('Tx Total Time (s)',fontsize=28)
+    plt.ylabel('Radio on time (s)',fontsize=28)
 
     ax = plt.gca()
     ax.set_aspect('auto')
@@ -323,7 +324,17 @@ def dissem_files(node_num, file_list, dissem_config_list):
         task_time = dissem_total_time(dissem_config[0], dissem_config[1], dissem_config[2], dissem_config[3], dissem_config[4], dissem_config[5], task_try_num, node_num)
 
         time_in_task = task_time[1]
-        plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config)
+        # plot figures
+        # plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config)
+
+        radio_on_time = [0] * len(rx_time)
+        for i in range(0, len(rx_time)):
+            radio_on_time[i] = (rx_time[i] + tx_time[i]) / 1e6
+        radio_std = statistics.stdev(radio_on_time)
+        radio_mean = statistics.mean(radio_on_time)
+
+        print (radio_mean * task_try_num, radio_std * task_try_num, task_time[1], task_time[2])
+    return (radio_mean, radio_std, task_time[1], task_time[2])
 
 # const:
 # TODO:
