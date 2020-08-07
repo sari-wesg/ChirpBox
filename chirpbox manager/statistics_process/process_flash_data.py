@@ -118,7 +118,7 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
     plt.show()
 
 
-def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name):
+def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
     array_lbt = np.array(channel_data).T
     lbt_list = [[0]*3]*node_num * stats_lbt
     lbt_count = 0
@@ -132,22 +132,39 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name):
     plt.figure(figsize=(16,9))
 
     # seaborn
-    # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette("BrBG", 22))
-    ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
+    if (total == 1):
+        # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette("BrBG", 22))
+        ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
 
-    # config ticks
-    plt.xticks(fontsize=28)
-    # plt.yticks(fontsize=28)
-    y_value=['{:,.2f}'.format(x) + '%' for x in ax.get_yticks()]
-    ax.set_yticklabels(y_value, fontsize=28)
+        # config ticks
+        plt.xticks(fontsize=28)
+        plt.yticks(fontsize=28)
 
-    plt.xlabel('Channels',fontsize=28)
-    plt.ylabel('Tx Duty Cycle',fontsize=28)
+        plt.xlabel('Channels',fontsize=28)
+        plt.ylabel('Tx Total Time',fontsize=28)
 
-    plt.ylim(0,3)
+        plt.ylim(0,100)
 
-    plt.axhline(y=2.77, color='k', linestyle='--')
-    plt.text(7, 2.6, r'Effective Duty Cycle Limit',fontsize=18,fontname="Arial")
+        # plt.axhline(y=100, color='k', linestyle='--')
+        # plt.text(7, 100, r'TX period limit',fontsize=18,fontname="Arial")
+
+    else:
+        # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette("BrBG", 22))
+        ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
+
+        # config ticks
+        plt.xticks(fontsize=28)
+        # plt.yticks(fontsize=28)
+        y_value=['{:,.2f}'.format(x) + '%' for x in ax.get_yticks()]
+        ax.set_yticklabels(y_value, fontsize=28)
+
+        plt.xlabel('Channels',fontsize=28)
+        plt.ylabel('TX duty cycle',fontsize=28)
+
+        plt.ylim(0,3)
+
+        plt.axhline(y=2.77, color='k', linestyle='--')
+        plt.text(7, 2.6, r'Effective duty cycle limit',fontsize=18,fontname="Arial")
 
     ax = plt.gca()
     ax.set_aspect('auto')
@@ -160,7 +177,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name):
     # plt config
     figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.png'
     # plt.legend(loc='best',edgecolor='k',fontsize=10)
-    legend = plt.legend(loc='best', title="Node ID", edgecolor='k',fontsize = 10, fancybox=True)
+    legend = plt.legend(loc='center right', title="Node ID", edgecolor='k',fontsize = 10, fancybox=True)
     legend.get_frame().set_linewidth(2)
     legend.get_frame().set_edgecolor("k")
 
@@ -213,9 +230,13 @@ def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_
     # plot_with_node_num(rx_data_1[0], node_num, filename + "rx_1")
     # plot_with_node_num(tx_data_1[0], node_num, filename + "tx_1")
     channel_data_1_array = np.array(channel_data_1)
+    channel_data_1_array = channel_data_1_array / (1e6)
+    channel_data_1_temp = channel_data_1_array.tolist()
+    lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, filename + "channel_total", 1)
+    channel_data_1_array = np.array(channel_data_1)
     channel_data_1_array = channel_data_1_array / (time_in_task * 1e6) * 1e2
-    channel_data_1 = channel_data_1_array.tolist()
-    lbt_figure_sns(node_num, stats_lbt, channel_data_1, filename + "channel_1")
+    channel_data_1_temp = channel_data_1_array.tolist()
+    lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, filename + "channel_duty_cycle", 0)
     # plot_with_node_num_list_len_duty_cycle(channel_data_1, node_num, stats_lbt, filename + "channel_1")
 
     # plot_with_node_num(slot_data_2[0], node_num, filename + "slot1_2")
