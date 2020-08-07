@@ -63,7 +63,7 @@ def plot_with_node_num(stats_list, node_num, string_name):
     ax.spines['left'].set_linewidth(1.5)
     ax.spines['right'].set_linewidth(1.5)
     plt.subplots_adjust(left=0.22, right=0.96, top=0.95, bottom=0.15)
-    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.png'
+    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
     plt.tight_layout()
     plt.savefig(figure_name)
     plt.show()
@@ -112,7 +112,7 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
     ax.spines['right'].set_linewidth(1.5)
     ax.tick_params(direction='out', length=10, width=2)
 
-    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.png'
+    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
     plt.tight_layout()
     plt.savefig(figure_name, dpi = 300)
     plt.show()
@@ -133,15 +133,14 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
 
     # seaborn
     if (total == 1):
-        # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette("BrBG", 22))
-        ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
-
+        # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
+        ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette('PuBuGn_d', n_colors=node_num, desat=1))
         # config ticks
         plt.xticks(fontsize=28)
         plt.yticks(fontsize=28)
 
         plt.xlabel('Channels',fontsize=28)
-        plt.ylabel('Tx Total Time',fontsize=28)
+        plt.ylabel('Tx Total Time (s)',fontsize=28)
 
         plt.ylim(0,100)
 
@@ -150,7 +149,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
 
     else:
         # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette("BrBG", 22))
-        ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
+        ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette('PuBuGn_d', n_colors=node_num, desat=1))
 
         # config ticks
         plt.xticks(fontsize=28)
@@ -164,7 +163,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         plt.ylim(0,3)
 
         plt.axhline(y=2.77, color='k', linestyle='--')
-        plt.text(7, 2.6, r'Effective duty cycle limit',fontsize=18,fontname="Arial")
+        plt.text(6.5, 2.6, r'Effective duty cycle limit',fontsize=24,fontname="Arial")
 
     ax = plt.gca()
     ax.set_aspect('auto')
@@ -175,10 +174,49 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
     ax.tick_params(direction='out', length=10, width=2)
 
     # plt config
-    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.png'
+    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
     # plt.legend(loc='best',edgecolor='k',fontsize=10)
-    legend = plt.legend(loc='center right', title="Node ID", edgecolor='k',fontsize = 10, fancybox=True)
+    legend = plt.legend(loc='center right', bbox_to_anchor=(1.1, 0.5),title="Node ID", edgecolor='k',fontsize = 16, fancybox=True)
     legend.get_frame().set_linewidth(2)
+    legend.get_frame().set_edgecolor("k")
+
+    plt.tight_layout()
+    plt.savefig(figure_name, dpi = 300)
+    # plt.show()
+
+def rx_tx_one_dissem(node_num, rx_time, tx_time, string_name):
+    radio_list = [[0]*3]*node_num
+    for node_radio in range(0, node_num):
+        radio_list[node_radio] = [node_radio, rx_time[node_radio], tx_time[node_radio]]
+    df = pd.DataFrame(radio_list,columns=['node_id','RX time','TX time'])
+
+
+    sns.set(context=None, style=None, palette=sns.color_palette('PuBuGn_d', n_colors=2, desat=1), font_scale=1, color_codes=False, rc=None)
+    ax = df.set_index('node_id').plot(kind='bar', stacked=True, figsize=(16,9))
+
+    # config ticks
+    plt.xticks(fontsize=28)
+    plt.yticks(fontsize=28)
+
+    # change font size of the scientific notation in matplotlib
+    ax.yaxis.offsetText.set_fontsize(24)
+
+    plt.xlabel('Channels',fontsize=28)
+    plt.ylabel('Tx Total Time (s)',fontsize=28)
+
+    ax = plt.gca()
+    ax.set_aspect('auto')
+    ax.spines['bottom'].set_linewidth(1.5)
+    ax.spines['top'].set_linewidth(1.5)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['right'].set_linewidth(1.5)
+    ax.tick_params(direction='out', length=10, width=2)
+
+    # plt config
+    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
+    # plt.legend(loc='best',edgecolor='k',fontsize=10)
+    legend = plt.legend(loc='upper right', title="Node ID", edgecolor='k',fontsize = 16, fancybox=True)
+    legend.get_frame().set_linewidth(1.5)
     legend.get_frame().set_edgecolor("k")
 
     plt.tight_layout()
@@ -229,10 +267,15 @@ def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_
     # plot_with_node_num(slot_data_1[4], node_num, filename + "slot_fail_1")
     # plot_with_node_num(rx_data_1[0], node_num, filename + "rx_1")
     # plot_with_node_num(tx_data_1[0], node_num, filename + "tx_1")
+    # 1, plt radio on time
+    rx_tx_one_dissem(node_num, rx_data_1[0], tx_data_1[0], filename + "radio_on")
+
+    # 2, plt lbt total time
     channel_data_1_array = np.array(channel_data_1)
     channel_data_1_array = channel_data_1_array / (1e6)
     channel_data_1_temp = channel_data_1_array.tolist()
     lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, filename + "channel_total", 1)
+    # 3, plt lbt duty cycle
     channel_data_1_array = np.array(channel_data_1)
     channel_data_1_array = channel_data_1_array / (time_in_task * 1e6) * 1e2
     channel_data_1_temp = channel_data_1_array.tolist()
