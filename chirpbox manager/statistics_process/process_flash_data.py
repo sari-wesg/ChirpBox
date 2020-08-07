@@ -152,6 +152,8 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette('PuBuGn_d', n_colors=node_num, desat=1))
 
         # config ticks
+        plt.ylim(0,3)
+
         plt.xticks(fontsize=28)
         # plt.yticks(fontsize=28)
         y_value=['{:,.2f}'.format(x) + '%' for x in ax.get_yticks()]
@@ -160,7 +162,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         plt.xlabel('Channels',fontsize=28)
         plt.ylabel('TX duty cycle',fontsize=28)
 
-        plt.ylim(0,3)
+        # plt.ylim(0,3)
 
         plt.axhline(y=2.77, color='k', linestyle='--')
         plt.text(6.5, 2.6, r'Effective duty cycle limit',fontsize=24,fontname="Arial")
@@ -176,7 +178,8 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
     # plt config
     figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
     # plt.legend(loc='best',edgecolor='k',fontsize=10)
-    legend = plt.legend(loc='center right', bbox_to_anchor=(1.1, 0.5),title="Node ID", edgecolor='k',fontsize = 16, fancybox=True)
+    legend = plt.legend(loc='center right', bbox_to_anchor=(1.1, 0.5), edgecolor='k',fontsize = 16, fancybox=True)
+    legend.set_title("Node ID",prop={'size':16})
     legend.get_frame().set_linewidth(2)
     legend.get_frame().set_edgecolor("k")
 
@@ -215,7 +218,8 @@ def rx_tx_one_dissem(node_num, rx_time, tx_time, string_name):
     # plt config
     figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
     # plt.legend(loc='best',edgecolor='k',fontsize=10)
-    legend = plt.legend(loc='upper right', title="Node ID", edgecolor='k',fontsize = 16, fancybox=True)
+    legend = plt.legend(loc='upper right', edgecolor='k',fontsize = 16, fancybox=True)
+    legend.set_title("Node ID",prop={'size':16})
     legend.get_frame().set_linewidth(1.5)
     legend.get_frame().set_edgecolor("k")
 
@@ -223,7 +227,7 @@ def rx_tx_one_dissem(node_num, rx_time, tx_time, string_name):
     plt.savefig(figure_name, dpi = 300)
     # plt.show()
 
-def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_task):
+def matrix_to_type_data(Matrix_data, node_num, filename):
     global stats_lbt
     slot_data_1 = [[0 for x in range(node_num)] for y in range(5)]
     rx_data_1 = [[0 for x in range(node_num)] for y in range(4)]
@@ -267,19 +271,6 @@ def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_
     # plot_with_node_num(slot_data_1[4], node_num, filename + "slot_fail_1")
     # plot_with_node_num(rx_data_1[0], node_num, filename + "rx_1")
     # plot_with_node_num(tx_data_1[0], node_num, filename + "tx_1")
-    # 1, plt radio on time
-    rx_tx_one_dissem(node_num, rx_data_1[0], tx_data_1[0], filename + "radio_on")
-
-    # 2, plt lbt total time
-    channel_data_1_array = np.array(channel_data_1)
-    channel_data_1_array = channel_data_1_array / (1e6)
-    channel_data_1_temp = channel_data_1_array.tolist()
-    lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, filename + "channel_total", 1)
-    # 3, plt lbt duty cycle
-    channel_data_1_array = np.array(channel_data_1)
-    channel_data_1_array = channel_data_1_array / (time_in_task * 1e6) * 1e2
-    channel_data_1_temp = channel_data_1_array.tolist()
-    lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, filename + "channel_duty_cycle", 0)
     # plot_with_node_num_list_len_duty_cycle(channel_data_1, node_num, stats_lbt, filename + "channel_1")
 
     # plot_with_node_num(slot_data_2[0], node_num, filename + "slot1_2")
@@ -296,6 +287,8 @@ def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_
     # print(rx_data_2)
     # print(tx_data_2)
     # print(channel_data_2)
+    try_num = slot_data_1[4][0]
+    return [rx_data_1[0], tx_data_1[0], channel_data_1, try_num]
 
 def print_in_hex(matrix_data):
     for i in range(len(matrix_data)):
@@ -304,32 +297,37 @@ def print_in_hex(matrix_data):
             print(hex((matrix_data[i][k])), '', end = '')
         print('\n')
 
+def plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config):
+    dissem_config_name = ''.join(str(e) for e in dissem_config)
+    # 1, plt radio on time
+    rx_tx_one_dissem(node_num, rx_time, tx_time, dissem_config_name + "radio_on")
+
+    # 2, plt lbt total time
+    channel_data_1_array = np.array(channel_data)
+    channel_data_1_array = channel_data_1_array / (1e6)
+    channel_data_1_temp = channel_data_1_array.tolist()
+    lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, dissem_config_name + "channel_total", 1)
+    # 3, plt lbt duty cycle
+    channel_data_1_array = np.array(channel_data)
+    channel_data_1_array = channel_data_1_array / (time_in_task * 1e6) * 1e2
+    channel_data_1_temp = channel_data_1_array.tolist()
+    lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, dissem_config_name + "channel_duty_cycle", 0)
+
+def dissem_files(node_num, file_list, dissem_config_list):
+    f_data_len = 120
+    for i in range(0, len(file_list)):
+        filename = file_list[i]
+        Matrix_data = coldata_to_list(filename, int(node_num), int(f_data_len - 8))
+        rx_time, tx_time, channel_data, task_try_num = matrix_to_type_data(Matrix_data, node_num, filename)
+        dissem_config = dissem_config_list[i]
+        task_time = dissem_total_time(dissem_config[0], dissem_config[1], dissem_config[2], dissem_config[3], dissem_config[4], dissem_config[5], task_try_num, node_num)
+
+        time_in_task = task_time[1]
+        plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config)
 
 # const:
+# TODO:
 node_num = 22
-f_data_len = 120
-filename = "disseminate_command_len_200_used_sf7_generate_size4_slot_num40_bitmap3FFFFF_FileSize2048_dissem_back_sf7_dissem_back_slot120(20200806220358213616).txt"
-Matrix_data = coldata_to_list(filename, int(node_num), int(f_data_len - 8))
-
-# print_in_hex(Matrix_data)
-
-task_payload_len = 200
-task_slot_num = 40
-task_sf = 7
-task_generate_size = 4
-task_back_sf = 7
-task_back_slot = 120
-task_try_num = 7
-
-task_time = dissem_total_time(task_sf, task_payload_len, task_slot_num, task_generate_size, task_back_sf, task_back_slot, task_try_num, node_num)
-time_in_round = task_time[0]
-time_in_task = task_time[1]
-# print(time_in_round, time_in_task)
-matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_task)
-
-
-# People_List = [['Jon','Smith',21],['Mark','Brown',38],['Maria','Lee',42],['Jill','Jones',28],['Jack','Ford',55]]
-
-# df = pd.DataFrame(People_List,columns=['First_Name','Last_Name','Age'])
-# print(df)
-
+file_list = ["disseminate_command_len_200_used_sf7_generate_size4_slot_num35_bitmap3FFFFF_FileSize2048(20200806200112516334).txt", "disseminate_command_len_200_used_sf7_generate_size12_slot_num90_bitmap3FFFFF_FileSize2048(20200806214427249798).txt"]
+dissem_config_list = [[7, 200, 35, 4, 7, 80], [7, 200, 90, 12, 7, 80]]
+dissem_files(node_num, file_list, dissem_config_list)
