@@ -6,6 +6,7 @@ import pandas
 import datetime
 from cal_task_time import dissem_total_time
 import seaborn as sns
+import pandas as pd
 
 class STATE(enum.Enum):
     WAITING_FOR_R = 1
@@ -100,10 +101,6 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
 
     plt.ylim(0,3)
 
-    # add vertical line
-    # yposition = 2.77
-    # plt.axvline(y=yposition, color='k', linestyle='-.',linewidth=0.5)
-
     plt.axhline(y=2.77, color='r', linestyle='--')
     plt.text(7.5, 2.6, r'Effective Duty Cycle',fontsize=18,fontname="Arial")
 
@@ -120,6 +117,56 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
     plt.savefig(figure_name, dpi = 300)
     plt.show()
 
+
+def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name):
+    array_lbt = np.array(channel_data).T
+    lbt_list = [[0]*3]*node_num * stats_lbt
+    lbt_count = 0
+    for node_lbt in range(0, node_num):
+        for channel_lbt in range(0, stats_lbt):
+            lbt_list[lbt_count] = [node_lbt, channel_lbt, array_lbt[node_lbt][channel_lbt]]
+            lbt_count = lbt_count + 1
+    df = pd.DataFrame(lbt_list,columns=['node_id','channel_id','duty_cycle'])
+
+    # figure config
+    plt.figure(figsize=(16,9))
+
+    # seaborn
+    # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette("BrBG", 22))
+    ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
+
+    # config ticks
+    plt.xticks(fontsize=28)
+    # plt.yticks(fontsize=28)
+    y_value=['{:,.2f}'.format(x) + '%' for x in ax.get_yticks()]
+    ax.set_yticklabels(y_value, fontsize=28)
+
+    plt.xlabel('Channels',fontsize=28)
+    plt.ylabel('Tx Duty Cycle',fontsize=28)
+
+    plt.ylim(0,3)
+
+    plt.axhline(y=2.77, color='k', linestyle='--')
+    plt.text(7, 2.6, r'Effective Duty Cycle Limit',fontsize=18,fontname="Arial")
+
+    ax = plt.gca()
+    ax.set_aspect('auto')
+    ax.spines['bottom'].set_linewidth(1.5)
+    ax.spines['top'].set_linewidth(1.5)
+    ax.spines['left'].set_linewidth(1.5)
+    ax.spines['right'].set_linewidth(1.5)
+    ax.tick_params(direction='out', length=10, width=2)
+
+    # plt config
+    figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.png'
+    # plt.legend(loc='best',edgecolor='k',fontsize=10)
+    legend = plt.legend(loc='best', title="Node ID", edgecolor='k',fontsize = 10, fancybox=True)
+    legend.get_frame().set_linewidth(2)
+    legend.get_frame().set_edgecolor("k")
+
+    plt.tight_layout()
+    plt.savefig(figure_name, dpi = 300)
+    # plt.show()
 
 def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_task):
     global stats_lbt
@@ -168,8 +215,8 @@ def matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_
     channel_data_1_array = np.array(channel_data_1)
     channel_data_1_array = channel_data_1_array / (time_in_task * 1e6) * 1e2
     channel_data_1 = channel_data_1_array.tolist()
-    # print(channel_data_1)
-    plot_with_node_num_list_len_duty_cycle(channel_data_1, node_num, stats_lbt, filename + "channel_1")
+    lbt_figure_sns(node_num, stats_lbt, channel_data_1, filename + "channel_1")
+    # plot_with_node_num_list_len_duty_cycle(channel_data_1, node_num, stats_lbt, filename + "channel_1")
 
     # plot_with_node_num(slot_data_2[0], node_num, filename + "slot1_2")
     # plot_with_node_num(slot_data_2[4], node_num, filename + "slot_fail_2")
@@ -216,4 +263,9 @@ time_in_task = task_time[1]
 # print(time_in_round, time_in_task)
 matrix_to_type_data(Matrix_data, node_num, filename, time_in_round, time_in_task)
 
+
+# People_List = [['Jon','Smith',21],['Mark','Brown',38],['Maria','Lee',42],['Jill','Jones',28],['Jack','Ford',55]]
+
+# df = pd.DataFrame(People_List,columns=['First_Name','Last_Name','Age'])
+# print(df)
 
