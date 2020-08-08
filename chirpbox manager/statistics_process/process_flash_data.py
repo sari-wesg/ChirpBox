@@ -338,7 +338,6 @@ def dissem_files(node_num, file_list, dissem_config_list):
 
 # const:
 # TODO:
-node_num = 22
-file_list = ["disseminate_command_len_200_used_sf7_generate_size4_slot_num35_bitmap3FFFFF_FileSize2048(20200806200112516334).txt", "disseminate_command_len_200_used_sf7_generate_size12_slot_num90_bitmap3FFFFF_FileSize2048(20200806214427249798).txt"]
-dissem_config_list = [[7, 200, 35, 4, 7, 80], [7, 200, 90, 12, 7, 80]]
-dissem_files(node_num, file_list, dissem_config_list)
+# file_list = ["disseminate_command_len_200_used_sf7_generate_size4_slot_num35_bitmap3FFFFF_FileSize2048(20200806200112516334).txt", "disseminate_command_len_200_used_sf7_generate_size12_slot_num90_bitmap3FFFFF_FileSize2048(20200806214427249798).txt"]
+# dissem_config_list = [[7, 200, 35, 4, 7, 80], [7, 200, 90, 12, 7, 80]]
+# dissem_files(22, file_list, dissem_config_list)
