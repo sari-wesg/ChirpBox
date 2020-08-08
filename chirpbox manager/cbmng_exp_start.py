@@ -282,6 +282,21 @@ def assign_sniffer(command_sf, com_port, slot_num):
 		expconfapp.read_configuration()
 	else:
 		return False
+
+	time_now = datetime.datetime.now()
+	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	exp_no = cbmng_common.tid_maker()
+
+	FileSize = cbmng_common.get_FileSize(firmware)
+	exp_name = "all_to_all" + "_used_sf" + str(command_sf) + "_slot_num" + str(slot_num) + "_payload_len_8"
+	print(exp_name)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
+
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
