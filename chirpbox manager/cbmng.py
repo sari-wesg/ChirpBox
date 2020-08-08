@@ -76,7 +76,7 @@ def main(argv):
 	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 5)):
 		if(cbmng_exp_start.check() == True):
 			cbmng_exp_start.assign_sniffer(int(argv[2]), argv[3], int(argv[4]))
-		exit(0)
+		# exit(0)
 	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 6)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_data(argv[4], int(argv[2]), int(argv[3]), int(argv[5]))
@@ -88,7 +88,7 @@ def main(argv):
 	elif(((argv[1] == "collect_version") or (argv[1] == "-colver")) and (len(argv) == 5)):
 		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_version(argv[3], int(argv[2]), int(argv[4]))
-		exit(0)
+		# exit(0)
 	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 12)):
 		if(cbmng_exp_start.check() == True):
 			cbmng_exp_start.disseminate(argv[7], int(argv[2]), argv[3], int(argv[4]), int(argv[6]), int(argv[5]), argv[8], int(argv[9]), int(argv[10]), int(argv[11]))
