@@ -121,7 +121,7 @@ def dissem_total_time(send_sf, send_payload, send_slot, send_generate, back_sf, 
     dissem_col_time_total = (try_num - 1) * dissem_col_time
     dissem_total_time = dissem_time_total + dissem_col_time_total
     # print(dissem_time, dissem_time_total, dissem_col_time, dissem_col_time_total, dissem_total_time)
-    return (dissem_time, dissem_total_time)
+    return (dissem_time, dissem_total_time, dissem_time_total)
 
 task_payload_len = 200
 task_slot_num = 90

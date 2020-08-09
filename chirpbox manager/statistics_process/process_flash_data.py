@@ -67,7 +67,7 @@ def plot_with_node_num(stats_list, node_num, string_name):
     figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
     plt.tight_layout()
     plt.savefig(figure_name)
-    plt.show()
+    # plt.show()
 
 
 def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, string_name):
@@ -100,7 +100,7 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
     plt.xlabel('channel length',fontsize=28)
     plt.ylabel('time in duty cycle',fontsize=28)
 
-    plt.ylim(0,3)
+    # plt.ylim(0,3)
 
     plt.axhline(y=2.77, color='r', linestyle='--')
     plt.text(7.5, 2.6, r'Effective Duty Cycle',fontsize=18,fontname="Arial")
@@ -116,7 +116,7 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
     figure_name = "coldata_save//" + string_name + "_" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'
     plt.tight_layout()
     plt.savefig(figure_name, dpi = 300)
-    plt.show()
+    # plt.show()
 
 
 def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
@@ -153,7 +153,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette('PuBuGn_d', n_colors=node_num, desat=1))
 
         # config ticks
-        plt.ylim(0,3)
+        # plt.ylim(0,3)
 
         plt.xticks(fontsize=28)
         # plt.yticks(fontsize=28)
@@ -298,7 +298,7 @@ def print_in_hex(matrix_data):
             print(hex((matrix_data[i][k])), '', end = '')
         print('\n')
 
-def plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config):
+def plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config, node_num):
     dissem_config_name = ''.join(str(e) for e in dissem_config)
     # 1, plt radio on time
     rx_tx_one_dissem(node_num, rx_time, tx_time, dissem_config_name + "radio_on")
@@ -316,6 +316,7 @@ def plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_
 
 def dissem_files(node_num, file_list, dissem_config_list):
     f_data_len = 120
+    dissem_result = []
     for i in range(0, len(file_list)):
         filename = file_list[i]
         Matrix_data = coldata_to_list(filename, int(node_num), int(f_data_len - 8))
@@ -325,16 +326,23 @@ def dissem_files(node_num, file_list, dissem_config_list):
 
         time_in_task = task_time[1]
         # plot figures
-        # plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config)
+        plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config, node_num)
 
-        radio_on_time = [0] * len(rx_time)
-        for i in range(0, len(rx_time)):
-            radio_on_time[i] = (rx_time[i] + tx_time[i]) / 1e6
-        radio_std = statistics.stdev(radio_on_time)
-        radio_mean = statistics.mean(radio_on_time)
+        # radio_on_time = [0] * len(rx_time)
+        # for i in range(0, len(rx_time)):
+        #     radio_on_time[i] = (rx_time[i] + tx_time[i]) / 1e6
+        # radio_std = statistics.stdev(radio_on_time)
+        # radio_mean = statistics.mean(radio_on_time)
+        rx_time[:] = [x / 1e6 for x in rx_time]
+        tx_time[:] = [x / 1e6 for x in tx_time]
+        radio_rx_mean = statistics.mean(rx_time)
+        radio_rx_stdev = statistics.stdev(rx_time)
+        radio_tx_mean = statistics.mean(tx_time)
+        radio_tx_stdev = statistics.stdev(tx_time)
 
-        print (radio_mean * task_try_num, radio_std * task_try_num, task_time[1], task_time[2])
-    return (radio_mean, radio_std, task_time[1], task_time[2])
+        # print (radio_rx_mean, radio_rx_stdev, radio_tx_mean, radio_tx_stdev, task_time[1], task_try_num)
+        dissem_result.append([radio_rx_mean, radio_rx_stdev, radio_tx_mean, radio_tx_stdev, task_time[1], task_try_num])
+    return (dissem_result)
 
 # const:
 # TODO:

@@ -523,6 +523,20 @@ def collect_version(com_port, command_sf, slot_num):
 	dissem_back_sf = 0
 	dissem_back_slot = 0
 
+	time_now = datetime.datetime.now()
+	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	exp_no = cbmng_common.tid_maker()
+
+	FileSize = cbmng_common.get_FileSize(firmware)
+	exp_name = "version" + "_used_sf" + str(command_sf) + "_slot_num" + str(slot_num) + "_payload_len_11"
+	print(exp_name)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
+
 	# config and open the serial port
 	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
 	# corresponded task number
