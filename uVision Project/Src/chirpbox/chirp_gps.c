@@ -164,7 +164,7 @@ static void change_unix(long ts, Chirp_Time *gps_time)
     gps_time->chirp_hour = (uint8_t)hour;
     gps_time->chirp_min = (uint8_t)minute;
     gps_time->chirp_sec = (uint8_t)second;
-    PRINTF("%d-%d-%d %d:%d:%d week: %d\n", gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec, gps_time->chirp_day);
+    TRACE_MSG("%d-%d-%d %d:%d:%d week: %d\n", gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec, gps_time->chirp_day);
 }
 
 void gps_pps_IRQ()
@@ -232,7 +232,7 @@ Chirp_Time GPS_Get_Time()
         ;
     if (gps_done == 2)
     {
-        PRINTF("chirp_time:%s\n", aRxBuffer);
+        TRACE_MSG("chirp_time:%s\n", aRxBuffer);
         change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     }
     return chirp_time;
@@ -262,7 +262,7 @@ time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, 
     now = GPS_Conv(gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec);
     start = GPS_Conv(start_year, start_month, start_date, start_hour, start_min, start_sec);
     diff = start - now;
-    printf("seconds difference = %ld\n", diff);
+    TRACE_MSG("seconds difference = %ld\n", diff);
     return diff;
 }
 

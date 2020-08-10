@@ -95,6 +95,7 @@ typedef struct Flash_FILE_tag
 #define TOPO_FLASH_ADDRESS            (FLASH_START_BANK2 - FLASH_PAGE) /* 0x0807 F800 */
 #define DAEMON_FLASH_ADDRESS          (FLASH_START_BANK2 - 4 * FLASH_PAGE) /* 807E000 */
 #define RESET_FLASH_ADDRESS           (FLASH_START_BANK2 - 5 * FLASH_PAGE) /* 807D800 */
+#define TRACE_FLASH_ADDRESS           (FLASH_START_BANK2 - 6 * FLASH_PAGE) /* 807D000 */
 
 #define FIRMWARE_FLASH_ADDRESS_1      (FLASH_START_BANK2 - 3 * FLASH_PAGE) /* 0x0807 E800 */
 #define FIRMWARE_FLASH_ADDRESS_2      (USER_FLASH_END_ADDRESS - 3 * FLASH_PAGE) /* 0x080F E800 */
@@ -104,6 +105,7 @@ typedef struct Flash_FILE_tag
 
 #define DAEMON_PAGE                   (252)
 #define RESET_PAGE                    (251)
+#define TRACE_PAGE                    (250)
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************

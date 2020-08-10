@@ -1798,8 +1798,8 @@ PT_THREAD(mixer_update_slot())
 				#else
 				for (i = 0; i < MX_NUM_NODES; ++i)
 				#endif
-					GPI_TRACE_MSG(TRACE_VERBOSE, "history %2u: %u %u", i,
-						(int)(mx.history[i].list_id), (int)(mx.history[i].last_slot_number));
+//					GPI_TRACE_MSG(TRACE_VERBOSE, "history %2u: %u %u", i,
+//						(int)(mx.history[i].list_id), (int)(mx.history[i].last_slot_number));
 
 				#if MX_PSEUDO_CONFIG
 				for (i = 0; i < chirp_config.mx_num_nodes; ++i)
@@ -1809,7 +1809,7 @@ PT_THREAD(mixer_update_slot())
 				{
 					char msg[16];
 					sprintf(msg, "row map %2u:", i);
-					TRACE_DUMP(1, msg, mx.history[i].row_map, sizeof(mx.history[0].row_map));
+//					TRACE_DUMP(1, msg, mx.history[i].row_map, sizeof(mx.history[0].row_map));
 				}
 			}
 			#endif

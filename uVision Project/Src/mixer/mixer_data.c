@@ -1389,7 +1389,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
 	while (1)
 	{
-        PRINTF("round:%lu, %lu\n", chirp_outl->round, chirp_outl->round_max);
+        TRACE_MSG("round:%lu, %lu\n", chirp_outl->round, chirp_outl->round_max);
 
         gpi_radio_init();
 

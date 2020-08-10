@@ -62,6 +62,7 @@
 
 #include <stdint.h>
 #include "chirp_internal.h"
+#include "trace_flash.h"
 
 #ifdef MX_CONFIG_FILE
 	#include STRINGIFY(MX_CONFIG_FILE)
@@ -125,9 +126,9 @@
 #endif
 
 #ifndef MX_SMART_SHUTDOWN
-	#define MX_SMART_SHUTDOWN		1
+	#define MX_SMART_SHUTDOWN		0
 	#undef  MX_SMART_SHUTDOWN_MAP
-	#define MX_SMART_SHUTDOWN_MAP	1
+	#define MX_SMART_SHUTDOWN_MAP	0
 #endif
 
 #ifndef MX_BENCHMARK_NO_SIDELOAD

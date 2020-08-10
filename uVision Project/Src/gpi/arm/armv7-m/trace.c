@@ -89,7 +89,7 @@ static volatile unsigned int	s_msg_queue_num_read = 0;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
-extern char	__stack_end__[1];
+extern char	_estack [1];
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -255,7 +255,7 @@ void gpi_trace_store_msg(const char* fmt, ...)
 		// ATTENTION: If the stack is almost empty, then copying a fixed-size va block can exceed
 		// the stack range and in consequence throw an exception (due to the access violation).
 		// To circumvent that, the critical situations must be handled explicitly.
-		size_t va_size_max = (uintptr_t)__stack_end__ - (uintptr_t)(va.__ap);
+		size_t va_size_max = (uintptr_t)_estack - (uintptr_t)(va.__ap);
 		if (sizeof(msg->var_args) > va_size_max)
 			gpi_memcpy_dma_aligned(msg->var_args, va.__ap, va_size_max);
 		else gpi_memcpy_dma_aligned(msg->var_args, va.__ap, sizeof(msg->var_args));
