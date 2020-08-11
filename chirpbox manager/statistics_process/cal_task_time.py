@@ -85,7 +85,7 @@ def task_slot(task, payload_len, slot_num, sf, default_generate_size, node_num):
         mx_generation_size = mx_num_nodes
         payload_len = 12
         slot_num = mx_num_nodes * 4
-        sf = 12
+        sf = 11
     elif (task == CHIRP_TASK.CHIRP_START):
         mx_generation_size = mx_num_nodes
         payload_len = 25
@@ -107,9 +107,11 @@ def task_slot(task, payload_len, slot_num, sf, default_generate_size, node_num):
         mx_generation_size = mx_num_nodes
         payload_len = 11
     phy_payload_size = chirp_mx_packet_config(mx_num_nodes, mx_generation_size, payload_len + 2)
+    # print(phy_payload_size)
     packet_time, symbol_time_us = lora_packet_time(sf, 7, phy_payload_size)
     lbt_detect_duration_us = (6 * symbol_time_us if ( 6 * symbol_time_us > LBT_DELAY_IN_US ) else LBT_DELAY_IN_US)
     # print("lbt_detect_duration_us", lbt_detect_duration_us, symbol_time_us)
+    # print(packet_time)
     chirp_mx_slot_time = chirp_mx_slot_config(packet_time + 100000 + lbt_detect_duration_us * CHANNEL_ALTER, slot_num, 1500000)
     return chirp_mx_slot_time
 
@@ -133,3 +135,4 @@ task_try_num = 4
 node_num = 21
 
 # print(dissem_total_time(task_sf, task_payload_len, task_slot_num, task_generate_size, task_back_sf, task_back_slot, task_try_num, node_num))
+# print(task_slot(CHIRP_TASK.CHIRP_SNIFF, 11, 63, 11, 21, 21))

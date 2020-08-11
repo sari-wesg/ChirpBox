@@ -10,7 +10,7 @@ def test_alltoall(slot_number, used_sf, used_payload_len):
         print(task_sniffer.split())
         cbmng.main(task_sniffer.split())
 
-        task_coldata_run = "cbmng.py " + "-coldata " + "120 " + "7 " + com_serial + "100 "
+        task_coldata_run = "cbmng.py " + "-coldata " + "120 " + "7 " + "com11 " + "100 "
         print(task_coldata_run)
         # time.sleep(300)
         cbmng.main(task_coldata_run.split())
@@ -19,7 +19,7 @@ def test_alltoall(slot_number, used_sf, used_payload_len):
     exit(0)
 
 # mixer communication slot number
-slot_number = 120
+slot_number = 80
 # mixer communication sf
 used_sf = 7
 # The length of payload to collect data

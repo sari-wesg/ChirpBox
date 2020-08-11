@@ -1,6 +1,7 @@
 import enum
 import math
 import matplotlib.pyplot as plt
+plt.rcParams.update({'figure.max_open_warning': 0})
 import numpy as np
 import pandas
 import datetime
@@ -16,7 +17,7 @@ class STATE(enum.Enum):
 stats_len_write = 16
 stats_len = 15
 stats_all_len = stats_len_write * 2
-stats_lbt = 10
+stats_lbt = 9
 stats_total_len = stats_all_len + stats_lbt * 2
 
 def coldata_to_list(filename, node_num, value_row):
@@ -100,7 +101,7 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
     plt.xlabel('channel length',fontsize=28)
     plt.ylabel('time in duty cycle',fontsize=28)
 
-    # plt.ylim(0,3)
+    plt.ylim(0,3)
 
     plt.axhline(y=2.77, color='r', linestyle='--')
     plt.text(7.5, 2.6, r'Effective Duty Cycle',fontsize=18,fontname="Arial")
@@ -153,7 +154,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette('PuBuGn_d', n_colors=node_num, desat=1))
 
         # config ticks
-        # plt.ylim(0,3)
+        plt.ylim(0,3)
 
         plt.xticks(fontsize=28)
         # plt.yticks(fontsize=28)
@@ -166,7 +167,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         # plt.ylim(0,3)
 
         plt.axhline(y=2.77, color='k', linestyle='--')
-        plt.text(6.5, 2.6, r'Effective duty cycle limit',fontsize=24,fontname="Arial")
+        plt.text(5.75, 2.6, r'Effective duty cycle limit',fontsize=24,fontname="Arial")
 
     ax = plt.gca()
     ax.set_aspect('auto')
@@ -301,7 +302,7 @@ def print_in_hex(matrix_data):
 def plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config, node_num):
     dissem_config_name = ''.join(str(e) for e in dissem_config)
     # 1, plt radio on time
-    rx_tx_one_dissem(node_num, rx_time, tx_time, dissem_config_name + "radio_on")
+    # rx_tx_one_dissem(node_num, rx_time, tx_time, dissem_config_name + "radio_on")
 
     # 2, plt lbt total time
     channel_data_1_array = np.array(channel_data)
@@ -326,7 +327,7 @@ def dissem_files(node_num, file_list, dissem_config_list):
 
         time_in_task = task_time[1]
         # plot figures
-        plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config, node_num)
+        # plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config, node_num)
 
         # radio_on_time = [0] * len(rx_time)
         # for i in range(0, len(rx_time)):
