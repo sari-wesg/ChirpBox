@@ -874,6 +874,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint16_t			default_slot_num;
 	uint32_t			default_sf;
 	uint32_t			default_freq;
+	int8_t				default_tp;
 	uint8_t				default_payload_len;
 	uint8_t				default_generate_size;
 	uint32_t			firmware_bitmap[DISSEM_BITMAP_32];

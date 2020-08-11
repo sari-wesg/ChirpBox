@@ -726,12 +726,13 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t default_sf;
   uint8_t default_payload_len;
   uint8_t default_generate_size;
+  int8_t default_tp;
   uint16_t default_slot_num;
   uint8_t dissem_back_sf;
   uint8_t dissem_back_slot_num;
   uint8_t task_wait = 0;
 
-  uint8_t task[25 + DISSEM_BITMAP_32 * 8];
+  uint8_t task[28 + DISSEM_BITMAP_32 * 8];
   PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_SNIFF\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_SNIFF, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
@@ -768,16 +769,17 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
     default_slot_num = (task[13] - '0') * 1000 + (task[14] - '0') * 100 + (task[15] - '0') * 10 + (task[16] - '0');
     dissem_back_sf = (task[18] - '0') * 10 + task[19] - '0';
     dissem_back_slot_num = (task[21] - '0') * 100 + (task[22] - '0') * 10 + task[23] - '0';
+    default_tp = (task[25] - '0') * 10 + (task[26] - '0');
     uint8_t i, data;
     memset((uint32_t *)&(chirp_outl->firmware_bitmap[0]), 0, DISSEM_BITMAP_32 * sizeof(uint32_t));
-    for (i = 25; i < 25 + DISSEM_BITMAP_32 * sizeof(uint32_t) * 2; i++)
+    for (i = 28; i < 28 + DISSEM_BITMAP_32 * sizeof(uint32_t) * 2; i++)
     {
       data = task[i];
       if ((data >= '0') && (data <= '9'))
         data = data - '0';
       else
         data = 10 + data - 'A';
-      chirp_outl->firmware_bitmap[(i - 25) / 8] += data * pow(0x10, sizeof(uint32_t) * 2 - 1 - ((i - 25) % (sizeof(uint32_t) * 2)));
+      chirp_outl->firmware_bitmap[(i - 28) / 8] += data * pow(0x10, sizeof(uint32_t) * 2 - 1 - ((i - 28) % (sizeof(uint32_t) * 2)));
     }
   } while ((mx_task > MX_TASK_LAST) || (mx_task < MX_TASK_FIRST));
 
@@ -787,12 +789,13 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
 
   chirp_outl->arrange_task = (Mixer_Task )mx_task;
   chirp_outl->default_sf = default_sf;
+  chirp_outl->default_tp = default_tp;
   chirp_outl->default_payload_len = default_payload_len;
   chirp_outl->default_generate_size = default_generate_size;
   chirp_outl->default_slot_num = default_slot_num;
   chirp_outl->dissem_back_sf = dissem_back_sf;
   chirp_outl->dissem_back_slot_num = dissem_back_slot_num;
-  PRINTF("default sf:%lu, %lu, %lu, %lu, %lu, %lu, %02x\n", chirp_outl->default_sf, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0]);
+  PRINTF("default sf:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0]);
   switch (mx_task)
   {
     case CHIRP_START:
@@ -1288,7 +1291,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
-		chirp_outl.payload_len = DATA_HEADER_LENGTH + 4;
+		chirp_outl.payload_len = DATA_HEADER_LENGTH + 5;
 		chirp_outl.round_setup = 1;
 		chirp_outl.round_max = 1;
 		chirp_outl.file_chunk_len = 0;
@@ -1328,7 +1331,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       gpi_watchdog_periodic();
 			case CHIRP_START:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_START---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
@@ -1396,7 +1399,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case MX_DISSEMINATE:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
         chirp_outl.disem_file_index = 0;
         chirp_outl.disem_file_max = UINT16_MAX / 2;
         chirp_outl.disem_file_index_stay = 0;
@@ -1504,7 +1507,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case MX_COLLECT:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------MX_COLLECT---------\n");
 				// TODO: tune those parameters
@@ -1541,7 +1544,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_CONNECTIVITY:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
@@ -1578,7 +1581,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_TOPO:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_TOPO---------\n");
 				// TODO: tune those parameters
@@ -1609,7 +1612,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_SNIFF:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 				TRACE_MSG("---------CHIRP_SNIFF---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
@@ -1636,7 +1639,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_VERSION:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, 14, chirp_outl.default_freq);
+				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_VERSION---------\n");
 				// TODO: tune those parameters

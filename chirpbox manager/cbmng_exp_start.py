@@ -103,7 +103,7 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
-def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num):
+def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num, used_tp):
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		# time_now = datetime.datetime.now()
@@ -139,7 +139,7 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 			 	if (line == "Input initiator task:"):
 			 		slot_num = 100
 					# ser.write(str(task_index).encode()) # send commands
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + "," + '{0:08X}'.format(int(bitmap, 16))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -200,7 +200,7 @@ def is_running():
 		else:
 			return False
 
-def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_num, topo_payload_len):
+def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_num, topo_payload_len, used_tp):
 	bitmap = "0"
 	dissem_back_sf = 0
 	dissem_back_slot = 0
@@ -232,7 +232,7 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 			 	print(line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + "," + '{0:08X}'.format(int(bitmap, 16))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -265,7 +265,7 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 
 	return True
 
-def assign_sniffer(command_sf, com_port, slot_num):
+def assign_sniffer(command_sf, com_port, slot_num, used_tp):
 	bitmap = "0"
 	dissem_back_sf = 0
 	dissem_back_slot = 0
@@ -314,7 +314,7 @@ def assign_sniffer(command_sf, com_port, slot_num):
 			 	print (line)
 			 	if (line == "Input initiator task:"):
 			 		# ser.write(str(task_index).encode()) # send commands
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + "," + '{0:08X}'.format(int(bitmap, 16))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -358,7 +358,7 @@ def assign_sniffer(command_sf, com_port, slot_num):
 
 	return True
 
-def collect_data(com_port, command_len, command_sf, slot_num):
+def collect_data(com_port, command_len, command_sf, slot_num, used_tp):
 	bitmap = "0"
 	dissem_back_sf = 0
 	dissem_back_slot = 0
@@ -379,6 +379,20 @@ def collect_data(com_port, command_len, command_sf, slot_num):
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
+
+	time_now = datetime.datetime.now()
+	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	exp_no = cbmng_common.tid_maker()
+
+	exp_name = "collect_data_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "command_len" + str(command_len) + "_slot_num" + str(slot_num) + "start address: " + str(start_addr) + "end address: " + str(end_addr)
+	print(exp_name)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
+
 	print("Collecting ...")
 
 	# config and open the serial port
@@ -396,7 +410,7 @@ def collect_data(com_port, command_len, command_sf, slot_num):
 			if line:
 			 	print (line)
 			 	if (line == "Input initiator task:"):
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + "," + '{0:08X}'.format(int(bitmap, 16))
+			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		# print(task)
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
@@ -440,7 +454,7 @@ def collect_data(com_port, command_len, command_sf, slot_num):
 	return True
 
 
-def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
+def collect_topology(com_port, using_pos, command_sf, command_len, slot_num, used_tp):
 	bitmap = "0"
 	dissem_back_sf = 0
 	dissem_back_slot = 0
@@ -469,7 +483,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 				 	if (line == "Input initiator task:"):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 		# print(task_index)
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + "," + '{0:08X}'.format(int(bitmap, 16))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 	 				if (line == "output from initiator (topology):"):
@@ -517,7 +531,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num):
 	return True
 
 
-def collect_version(com_port, command_sf, slot_num):
+def collect_version(com_port, command_sf, slot_num, used_tp):
 	bitmap = "0"
 	filename = "version.txt"
 	dissem_back_sf = 0
@@ -555,7 +569,7 @@ def collect_version(com_port, command_sf, slot_num):
 				 	print (line)
 				 	if (line == "Input initiator task:"):
 				 		print("Input")
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + "," + '{0:08X}'.format(int(bitmap, 16))
+				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))
 				 		print(task)
 				 		ser.write(str(task).encode()) # send commands
 				 		# ser.write(str(task_index).encode()) # send commands
@@ -578,7 +592,7 @@ def collect_version(com_port, command_sf, slot_num):
 	return True
 
 
-def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot):
+def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp):
 	BANK2_SIZE = 512 * 1024
 
 	try:
@@ -606,7 +620,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	exp_no = cbmng_common.tid_maker()
 
 	FileSize = cbmng_common.get_FileSize(firmware)
-	exp_name = "disseminate_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "_generate_size" + str(command_size) + "_slot_num" + str(slot_num) + "_bitmap" + str(bitmap) + "_FileSize" + str(FileSize) + "_dissem_back_sf" + str(dissem_back_sf) + "_dissem_back_slot" + str(dissem_back_slot)
+	exp_name = "disseminate_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "_generate_size" + str(command_size) + "_slot_num" + str(slot_num) + "_bitmap" + str(bitmap) + "_FileSize" + str(FileSize) + "_dissem_back_sf" + str(dissem_back_sf) + "_dissem_back_slot" + str(dissem_back_slot)
 	print(exp_name)
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
@@ -668,7 +682,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 			 	print(line)
 			 	if (line == "Input initiator task:"):
 				 	# TODO:
-				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf)) + ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(command_size)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + "," + '{0:08X}'.format(int(bitmap, 16))
+				 	task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf)) + ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(command_size)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))
 			 		ser.write(str(task).encode()) # send commands
 			 		# print(task)
 			 	if (line == "Waiting for parameter(s)..."):

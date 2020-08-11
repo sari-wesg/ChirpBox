@@ -873,6 +873,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 16;
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 8;
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0];
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->default_tp;
             k = 0;
             break;
         }
@@ -1305,6 +1306,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             {
                                 memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
                                 chirp_outl->firmware_bitmap[0] = (task_data[0] << 24) | (task_data[1] << 16) | (task_data[2] << 8) | (task_data[3]);
+                                chirp_outl->default_tp = task_data[4];
                             }
                             break;
                         }
@@ -1519,7 +1521,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 if (!chirp_outl->disem_flag)
                 {
                     free(payload_distribution);
-                    chirp_mx_radio_config(chirp_outl->default_sf, 7, 1, 8, 14, chirp_outl->default_freq);
+                    chirp_mx_radio_config(chirp_outl->default_sf, 7, 1, 8, chirp_outl->default_tp, chirp_outl->default_freq);
                     /* If now is confirm, the initiator collect all nodes information about whether they are full rank last round, if so, then send the next file chunk, file index++, else do not increase file index */
                     if ((!node_id) && (chirp_config.full_column == 0))
                     {
