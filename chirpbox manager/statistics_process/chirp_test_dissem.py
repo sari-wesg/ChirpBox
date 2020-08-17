@@ -15,23 +15,22 @@ def generate_command_dissem(com_serial):
     count = 0
     payload_len = 232
     dissem_back_sf = 7
-    # dissem_back_slot = 60
-    used_sf = 7
-    config_list = [[16, 150, 80]]
-    for i in range(0, len(config_list)):
-        generation_size = config_list[i][0]
-        slot_number = config_list[i][1]
-        dissem_back_slot = config_list[i][2]
-        task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "ac2f " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + "1FFFFF " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + "0 "
-        print(generation_size, slot_number, used_sf, count)
-        print(task_dissem_run)
-        cbmng.main(task_dissem_run.split())
+    dissem_back_slot = 80
+    used_sf = 12
+    generation_size = 4
+    used_tp = 0
+    # for slot_number in np.arange(145, 171, 5):
+    slot_number = 20
+    task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "ac2f " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + "1FFFFF " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + str(used_tp) + " "
+    print(generation_size, slot_number, used_sf, count)
+    print(task_dissem_run)
+    cbmng.main(task_dissem_run.split())
 
-        task_coldata_run = "cbmng.py " + "-coldata " + "120 " + "7 " + com_serial + "120 " + "14 "
-        print(task_coldata_run)
-        # time.sleep(300)
-        cbmng.main(task_coldata_run.split())
-        count += 1
+    task_coldata_run = "cbmng.py " + "-coldata " + "120 " + "7 " + com_serial + "120 " + "14 "
+    print(task_coldata_run)
+    # time.sleep(300)
+    cbmng.main(task_coldata_run.split())
+    count += 1
 
     print("count", count)
     exit(0)

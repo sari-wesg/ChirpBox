@@ -81,7 +81,7 @@ def generate_json_for_upgrade():
 		"experiment_name": "Upgrade_daemon",
 		"experiment_description": "Upgrade_daemon",
 		"payload_length": 0,
-		"experiment_duration": 10,
+		"experiment_duration": 300,
 		"num_generated_packets": "False",
 		"num_received_packets": "False",
 		"e2e_latency": "False",
@@ -89,8 +89,8 @@ def generate_json_for_upgrade():
 		"rx_energy": "False",
 		"sniffer_and_channels": [],
 		"sniffer_type": [],
-		"start_address": "0807E000",
-		"end_address": "0807E0D0",
+		"start_address": "080FD800",
+		"end_address": "080FE000",
 		"command_sf": 12
 	}
 	with open("tmp.json", "w") as f:
@@ -144,7 +144,7 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 			 		ser.write(str(task).encode()) # send commands
 			 	if (line == "Waiting for parameter(s)..."):
 			 		time_now = datetime.datetime.now()
-			 		start_time_t = time_now + datetime.timedelta(seconds = 100)
+			 		start_time_t = time_now + datetime.timedelta(seconds = 40)
 			 		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 			 		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 			 		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
@@ -380,18 +380,18 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp):
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 
-	time_now = datetime.datetime.now()
-	start_time_t = time_now + datetime.timedelta(minutes = 0)
-	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
-	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	exp_no = cbmng_common.tid_maker()
+	# time_now = datetime.datetime.now()
+	# start_time_t = time_now + datetime.timedelta(minutes = 0)
+	# start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	# end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	# end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	# exp_no = cbmng_common.tid_maker()
 
-	exp_name = "collect_data_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "command_len" + str(command_len) + "_slot_num" + str(slot_num) + "start address: " + str(start_addr) + "end address: " + str(end_addr)
-	print(exp_name)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
-	with open(running_status, "w") as f:
-		json.dump(running_dict, f)
+	# exp_name = "collect_data_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "command_len" + str(command_len) + "_slot_num" + str(slot_num) + "startaddress_" + str(start_addr) + "end_address" + str(end_addr)
+	# print(exp_name)
+	# running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	# with open(running_status, "w") as f:
+	# 	json.dump(running_dict, f)
 
 	print("Collecting ...")
 
@@ -627,7 +627,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		json.dump(running_dict, f)
 
 	# !!!!!TODO:
-	test_dissem = True
+	test_dissem = False
 	if (test_dissem == False):
 		if(firmware_burned_existing == 1):
 			if(daemon_patch == 1):

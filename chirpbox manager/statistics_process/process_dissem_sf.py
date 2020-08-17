@@ -58,7 +58,7 @@ ax.yaxis.offsetText.set_fontsize(24)
 
 ax.set_xticklabels(config_label_name, rotation=0)
 ax.set_xlabel('Configs',fontsize=28)
-ax.set_ylabel('Radio on time (s)',fontsize=28)
+ax.set_ylabel('Time (s)',fontsize=28)
 ax2.set_ylabel('Energy',fontsize=28)
 ax2.tick_params(axis="both", labelsize=24, length=10, width=2)
 

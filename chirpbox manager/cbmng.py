@@ -62,7 +62,7 @@ def main(argv):
 	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 9)):
 	 	if(cbmng_exp_start.check() == True):
 	 		cbmng_exp_start.start(argv[5], int(argv[2]), argv[3], int(argv[4]), argv[6], int(argv[7]), int(argv[8]))
-	 	exit(0)
+	 	# exit(0)
 	elif(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
 		if(cbmng_exp_start.is_running() == True):
 			print("The testbed is running...")

@@ -27,7 +27,8 @@ back_radio_80 = all_to_all_radio_time(all_to_all_filename, node_num)
 
 file_list = ["dissem_time//disseminate_command_len_232_used_sf7_generate_size16_slot_num80_bitmap1FFFFF_FileSize5120_dissem_back_sf7_dissem_back_slot80(20200811042957555476).txt", "dissem_time//disseminate_command_len_232_used_sf7_generate_size16_slot_num80_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811044715623570).txt", "dissem_time//disseminate_command_len_232_used_sf7_generate_size16_slot_num80_bitmap1FFFFF_FileSize40960_dissem_back_sf7_dissem_back_slot80(20200811051742210983).txt", "dissem_time//disseminate_command_len_232_used_sf7_generate_size16_slot_num80_bitmap1FFFFF_FileSize61440_dissem_back_sf7_dissem_back_slot80(20200811071707960877).txt", "dissem_time//disseminate_command_len_232_used_sf7_generate_size16_slot_num80_bitmap1FFFFF_FileSize102400_dissem_back_sf7_dissem_back_slot80(20200811074529606211).txt"]
 dissem_config_list = [[7, 232, 80, 16, 7, 80], [7, 232, 80, 16, 7, 80], [7, 232, 80, 16, 7, 80], [7, 232, 80, 16, 7, 80], [7, 232, 80, 16, 7, 80]]
-config_label_name_file = ["5", "15", "40", "60", "100"]
+# config_label_name_file = ["5", "15", "40", "60", "100"]
+config_label_name_file = ["5", "10", "25", "50", "100"]
 dissem_result = dissem_files(21, file_list, dissem_config_list)
 # print(dissem_result)
 type_dissem = 3
@@ -47,10 +48,17 @@ for i in range(len(dissem_result)):
     print(radio_rx_total, radio_rx_std, radio_tx_total, radio_tx_std, radio_rx_total + radio_tx_total, dissem_result[i][4], dissem_result[i][5])
 
 print(dissem_plt_result)
-dissem_plt_pd = [[0]*7]*len(dissem_plt_result)
+dissem_plt_pd = [[0]*9]*len(dissem_plt_result)
 for i in range(0, len(dissem_plt_result)):
-    dissem_plt_pd[i] = [i, dissem_plt_result[i][0], dissem_plt_result[i][1], dissem_plt_result[i][2], dissem_plt_result[i][3], dissem_plt_result[i][6], dissem_plt_result[i][5]]
-df = pd.DataFrame(dissem_plt_pd,columns=['id', 'RX time','RX time std','TX time','TX time std','Total time','energy'])
+    run_time_energy = (dissem_plt_result[i][2] / 2) * 3.6715
+    lp_time_energy = (dissem_plt_result[i][6] - dissem_plt_result[i][1] - dissem_plt_result[i][2] - dissem_plt_result[i][2] / 2) * (2.9602)
+    rx_energy = (dissem_plt_result[i][0]) * (2.96 + 10.3)
+    tx_energy = (dissem_plt_result[i][3]) * (2.96 + 44)
+    energy = (run_time_energy + lp_time_energy + rx_energy + tx_energy) / 1000 * 3.3
+    print("energy", energy, dissem_plt_result[i][2] / 2, dissem_plt_result[i][6] - dissem_plt_result[i][1] - dissem_plt_result[i][2] - dissem_plt_result[i][2] / 2, dissem_plt_result[i][0], dissem_plt_result[i][3])
+
+    dissem_plt_pd[i] = [i, dissem_plt_result[i][0], dissem_plt_result[i][1], dissem_plt_result[i][2], dissem_plt_result[i][3], dissem_plt_result[i][6], energy, dissem_plt_result[i][2] / 2, dissem_plt_result[i][3] / 1.44]
+df = pd.DataFrame(dissem_plt_pd,columns=['id', 'RX time','RX time std','TX time','TX time std','Total time','energy','CPU time','CPU time std'])
 
 df_bar = df[0:len(df)].copy()
 # df1 = df_bar.iloc[[0,3,6, 9, 12],:]
@@ -65,7 +73,7 @@ sns.set_palette(sns.color_palette("muted"))
 # df[['Total time']].plot.bar(stacked=True, width=0.3, fc=(1,0,0,0), ec=(0,0,0,1), ax=ax, linewidth=2)
 
 
-df_bar[['RX time', 'TX time']].plot.bar(stacked=True, yerr=df_bar[['RX time std', 'TX time std']].values.T, width=0.25, ax=ax, error_kw=dict(ecolor='k', lw=0.2, markersize=10, capsize=5, capthick=1, elinewidth=2), align='center', color = ["#72A1B9", "#345059"])
+df_bar[['RX time', 'TX time','CPU time']].plot.bar(stacked=True, yerr=df_bar[['RX time std', 'TX time std', 'CPU time std']].values.T, width=0.25, ax=ax, error_kw=dict(ecolor='k', lw=0.2, markersize=10, capsize=5, capthick=1, elinewidth=2), align='center', color = ["#72A1B9", "#345059", '#DC5E4B'])
 df_bar[['Total time']].plot.bar(stacked=True, width=0.25, fc=(1,0,0,0), ec=(0,0,0,1), ax=ax, linewidth=2, label='_nolegend_')
 
 # df1[['RX time', 'TX time']].plot.bar(position=1.5, stacked=True, yerr=df1[['RX time std', 'TX time std']].values.T, width=0.25, ax=ax, error_kw=dict(ecolor='k', lw=0.2, markersize=10, capsize=5, capthick=1, elinewidth=2), align='center', color = ["#618A8A", "#39F3BB"])
@@ -82,10 +90,12 @@ ax = plt.gca()
 ax.set_axisbelow(True)
 ax.grid(True)
 minorLocator = MultipleLocator(1)
+# ax.xaxis.set_minor_locator(minorLocator)
 ax.xaxis.set_minor_locator(minorLocator)
 plt.gca().yaxis.grid(color='gray', linestyle='dashed')
+plt.gca().xaxis.grid(color='gray', linestyle='dashed')
 ax2 = ax.twinx()
-ax2.plot(df['energy'],linestyle='None',marker='D', markersize=12,markerfacecolor='None', markeredgecolor='r', markeredgewidth = 2)
+ax2.plot(df['energy'],linestyle='--',linewidth=3,color = "#DC5E4B", marker='D', markersize=10,markerfacecolor='#DC5E4B', markeredgecolor="#DC5E4B", markeredgewidth = 3)
 
 # df_energy = []
 # for i in range((int)(len(file_list) / type_dissem)):
@@ -109,14 +119,13 @@ ax2.plot(df['energy'],linestyle='None',marker='D', markersize=12,markerfacecolor
 # ax.set_xticks(fontsize=28)
 ax.yaxis.set_ticks(np.arange(0, 3600+1, 600))
 
-ax.tick_params(axis="both", labelsize=24, length=10, width=2)
+ax.tick_params(axis="both", labelsize=30, length=10, width=2)
 
 # change font size of the scientific notation in matplotlib
-ax.yaxis.offsetText.set_fontsize(24)
+ax.yaxis.offsetText.set_fontsize(30)
 
 # Hide major tick labels
 # ax.set_xticklabels(config_label_name_file, minor=True, rotation=0)
-# ax2.set_xticklabels('')
 
 # Customize minor tick labels
 print(ax.get_xticks())
@@ -126,12 +135,13 @@ print(x_list)
 ax.set_xticks(x_list,      minor=True)
 
 ax2.set_xticks(x_list,      minor=True)
+
 # ax.set_xticklabels('')
-ax.set_xticklabels(config_label_name_file, rotation=0)
-ax.set_xlabel('Firmware size (kB)',fontsize=28)
-ax.set_ylabel('Time (s)',fontsize=28)
-ax2.set_ylabel('Average energy',fontsize=28)
-ax2.tick_params(axis="both", labelsize=24, length=10, width=2)
+ax.set_xticklabels(config_label_name_file, rotation=0, fontsize=30)
+ax.set_xlabel('Firmware size (kB)',fontsize=40)
+ax.set_ylabel('Time (s)',fontsize=40)
+ax2.tick_params(axis="both", labelsize=30, length=10, width=2)
+ax2.set_ylabel('Energy consumption (J)',fontsize=40, rotation=-90, labelpad=45)
 
 
 # RX = mpatches.Patch(color='#344146', label='RX time')
@@ -156,6 +166,12 @@ for h,l in zip(hand,labl):
     if (l == 'TX time'):
         lablout.append(l)
         handout.append(h)
+
+for h,l in zip(hand,labl):
+    print(l)
+    if (l == 'CPU time'):
+        lablout.append(l)
+        handout.append(h)
 print(lablout)
 
 for h,l in zip(hand,labl):
@@ -164,27 +180,28 @@ for h,l in zip(hand,labl):
         handout.append(h)
         break
 
-legend = ax.legend(handout, lablout, loc='upper left', edgecolor='k',fontsize = 20, fancybox=True, ncol=1, handletextpad=1, handlelength=2)
-legend.set_title("Time distribution",prop={'size':20})
+legend = ax.legend(handout, lablout, loc='upper left', edgecolor='k',fontsize = 30, fancybox=True, ncol=1, handletextpad=1, handlelength=2)
+legend.set_title("Time distribution",prop={'size':30})
 legend.get_frame().set_linewidth(2)
 legend.get_frame().set_edgecolor("k")
 # for vpack in legend._legend_handle_box.get_children()[:1]:
 #     for hpack in vpack.get_children():
 #         hpack.get_children()[0].set_width(0)
 
-energy_1 = mlines.Line2D([], [], linestyle='None',marker='D', markersize=12,markerfacecolor='None', markeredgecolor='r', markeredgewidth = 2,  label='Average energy')
+energy_1 = mlines.Line2D([], [],linestyle='--',linewidth=3,color = "#DC5E4B",marker='D', markersize=10,markerfacecolor='#DC5E4B', markeredgecolor='#DC5E4B', markeredgewidth = 3,  label='Energy consumption')
+
+
 
 # energy_2 = mlines.Line2D([], [], color='k', linestyle='--',marker='o', markersize=10, label='Config 2')
 # energy_3 = mlines.Line2D([], [], color='r', linestyle='--',marker='o', markersize=10, label='Config 3')
-legend = plt.legend(handles=[energy_1], loc='upper right', edgecolor='k',fontsize = 20, fancybox=True)
+legend = plt.legend(handles=[energy_1], loc='upper right', edgecolor='k',fontsize = 30, fancybox=True)
 
 # legend.set_title("Time distribution",prop={'size':20})
 legend.get_frame().set_linewidth(2)
 legend.get_frame().set_edgecolor("k")
 ax.set_ylim(0,3600)
-ax2.set_ylim(0,100)
-y_value=['{:,.2f}'.format(x) + '%' for x in ax2.get_yticks()]
-ax2.set_yticklabels(y_value, fontsize=28)
+ax2.yaxis.set_ticks(np.arange(0, 90+1, 15))
+ax2.set_ylim(0,90)
 
 
 ax = plt.gca()
@@ -195,7 +212,7 @@ ax.spines['left'].set_linewidth(1.5)
 ax.spines['right'].set_linewidth(1.5)
 ax.tick_params(direction='out', length=10, width=2)
 # ax.grid(which='both', axis='both', linestyle='--')
-ax.set_xticklabels(config_label_name_file)
+ax.set_xticklabels(config_label_name_file, fontsize=30)
 plt.setp(ax.get_xticklabels(), rotation=30)
 
 # plt config

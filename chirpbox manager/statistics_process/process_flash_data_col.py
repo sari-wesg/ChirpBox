@@ -5,7 +5,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 import numpy as np
 import pandas
 import datetime
-from cal_task_time import dissem_total_time, effective_round
+from cal_task_time import *
 import seaborn as sns
 import pandas as pd
 import statistics
@@ -18,7 +18,7 @@ stats_len_write = 16
 stats_len = 15
 stats_all_len = stats_len_write * 2
 stats_lbt = 9
-stats_total_len = stats_all_len + stats_lbt * 2
+stats_total_len = stats_all_len + (stats_lbt + 1) * 2
 
 def coldata_to_list(filename, node_num, value_row):
     Matrix_data = [[0 for x in range(stats_total_len)] for y in range(node_num)]
@@ -230,6 +230,11 @@ def rx_tx_one_dissem(node_num, rx_time, tx_time, string_name):
     # plt.show()
 
 def matrix_to_type_data(Matrix_data, node_num, filename):
+    print(Matrix_data)
+    print(len(Matrix_data))
+    list_test = [38, 1, 38, 38, 0, 4506309, 1, 4506309, 4506309, 0, 873683, 1, 873683, 873683, 0, 0, 582, 11, 40, 60, 0, 193637478, 11, 16353727, 18606317, 0, 41012384, 11, 2734283, 4687392, 0, 0, 873678, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6640926, 8592447, 4296606, 2734280, 3515198, 4686825, 3124324, 2734347]
+    print(len(list_test))
+
     global stats_lbt
     slot_data_1 = [[0 for x in range(node_num)] for y in range(5)]
     rx_data_1 = [[0 for x in range(node_num)] for y in range(4)]
@@ -249,6 +254,8 @@ def matrix_to_type_data(Matrix_data, node_num, filename):
 
     channel_data_1_pos = 32
     channel_data_2_pos = 32 + stats_lbt
+    if ((stats_lbt % 2)==1):
+        channel_data_2_pos = channel_data_2_pos + 1
 
     data_to_stats_list(Matrix_data, node_num, slot_1_pos, 5, slot_data_1)
     data_to_stats_list(Matrix_data, node_num, rx_1_pos, 4, rx_data_1)
@@ -285,12 +292,12 @@ def matrix_to_type_data(Matrix_data, node_num, filename):
     # print(rx_data_1)
     # print(tx_data_1)
     # print(channel_data_1)
-    # print(slot_data_2)
-    # print(rx_data_2)
-    # print(tx_data_2)
-    # print(channel_data_2)
-    try_num = slot_data_1[4][0]
-    return [rx_data_1[0], tx_data_1[0], channel_data_1, try_num]
+    print(slot_data_2)
+    print(rx_data_2)
+    print(tx_data_2)
+    print(channel_data_2)
+    try_num = slot_data_2[1][0]
+    return [rx_data_2[0], tx_data_2[0], channel_data_2, try_num]
 
 def print_in_hex(matrix_data):
     for i in range(len(matrix_data)):
@@ -342,16 +349,16 @@ def dissem_files(node_num, file_list, dissem_config_list):
 
         # plot figures
         # print("channel_data", channel_data)
-        change_list = [0.8, 0.66, 0.6, 0.83, 1]
-        if (1):
-            change_list_id = i
-            for k in range(9):
-                for node_index in range(node_num):
-                    # print(node_index, k, change_list[change_list_id])
-                    channel_data[k][node_index] = channel_data[k][node_index] * change_list[change_list_id]
-            task_try_num = task_try_num * change_list[change_list_id]
-            time_in_task = time_in_task * change_list[change_list_id]
-        #     print("-------channel_data", channel_data, task_try_num)
+        # change_list = [0.8, 0.66, 0.6, 0.83, 1]
+        # if (1):
+        #     change_list_id = i
+        #     for k in range(9):
+        #         for node_index in range(node_num):
+        #             # print(node_index, k, change_list[change_list_id])
+        #             channel_data[k][node_index] = channel_data[k][node_index] * change_list[change_list_id]
+        #     task_try_num = task_try_num * change_list[change_list_id]
+        #     time_in_task = time_in_task * change_list[change_list_id]
+            # print("-------channel_data", channel_data, task_try_num)
         # plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, dissem_config, node_num)
 
         # radio_on_time = [0] * len(rx_time)
@@ -376,11 +383,40 @@ def dissem_files(node_num, file_list, dissem_config_list):
     # df.to_csv(save_csv_name, encoding='utf-8', index=False)
     return (dissem_result)
 
+
+def coll_files(node_num, file_list, coll_config):
+    f_data_len = 120
+    dissem_result = []
+    dissem_round = []
+    for i in range(0, len(file_list)):
+        filename = file_list[i]
+        Matrix_data = coldata_to_list(filename, int(node_num), int(f_data_len - 8))
+        rx_time, tx_time, channel_data, task_try_num = matrix_to_type_data(Matrix_data, node_num, filename)
+
+        round_time = task_slot(CHIRP_TASK.MX_COLLECT, 232, 60, 7, node_num, node_num)
+        time_in_task = task_try_num * round_time
+        print("total_time", time_in_task)
+
+        plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_task, coll_config, node_num)
+
+        # rx_time[:] = [x / 1e6 for x in rx_time]
+        # tx_time[:] = [x / 1e6 for x in tx_time]
+        # radio_rx_mean = statistics.mean(rx_time)
+        # radio_rx_stdev = statistics.stdev(rx_time)
+        # radio_tx_mean = statistics.mean(tx_time)
+        # radio_tx_stdev = statistics.stdev(tx_time)
+        # # print (radio_rx_mean, radio_rx_stdev, radio_tx_mean, radio_tx_stdev, task_time[1], task_try_num)
+        # dissem_result.append([radio_rx_mean, radio_rx_stdev, radio_tx_mean, radio_tx_stdev, time_in_task, task_try_num])
+
+    return (dissem_result)
+
+
 # const:
 # TODO:
-
-# file_list = ["pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num100_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811154948342472).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num100_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812131914560704).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num100_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812133742785769).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num100_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812140001627125).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num100_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812142439933873).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num100_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812144917871390).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num105_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811171619537780).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num105_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812150917319735).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num105_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812153227127975).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num105_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812155651338578).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num105_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812162227812969).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num105_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812164803298882).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num110_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811163636379456).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num110_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812170846826385).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num110_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812172624535760).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num110_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812174129004476).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num110_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812180257746571).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num115_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811173816193005).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num115_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812194032239457).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num115_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812195738396576).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num120_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812204541880076).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num120_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812210634300387).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num120_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812212500692916).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num120_bitmap1FFFFF_FileSize40960_dissem_back_sf7_dissem_back_slot80(20200811152005225895).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num125_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811194058946908).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num125_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812214327674537).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num125_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812220055209325).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num125_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812222346950340).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num130_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811165829810119).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num130_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200812224229711657).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num135_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811195658796469).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num135_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813004542061825).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num135_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813010238783255).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num135_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813012339756445).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num140_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813014016772317).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num140_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813015720029314).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num140_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813021424711281).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num140_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811201502927964).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num145_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811203337255067).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num145_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813042122414378).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num145_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813044049809995).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num145_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813045805528923).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num150_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813051521241580).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num150_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813053303719885).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num150_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813055046176697).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num150_bitmap1FFFFF_FileSize40960_dissem_back_sf7_dissem_back_slot80(20200811142921992997).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num155_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811205052984102).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num155_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813061004905632).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num155_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813062937890122).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num155_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813064733130341).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num160_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813070528313773).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num160_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813072350257930).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num160_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813074212219210).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num160_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811210848243739).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num165_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811212710349253).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num165_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813080034193921).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num165_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813081922889752).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num165_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813083811592287).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num170_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813085700266394).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num170_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200811214744310185).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num170_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813091601720417).txt", "pdr_in_dissem//disseminate_command_len_232_used_sf7used_tp0_generate_size16_slot_num170_bitmap1FFFFF_FileSize15360_dissem_back_sf7_dissem_back_slot80(20200813093649322363).txt"]
-# dissem_config_list = [[7, 232, 100, 16, 7, 80, 15], [7, 232, 100, 16, 7, 80, 15], [7, 232, 100, 16, 7, 80, 15], [7, 232, 100, 16, 7, 80, 15], [7, 232, 100, 16, 7, 80, 15], [7, 232, 100, 16, 7, 80, 15], [7, 232, 105, 16, 7, 80, 15], [7, 232, 105, 16, 7, 80, 15], [7, 232, 105, 16, 7, 80, 15], [7, 232, 105, 16, 7, 80, 15], [7, 232, 105, 16, 7, 80, 15], [7, 232, 105, 16, 7, 80, 15], [7, 232, 110, 16, 7, 80, 15], [7, 232, 110, 16, 7, 80, 15], [7, 232, 110, 16, 7, 80, 15], [7, 232, 110, 16, 7, 80, 15], [7, 232, 110, 16, 7, 80, 15], [7, 232, 115, 16, 7, 80, 15], [7, 232, 115, 16, 7, 80, 15], [7, 232, 115, 16, 7, 80, 15], [7, 232, 120, 16, 7, 80, 15], [7, 232, 120, 16, 7, 80, 15], [7, 232, 120, 16, 7, 80, 15], [7, 232, 120, 16, 7, 80, 40], [7, 232, 125, 16, 7, 80, 15], [7, 232, 125, 16, 7, 80, 15], [7, 232, 125, 16, 7, 80, 15], [7, 232, 125, 16, 7, 80, 15], [7, 232, 130, 16, 7, 80, 15], [7, 232, 130, 16, 7, 80, 15], [7, 232, 135, 16, 7, 80, 15], [7, 232, 135, 16, 7, 80, 15], [7, 232, 135, 16, 7, 80, 15], [7, 232, 135, 16, 7, 80, 15], [7, 232, 140, 16, 7, 80, 15], [7, 232, 140, 16, 7, 80, 15], [7, 232, 140, 16, 7, 80, 15], [7, 232, 140, 16, 7, 80, 15], [7, 232, 145, 16, 7, 80, 15], [7, 232, 145, 16, 7, 80, 15], [7, 232, 145, 16, 7, 80, 15], [7, 232, 145, 16, 7, 80, 15], [7, 232, 150, 16, 7, 80, 15], [7, 232, 150, 16, 7, 80, 15], [7, 232, 150, 16, 7, 80, 15], [7, 232, 150, 16, 7, 80, 40], [7, 232, 155, 16, 7, 80, 15], [7, 232, 155, 16, 7, 80, 15], [7, 232, 155, 16, 7, 80, 15], [7, 232, 155, 16, 7, 80, 15], [7, 232, 160, 16, 7, 80, 15], [7, 232, 160, 16, 7, 80, 15], [7, 232, 160, 16, 7, 80, 15], [7, 232, 160, 16, 7, 80, 15], [7, 232, 165, 16, 7, 80, 15], [7, 232, 165, 16, 7, 80, 15], [7, 232, 165, 16, 7, 80, 15], [7, 232, 165, 16, 7, 80, 15], [7, 232, 170, 16, 7, 80, 15], [7, 232, 170, 16, 7, 80, 15], [7, 232, 170, 16, 7, 80, 15], [7, 232, 170, 16, 7, 80, 15]]
+node_num = 21
+file_list = ["collect_data_command_len_136_used_sf7used_tp14command_len136_slot_num60startaddress_0807E000end_address0807E808(20200815234429736613).txt"]
+coll_config = [[0]]
+coll_files(node_num, file_list, coll_config)
 
 # print(len(file_list), len(dissem_config_list))
 # dissem_files(21, file_list, dissem_config_list)

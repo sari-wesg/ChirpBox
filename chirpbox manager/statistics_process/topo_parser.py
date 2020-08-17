@@ -8,6 +8,7 @@ import matplotlib.style as style
 import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
+from matplotlib.colors import LinearSegmentedColormap
 
 from PIL import Image
 
@@ -50,6 +51,7 @@ def heatmap(data,
         cbar_kw={},
         cbarlabel="",
         cbar_flag=False,
+        alpha_value = 1,
         **kwargs):
     """
     Create a heatmap from a numpy array and two lists of labels.
@@ -77,7 +79,8 @@ def heatmap(data,
         ax = plt.gca()
 
     # Plot the heatmap
-    im = ax.imshow(data, **kwargs)
+    im = ax.imshow(data, **kwargs, alpha=alpha_value)
+    im.set_clim(0, 100)
 
     # Adjust the size of the color bar
     if (cbar_flag == True):
@@ -87,7 +90,7 @@ def heatmap(data,
         # Create colorbar
         cbar = ax.figure.colorbar(im, cax=cax, **cbar_kw)
         cbar.ax.tick_params(labelsize = 23)
-        cbar.ax.set_ylabel(cbarlabel, rotation = -90, va = "bottom", fontsize = 23)
+        cbar.ax.set_ylabel(cbarlabel, rotation = -90, va = "bottom", fontsize = 40)
     else:
         cbar = False
     # We want to show all ticks...
@@ -278,15 +281,19 @@ def topo_parser(filename, using_pos):
 
     plt.tick_params(labelsize=23)
 
-    plt.xlabel('TX Node ID', fontsize=23)
-    plt.ylabel('RX Node ID', fontsize=23)
+    plt.xlabel('TX Node ID', fontsize=40)
+    plt.ylabel('RX Node ID', fontsize=40)
+    colors = ["#FFFFFF", "#09526A"] # Experiment with this
+    cm = LinearSegmentedColormap.from_list('test', colors, N=100)
+
     im, cbar = heatmap(con_mat,
                         node_list,
                         node_list,
                         ax=ax,
-                        cmap="YlGn",
-                        cbar_flag = False,
-                        cbarlabel="Receiving Packet Number")
+                        cmap=cm,
+                        cbar_flag = True,
+                        alpha_value = 1,
+                        cbarlabel="Packet delivery ratio (%)")
 
     tmp = re.split(r'[().]', filename)
     # conf = tmp[0]
@@ -294,13 +301,56 @@ def topo_parser(filename, using_pos):
     conf = tmp[0][txt_len:]
     sequence_num = tmp[1]
 
-    ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
+    # ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
     fig.tight_layout()
-    im.set_clim(0, 100)
+    # TODO:
+    # im.set_clim(0, 50)
     plt.savefig("Connectivity matrix -- " + conf + " (" + sequence_num + ").pdf", bbox_inches='tight')
     #plt.show()
     Connectivity_png = "Connectivity matrix -- " + conf + " (" + sequence_num + ").png"
-    plt.savefig(Connectivity_png, bbox_inches='tight')
+
+    # 9 draw temperature
+    print(node_temp)
+    print(con_mat)
+    # ax2 = ax.twinx()
+
+    # # for node_id in range(node_num):
+    # #     for node_id_temp in range(node_num):
+    # #         con_mat_temp[node_id][node_id_temp] = node_temp[node_id][1]
+
+    # for node_id in range(node_num):
+    #     for node_id_temp in range(node_num):
+    #         con_mat_temp[node_id_temp][node_id] = node_temp[node_id][1]
+
+
+    # print(node_temp)
+    # plt.rcParams["figure.figsize"] = (20, 20)
+    # # fig, ax = plt.subplots()
+    # plt.tick_params(labelsize=23)
+
+    # plt.xlabel('TX Node ID', fontsize=23)
+    # plt.ylabel('RX Node ID', fontsize=23)
+
+    # im, cbar = heatmap(con_mat_temp,
+    #                     node_list,
+    #                     node_list,
+    #                     ax=ax2,
+    #                     cbar_flag = True,
+    #                     alpha_value = 0.5,
+    #                     cmap="RdPu")
+    # fig.tight_layout()
+
+    # tmp = re.split(r'[().]', filename)
+    # # conf = tmp[0]
+    # txt_len = len("Chirpbox_connectivity_")
+    # conf = tmp[0][txt_len:]
+    # sequence_num = tmp[1]
+
+    # # ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
+    # fig.tight_layout()
+    # im.set_clim(0, 50)
+
+    # plt.savefig(Connectivity_png, bbox_inches='tight')
 
     # 5. draw the topology
     # 5.1 Get a adjacent matrix, i.e., remove weight information
@@ -335,7 +385,7 @@ def topo_parser(filename, using_pos):
         if (using_pos == 0):
             pos = nx.spring_layout(G_UNDIR_MAPPING)
         if (using_pos == 2):
-            pos = {0: [331, 309], 1: [458, 716], 2: [207, 415], 3: [340, 317], 4: [902, 284], 5: [878, 14], 6: [251, 340], 7: [320, 157], 8: [56, 217], 9: [257, 169], 10: [378, 307], 11: [329, 759], 12: [470, 242], 13: [423, 237], 14: [672, 496], 15: [424, 561], 16: [805, 526], 17: [628, 701], 18: [592, 562], 19: [763, 704], 20: [229, 645], 21: [340, 309]}
+            pos = {0: [331, 309], 1: [458, 716], 2: [207, 415], 3: [340, 317], 4: [902, 284], 5: [878, 14], 6: [251, 340], 7: [320, 157], 8: [56, 217], 9: [257, 169], 10: [378, 307], 11: [329, 759], 12: [470, 242], 13: [423, 237], 14: [672, 496], 15: [424, 561], 16: [805, 526], 17: [628, 701], 18: [592, 562], 19: [763, 704], 20: [229, 645]}
         np.save(data_dir + posfilepath, pos)
     if (using_pos == 2):
         img = matplotlib.image.imread("area1.png")
@@ -345,7 +395,7 @@ def topo_parser(filename, using_pos):
     nx.draw(G_UNDIR_MAPPING, pos = pos, node_color = '#ADDD8E', with_labels = True)
     nx.draw_networkx_edges(G_UNDIR_MAPPING, pos = pos, edge_color = 'black', alpha = .1)
     nx.draw_networkx_labels(G_UNDIR_MAPPING, pos = pos, label_pos = 10.3)
-    plt.title('Network topology -- ' + conf + ' (' + sequence_num + ')', fontsize=30)
+    # plt.title('Network topology -- ' + conf + ' (' + sequence_num + ')', fontsize=30)
     plt.savefig('Network topology -- ' + conf + ' (' + sequence_num + ").pdf", bbox_inches='tight')
     #plt.show()
     #mplleaflet.show(fig=ax.figure)
@@ -364,7 +414,7 @@ def topo_parser(filename, using_pos):
                 no_path = 1
             if (max_hop < hop):
                 max_hop = hop
-                print("So far, the maximal hop is from " + str(node_list[cnt_degrees_tx]) + " to " + str(node_list[cnt_degrees_rx]))
+                print("So far, the maximal hop is from " + str(node_list[cnt_degrees_tx]) + " to " + str(node_list[cnt_degrees_rx]), max_hop)
         # if (no_path == 1):
         #     max_hop = max_hop + 100
 
@@ -397,57 +447,57 @@ def topo_parser(filename, using_pos):
     sym = (norm_c_sym - norm_c_anti) / (norm_c_sym + norm_c_anti)
     # print(sym)
 
-    # 9 draw temperature
-    for node_id in range(node_num):
-        for node_id_temp in range(node_num):
-            con_mat_temp[node_id][node_id_temp] = node_temp[node_id][1]
+    # # 9 draw temperature
+    # for node_id in range(node_num):
+    #     for node_id_temp in range(node_num):
+    #         con_mat_temp[node_id][node_id_temp] = node_temp[node_id][1]
 
-    plt.rcParams["figure.figsize"] = (20, 20)
-    fig, ax = plt.subplots()
-    plt.tick_params(labelsize=23)
+    # plt.rcParams["figure.figsize"] = (20, 20)
+    # fig, ax = plt.subplots()
+    # plt.tick_params(labelsize=23)
 
-    plt.xlabel('TX Node ID', fontsize=23)
-    plt.ylabel('RX Node ID', fontsize=23)
+    # plt.xlabel('TX Node ID', fontsize=23)
+    # plt.ylabel('RX Node ID', fontsize=23)
 
-    im, cbar = heatmap(con_mat_temp,
-                        node_list,
-                        node_list,
-                        ax=ax,
-                        cbar_flag = False,
-                        cmap="RdPu")
-    fig.tight_layout()
+    # im, cbar = heatmap(con_mat_temp,
+    #                     node_list,
+    #                     node_list,
+    #                     ax=ax,
+    #                     cbar_flag = True,
+    #                     cmap="RdPu")
+    # fig.tight_layout()
 
-    tmp = re.split(r'[().]', filename)
-    # conf = tmp[0]
-    txt_len = len("Chirpbox_connectivity_")
-    conf = tmp[0][txt_len:]
-    sequence_num = tmp[1]
+    # tmp = re.split(r'[().]', filename)
+    # # conf = tmp[0]
+    # txt_len = len("Chirpbox_connectivity_")
+    # conf = tmp[0][txt_len:]
+    # sequence_num = tmp[1]
 
-    ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
-    fig.tight_layout()
-    im.set_clim(15, 35)
-    temperature_png = "temperature -- " + conf + " (" + sequence_num + ").png"
-    plt.savefig(temperature_png, bbox_inches='tight')
+    # # ax.set_title("Connectivity matrix -- " + conf + " (" + sequence_num + ")", fontsize=30)
+    # fig.tight_layout()
+    # im.set_clim(15, 35)
+    # temperature_png = "temperature -- " + conf + " (" + sequence_num + ").png"
+    # plt.savefig(temperature_png, bbox_inches='tight')
 
-    # Take two images for blending them together
-    image1 = Image.open(temperature_png)
-    image2 = Image.open(Connectivity_png)
+    # # Take two images for blending them together
+    # image1 = Image.open(temperature_png)
+    # image2 = Image.open(Connectivity_png)
 
-    # Make the images of uniform size
-    image3 = changeImageSize(2000, 2000, image1)
-    image4 = changeImageSize(2000, 2000, image2)
+    # # Make the images of uniform size
+    # image3 = changeImageSize(2000, 2000, image1)
+    # image4 = changeImageSize(2000, 2000, image2)
 
-    # Make sure images got an alpha channel
-    image5 = image3.convert("RGBA")
-    image6 = image4.convert("RGBA")
+    # # Make sure images got an alpha channel
+    # image5 = image3.convert("RGBA")
+    # image6 = image4.convert("RGBA")
 
-    # alpha-blend the images with varying values of alpha
-    alphaBlended2 = Image.blend(image6, image5, alpha=.3)
+    # # alpha-blend the images with varying values of alpha
+    # alphaBlended2 = Image.blend(image6, image5, alpha=.3)
 
-    # Display the alpha-blended images
-    # alphaBlended2.show()
-    alphaBlended_name = Connectivity_png
-    alphaBlended2.save(alphaBlended_name)
+    # # Display the alpha-blended images
+    # # alphaBlended2.show()
+    # alphaBlended_name = Connectivity_png
+    # alphaBlended2.save(alphaBlended_name)
 
     # max_hop = 0
     # mean_degree = 0
@@ -456,5 +506,6 @@ def topo_parser(filename, using_pos):
     # max_degree = 0
     # sym = [[0]*3]*3
     # node_temp = 0
+    print(max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp)
 
     return [max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp]
