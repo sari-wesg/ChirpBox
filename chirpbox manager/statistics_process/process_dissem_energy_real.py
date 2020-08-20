@@ -119,10 +119,10 @@ ax2.plot(df['energy'],linestyle='--',linewidth=3,color = "#DC5E4B", marker='D', 
 # ax.set_xticks(fontsize=28)
 ax.yaxis.set_ticks(np.arange(0, 3600+1, 600))
 
-ax.tick_params(axis="both", labelsize=30, length=10, width=2)
+ax.tick_params(axis="both", labelsize=34, length=10, width=2)
 
 # change font size of the scientific notation in matplotlib
-ax.yaxis.offsetText.set_fontsize(30)
+ax.yaxis.offsetText.set_fontsize(34)
 
 # Hide major tick labels
 # ax.set_xticklabels(config_label_name_file, minor=True, rotation=0)
@@ -137,11 +137,11 @@ ax.set_xticks(x_list,      minor=True)
 ax2.set_xticks(x_list,      minor=True)
 
 # ax.set_xticklabels('')
-ax.set_xticklabels(config_label_name_file, rotation=0, fontsize=30)
-ax.set_xlabel('Firmware size (kB)',fontsize=40)
-ax.set_ylabel('Time (s)',fontsize=40)
-ax2.tick_params(axis="both", labelsize=30, length=10, width=2)
-ax2.set_ylabel('Energy consumption (J)',fontsize=40, rotation=-90, labelpad=45)
+ax.set_xticklabels(config_label_name_file, rotation=0, fontsize=34)
+ax.set_xlabel('Firmware size (kB)',fontsize=42)
+ax.set_ylabel('Time (s)',fontsize=42)
+ax2.tick_params(axis="both", labelsize=34, length=10, width=2)
+ax2.set_ylabel('Energy consumption (J)',fontsize=42, rotation=-90, labelpad=45)
 
 
 # RX = mpatches.Patch(color='#344146', label='RX time')
@@ -180,7 +180,7 @@ for h,l in zip(hand,labl):
         handout.append(h)
         break
 
-legend = ax.legend(handout, lablout, loc='upper left', edgecolor='k',fontsize = 30, fancybox=True, ncol=1, handletextpad=1, handlelength=2)
+legend = ax.legend(handout, lablout, loc='upper left', edgecolor='k',fontsize = 34, fancybox=True, ncol=1, handletextpad=1, handlelength=2)
 legend.set_title("Time distribution",prop={'size':30})
 legend.get_frame().set_linewidth(2)
 legend.get_frame().set_edgecolor("k")
@@ -194,7 +194,7 @@ energy_1 = mlines.Line2D([], [],linestyle='--',linewidth=3,color = "#DC5E4B",mar
 
 # energy_2 = mlines.Line2D([], [], color='k', linestyle='--',marker='o', markersize=10, label='Config 2')
 # energy_3 = mlines.Line2D([], [], color='r', linestyle='--',marker='o', markersize=10, label='Config 3')
-legend = plt.legend(handles=[energy_1], loc='upper right', edgecolor='k',fontsize = 30, fancybox=True)
+legend = plt.legend(handles=[energy_1], loc='upper right', edgecolor='k',fontsize = 34, fancybox=True)
 
 # legend.set_title("Time distribution",prop={'size':20})
 legend.get_frame().set_linewidth(2)
@@ -212,8 +212,8 @@ ax.spines['left'].set_linewidth(1.5)
 ax.spines['right'].set_linewidth(1.5)
 ax.tick_params(direction='out', length=10, width=2)
 # ax.grid(which='both', axis='both', linestyle='--')
-ax.set_xticklabels(config_label_name_file, fontsize=30)
-plt.setp(ax.get_xticklabels(), rotation=30)
+ax.set_xticklabels(config_label_name_file, fontsize=34)
+plt.setp(ax.get_xticklabels(), rotation=34)
 
 # plt config
 figure_name = "coldata_save//" + "dissem" + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + '.pdf'

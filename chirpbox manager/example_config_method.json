@@ -2,7 +2,7 @@
 	"experiment_name": "test",
 	"experiment_description": "Just for description",
 	"payload_length": 6,
-	"experiment_duration": 300,
+	"experiment_duration": 3600,
 	"num_generated_packets": "True",
 	"num_received_packets": "True",
 	"e2e_latency": "True",
@@ -10,7 +10,7 @@
 	"rx_energy": "True",
 	"sniffer_type": 1,
 	"sniffer_and_channels": [],
-	"start_address": "080FD000",
-	"end_address": "080FD800",
+	"start_address": "080FD800",
+	"end_address": "080FE000",
 	"command_sf": 7
 }

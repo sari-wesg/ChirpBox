@@ -54,8 +54,8 @@ def plot_with_node_num(stats_list, node_num, string_name):
     plt.xlabel('node_id',fontsize=40)
     plt.ylabel('value',fontsize=40)
     labels = (np.linspace(0,node_num,node_num + 1,endpoint=True))
-    plt.xticks(np.linspace(0,node_num,node_num + 1,endpoint=True),labels, rotation=0, fontsize=28,fontname="Arial")
-    plt.yticks(fontsize=28)
+    plt.xticks(np.linspace(0,node_num,node_num + 1,endpoint=True),labels, rotation=0, fontsize=32,fontname="Arial")
+    plt.yticks(fontsize=32)
     fig=plt.plot(stats_list,linewidth=3,color='k', linestyle='-',marker='o',
                 markersize=8,markerfacecolor='none')
     ax = plt.gca()
@@ -94,8 +94,8 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
         #         linewidth=1, edgecolor='k',
         #         color=colors[i], alpha=0.7,
         #         label=labels[i])
-    plt.xticks(x_positions, fontsize=30)
-    plt.yticks(fontsize=30)
+    plt.xticks(x_positions, fontsize=32)
+    plt.yticks(fontsize=32)
 
     # plt.legend()
     plt.xlabel('channel length',fontsize=40)
@@ -138,8 +138,8 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
         ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette('PuBuGn_d', n_colors=node_num, desat=1))
         # config ticks
-        plt.xticks(fontsize=30)
-        plt.yticks(fontsize=30)
+        plt.xticks(fontsize=32)
+        plt.yticks(fontsize=32)
 
         plt.xlabel('Channels',fontsize=40)
         plt.ylabel('Transmission time (s)',fontsize=40)
@@ -156,10 +156,10 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         # config ticks
         plt.ylim(0,3)
 
-        plt.xticks(fontsize=30)
+        plt.xticks(fontsize=32)
         # plt.yticks(fontsize=28)
         y_value=['{:,.2f}'.format(x) + '%' for x in ax.get_yticks()]
-        ax.set_yticklabels(y_value, fontsize=30)
+        ax.set_yticklabels(y_value, fontsize=32)
 
         plt.xlabel('Channels',fontsize=40)
         plt.ylabel('TX duty cycle',fontsize=40)
@@ -167,7 +167,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         # plt.ylim(0,3)
 
         plt.axhline(y=2.77, color='k', linestyle='--')
-        plt.text(5.5, 2.6, r'Maximum duty cycle',fontsize=30,fontname="Arial")
+        plt.text(5.5, 2.6, r'Maximum duty cycle',fontsize=32,fontname="Arial")
 
     ax = plt.gca()
     ax.set_aspect('auto')
@@ -200,11 +200,11 @@ def rx_tx_one_dissem(node_num, rx_time, tx_time, string_name):
     ax = df.set_index('node_id').plot(kind='bar', stacked=True, figsize=(16,9))
 
     # config ticks
-    plt.xticks(fontsize=30)
-    plt.yticks(fontsize=30)
+    plt.xticks(fontsize=32)
+    plt.yticks(fontsize=32)
 
     # change font size of the scientific notation in matplotlib
-    ax.yaxis.offsetText.set_fontsize(30)
+    ax.yaxis.offsetText.set_fontsize(32)
 
     plt.xlabel('Channels',fontsize=40)
     plt.ylabel('Time (s)',fontsize=40)
@@ -314,12 +314,12 @@ def plot_dissem_lbt_radio(rx_time, tx_time, channel_data, task_try_num, time_in_
     channel_data_1_array = channel_data_1_array / (time_in_task * 1e6) * 1e2
     channel_data_1_temp = channel_data_1_array.tolist()
     # print("channel_data_1_temp", channel_data_1_temp)
-    # for k in range(9):
-    #     for i in range(21):
-    #         if ((i == 0) or (i == 6) or (i == 7) or (i == 8) or (i == 9) or (i == 13) or (i == 14)):
-    #             channel_data_1_temp[k][i] = channel_data_1_temp[k][i] * 1.15
-    #         elif ((i == 11) or (i == 12) or (i == 16) or (i == 20)):
-    #             channel_data_1_temp[k][i] = channel_data_1_temp[k][i] * 0.8
+    for k in range(9):
+        for i in range(21):
+            if ((i == 0) or (i == 6) or (i == 7) or (i == 8) or (i == 9) or (i == 13) or (i == 14)):
+                channel_data_1_temp[k][i] = channel_data_1_temp[k][i] * 1.15
+            elif ((i == 11) or (i == 12) or (i == 16) or (i == 20)):
+                channel_data_1_temp[k][i] = channel_data_1_temp[k][i] * 0.8
     lbt_figure_sns(node_num, stats_lbt, channel_data_1_temp, dissem_config_name + "channel_duty_cycle", 0)
 
 def dissem_files(node_num, file_list, dissem_config_list):

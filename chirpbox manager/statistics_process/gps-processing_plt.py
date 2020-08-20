@@ -30,7 +30,7 @@ def plot_with_interval(min_interval_max, time_list, ch_list):
         plt.plot(x,y, linestyle='none',marker='o', markersize = 1)
     plt.show()
 
-df = pd.read_csv('gps_sf12_21nodes.csv')
+df = pd.read_csv('gps_sf12_8nodes(4_5_9_11_12_13_16_19).csv')
 
 dates = []
 time_list = []

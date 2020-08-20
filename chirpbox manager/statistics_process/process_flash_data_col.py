@@ -94,8 +94,8 @@ def plot_with_node_num_list_len_duty_cycle(stats_list, node_num, list_len, strin
         #         linewidth=1, edgecolor='k',
         #         color=colors[i], alpha=0.7,
         #         label=labels[i])
-    plt.xticks(x_positions, fontsize=30)
-    plt.yticks(fontsize=30)
+    plt.xticks(x_positions, fontsize=32)
+    plt.yticks(fontsize=32)
 
     # plt.legend()
     plt.xlabel('channel length',fontsize=40)
@@ -138,8 +138,8 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         # ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette="muted")
         ax = sns.barplot(y='duty_cycle',x='channel_id',data=df,hue='node_id', palette=sns.color_palette('PuBuGn_d', n_colors=node_num, desat=1))
         # config ticks
-        plt.xticks(fontsize=30)
-        plt.yticks(fontsize=30)
+        plt.xticks(fontsize=32)
+        plt.yticks(fontsize=32)
 
         plt.xlabel('Channels',fontsize=40)
         plt.ylabel('Transmission time (s)',fontsize=40)
@@ -156,10 +156,10 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         # config ticks
         plt.ylim(0,3)
 
-        plt.xticks(fontsize=30)
+        plt.xticks(fontsize=32)
         # plt.yticks(fontsize=28)
         y_value=['{:,.2f}'.format(x) + '%' for x in ax.get_yticks()]
-        ax.set_yticklabels(y_value, fontsize=30)
+        ax.set_yticklabels(y_value, fontsize=32)
 
         plt.xlabel('Channels',fontsize=40)
         plt.ylabel('TX duty cycle',fontsize=40)
@@ -167,7 +167,7 @@ def lbt_figure_sns(node_num, stats_lbt, channel_data, string_name, total):
         # plt.ylim(0,3)
 
         plt.axhline(y=2.77, color='k', linestyle='--')
-        plt.text(5.5, 2.6, r'Maximum duty cycle',fontsize=30,fontname="Arial")
+        plt.text(5.5, 2.6, r'Maximum duty cycle',fontsize=32,fontname="Arial")
 
     ax = plt.gca()
     ax.set_aspect('auto')
@@ -200,11 +200,11 @@ def rx_tx_one_dissem(node_num, rx_time, tx_time, string_name):
     ax = df.set_index('node_id').plot(kind='bar', stacked=True, figsize=(16,9))
 
     # config ticks
-    plt.xticks(fontsize=30)
-    plt.yticks(fontsize=30)
+    plt.xticks(fontsize=32)
+    plt.yticks(fontsize=32)
 
     # change font size of the scientific notation in matplotlib
-    ax.yaxis.offsetText.set_fontsize(30)
+    ax.yaxis.offsetText.set_fontsize(32)
 
     plt.xlabel('Channels',fontsize=40)
     plt.ylabel('Time (s)',fontsize=40)

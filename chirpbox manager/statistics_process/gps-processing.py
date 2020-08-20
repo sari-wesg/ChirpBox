@@ -56,7 +56,7 @@ node_tx_data = [[0]*6]
 # with open("Processed_Data.txt","w") as f_target:
 for node in range(total_node_num):
     #open original txt
-    f_original = open("sf12_partnodes.txt")
+    f_original = open("sf12_2.txt")
     line = f_original.readline()
     # f_target.write("Node "+str(node)+":\n"+"{\n")
     while line:
@@ -89,19 +89,20 @@ for node in range(total_node_num):
         if((Message.GPS_TIME_HOUR != 0xff) and (Message.GPS_TIME_SEC != 0xff)):
             if (((Message.GPS_TIME_HOUR == 0) and (Message.GPS_TIME_MIN == 0) and (Message.GPS_TIME_SEC == 0)) != 1):
             # TODO:
-                if ((Message.GPS_TIME_HOUR < 16) or ((Message.GPS_TIME_HOUR == 16) and Message.GPS_TIME_MIN <= 4)):
+                # if ((Message.GPS_TIME_HOUR == 3)):
                 # if ((Message.GPS_TIME_HOUR < 16)):
                 # node_num_list = [16, 19, 11, 5, 4, 9, 13, 12]
                 # if (node in node_num_list):
 
-                    # convert to timestamp
-                    timestring = "2020-8-16 " + str(Message.GPS_TIME_HOUR) + ":" + str(Message.GPS_TIME_MIN) + ":" + str(Message.GPS_TIME_SEC)
-                    naive = datetime.datetime.strptime (timestring, "%Y-%m-%d %H:%M:%S")
-                    local_dt = local.localize(naive, is_dst=None)
-                    utc_dt = datetime.datetime.timestamp(local_dt)
+                # convert to timestamp
+                timestring = "2020-8-16 " + str(Message.GPS_TIME_HOUR) + ":" + str(Message.GPS_TIME_MIN) + ":" + str(Message.GPS_TIME_SEC)
+                naive = datetime.datetime.strptime (timestring, "%Y-%m-%d %H:%M:%S")
+                local_dt = local.localize(naive, is_dst=None)
+                utc_dt = datetime.datetime.timestamp(local_dt)
                     # print(timestring, int(utc_dt))
-
-                    node_tx_data.append([node, Message.TX_NUM, Message.CHANNEL, int(utc_dt)])
+                    # if ((utc_dt >= 1597519505) and (utc_dt <= 1597519665)):
+                node_tx_data.append([node, Message.TX_NUM, Message.CHANNEL, int(utc_dt)])
+                # node_tx_data.append([node, Message.TX_NUM, Message.CHANNEL, Message.GPS_TIME_HOUR, Message.GPS_TIME_MIN, Message.GPS_TIME_SEC])
 
             # node_tx_data[Round_Count - ROUND_NUM_NODE + i] = [node, Message.TX_NUM, Message.CHANNEL, Message.GPS_TIME_HOUR, Message.GPS_TIME_MIN, Message.GPS_TIME_SEC]
     mesg_original = ''
@@ -111,9 +112,10 @@ for node in range(total_node_num):
 # remove first row
 del node_tx_data[0]
 df = pd.DataFrame(node_tx_data,columns=['node_id', 'TX_NUM','CHANNEL','GPS_UTC'])
+# df = pd.DataFrame(node_tx_data,columns=['node_id', 'TX_NUM','CHANNEL','GPS_H','GPS_M','GPS_S'])
 print(df)
 
-df.to_csv('gps_lorawan.csv')
+df.to_csv('gps_sf12_utc.csv')
 
 
 

@@ -89,16 +89,16 @@ def heatmap(data,
 
         # Create colorbar
         cbar = ax.figure.colorbar(im, cax=cax, **cbar_kw)
-        cbar.ax.tick_params(labelsize = 23)
-        cbar.ax.set_ylabel(cbarlabel, rotation = -90, va = "bottom", fontsize = 40)
+        cbar.ax.tick_params(labelsize = 40)
+        cbar.ax.set_ylabel(cbarlabel, rotation = -90, va = "bottom", fontsize = 80)
     else:
         cbar = False
     # We want to show all ticks...
     ax.set_xticks(np.arange(data.shape[1]))
     ax.set_yticks(np.arange(data.shape[0]))
     # ... and label them with the respective list entries.
-    ax.set_xticklabels(col_labels)
-    ax.set_yticklabels(row_labels)
+    ax.set_xticklabels(col_labels,fontsize=28)
+    ax.set_yticklabels(row_labels,fontsize=28)
 
     # Let the horizontal axes labeling appear on top.
     ax.tick_params(top=False, bottom=True, labeltop=False, labelbottom=True)
@@ -279,10 +279,10 @@ def topo_parser(filename, using_pos):
     plt.rcParams["figure.figsize"] = (20, 20)
     fig, ax = plt.subplots()
 
-    plt.tick_params(labelsize=23)
+    plt.tick_params(labelsize=30)
 
-    plt.xlabel('TX Node ID', fontsize=40)
-    plt.ylabel('RX Node ID', fontsize=40)
+    plt.xlabel('TX Node ID', fontsize=80)
+    plt.ylabel('RX Node ID', fontsize=80)
     colors = ["#FFFFFF", "#09526A"] # Experiment with this
     cm = LinearSegmentedColormap.from_list('test', colors, N=100)
 
