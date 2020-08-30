@@ -1287,7 +1287,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.task = MX_ARRANGE;
 		chirp_outl.arrange_task = MX_ARRANGE;
 
-		TRACE_MSG("---------MX_ARRANGE---------\n");
+		printf("---------MX_ARRANGE---------\n");
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;

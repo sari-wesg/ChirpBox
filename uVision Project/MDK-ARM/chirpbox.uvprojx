@@ -239,7 +239,7 @@
             <uThumb>1</uThumb>
             <VariousControls>
               <MiscControls>-mcpu=cortex-m4 -mthumb -fdata-sections -ffunction-sections </MiscControls>
-              <Define>USE_HAL_DRIVER,STM32L476xx,ARM_MATH_CM4,CONFIG_GPIO_AS_PINRESET,GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG,GPI_TRACE_MODE=GPI_TRACE_MODE_NO_TRACE,ASSERT_WARN_CT=0,MX_CONFIG_FILE=mixer_config.h</Define>
+              <Define>USE_HAL_DRIVER,STM32L476xx,ARM_MATH_CM4,CONFIG_GPIO_AS_PINRESET,GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG,ASSERT_WARN_CT=0,MX_CONFIG_FILE=mixer_config.h</Define>
               <Undefine></Undefine>
               <IncludePath>../Inc;../Drivers/STM32L4xx_HAL_Driver/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L4xx/Include;../Drivers/CMSIS/Include;..\Src;..\tutorial\L476RG;..\Src\tools\Inc;..\Src\mixer;..\Src\chirpbox</IncludePath>
             </VariousControls>
@@ -554,6 +554,11 @@
               <FileName>md5.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\tools\Src\md5.c</FilePath>
+            </File>
+            <File>
+              <FileName>trace_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\tools\Src\trace_flash.c</FilePath>
             </File>
           </Files>
         </Group>
