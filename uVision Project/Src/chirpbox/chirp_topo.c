@@ -74,7 +74,11 @@ Topology_result *node_topology;
 
 void packet_prepare(uint8_t node_id)
 {
-    Tx_Buffer[0] = node_id;
+    Tx_Buffer[0] = node_id + 1;
+    Tx_Buffer[1] = node_id + 2;
+    uint16_t topo_hash_tx = Chirp_RSHash((uint8_t *)&(Tx_Buffer[0]), 2);
+    Tx_Buffer[2] = topo_hash_tx >> 8;
+    Tx_Buffer[3] = topo_hash_tx;
 }
 
 //**************************************************************************************************
@@ -82,7 +86,8 @@ void packet_prepare(uint8_t node_id)
 uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len)
 {
     tx_num_max = 20;
-    tx_payload_len = payload_len;
+    assert_reset(payload_len >= 2);
+    tx_payload_len = payload_len + 2;
     assert_reset(tx_payload_len <= BUFFER_SIZE);
     packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, tx_payload_len) + 50000;
     node_topology = (Topology_result *)malloc(nodes_num * sizeof(Topology_result));
@@ -228,17 +233,27 @@ void topo_dio0_isr()
         volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
         if(( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) != RFLR_IRQFLAGS_PAYLOADCRCERROR )
         {
-            // memset(Rx_Buffer, 0, BUFFER_SIZE);
+            memset(Rx_Buffer, 0, BUFFER_SIZE);
             // read rx packet from start address (in data buffer) of last packet received
-            // SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
-            // SX1276ReadFifo(Rx_Buffer, packet_len );
-            // count++;
-            rx_receive_num++;
-            // add_rx_topology_count();
+            SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
+            SX1276ReadFifo(Rx_Buffer, packet_len );
+            uint16_t topo_hash_rx = Chirp_RSHash((uint8_t *)&(Rx_Buffer[0]), 2);
+            if (topo_hash_rx == Rx_Buffer[2] >> 8 | Rx_Buffer[3])
+            {
+                // count++;
+                rx_receive_num++;
+                // add_rx_topology_count();
 
-            #if DEBUG
-                PRINTF("RX: %d\n", rx_receive_num);
-            #endif
+                #if DEBUG
+                    PRINTF("RX: %d\n", rx_receive_num);
+                #endif
+            }
+            else
+            {
+                #if DEBUG
+                    PRINTF("crc: %d\n", rx_receive_num);
+                #endif
+            }
         }
         else
         {
