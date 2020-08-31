@@ -1437,6 +1437,10 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             lbt_check_time();
             chirp_isr.state = ISR_MIXER;
             chirp_config.lbt_channel_primary = (chirp_outl->round - 1) % LBT_CHANNEL_NUM;
+            if ((chirp_outl->disem_flag) && (chirp_outl->task == MX_DISSEMINATE) && (chirp_outl->round >= 2))
+            {
+                chirp_config.lbt_channel_primary = (chirp_outl->round / 2) % LBT_CHANNEL_NUM;
+            }
             SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
         #endif
 		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
