@@ -732,7 +732,7 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t dissem_back_slot_num;
   uint8_t task_wait = 0;
 
-  uint8_t task[28 + DISSEM_BITMAP_32 * 8];
+  uint8_t task[28 + DISSEM_BITMAP_32 * 8 + DISSEM_BITMAP_32 * 8 + 1];
   PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_SNIFF\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_SNIFF, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
@@ -772,6 +772,7 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
     default_tp = (task[25] - '0') * 10 + (task[26] - '0');
     uint8_t i, data;
     memset((uint32_t *)&(chirp_outl->firmware_bitmap[0]), 0, DISSEM_BITMAP_32 * sizeof(uint32_t));
+    memset((uint32_t *)&(chirp_outl->task_bitmap[0]), 0, DISSEM_BITMAP_32 * sizeof(uint32_t));
     for (i = 28; i < 28 + DISSEM_BITMAP_32 * sizeof(uint32_t) * 2; i++)
     {
       data = task[i];
@@ -780,6 +781,15 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
       else
         data = 10 + data - 'A';
       chirp_outl->firmware_bitmap[(i - 28) / 8] += data * pow(0x10, sizeof(uint32_t) * 2 - 1 - ((i - 28) % (sizeof(uint32_t) * 2)));
+    }
+    for (i = 37; i < 37 + DISSEM_BITMAP_32 * sizeof(uint32_t) * 2; i++)
+    {
+      data = task[i];
+      if ((data >= '0') && (data <= '9'))
+        data = data - '0';
+      else
+        data = 10 + data - 'A';
+      chirp_outl->task_bitmap[(i - 37) / 8] += data * pow(0x10, sizeof(uint32_t) * 2 - 1 - ((i - 37) % (sizeof(uint32_t) * 2)));
     }
   } while ((mx_task > MX_TASK_LAST) || (mx_task < MX_TASK_FIRST));
 
@@ -795,7 +805,7 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
   chirp_outl->default_slot_num = default_slot_num;
   chirp_outl->dissem_back_sf = dissem_back_sf;
   chirp_outl->dissem_back_slot_num = dissem_back_slot_num;
-  PRINTF("default sf:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0]);
+  PRINTF("default sf:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %02x, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0], chirp_outl->task_bitmap[0]);
   switch (mx_task)
   {
     case CHIRP_START:
@@ -1291,7 +1301,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
-		chirp_outl.payload_len = DATA_HEADER_LENGTH + 5;
+		chirp_outl.payload_len = DATA_HEADER_LENGTH + 5 + 4;
 		chirp_outl.round_setup = 1;
 		chirp_outl.round_max = 1;
 		chirp_outl.file_chunk_len = 0;
@@ -1326,6 +1336,22 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(20000);
     else
       deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
+
+    uint32_t task_bitmap_temp = chirp_outl.task_bitmap[0];
+    uint8_t task_node_id = 0;
+    uint8_t task_lsb;
+    while(task_bitmap_temp)
+    {
+      task_lsb = gpi_get_lsb_32(task_bitmap_temp);
+      // printf("task_bitmap_temp:%02x, %lu\n", task_bitmap_temp, task_lsb);
+      if (task_lsb == node_id)
+        break;
+      task_bitmap_temp &= ~(1 << task_lsb);
+      task_node_id++;
+    }
+    uint32_t task_node_num = gpi_popcnt_32(chirp_outl.task_bitmap[0]);
+    // printf("task_node_id:%lu, %lu\n", task_node_id, task_node_num);
+
 		switch (chirp_outl.task)
 		{
       gpi_watchdog_periodic();
@@ -1399,6 +1425,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case MX_DISSEMINATE:
 			{
+        if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
+        {
 				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
         chirp_outl.disem_file_index = 0;
         chirp_outl.disem_file_max = UINT16_MAX / 2;
@@ -1407,7 +1435,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         memset(chirp_outl.firmware_md5, 0, sizeof(chirp_outl.firmware_md5));
 				TRACE_MSG("---------MX_DISSEMINATE---------\n");
 				// TODO: tune those parameters
-				chirp_outl.num_nodes = network_num_nodes;
+				chirp_outl.num_nodes = task_node_num;
 				chirp_outl.generation_size = chirp_outl.default_generate_size;
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
         assert_reset(chirp_outl.payload_len > DATA_HEADER_LENGTH + 28);
@@ -1444,7 +1472,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 				// chirp_mx_round(node_id, &chirp_outl);
-        if (!chirp_mx_round(node_id, &chirp_outl))
+        if (!chirp_mx_round(task_node_id, &chirp_outl))
         {
           free(payload_distribution);
           FLASH_If_Erase(0);
@@ -1495,7 +1523,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         }
         else
           printf("version right\n");
-        if (!(chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))))
+        if (!(chirp_outl.firmware_bitmap[task_node_id / 32] & (1 << (task_node_id % 32))))
         {
           TRACE_MSG("bitmap wrong\n");
           FLASH_If_Erase(0);
@@ -1503,15 +1531,18 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         else
           TRACE_MSG("bitmap right\n");
         Stats_to_Flash(chirp_outl.task);
+        }
 				break;
 			}
 			case MX_COLLECT:
 			{
+        if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
+        {
 				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------MX_COLLECT---------\n");
 				// TODO: tune those parameters
-				chirp_outl.num_nodes = network_num_nodes;
+				chirp_outl.num_nodes = task_node_num;
 				chirp_outl.generation_size = chirp_outl.num_nodes;
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
 				chirp_outl.round_max = UINT16_MAX;
@@ -1534,12 +1565,13 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         printf("set88:%lu\n", chirp_outl.round_max);
 
 				// chirp_mx_round(node_id, &chirp_outl);
-        if (!chirp_mx_round(node_id, &chirp_outl))
+        if (!chirp_mx_round(task_node_id, &chirp_outl))
         {
           free(payload_distribution);
           break;
         }
 				free(payload_distribution);
+        }
 				break;
 			}
 			case CHIRP_CONNECTIVITY:

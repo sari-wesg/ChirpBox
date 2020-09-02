@@ -874,6 +874,10 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 8;
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0];
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->default_tp;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 24;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 16;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 8;
+            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0];
             k = 0;
             break;
         }
@@ -1307,6 +1311,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
                                 chirp_outl->firmware_bitmap[0] = (task_data[0] << 24) | (task_data[1] << 16) | (task_data[2] << 8) | (task_data[3]);
                                 chirp_outl->default_tp = task_data[4];
+                                chirp_outl->task_bitmap[0] = (task_data[5] << 24) | (task_data[6] << 16) | (task_data[7] << 8) | (task_data[8]);
                             }
                             break;
                         }

@@ -878,6 +878,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				default_payload_len;
 	uint8_t				default_generate_size;
 	uint32_t			firmware_bitmap[DISSEM_BITMAP_32];
+	uint32_t			task_bitmap[DISSEM_BITMAP_32];
 
 	// send back the results in dissem
 	uint8_t				dissem_back_sf;
