@@ -13,27 +13,21 @@ import time
 # [4, 35]
 def generate_command_dissem(com_serial):
     count = 0
+    232, 232, 184, 88, 48
     payload_len = 232
     dissem_back_sf = 7
-    dissem_back_slot = 200
+    dissem_back_slot = 80
     used_sf = 7
     generation_size = 16
     used_tp = 0
     # for slot_number in np.arange(145, 171, 5):
-    slot_number = 150
-    bitmap_list = ['fffff', '7FFF', '3FF', '1F']
-    # except node 10, (except node 13, 10, 15, 6, 9), (except node 13, 10, 15, 6, 9,  3, 1, 14, 5,19), (except node 13, 10, 15, 6, 9,  3, 1, 14, 5, 19,   17, 16, 8, 12, 4)
-    0,
-    2,7,8,9,12
-    3,13,18,15,20
-    1,11,17,14,4
-    task_bitmap_list = ['1fffff', '16FB9F', '14B38D', '1385']
-    # 0,2,3,4,7,8,12,14,16,20
-    # 0,1,2,8,12
-    # 131917
-    for i in range(len(bitmap_list)):
-        bitmap = bitmap_list[i]
-        task_bitmap = task_bitmap_list[i]
+    slot_number = 80
+    bitmap = '1fffff'
+    task_bitmap = '1fffff'
+    sf_list = [9, 10, 11]
+    for i in range(len(sf_list)):
+        used_sf = sf_list[i]
+        dissem_back_sf = sf_list[i]
         task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "f4d4 " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + bitmap  + " " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + str(used_tp) + " " + task_bitmap + " "
         print(task_dissem_run)
         cbmng.main(task_dissem_run.split())

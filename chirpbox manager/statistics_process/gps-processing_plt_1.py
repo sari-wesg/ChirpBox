@@ -18,7 +18,9 @@ import datetime
 import matplotlib.image as image
 from matplotlib.offsetbox import (TextArea, DrawingArea, OffsetImage,
                                   AnnotationBbox)
-file_name = 'gps_sf12_8nodes(4_5_9_11_12_13_16_19)_utc'
+file_name = 'gps_sf12_21nodes_utc'
+# gateway2
+file_name_2 = 'gps_sf12_21nodes_utc'
 
 df = pd.read_csv(file_name+'.csv')
 txt_file_name =  file_name[0:-4] + '.txt'

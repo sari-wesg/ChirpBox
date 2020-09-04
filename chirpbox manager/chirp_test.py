@@ -6,12 +6,12 @@ def generate_command_connect(slot_number, used_sf, used_payload_len):
     task_version = "cbmng.py " + "-colver " + str(7) + " " + "com11 " + "60 " + "14 "
     print(task_version.split())
     cbmng.main(task_version.split())
-    task_coldata_run = "cbmng.py " + "-coldata " + "232 " + "7 " + "com11 " + "60 " + "14 "
+    task_coldata_run = "cbmng.py " + "-coldata " + "232 " + "7 " + "com11 " + "80 " + "14 "
     print(task_coldata_run)
     cbmng.main(task_coldata_run.split())
-    task_coldata_run = "cbmng.py " + "-coldata " + "120 " + "7 " + "com11 " + "60 " + "14 "
-    print(task_coldata_run)
-    cbmng.main(task_coldata_run.split())
+    # task_coldata_run = "cbmng.py " + "-coldata " + "120 " + "7 " + "com11 " + "60 " + "14 "
+    # print(task_coldata_run)
+    # cbmng.main(task_coldata_run.split())
     # count = 0
     # txpower = 0
     # sf = 7

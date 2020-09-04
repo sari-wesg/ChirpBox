@@ -89,7 +89,7 @@ def heatmap(data,
 
         # Create colorbar
         cbar = ax.figure.colorbar(im, cax=cax, **cbar_kw)
-        cbar.ax.tick_params(labelsize = 40)
+        cbar.ax.tick_params(labelsize = 60)
         cbar.ax.set_ylabel(cbarlabel, rotation = -90, va = "bottom", fontsize = 80)
     else:
         cbar = False
@@ -97,18 +97,20 @@ def heatmap(data,
     ax.set_xticks(np.arange(data.shape[1]))
     ax.set_yticks(np.arange(data.shape[0]))
     # ... and label them with the respective list entries.
-    ax.set_xticklabels(col_labels,fontsize=28)
-    ax.set_yticklabels(row_labels,fontsize=28)
+    ax.set_xticklabels(col_labels,fontsize=60)
+    ax.set_yticklabels(row_labels,fontsize=60)
+    # ax.xaxis.labelpad = 50
 
     # Let the horizontal axes labeling appear on top.
     ax.tick_params(top=False, bottom=True, labeltop=False, labelbottom=True)
 
     # Rotate the tick labels and set their alignment.
     plt.setp(ax.get_xticklabels(),
-                # rotation=90,
-                rotation=0,
-                ha="right",
-                rotation_mode="anchor")
+                rotation=90,
+                # rotation=0,
+                ha="center"
+                # rotation_mode="anchor"
+                )
 
     # Turn spines off and create white grid.
     for edge, spine in ax.spines.items():
@@ -281,8 +283,8 @@ def topo_parser(filename, using_pos):
 
     plt.tick_params(labelsize=30)
 
-    plt.xlabel('TX Node ID', fontsize=80)
-    plt.ylabel('RX Node ID', fontsize=80)
+    plt.xlabel('Tx Node ID', fontsize=80)
+    plt.ylabel('Rx Node ID', fontsize=80)
     colors = ["#FFFFFF", "#09526A"] # Experiment with this
     cm = LinearSegmentedColormap.from_list('test', colors, N=100)
 
@@ -293,7 +295,7 @@ def topo_parser(filename, using_pos):
                         cmap=cm,
                         cbar_flag = True,
                         alpha_value = 1,
-                        cbarlabel="Packet delivery ratio (%)")
+                        cbarlabel="Packet Reception Rate (%)")
 
     tmp = re.split(r'[().]', filename)
     # conf = tmp[0]
@@ -506,6 +508,8 @@ def topo_parser(filename, using_pos):
     # max_degree = 0
     # sym = [[0]*3]*3
     # node_temp = 0
+    print("hhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+    print(max_hop, mean_degree, sym[0][0])
     print(max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp)
 
     return [max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp]

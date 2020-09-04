@@ -50,11 +50,11 @@ for i in range(len(dissem_result)):
 print(dissem_plt_result)
 dissem_plt_pd = [[0]*9]*len(dissem_plt_result)
 for i in range(0, len(dissem_plt_result)):
-    run_time_energy = (dissem_plt_result[i][2] / 2) * 3.6715
-    lp_time_energy = (dissem_plt_result[i][6] - dissem_plt_result[i][1] - dissem_plt_result[i][2] - dissem_plt_result[i][2] / 2) * (2.9602)
-    rx_energy = (dissem_plt_result[i][0]) * (2.96 + 10.3)
-    tx_energy = (dissem_plt_result[i][3]) * (2.96 + 44)
-    energy = (run_time_energy + lp_time_energy + rx_energy + tx_energy) / 1000 * 3.3
+    run_time_energy = (dissem_plt_result[i][2] / 2) * (45+10.2) * 5
+    lp_time_energy = (dissem_plt_result[i][6] - dissem_plt_result[i][2] / 2) * (45+2.96) * 5
+    rx_energy = (dissem_plt_result[i][0]) * (10.3) * 3.3
+    tx_energy = (dissem_plt_result[i][2]) * (44)*3.3
+    energy = (run_time_energy + lp_time_energy + rx_energy + tx_energy) / 1000
     print("energy", energy, dissem_plt_result[i][2] / 2, dissem_plt_result[i][6] - dissem_plt_result[i][1] - dissem_plt_result[i][2] - dissem_plt_result[i][2] / 2, dissem_plt_result[i][0], dissem_plt_result[i][3])
 
     dissem_plt_pd[i] = [i, dissem_plt_result[i][0], dissem_plt_result[i][1], dissem_plt_result[i][2], dissem_plt_result[i][3], dissem_plt_result[i][6], energy, dissem_plt_result[i][2] / 2, dissem_plt_result[i][3] / 1.44]
@@ -200,9 +200,9 @@ legend = plt.legend(handles=[energy_1], loc='upper right', edgecolor='k',fontsiz
 legend.get_frame().set_linewidth(2)
 legend.get_frame().set_edgecolor("k")
 ax.set_ylim(0,3600)
-ax2.yaxis.set_ticks(np.arange(0, 90+1, 15))
-ax2.set_ylim(0,90)
-
+# ax2.yaxis.set_ticks(np.arange(0, 90+1, 15))
+# ax2.set_ylim(0,90)
+print('energy', df['energy'])
 
 ax = plt.gca()
 ax.set_aspect('auto')

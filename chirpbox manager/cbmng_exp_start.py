@@ -90,7 +90,7 @@ def generate_json_for_upgrade():
 		"sniffer_and_channels": [],
 		"sniffer_type": [],
 		"start_address": "0807E000",
-		"end_address": "0807E800",
+		"end_address": "0807E0D0",
 		"command_sf": 12
 	}
 	with open("tmp.json", "w") as f:
@@ -632,7 +632,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		json.dump(running_dict, f)
 
 	# !!!!!TODO:
-	test_dissem = False
+	test_dissem = True
 	if (test_dissem == False):
 		if(firmware_burned_existing == 1):
 			if(daemon_patch == 1):

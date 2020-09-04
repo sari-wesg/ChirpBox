@@ -27,11 +27,17 @@ def topo_process():
 # 3 12.0 4.976133515281193 4.0 20.0 0.7752743101152969
 # 2 16.571428571428573 3.048363004434137 8.0 20.0 0.8661097271285673
 # filename = "Chirpbox_connectivity_sf7ch470000tp0topo_payload_len200(20200813135615054714).txt"
-filename = "Chirpbox_connectivity_sf7ch470000tp0topo_payload_len200(20200814215826425401).txt"
+# filename = "Chirpbox_connectivity_sf7ch470000tp0topo_payload_len200(20200814215826425401).txt"
 # filename = "Chirpbox_connectivity_sf7ch470000tp0topo_payload_len1(20200815033904576109).txt"
 # filename = "Chirpbox_connectivity_sf12ch470000tp0topo_payload_len1(20200815034729199028).txt"
 # filename = "Chirpbox_connectivity_sf7ch470000tp14topo_payload_len1(20200805170357607773).txt"
 
-topo_parser.topo_parser(filename, 2)
+# filelist = ["Chirpbox_connectivity_sf7ch486300tp0topo_payload_len8(20200831173703125039).txt", "Chirpbox_connectivity_sf7ch487100tp0topo_payload_len8(20200831174416507619).txt",  "Chirpbox_connectivity_sf7ch487700tp0topo_payload_len8(20200831175154287705).txt", "Chirpbox_connectivity_sf12ch486300tp0topo_payload_len8(20200831181338788182).txt", "Chirpbox_connectivity_sf12ch487100tp0topo_payload_len8(20200831182818594542).txt", "Chirpbox_connectivity_sf12ch487700tp0topo_payload_len8(20200831175916501985).txt"]
+filelist = ["Chirpbox_connectivity_sf7ch486300tp10topo_payload_len8(20200831201808588934).txt"]
+
+
+for i in range(len(filelist)):
+    filename = filelist[i]
+    topo_parser.topo_parser(filename, 2)
 
 # topo_process()
