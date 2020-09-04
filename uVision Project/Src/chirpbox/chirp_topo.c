@@ -24,8 +24,7 @@
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#define DEBUG 1
-#if DEBUG
+#if DEBUG_CHIRPBOX
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -244,15 +243,11 @@ void topo_dio0_isr()
                 rx_receive_num++;
                 // add_rx_topology_count();
 
-                #if DEBUG
-                    PRINTF("RX: %d\n", rx_receive_num);
-                #endif
+                PRINTF("RX: %d\n", rx_receive_num);
             }
             else
             {
-                #if DEBUG
-                    PRINTF("crc: %d\n", rx_receive_num);
-                #endif
+                PRINTF("crc: %d\n", rx_receive_num);
             }
         }
         else

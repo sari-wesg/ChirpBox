@@ -16,8 +16,7 @@
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#define DEBUG 1
-#if DEBUG
+#if DEBUG_CHIRPBOX
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -164,14 +163,14 @@ static void change_unix(long ts, Chirp_Time *gps_time)
     gps_time->chirp_hour = (uint8_t)hour;
     gps_time->chirp_min = (uint8_t)minute;
     gps_time->chirp_sec = (uint8_t)second;
-    printf("%d-%d-%d %d:%d:%d week: %d\n", gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec, gps_time->chirp_day);
+    PRINTF("%d-%d-%d %d:%d:%d week: %d\n", gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec, gps_time->chirp_day);
 }
 
 void gps_pps_IRQ()
 {
     gpi_watchdog_periodic();
     pps_count++;
-    printf("pps:%lu\n", pps_count);
+    PRINTF("pps:%lu\n", pps_count);
 }
 
 //**************************************************************************************************
@@ -232,7 +231,7 @@ Chirp_Time GPS_Get_Time()
         ;
     if (gps_done == 2)
     {
-        printf("chirp_time:%s\n", aRxBuffer);
+        PRINTF("chirp_time:%s\n", aRxBuffer);
         change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     }
     return chirp_time;
@@ -262,7 +261,7 @@ time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, 
     now = GPS_Conv(gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec);
     start = GPS_Conv(start_year, start_month, start_date, start_hour, start_min, start_sec);
     diff = start - now;
-    printf("seconds difference = %ld\n", diff);
+    PRINTF("seconds difference = %ld\n", diff);
     return diff;
 }
 
@@ -311,7 +310,7 @@ void GPS_Wakeup(uint32_t interval_sec)
     GPS_Get_Time();
     time_t diff = GPS_Diff(&chirp_time, 1970, 1, 1, 0, 0, 0);
     time_t sleep_sec = interval_sec - (time_t)(0 - diff) % interval_sec;
-    printf("sleep_sec:%lu, version: %x-%x\n", sleep_sec, VERSION_MAJOR, VERSION_NODE);
+    PRINTF("sleep_sec:%lu, version: %x-%x\n", sleep_sec, VERSION_MAJOR, VERSION_NODE);
     gps_state = GPS_WAKEUP;
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
@@ -357,7 +356,7 @@ void gps_main_timer_isr(void)
 
         __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
         gps_done = 1;
-        printf("gps timeout!\n");
+        PRINTF("gps timeout!\n");
     }
     #endif
 }

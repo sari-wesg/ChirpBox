@@ -66,8 +66,7 @@ uint8_t gps_time_str[4];
 
 //**************************************************************************************************
 //***** Local (Private) Defines and Consts *********************************************************
-#define DEBUG 1
-#if DEBUG
+#if DEBUG_CHIRPBOX
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -371,15 +370,15 @@ void Flash_Bank_Copy_Bank(uint32_t FLASH_SRC, uint32_t FLASH_DEST, uint32_t firm
   //   menu_preSend(0);
 
   round = (firmware_size + sizeof(firmware_file_buffer) - 1) / sizeof(firmware_file_buffer);
-  printf("copy round:%lu, %lu\n", round, firmware_size);
+  PRINTF("copy round:%lu, %lu\n", round, firmware_size);
   for (n = round; n > 0; n--)
   {
-    printf("%lu, ", (n - 1));
+    PRINTF("%lu, ", (n - 1));
     memcpy(firmware_file_buffer, (__IO uint32_t*)(FLASH_SRC + (n - 1) * sizeof(firmware_file_buffer)), sizeof(firmware_file_buffer));
 
     FLASH_If_Write(FLASH_DEST + (n - 1) * sizeof(firmware_file_buffer), (uint32_t *)(firmware_file_buffer), sizeof(firmware_file_buffer) / sizeof(uint32_t));
   }
-  printf("\n");
+  PRINTF("\n");
 
   if (bank)
   {
@@ -418,7 +417,7 @@ void menu_bank(void)
     Serial_PutString((uint8_t *)"\tSystem running from STM32L476 *Bank 2*  \r\n\n");
     #if BANK_1_RUN
     uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_1);
-    printf("firmware_size:%lu\n", firmware_size);
+    PRINTF("firmware_size:%lu\n", firmware_size);
     if ((firmware_size < 0x100000) && (firmware_size))
       Flash_Bank_Copy_Bank(FLASH_START_BANK1, FLASH_START_BANK2, firmware_size, 1);
     DS3231_GetTime();
@@ -899,7 +898,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
   }
 
   uart_read_data(0, rxbuffer_len);
-  printf("\nWaiting for parameter(s)...\n");
+  PRINTF("\nWaiting for parameter(s)...\n");
 
   while(!uart_read_done);
 
@@ -1008,7 +1007,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
           }
         }
 
-        printf("\tSTART at %lu-%lu-%lu, %lu:%lu:%lu\n\tEnd at %lu-%lu-%lu, %lu:%lu:%lu\n, start user:%lu, ver:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
+        PRINTF("\tSTART at %lu-%lu-%lu, %lu:%lu:%lu\n\tEnd at %lu-%lu-%lu, %lu:%lu:%lu\n, start user:%lu, ver:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
         break;
       }
       case MX_DISSEMINATE:
@@ -1071,12 +1070,12 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
             }
           }
         }
-        printf("MX_DISSEMINATE:%lu, %lu, %lu, %lu, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash);
+        PRINTF("MX_DISSEMINATE:%lu, %lu, %lu, %lu, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash);
         for (i = 0; i < 16; i++)
         {
-          printf("%02X", chirp_outl->firmware_md5[i]);
+          PRINTF("%02X", chirp_outl->firmware_md5[i]);
         }
-        printf("\n");
+        PRINTF("\n");
         if (!chirp_outl->patch_update)
         {
           menu_preSend(1);
@@ -1113,7 +1112,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
           }
         }
 
-        printf("Start address: 0x%x, End address: 0x%x\n", chirp_outl->collect_addr_start, chirp_outl->collect_addr_end);
+        PRINTF("Start address: 0x%x, End address: 0x%x\n", chirp_outl->collect_addr_start, chirp_outl->collect_addr_end);
         break;
       }
       case CHIRP_CONNECTIVITY:
@@ -1160,7 +1159,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
         if (!tx_sign)
           chirp_outl->tx_power = 0 - chirp_outl->tx_power;
 
-        printf("Spreading factor: %lu, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
+        PRINTF("Spreading factor: %lu, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
         break;
       }
       case CHIRP_SNIFF:
@@ -1191,7 +1190,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
           }
         }
         free(command_buffer);
-        printf("Sniffer num:%lu\n", chirp_outl->sniff_nodes_num);
+        PRINTF("Sniffer num:%lu\n", chirp_outl->sniff_nodes_num);
 
         chirp_outl->sniff_node[0] = (Sniff_Config *)malloc(sizeof(Sniff_Config) * chirp_outl->sniff_nodes_num);
         /* allocate space for sniffer nodes */
@@ -1204,7 +1203,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
         uint8_t p;
         for (i = 0; i < chirp_outl->sniff_nodes_num; i++)
         {
-          printf("Sniffer config...\n");
+          PRINTF("Sniffer config...\n");
           k = 0;
           uart_read_data(0, rxbuffer_len);
           while(!uart_read_done);
@@ -1232,7 +1231,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
 
         for (i = 0; i < chirp_outl->sniff_nodes_num; i++)
         {
-          printf("sniffer:%lu, %lu kHz\n", chirp_outl->sniff_node[i]->sniff_id, chirp_outl->sniff_node[i]->sniff_freq_khz);
+          PRINTF("sniffer:%lu, %lu kHz\n", chirp_outl->sniff_node[i]->sniff_id, chirp_outl->sniff_node[i]->sniff_freq_khz);
         }
 
         break;
@@ -1299,7 +1298,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.task = MX_ARRANGE;
 		chirp_outl.arrange_task = MX_ARRANGE;
 
-		printf("---------MX_ARRANGE---------\n");
+		PRINTF("---------MX_ARRANGE---------\n");
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
@@ -1345,21 +1344,21 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     while(task_bitmap_temp)
     {
       task_lsb = gpi_get_lsb_32(task_bitmap_temp);
-      // printf("task_bitmap_temp:%02x, %lu\n", task_bitmap_temp, task_lsb);
+      // PRINTF("task_bitmap_temp:%02x, %lu\n", task_bitmap_temp, task_lsb);
       if (task_lsb == node_id)
         break;
       task_bitmap_temp &= ~(1 << task_lsb);
       task_node_id++;
     }
     uint32_t task_node_num = gpi_popcnt_32(chirp_outl.task_bitmap[0]);
-    // printf("task_node_id:%lu, %lu\n", task_node_id, task_node_num);
+    // PRINTF("task_node_id:%lu, %lu\n", task_node_id, task_node_num);
     energest_init_debug();
     #if ENERGEST_CONF_ON
       ENERGEST_ON(ENERGEST_TYPE_CPU);
     #endif
+    gpi_watchdog_periodic();
 		switch (chirp_outl.task)
 		{
-      gpi_watchdog_periodic();
 			case CHIRP_START:
 			{
 				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
@@ -1511,9 +1510,9 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         TRACE_MSG("Md5 check: %lu\n", chirp_outl.firmware_size);
         for (i = 0; i < 16; i++)
         {
-          printf("%02X", chirp_outl.firmware_md5[i]);
+          PRINTF("%02X", chirp_outl.firmware_md5[i]);
         }
-        printf("\n");
+        PRINTF("\n");
         if (!MD5_File(1, 0, chirp_outl.firmware_size, chirp_outl.firmware_md5))
         {
           TRACE_MSG("md5 error\n");
@@ -1523,11 +1522,11 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         TRACE_MSG("version_hash:%lu, %lu\n", ((VERSION_MAJOR << 8) | (VERSION_NODE)), chirp_outl.version_hash);
         if (chirp_outl.version_hash != ((VERSION_MAJOR << 8) | (VERSION_NODE)))
         {
-          printf("version wrong\n");
+          PRINTF("version wrong\n");
           FLASH_If_Erase(0);
         }
         else
-          printf("version right\n");
+          PRINTF("version right\n");
         if (!(chirp_outl.firmware_bitmap[task_node_id / 32] & (1 << (task_node_id % 32))))
         {
           TRACE_MSG("bitmap wrong\n");
@@ -1574,14 +1573,14 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					menu_initiator_read_command(&chirp_outl);
 					chirp_outl.collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
 					chirp_outl.round_max = chirp_outl.round_setup + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
-					printf("set:%lu\n", chirp_outl.round_max);
+					PRINTF("set:%lu\n", chirp_outl.round_max);
 				}
 				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-        printf("set88:%lu\n", chirp_outl.round_max);
+        PRINTF("set88:%lu\n", chirp_outl.round_max);
 
 				// chirp_mx_round(node_id, &chirp_outl);
         if (!chirp_mx_round(task_node_id, &chirp_outl))

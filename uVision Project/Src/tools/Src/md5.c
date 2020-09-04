@@ -246,27 +246,27 @@ bool MD5_File(uint8_t fileBank, uint32_t filePage, uint32_t fileSize, uint8_t *m
 {
 	int ret;
     Flash_FILE md5File = {fileBank, filePage, 0, 0, fileSize};
-    printf("MD5 File size:%lu\n", fileSize);
+    PRINTF_CHIRP("MD5 File size:%lu\n", fileSize);
 	uint8_t md5_value[MD5_SIZE];
 
 	// test file md5
 	ret = MD5_File_Compute(&md5File, md5_value);
 	if (0 == ret)
 	{
-		printf("MD5 value:\n");
+		PRINTF_CHIRP("MD5 value:\n");
 		for(uint8_t i = 0; i < MD5_SIZE; i++)
-			printf("%02X", md5_value[i]);
-		printf("\n");
+			PRINTF_CHIRP("%02X", md5_value[i]);
+		PRINTF_CHIRP("\n");
 	}
 
 	for (uint8_t i = 0; i < MD5_SIZE; i++)
 	{
 		if (md5_check[i] != md5_value[i])
 		{
-			printf("MD5 check wrong\n");
+			PRINTF_CHIRP("MD5 check wrong\n");
 			return false;
 		}
 	}
-	printf("MD5 check right\n");
+	PRINTF_CHIRP("MD5 check right\n");
 	return true;
 }

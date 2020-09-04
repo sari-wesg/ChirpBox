@@ -111,7 +111,7 @@ static const uint32_t nodes[256] = {0x550033, 0x420029, 0x38001E, 0x1E0030, 0x26
 // static const uint32_t nodes[256] = {0x550033, 0x440032};
 
 #endif
-const uint8_t VERSION_MAJOR = 0x72, VERSION_NODE = 0x19;
+const uint8_t VERSION_MAJOR = 0x66, VERSION_NODE = 0xbc;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 

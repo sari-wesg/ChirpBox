@@ -69,13 +69,6 @@ GPI_TRACE_CONFIG(mixer_processing, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER
 #define PRINTF(...)
 #endif
 
-#define DEBUG 1
-#if DEBUG
-#include <stdio.h>
-#define PRINTF_decode(...) printf(__VA_ARGS__)
-#else
-#define PRINTF_decode(...)
-#endif
 //**************************************************************************************************
 //**** Includes ************************************************************************************
 
@@ -107,7 +100,12 @@ GPI_TRACE_CONFIG(mixer_processing, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-
+// #define DEBUG 1
+#if PRINTF_CHIRP
+#define PRINTF_decode(...) printf(__VA_ARGS__)
+#else
+#define PRINTF_decode(...)
+#endif
 
 
 //**************************************************************************************************
@@ -229,7 +227,7 @@ static void trace_packet(const Packet *p)
 		#endif
 	}
 
-	printf("%s\n", msg);
+	PRINTF_CHIRP("%s\n", msg);
 }
 
 #else
@@ -780,7 +778,7 @@ PT_THREAD(mixer_update_slot())
 		#if MX_VERBOSE_PACKETS
 			if (mx.events & BV(TX_READY))
 			{
-				PRINTF_decode("Tx: ");
+				PRINTF_CHIRP("Tx: ");
 				#if MX_PSEUDO_CONFIG
 				TRACE_PACKET(&(mx.tx_packet->phy_payload_begin));
 				#else
@@ -1885,7 +1883,7 @@ PT_THREAD(mixer_process_rx_data())
 			#else
 			TRACE_DUMP(1, "Rx packet:", &(p->phy_payload_begin), PHY_PAYLOAD_SIZE);
 			#endif
-			PRINTF_decode("Rx: ");
+			PRINTF_CHIRP("Rx: ");
 
 			TRACE_PACKET(p);
 			// #if (!BANK_1_RUN)
@@ -2339,7 +2337,7 @@ PT_THREAD(mixer_process_rx_data())
 						if (!mx.request->my_column_pending)
 						{
 							chirp_config.full_column = 0;
-							printf("-----column_pending = 0-----\n");
+							PRINTF_CHIRP("-----column_pending = 0-----\n");
 						}
 						#else
 						mx.request.my_row_mask[i / (sizeof(uint_fast_t) * 8)] &=
@@ -2370,7 +2368,7 @@ PT_THREAD(mixer_process_rx_data())
 					if (MX_GENERATION_SIZE == mx.rank)
 					#endif
 					{
-						printf("------------full_rank------------:%d\n", mx.slot_number);
+						PRINTF_CHIRP("------------full_rank------------:%d\n", mx.slot_number);
 
 						static Pt_Context	pt_decode;
 
@@ -2734,7 +2732,7 @@ PT_THREAD(mixer_maintenance())
 		Gpi_Fast_Tick_Extended now = gpi_tick_fast_extended();
 
 		chirp_config.update_slot++;
-        printf("l:%llu\n", (mx.round_deadline - now) / 16000000);
+        PRINTF_CHIRP("l:%llu\n", (mx.round_deadline - now) / 16000000);
 
 		// monitor round length
 		// NOTE: we test once per slot, and STOP executes gracefully at the next slot boundary
@@ -2815,13 +2813,13 @@ PT_THREAD(mixer_maintenance())
 				{
 					#if !(GPI_ARCH_IS_BOARD(TMOTE_FLOCKLAB) || GPI_ARCH_IS_BOARD(TMOTE_INDRIYA))
 						#if MX_PSEUDO_CONFIG
-						printf("# ID:%u ", mx.tx_packet->sender_id + 1);
+						PRINTF_CHIRP("# ID:%u ", mx.tx_packet->sender_id + 1);
 						#else
-						printf("# ID:%u ", mx.tx_packet.sender_id + 1);
+						PRINTF_CHIRP("# ID:%u ", mx.tx_packet.sender_id + 1);
 						#endif
 					#endif
 
-					printf("profile %u %s %4" PRIu16 ": %" PRIu32 "\n", s_snapshot_index, module_name, line, timestamp);
+					PRINTF_CHIRP("profile %u %s %4" PRIu16 ": %" PRIu32 "\n", s_snapshot_index, module_name, line, timestamp);
 				}
 
 			#endif
@@ -2839,7 +2837,7 @@ PT_THREAD(mixer_maintenance())
 			#endif
 				{
 					GPI_TRACE_MSG(TRACE_INFO, "max. round length reached -> STOP initiated");
-					printf("MX_SESSION_LENGTH\n");
+					PRINTF_CHIRP("MX_SESSION_LENGTH\n");
 					gpi_atomic_set(&mx.events, BV(DEADLINE_REACHED));
 
 					while (!mixer_transport_set_next_slot_task(STOP));

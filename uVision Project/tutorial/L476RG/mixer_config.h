@@ -10,6 +10,14 @@
 	#define PSEUDO_CONF						1
 #endif
 
+#define DEBUG_CHIRPBOX 0
+#if DEBUG_CHIRPBOX
+
+#define PRINTF_CHIRP(...) printf(__VA_ARGS__)
+#else
+#define PRINTF_CHIRP(...)
+#endif
+
 /*radio---------------------------------------------------------------------------*/
 #define REGION_CN470				// Frequency by country
 #define USE_MODEM_LORA				// Radio modem

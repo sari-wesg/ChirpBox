@@ -25,8 +25,7 @@
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#define DEBUG 1
-#if DEBUG
+#if DEBUG_CHIRPBOX
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -109,7 +108,7 @@ void sniff_stat_write(Sniff_stat *head)
         memset(sniff_node, 0, sizeof(sniff_node));
         sniff_node[0] = p1->next->node_id;
         sniff_node[1] = p1->next->radio_on_time;
-        printf("sniff_node:%lu, %lu\n", sniff_node[0], sniff_node[1]);
+        PRINTF("sniff_node:%lu, %lu\n", sniff_node[0], sniff_node[1]);
         FLASH_If_Write(USER_FLASH_ADDRESS + i * sizeof(sniff_node), (uint32_t *)(sniff_node), sizeof(sniff_node) / sizeof(uint32_t));
         p1 = p1->next;
         i++;

@@ -23,8 +23,7 @@
 #endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#define DEBUG 1
-#if DEBUG
+#if DEBUG_CHIRPBOX
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -89,8 +88,8 @@ void PRINT_PACKET(uint8_t *p, uint8_t len, uint8_t Packet)
         PRINTF("r ");
     else
         PRINTF("f ");
-    for (i = 0; i < len;)
-        PRINTF("%02x ", ((uint8_t *)p)[i++]);
+    for (i = 0; i < len; i++)
+        PRINTF("%02x ", ((uint8_t *)p)[i]);
     PRINTF("\n");
 }
 
@@ -163,7 +162,7 @@ uint8_t read_message(uint32_t *round, uint8_t *mx_task)
             }
             else
             {
-                printf("message %u wrong\n", i);
+                PRINTF("message %u wrong\n", i);
                 PRINT_PACKET(p, DATA_HEADER_LENGTH, 1);
             }
 
@@ -209,15 +208,15 @@ uint8_t update_new_message(uint16_t slot_number)
     #else
         uint16_t now_time = slot_number;
     #endif
-    // printf("now_time:%d, %d, %d\n", beat, now_time, new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]);
+    // PRINTF("now_time:%d, %d, %d\n", beat, now_time, new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]);
     if ((now_time >= new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]) && (beat < node_generate_num[mx.tx_packet.sender_id]))
     {
-        printf("----update:%d, %d, %d\n", beat, now_time, new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]);
+        PRINTF("----update:%d, %d, %d\n", beat, now_time, new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]);
         beat++;
         data[0] = payload_distribution[mx.tx_packet.sender_id] + 1;
         data[1] = beat >> 8;
         data[2] = beat;
-        printf("data:%d, %d\n", data[1], data[2]);
+        PRINTF("data:%d, %d\n", data[1], data[2]);
         data[3] = mx.tx_packet.sender_id;
         if(set_packet[mx.tx_packet.sender_id][set_beat] == node_generate[mx.tx_packet.sender_id][beat - 1])
         {
@@ -266,7 +265,7 @@ uint32_t read_result_message(uint8_t read_case)
         void *p = mixer_read(i);
         if (NULL == p)
         {
-            // printf("message %u not decoded\n", i);
+            // PRINTF("message %u not decoded\n", i);
         }
         else
         {
@@ -274,9 +273,9 @@ uint32_t read_result_message(uint8_t read_case)
             if ((data_result[3] == i) && (data_result[0] == payload_distribution[i] + 1))
             {
                 int j;
-                printf("r ");
+                PRINTF("r ");
                 for(j = 0; j < RESULT_POSITION; j++)
-                    printf("%02x ", ((uint8_t *)p)[j]);
+                    PRINTF("%02x ", ((uint8_t *)p)[j]);
                     switch (read_case)
                     {
                         case READ_RESULTS:
@@ -288,11 +287,11 @@ uint32_t read_result_message(uint8_t read_case)
                         default:
                             break;
                     }
-                printf("\n");
+                PRINTF("\n");
             }
             else
             {
-                printf("message %u wrong\n", i);
+                PRINTF("message %u wrong\n", i);
             }
 
             // use message 0 to check/adapt round number
@@ -428,9 +427,9 @@ void decode_sensor_results(uint8_t *data_result)
         memcpy(&results, data_result + RESULT_POSITION + i * 4, 4);
         real_results = results[3] << 24 | results[2] << 16 | results[1] << 8 | results[0];
         if ((i == 4) | (i == 5))
-            printf("%lu.%03lu%%, ", real_results / 1000, real_results % 1000);
+            PRINTF("%lu.%03lu%%, ", real_results / 1000, real_results % 1000);
         else
-            printf("%lu.%02lu%%, ", real_results / 100, real_results % 100);
+            PRINTF("%lu.%02lu%%, ", real_results / 100, real_results % 100);
 
     }
 }
@@ -791,7 +790,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             {
                 data[k++] = chirp_outl->round_max >> 8;
                 data[k++] = chirp_outl->round_max;
-                printf("set99:%lu\n", chirp_outl->round_max);
+                PRINTF("set99:%lu\n", chirp_outl->round_max);
 
                 memcpy(file_data, data, DATA_HEADER_LENGTH);
                 if (!node_id)
@@ -836,7 +835,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 2] = chirp_outl->sniff_node[i]->sniff_freq_khz >> 16;
                 file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 3] = chirp_outl->sniff_node[i]->sniff_freq_khz >> 8;
                 file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 4] = chirp_outl->sniff_node[i]->sniff_freq_khz;
-                printf("fre: %lu, %lu, %lu, %lu\n", file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 1], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 2], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 3], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 4]);
+                PRINTF("fre: %lu, %lu, %lu, %lu\n", file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 1], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 2], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 3], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 4]);
             }
             k = 0;
             break;
@@ -988,13 +987,13 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     if (!node_id)
     {
-        printf("-----column_pending = %lu-----\n", mx.request->my_column_pending);
+        PRINTF("-----column_pending = %lu-----\n", mx.request->my_column_pending);
         if ((chirp_outl->task == MX_COLLECT) && (chirp_outl->round > chirp_outl->round_setup))
-            printf("output from initiator (collect):\n");
+            PRINTF("output from initiator (collect):\n");
         else if (chirp_outl->task == CHIRP_TOPO)
-            printf("output from initiator (topology):\n");
+            PRINTF("output from initiator (topology):\n");
         else if (chirp_outl->task == CHIRP_VERSION)
-            printf("output from initiator (version):\n");
+            PRINTF("output from initiator (version):\n");
     }
 
     if  (chirp_outl->task == MX_DISSEMINATE)
@@ -1020,13 +1019,13 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 memcpy(receive_payload, p, chirp_config.matrix_payload_8.len);
                 calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, chirp_config.matrix_payload_8.len - 2);
                 rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
-                printf("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
+                PRINTF("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
                 if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                 {
                     rece_dissem_index = (receive_payload[ROUND_HEADER_LENGTH] << 8 | receive_payload[ROUND_HEADER_LENGTH + 1]);
                     if (rece_dissem_index >= chirp_outl->disem_file_max + 1)
                         chirp_outl->disem_file_index++;
-                    printf("dissem_index:%lu, %lu\n", rece_dissem_index, chirp_outl->disem_file_index);
+                    PRINTF("dissem_index:%lu, %lu\n", rece_dissem_index, chirp_outl->disem_file_index);
                     round_hash++;
                     PRINT_PACKET(p, DATA_HEADER_LENGTH, 1);
                 }
@@ -1059,7 +1058,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                     memcpy(receive_payload, p, chirp_config.matrix_payload_8.len);
                     calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, chirp_config.matrix_payload_8.len - 2);
                     rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
-                    printf("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
+                    PRINTF("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
                 }
                 // PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
                 packet_correct = 0;
@@ -1116,7 +1115,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 chirp_outl->end_sec = task_data[13];
                                 chirp_outl->flash_protection = task_data[14];
                                 chirp_outl->version_hash = (task_data[15] << 8) | (task_data[16]);
-                                printf("\t receive, START at %lu-%lu-%lu, %lu:%lu:%lu\n\tEnd at %lu-%lu-%lu, %lu:%lu:%lu\n, flash_protection:%lu, v:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
+                                PRINTF("\t receive, START at %lu-%lu-%lu, %lu:%lu:%lu\n\tEnd at %lu-%lu-%lu, %lu:%lu:%lu\n, flash_protection:%lu, v:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
                             }
                             break;
                         }
@@ -1140,8 +1139,8 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             chirp_outl->patch_bank = data[5];
                                             chirp_outl->disem_file_max = (chirp_outl->firmware_size + chirp_outl->file_chunk_len - 1) / chirp_outl->file_chunk_len  + 1;
                                             chirp_outl->version_hash = (data[6] << 8) | (data[7]);
-                                            printf("version_hash:%x, %x, %x\n", chirp_outl->version_hash, data[6], data[7]);
-                                            printf("MX_DISSEMINATE: %lu, %lu, %lu, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len);
+                                            PRINTF("version_hash:%x, %x, %x\n", chirp_outl->version_hash, data[6], data[7]);
+                                            PRINTF("MX_DISSEMINATE: %lu, %lu, %lu, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len);
 
                                             memcpy(&(chirp_outl->firmware_md5[0]), (uint8_t *)(p + 16), 16);
                                             /* update whole firmware */
@@ -1149,7 +1148,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             {
                                                 menu_preSend(1);
                                                 file_data[0] = chirp_outl->firmware_size;
-                                                // printf("whole firmware_size:%lu\n", chirp_outl->firmware_size);
+                                                // PRINTF("whole firmware_size:%lu\n", chirp_outl->firmware_size);
                                                 FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)file_data, 2);
                                             }
                                             /* patch firmware */
@@ -1161,7 +1160,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                                 chirp_outl->old_firmware_size = (data[k++] << 24) | (data[k++] << 16) | (data[k++] << 8) | (data[k++]);
                                                 k = 0;
                                                 chirp_outl->patch_page = menu_pre_patch(chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size);
-                                                printf("patch:%lu, %lu\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
+                                                PRINTF("patch:%lu, %lu\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
                                             }
                                         }
                                         if (i == chirp_outl->generation_size - 1)
@@ -1179,7 +1178,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                     /* compare / increase the index */
                                     if (chirp_outl->disem_file_index == (data[ROUND_HEADER_LENGTH] << 8 | data[ROUND_HEADER_LENGTH + 1]))
                                     {
-                                        printf("write\n");
+                                        PRINTF("write\n");
                                         memcpy(&(chirp_outl->disem_file_memory[i * sizeof(file_data) / sizeof(uint32_t)]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
 
                                         if (i == chirp_outl->generation_size - 1)
@@ -1217,15 +1216,15 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 /* only initiator indicates the file information */
                                 if ((chirp_outl->task == MX_COLLECT) && (node_id) && (i == 0))
                                 {
-                                    printf("MX_COLLECT\n");
+                                    PRINTF("MX_COLLECT\n");
                                     chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
                                     memcpy(data, p + DATA_HEADER_LENGTH, DATA_HEADER_LENGTH);
-                                    printf("col_max:%lu\n", chirp_outl->round_max);
+                                    PRINTF("col_max:%lu\n", chirp_outl->round_max);
 
                                     chirp_outl->collect_addr_start = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
                                     chirp_outl->collect_addr_end = (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7]);
                                     chirp_outl->collect_length = ((chirp_outl->collect_addr_end - chirp_outl->collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
-                                    printf("addr:%lu, %lu, %lu\n", chirp_outl->collect_addr_start, chirp_outl->collect_addr_end, chirp_outl->collect_length);
+                                    PRINTF("addr:%lu, %lu, %lu\n", chirp_outl->collect_addr_start, chirp_outl->collect_addr_end, chirp_outl->collect_length);
                                 }
                             }
                             /* round > setup_round */
@@ -1243,7 +1242,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         {
                             if (node_id)
                             {
-                                printf("CHIRP_CONNECTIVITY\n");
+                                PRINTF("CHIRP_CONNECTIVITY\n");
 
                                 memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
                                 chirp_outl->sf = task_data[0];
@@ -1257,7 +1256,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         {
                             if (node_id)
                             {
-                                printf("CHIRP_SNIFF\n");
+                                PRINTF("CHIRP_SNIFF\n");
 
                                 chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
                                 chirp_outl->sniff_net = data[k++];
@@ -1268,7 +1267,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                     {
                                         chirp_outl->sniff_flag = 1;
                                         chirp_outl->sniff_freq = task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 1] << 24 | task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 2] << 16 | task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 3] << 8 | task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 4];
-                                        printf("freq:%lu, %lu, %lu\n", k, chirp_outl->sniff_freq, chirp_outl->sniff_net);
+                                        PRINTF("freq:%lu, %lu, %lu\n", k, chirp_outl->sniff_freq, chirp_outl->sniff_net);
                                         break;
                                     }
                                 }
@@ -1283,7 +1282,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         }
                         case MX_ARRANGE:
                         {
-                            printf("MX_ARRANGE\n");
+                            PRINTF("MX_ARRANGE\n");
                             chirp_outl->arrange_task = data[6];
                             if (chirp_outl->arrange_task == MX_DISSEMINATE)
                             {
@@ -1304,7 +1303,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             {
                                 chirp_outl->sniff_nodes_num = data[5];
                                 chirp_outl->default_payload_len = 40;
-                                printf("sniff_nodes_num:%lu\n", chirp_outl->sniff_nodes_num);
+                                PRINTF("sniff_nodes_num:%lu\n", chirp_outl->sniff_nodes_num);
                             }
                             if (node_id)
                             {
@@ -1319,7 +1318,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             break;
                     }
                     round_inc++;
-                    printf("roundinc %lu\n", round_inc);
+                    PRINTF("roundinc %lu\n", round_inc);
                 }
             }
         }
@@ -1396,7 +1395,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
 	while (1)
 	{
-        printf("round:%lu, %lu\n", chirp_outl->round, chirp_outl->round_max);
+        PRINTF("round:%lu, %lu\n", chirp_outl->round, chirp_outl->round_max);
 
         gpi_radio_init();
 
@@ -1437,7 +1436,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 		// while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
         deadline_dog = (chirp_config.mx_period_time_s + 60 - 1) / DOG_PERIOD + 60 / DOG_PERIOD;
         count_dog = 0;
-        printf("dg:%lu\n", deadline_dog);
+        PRINTF("dg:%lu\n", deadline_dog);
         #if MX_LBT_ACCESS
             lbt_check_time();
             chirp_isr.state = ISR_MIXER;
@@ -1478,7 +1477,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             else
             {
                 failed_round++;
-                printf("failed:%lu\n", failed_round);
+                PRINTF("failed:%lu\n", failed_round);
                 if (chirp_outl->task == MX_DISSEMINATE)
                 {
                     if (failed_round >= 2)
@@ -1513,12 +1512,12 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         if (chirp_outl->task == MX_DISSEMINATE)
         {
                 chirp_outl->disem_file_index_stay++;
-                printf("disem_file_index_stay:%lu\n", chirp_outl->disem_file_index_stay);
+                PRINTF("disem_file_index_stay:%lu\n", chirp_outl->disem_file_index_stay);
                 // if (chirp_outl->disem_file_index_stay > 5 * 2)
                 // {
                 //     if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
                 //     {
-                //         printf("full\n");
+                //         PRINTF("full\n");
                 //         return 1;
                 //     }
                 //     else
@@ -1536,7 +1535,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     {
                         chirp_outl->disem_file_index++;
                         chirp_outl->disem_file_index_stay = 0;
-                        printf("full receive\n");
+                        PRINTF("full receive\n");
                     }
                     PRINTF("next: disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL);
@@ -1565,11 +1564,11 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     chirp_mx_payload_distribution(MX_COLLECT);
                     chirp_outl->disem_flag = 0;
                     /* in confirm, all nodes sends packets */
-                    printf("rece_dissem_index:%x\n", rece_dissem_index);
+                    PRINTF("rece_dissem_index:%x\n", rece_dissem_index);
 
                     if (chirp_outl->disem_file_index > rece_dissem_index)
                     {
-                        printf("full disem_copy\n");
+                        PRINTF("full disem_copy\n");
                         chirp_config.disem_copy = 1;
                         chirp_outl->disem_flag_full_rank = mx.stat_counter.slot_full_rank;
                     }
@@ -1597,7 +1596,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
 void DOG_TIMER_ISR_NAME(void)
 {
-    printf("d:%lu, %lu\n", count_dog, deadline_dog);
+    PRINTF("d:%lu, %lu\n", count_dog, deadline_dog);
     count_dog++;
 	__HAL_TIM_CLEAR_IT(&htim5, TIM_IT_UPDATE);
 	__HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);
