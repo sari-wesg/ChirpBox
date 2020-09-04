@@ -107,6 +107,7 @@ typedef struct Flash_FILE_tag
 #define RESET_PAGE                    (251)
 #define TRACE_PAGE                    (250)
 
+#define DAEMON_FLASH_ADDRESS_FLASH_WRITE     (DAEMON_FLASH_ADDRESS + 0x200) /* 807E200 */
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
 

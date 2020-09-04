@@ -59,7 +59,7 @@ void
 energest_init(void)
 {
     int i;
-    for(i = 0; i < ENERGEST_TYPE_MAX; ++i) {
+    for(i = 0; i < ENERGEST_TYPE_MAX_DEBUG; ++i) {
     energest_total_time[i].current = energest_current_time[i] = 0;
     energest_current_mode[i] = 0;
     }
@@ -68,6 +68,15 @@ energest_init(void)
     energest_leveldevice_current_leveltime[i].current = 0;
     }
     #endif
+}
+void
+energest_init_debug(void)
+{
+    int i;
+    for(i = ENERGEST_TYPE_MAX_DEBUG+1; i < ENERGEST_TYPE_MAX; ++i) {
+    energest_total_time[i].current = energest_current_time[i] = 0;
+    energest_current_mode[i] = 0;
+    }
 }
 /*---------------------------------------------------------------------------*/
 unsigned long
@@ -120,6 +129,7 @@ energest_flush(void)
 #else /* ENERGEST_CONF_ON */
 void energest_type_set(int type, unsigned long val) {}
 void energest_init(void) {}
+void energest_init_debug(void) {}
 unsigned long energest_type_time(int type) { return 0; }
 void energest_flush(void) {}
 #endif /* ENERGEST_CONF_ON */

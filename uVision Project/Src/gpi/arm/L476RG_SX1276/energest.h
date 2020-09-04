@@ -50,7 +50,7 @@ typedef struct {
 } energest_t;
 
 enum energest_type {
-    ENERGEST_TYPE_CPU,
+    // ENERGEST_TYPE_CPU,
     ENERGEST_TYPE_LPM,
     ENERGEST_TYPE_IRQ,
     ENERGEST_TYPE_LED_GREEN,
@@ -60,16 +60,22 @@ enum energest_type {
     ENERGEST_TYPE_LISTEN,
 
     ENERGEST_TYPE_FLASH_READ,
-    ENERGEST_TYPE_FLASH_WRITE,
 
     ENERGEST_TYPE_SENSORS,
 
     ENERGEST_TYPE_SERIAL,
+    // ENERGEST_TYPE_MAX_DEBUG
+    ENERGEST_TYPE_FLASH_WRITE,
+    ENERGEST_TYPE_FLASH_ERASE,
+    ENERGEST_TYPE_FLASH_VERIFY,
+    ENERGEST_TYPE_CPU,
 
-    ENERGEST_TYPE_MAX
+    ENERGEST_TYPE_MAX,
+    ENERGEST_TYPE_MAX_DEBUG = ENERGEST_TYPE_FLASH_WRITE
 };
 
 void energest_init(void);
+void energest_init_debug(void);
 unsigned long energest_type_time(int type);
 #ifdef ENERGEST_CONF_LEVELDEVICE_LEVELS
 unsigned long energest_leveldevice_leveltime(int powerlevel);

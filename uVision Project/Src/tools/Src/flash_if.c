@@ -55,6 +55,9 @@
 #include "janpatch.h"
 #include "menu.h"
 
+#if ENERGEST_CONF_ON
+#include GPI_PLATFORM_PATH(energest.h)
+#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #define DEBUG 1
@@ -90,7 +93,9 @@ uint32_t FLASH_If_Erase(uint32_t bank_active)
   {
     bank_to_erase = FLASH_BANK_1;
   }
-
+  #if ENERGEST_CONF_ON
+    ENERGEST_ON(ENERGEST_TYPE_FLASH_ERASE);
+  #endif
   /* Unlock the Flash to enable the flash control register access *************/
   HAL_FLASH_Unlock();
 
@@ -104,7 +109,9 @@ uint32_t FLASH_If_Erase(uint32_t bank_active)
   /* Lock the Flash to disable the flash control register access (recommended
      to protect the FLASH memory against possible unwanted operation) *********/
   HAL_FLASH_Lock();
-
+  #if ENERGEST_CONF_ON
+    ENERGEST_OFF(ENERGEST_TYPE_FLASH_ERASE);
+  #endif
   if (status != HAL_OK)
   {
     /* Error occurred while page erase */
@@ -132,6 +139,9 @@ uint32_t FLASH_If_Erase_Pages(uint32_t bank_active, uint32_t page)
     bank_to_erase = FLASH_BANK_1;
   }
 
+  #if ENERGEST_CONF_ON
+    ENERGEST_ON(ENERGEST_TYPE_FLASH_ERASE);
+  #endif
   /* Unlock the Flash to enable the flash control register access *************/
   HAL_FLASH_Unlock();
 
@@ -145,7 +155,9 @@ uint32_t FLASH_If_Erase_Pages(uint32_t bank_active, uint32_t page)
   /* Lock the Flash to disable the flash control register access (recommended
      to protect the FLASH memory against possible unwanted operation) *********/
   HAL_FLASH_Lock();
-
+  #if ENERGEST_CONF_ON
+    ENERGEST_OFF(ENERGEST_TYPE_FLASH_ERASE);
+  #endif
   if (status != HAL_OK)
   {
     /* Error occurred while page erase */
@@ -197,8 +209,14 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
   {
     /* Device voltage range supposed to be [2.7V to 3.6V], the operation will
        be done by word */
+    #if ENERGEST_CONF_ON
+      ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
+    #endif
     if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, destination, *((uint64_t *)(p_source + 2*i))) == HAL_OK)
     {
+    #if ENERGEST_CONF_ON
+      ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
+    #endif
       /* Check the written value */
       if (*(uint64_t*)destination != *(uint64_t *)(p_source + 2*i))
       {
@@ -211,6 +229,9 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
     }
     else
     {
+    #if ENERGEST_CONF_ON
+      ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
+    #endif
       /* Error occurred while writing data in Flash memory */
       status = FLASHIF_WRITING_ERROR;
       break;

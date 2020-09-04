@@ -55,7 +55,9 @@
 #include "ds3231.h"
 // #include "gpi/interrupts.h"
 #include "md5.h"
-
+#if ENERGEST_CONF_ON
+#include GPI_PLATFORM_PATH(energest.h)
+#endif
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
 volatile uint8_t uart_read_done;
@@ -1351,7 +1353,10 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     }
     uint32_t task_node_num = gpi_popcnt_32(chirp_outl.task_bitmap[0]);
     // printf("task_node_id:%lu, %lu\n", task_node_id, task_node_num);
-
+    energest_init_debug();
+    #if ENERGEST_CONF_ON
+      ENERGEST_ON(ENERGEST_TYPE_CPU);
+    #endif
 		switch (chirp_outl.task)
 		{
       gpi_watchdog_periodic();
@@ -1530,7 +1535,21 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         }
         else
           TRACE_MSG("bitmap right\n");
+
+        #if ENERGEST_CONF_ON
+          ENERGEST_OFF(ENERGEST_TYPE_CPU);
+        #endif
+        // statistics for flash write, erase, and verify
+        uint32_t flash_write_array[4];
+        flash_write_array[0] = (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_FLASH_WRITE));
+        flash_write_array[1] = (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_FLASH_ERASE));
+        flash_write_array[2] = (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_FLASH_VERIFY));
+        flash_write_array[3] = (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_CPU));
+        printf("ENERGEST_TYPE_FLASH_WRITE:%lu, %lu, %lu, %lu, %lu\n", (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_FLASH_WRITE)), (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_FLASH_ERASE)), (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_FLASH_VERIFY)), (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_CPU)), (uint32_t)gpi_tick_fast_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
+
         Stats_to_Flash(chirp_outl.task);
+
+        FLASH_If_Write(DAEMON_FLASH_ADDRESS_FLASH_WRITE, flash_write_array, sizeof(flash_write_array) / sizeof(uint32_t));
         }
 				break;
 			}

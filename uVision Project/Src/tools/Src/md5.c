@@ -5,7 +5,10 @@
 #include <memory.h>
 #include "flash_if.h"
 #include <stdlib.h>
-
+#include "mixer_config.h"
+#if ENERGEST_CONF_ON
+#include GPI_PLATFORM_PATH(energest.h)
+#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 
@@ -215,7 +218,9 @@ int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value)
 
 	// init md5
 	MD5Init(&md5);
-
+	#if ENERGEST_CONF_ON
+		ENERGEST_ON(ENERGEST_TYPE_FLASH_VERIFY);
+	#endif
 	while (1)
 	{
 		ret = the_fread(data, 1, FLASH_PAGE, file);
@@ -231,7 +236,9 @@ int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value)
 	}
 
 	MD5Final(&md5, md5_value);
-
+	#if ENERGEST_CONF_ON
+		ENERGEST_OFF(ENERGEST_TYPE_FLASH_VERIFY);
+	#endif
 	return 0;
 }
 
