@@ -10,6 +10,37 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  // ---------------config all gpio as reset---------------
+  HAL_GPIO_WritePin(GPIOA, 0xffff, GPIO_PIN_RESET);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  HW_GPIO_Init(GPIOA, 0xffff, &GPIO_InitStruct );
+  HAL_GPIO_WritePin(GPIOA, 0xffff, GPIO_PIN_RESET);
+
+  HAL_GPIO_WritePin(GPIOB, 0xffff, GPIO_PIN_RESET);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  HW_GPIO_Init(GPIOB, 0xffff, &GPIO_InitStruct );
+  HAL_GPIO_WritePin(GPIOB, 0xffff, GPIO_PIN_RESET);
+
+  HAL_GPIO_WritePin(GPIOC, 0xffff, GPIO_PIN_RESET);
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  HW_GPIO_Init(GPIOC, 0xffff, &GPIO_InitStruct );
+  HAL_GPIO_WritePin(GPIOC, 0xffff, GPIO_PIN_RESET);
+
+  // ---------------config pc13 as input---------------
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HW_GPIO_Init(GPIOC, GPIO_PIN_13, &GPIO_InitStruct );
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;

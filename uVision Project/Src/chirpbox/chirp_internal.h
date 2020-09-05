@@ -225,6 +225,8 @@ void SX1276OnDio3Irq();
 //**************************************************************************************************
 /* GPS */
 void GPS_Init();
+void GPS_On();
+void GPS_Off();
 void GPS_Uart_Irq();
 Chirp_Time GPS_Get_Time();
 time_t GPS_Conv(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t min, uint8_t sec);

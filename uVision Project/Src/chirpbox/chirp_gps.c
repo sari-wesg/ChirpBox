@@ -180,6 +180,20 @@ void GPS_Init()
 {
     GPIO_InitTypeDef GPIO_InitStruct;
 
+    // config gps
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HW_GPIO_Init(GPIOA, GPIO_PIN_12|GPIO_PIN_11, &GPIO_InitStruct );
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12|GPIO_PIN_11, GPIO_PIN_RESET);
+
+    // config gps
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HW_GPIO_Init(GPIOB, GPIO_PIN_12, &GPIO_InitStruct );
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+
     /*Configure trigger */
     HAL_GPIO_WritePin(GPS_TRIGGER_Port, GPS_TRIGGER_Pin, GPIO_PIN_RESET);
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -196,6 +210,18 @@ void GPS_Init()
 
     HW_GPIO_SetIrq(GPS_PPS_Port, GPS_PPS_Pin, 0, gps_pps_IRQ);
     HAL_NVIC_DisableIRQ( EXTI0_IRQn );
+}
+
+void GPS_On()
+{
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12|GPIO_PIN_11, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+}
+
+void GPS_Off()
+{
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12|GPIO_PIN_11, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 }
 
 void GPS_Uart_Irq()
@@ -294,7 +320,9 @@ void GPS_Waiting_PPS(uint32_t PPS_wait)
     {
         pps_count = 0;
         while (pps_count <= PPS_wait)
-            ;
+        {
+            gpi_watchdog_periodic();
+        }
     }
     pps_count = 0;
     HAL_NVIC_DisableIRQ( EXTI0_IRQn );
