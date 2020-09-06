@@ -102,7 +102,8 @@ typedef enum Mixer_Task_tag
 	MX_ARRANGE,
 
 	MX_TASK_FIRST = CHIRP_START,
-	MX_TASK_LAST = MX_ARRANGE - 1
+	MX_TASK_LAST = MX_ARRANGE - 1,
+	MX_GLOSSY = MX_TASK_LAST + 1 + 1
 } Mixer_Task;
 
 typedef struct Chirpbox_tag

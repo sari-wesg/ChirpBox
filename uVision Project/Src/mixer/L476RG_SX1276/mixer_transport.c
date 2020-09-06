@@ -103,6 +103,7 @@ GPI_TRACE_CONFIG(mixer_transport, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER)
 #define PRINTF(...)
 #endif
 
+extern uint8_t node_id_allocate;
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 
@@ -851,6 +852,11 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 						mx.slot_number = packet->slot_number;
 						GPI_TRACE_MSG_FAST(TRACE_INFO, "(re)synchronized to slot %u", mx.slot_number);
+						if (chirp_config.task == MX_GLOSSY)
+						{
+							//once receive a packet, tx in next slot
+							set_event(SLOT_UPDATE);
+						}
 					}
 					// else use phase-lock control loop to track grid
 					else
@@ -2376,10 +2382,11 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			#endif
 		#endif
 
+		if (chirp_config.task != MX_GLOSSY)
 		// write coding vector and payload
 		{
 			#if MX_PSEUDO_CONFIG
-			assert_reset(chirp_config.payload.pos = chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
+			assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
 			#else
 			ASSERT_CT(offsetof(Packet, payload) ==
 				offsetof(Packet, coding_vector) +
@@ -2617,6 +2624,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			}
 		}
 
+		if (chirp_config.task != MX_GLOSSY)
+		{
 		#if (!MX_LBT_AFA)
 			// write info vector
 			if (NULL != p)
@@ -2683,8 +2692,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				#endif
 			}
 		#endif
+		}
 		// if zero packet: abort transmission
-		if (NULL == p)
+		if ((NULL == p) && (chirp_config.task != MX_GLOSSY))
 		{
 			#if MX_LBT_ACCESS
 				tx_failed_:
@@ -2896,12 +2906,20 @@ void mixer_transport_start()
 	GPI_TRACE_FUNCTION_FAST();
 
 	GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "start grid timer");
-
+	if (chirp_config.task != MX_GLOSSY)
+	{
 	if (mx.tx_sideload)		// if initiator
 		enter_resync(2);
 	else
 		enter_resync(1);
-
+	}
+	else
+	{
+		if (!node_id_allocate)		// if initiator
+			enter_resync(2);
+		else
+			enter_resync(1);
+	}
 	GPI_TRACE_RETURN_FAST();
 }
 

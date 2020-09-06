@@ -560,7 +560,8 @@ size_t mixer_write(unsigned int i, const void *msg, size_t size)
 void mixer_arm(Mixer_Start_Mode mode)
 {
 	GPI_TRACE_FUNCTION();
-
+	if (chirp_config.task != MX_GLOSSY)
+	{
 	// mark an empty row (used by rx processing)
 	mx.empty_row = NULL;
 	#if MX_PSEUDO_CONFIG
@@ -629,6 +630,7 @@ void mixer_arm(Mixer_Start_Mode mode)
 		mx.round_deadline_update_slot = 0;
 
 	GPI_TRACE_RETURN();
+	}
 }
 
 //**************************************************************************************************

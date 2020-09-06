@@ -774,6 +774,8 @@ PT_THREAD(mixer_update_slot())
 	{
 		PT_WAIT_UNTIL(pt, mx.events & BV(SLOT_UPDATE));
 		clear_event(SLOT_UPDATE);
+		if (chirp_config.task != MX_GLOSSY)
+		{
 		gpi_watchdog_periodic();
 		#if MX_VERBOSE_PACKETS
 			if (mx.events & BV(TX_READY))
@@ -1816,6 +1818,21 @@ PT_THREAD(mixer_update_slot())
 		PROFILE("mixer_update_slot() end");
 		// while(1);
     }
+	else
+	{
+		printf("hh:%lu, %lu\n", mx.slot_number, mx.events & BV(TX_READY));
+		if (mx.events & BV(TX_READY))
+		{
+			clear_event(TX_READY);
+			mixer_transport_set_next_slot_task(RX);
+		}
+		else
+		{
+			mixer_transport_set_next_slot_task(TX);
+		}
+		PT_YIELD(pt);
+	}
+	}
 	PT_END(pt);
 }
 
@@ -1851,7 +1868,8 @@ PT_THREAD(mixer_process_rx_data())
 		PT_WAIT_UNTIL(pt, mx.events & BV(RX_READY));
 
 		clear_event(RX_READY);
-
+		if (chirp_config.task != MX_GLOSSY)
+		{
 		while (mx.rx_queue_num_read != mx.rx_queue_num_written)
 		{
 			PROFILE("mixer_process_rx_data() begin");
@@ -2473,7 +2491,12 @@ PT_THREAD(mixer_process_rx_data())
 			PT_YIELD(pt);
 		}
 	}
-
+	else
+	{
+		printf("rx\n");
+		PT_YIELD(pt);
+	}
+	}
 	PT_END(pt);
 }
 
@@ -2749,6 +2772,7 @@ PT_THREAD(mixer_maintenance())
 			if ((mx.slot_number >= MX_ROUND_LENGTH) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0))
 			#endif
 			{
+				printf("slot_number:%lu, %lu, %lu\n", mx.slot_number, chirp_config.mx_round_length, chirp_config.update_slot);
 				#if MX_PSEUDO_CONFIG
 				mx.slot_number = chirp_config.mx_round_length;
 				#else
