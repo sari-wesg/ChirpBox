@@ -1332,9 +1332,11 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_config.glossy_task = 2;
     }
 
+    PRINTF("chirp_config.glossy_task:%lu\n", chirp_config.glossy_task);
     // no task
 		if (chirp_mx_round(node_id, &chirp_outl) != 2)
 		{
+        PRINTF("chirp_mx_round:%lu\n", chirp_config.glossy_task);
         if (!node_id)
         {
           #if GPS_DATA
@@ -1380,6 +1382,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     // have a task to do
     else
     {
+      PRINTF("glossy_task == 2\n");
       chirp_outl.glossy_resync = 0;
       if (chirp_outl.glossy_gps_on)
       {
@@ -1725,7 +1728,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           // #if GPS_DATA
           // GPS_Sleep(10);
           // #endif
-          RTC_Waiting_Count(10);
+          RTC_Waiting_Count(5);
           topo_round_robin(node_id, chirp_outl.num_nodes, i, deadline);
         }
 				topo_result(chirp_outl.num_nodes);

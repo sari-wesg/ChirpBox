@@ -10,7 +10,7 @@
 	#define PSEUDO_CONF						1
 #endif
 
-#define DEBUG_CHIRPBOX 0
+#define DEBUG_CHIRPBOX 1
 #if DEBUG_CHIRPBOX
 
 #define PRINTF_CHIRP(...) printf(__VA_ARGS__)
@@ -224,6 +224,9 @@ static const uint8_t set_packet[SENSOR_NUM * GROUP_NUM][MAX_GENERATE_LENGTH] = {
 #define HASH_HEADER            	        4
 #define HASH_TAIL            	        2
 #define HASH_TAIL_CODE            	    2
+
+#define CHIRP_HEADER            	    0x1234
+#define GLOSSY_HEADER            	    0x5678
 /*********************************************************/
 #define MX_GENERATION_SIZE_MAX  0xFF /* 255 packets */
 #define MX_NUM_NODES_MAX        0xFF /* 255 nodes */
