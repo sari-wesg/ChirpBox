@@ -485,6 +485,7 @@ typedef struct __attribute__((packed)) Chirp_Config_tag
 		uint32_t 	lbt_channel_time_us[LBT_CHANNEL_NUM];
 		uint32_t 	lbt_channel_time_stats_us[LBT_CHANNEL_NUM];
 	#endif
+	uint8_t		glossy_task;
 } Chirp_Config;
 
 #if INFO_VECTOR_QUEUE
@@ -885,6 +886,9 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				dissem_back_slot_num;
 
 	uint32_t			hash_header;
+	/* CHIRP_SNIFF */
+	uint8_t				glossy_resync;
+	uint8_t				glossy_gps_on;
 
 	/* CHIRP_START: mixer config */
 	uint16_t			start_year;

@@ -1393,6 +1393,11 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     chirp_config.task = chirp_outl->task;
 
+    if (chirp_config.task != MX_GLOSSY)
+        chirp_config.packet_hash = CHIRP_HEADER;
+    else
+        chirp_config.packet_hash = GLOSSY_HEADER;
+
 	while (1)
 	{
         PRINTF("round:%lu, %lu\n", chirp_outl->round, chirp_outl->round_max);
@@ -1460,6 +1465,8 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
         __HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);
 
+        if (chirp_config.task != MX_GLOSSY)
+        {
         if (chirp_outl->task != MX_DISSEMINATE)
         {
             Stats_value(RX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)));
@@ -1591,6 +1598,17 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
 
         deadline += (Gpi_Fast_Tick_Extended)update_period;
+        }
+        else
+        {
+            Gpi_Fast_Tick_Native resync_plus =  GPI_TICK_MS_TO_FAST2(((chirp_config.mx_slot_length_in_us * 5 / 2) * (chirp_config.mx_round_length / 2) / 1000) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));
+            if (!chirp_config.glossy_task)
+                deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
+            else
+                deadline += (Gpi_Fast_Tick_Extended)(update_period);
+            while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
+            return chirp_config.glossy_task;
+        }
 	}
 }
 

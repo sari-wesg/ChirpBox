@@ -563,6 +563,7 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 
 	timeout_cnt = 0
 	sniffer_cnt = 0
+	input = 0
 
 	with open(filename, 'w+') as f:
 		start_read = 0
@@ -573,6 +574,7 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 				if line:
 				 	print (line)
 				 	if (line == "Input initiator task:"):
+				 		input = 1
 				 		print("Input")
 				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
 				 		print(task)
@@ -580,8 +582,9 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 	if (line == "output from initiator (version):"):
 				 		start_read = 1
-	 				if (line == "Task list:"):
+	 				if ((line == "Task list:") and (input == 1)):
 	 					timeout_cnt = 0
+	 					input = 0
 	 					break
 	 				if(start_read == 1):
 	 					f.write(line + "\r")
@@ -632,7 +635,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		json.dump(running_dict, f)
 
 	# !!!!!TODO:
-	test_dissem = True
+	test_dissem = False
 	if (test_dissem == False):
 		if(firmware_burned_existing == 1):
 			if(daemon_patch == 1):

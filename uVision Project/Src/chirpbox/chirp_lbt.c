@@ -98,7 +98,9 @@ uint32_t lbt_update_channel(uint32_t tx_us, uint8_t tx_channel)
 
 void lbt_check_time()
 {
-	Chirp_Time gps_time = GPS_Get_Time();
+	// Chirp_Time gps_time = GPS_Get_Time();
+    // time_t diff = GPS_Diff(&gps_time, chirp_config.lbt_init_time.chirp_year, chirp_config.lbt_init_time.chirp_month, chirp_config.lbt_init_time.chirp_date, chirp_config.lbt_init_time.chirp_hour, chirp_config.lbt_init_time.chirp_min, chirp_config.lbt_init_time.chirp_sec);
+	Chirp_Time gps_time = RTC_GetTime();
     time_t diff = GPS_Diff(&gps_time, chirp_config.lbt_init_time.chirp_year, chirp_config.lbt_init_time.chirp_month, chirp_config.lbt_init_time.chirp_date, chirp_config.lbt_init_time.chirp_hour, chirp_config.lbt_init_time.chirp_min, chirp_config.lbt_init_time.chirp_sec);
     if (ABS(diff) >= 3600)
     {

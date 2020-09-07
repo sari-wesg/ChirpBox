@@ -721,7 +721,7 @@ uint32_t menu_initiator_read_file(void)
  * @param
  * @return: None
  */
-void menu_wait_task(Chirp_Outl *chirp_outl)
+uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
 {
   Mixer_Task mx_task;
   uint8_t default_sf;
@@ -746,16 +746,17 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
     {
       gpi_watchdog_periodic();
       #if GPS_DATA
-      /* initiator sleep for 60 s after 5 seconds not receiving any task */
+      /* initiator sleep for 60 s after 1 seconds not receiving any task */
       task_wait++;
-      if (task_wait > 5)
+      if (task_wait > 1)
       {
         __HAL_UART_DISABLE(&huart2);
         SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
-        GPS_Sleep(60);
+        // GPS_Sleep(60);
         task_wait = 0;
         SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
         __HAL_UART_ENABLE(&huart2);
+        return 0;
       }
       #endif
       PRINTF("Input initiator task:\n");
@@ -839,7 +840,7 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
       PRINTF("CHIRP_SNIFF\n");
       menu_initiator_read_command(chirp_outl);
       #if GPS_DATA
-      GPS_Sleep(60);
+      // GPS_Sleep(60);
       #endif
       break;
     }
@@ -852,6 +853,7 @@ void menu_wait_task(Chirp_Outl *chirp_outl)
       PRINTF("WRONG TASK\n");
       break;
   }
+  return 1;
 }
 
 /**
@@ -1275,28 +1277,125 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_config.lbt_channel_mask = ~(mask << 1);
   #endif
 
+  #if GPS_DATA
+  GPS_Sleep(60);
+  GPS_Off();
+  Chirp_Time ds3231_time;
+  time_t diff;
+  #endif
+
+  PRINTF("---------Chirpbox---------\n");
 	while (1)
 	{
-		PRINTF("---------Chirpbox---------\n");
-    memset(gps_time_str, 1, sizeof(gps_time_str));
-
-    #if GPS_DATA
-    Chirp_Time gps_time;
-    memset(&gps_time, 0, sizeof(gps_time));
-    while(!gps_time.chirp_year)
+    // just finish a task
+    if (chirp_config.glossy_task == 2)
     {
-      gps_time = GPS_Get_Time();
+      if (node_id)
+      {
+        DS3231_GetTime();
+        /* Set alarm */
+        ds3231_time = DS3231_ShowTime();
+        diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
+        time_t sleep_sec = 60 - (time_t)(0 - diff) % 60;
+        RTC_Waiting_Count(sleep_sec);
+      }
+      else
+      {
+        GPS_Sleep(60);
+      }
     }
-    uint8_t gps_time_str[4];
-    memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
-    #endif
 
-    chirp_outl.hash_header = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
-    chirp_config.packet_hash = chirp_outl.hash_header;
+		/* MX_GLOSSY (sync) */
+		chirp_outl.task = MX_GLOSSY;
+		chirp_outl.arrange_task = MX_GLOSSY;
+
+		PRINTF("---------MX_GLOSSY---------\n");
+		// TODO: glossy without mixer payload
+		chirp_outl.num_nodes = network_num_nodes;
+		chirp_outl.generation_size = 0;
+		chirp_outl.payload_len = 0;
+		chirp_outl.round_setup = 0;
+		chirp_outl.round_max = 0;
+		chirp_outl.file_chunk_len = 0;
+
+		chirp_mx_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
+		chirp_mx_packet_config(chirp_outl.num_nodes, 0, 0);
+    chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, 8);
+    chirp_mx_slot_config(chirp_outl.packet_time + 100000, 8, 10000000);
+
+    chirp_config.glossy_task = 0;
+    if (!node_id)
+    {
+      if (!menu_wait_task(&chirp_outl))
+        chirp_config.glossy_task = 1;
+      else
+        chirp_config.glossy_task = 2;
+    }
+
+    // no task
+		if (chirp_mx_round(node_id, &chirp_outl) != 2)
+		{
+        if (!node_id)
+        {
+          #if GPS_DATA
+          GPS_Sleep(60);
+          #endif
+        }
+        else
+        {
+          // this time glossy no task but sync true
+          if (chirp_config.glossy_task)
+          {
+            chirp_outl.glossy_resync = 0;
+            // close gps if on
+            if (chirp_outl.glossy_gps_on)
+            {
+              chirp_outl.glossy_gps_on = 0;
+              GPS_Off();
+            }
+          }
+          // long time no glossy, open the gps
+          if (!chirp_config.glossy_task)
+          {
+            chirp_outl.glossy_resync++;
+            if ((chirp_outl.glossy_resync >= 5) && (!chirp_outl.glossy_gps_on))
+            {
+              chirp_outl.glossy_gps_on = 1;
+              GPS_On();
+              GPS_Waiting_PPS(10);
+            }
+          }
+
+          // wait on each 60 seconds
+          if (chirp_outl.glossy_gps_on)
+          {
+            GPS_Sleep(60);
+          }
+          else
+          {
+            RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
+          }
+        }
+    }
+    // have a task to do
+    else
+    {
+      chirp_outl.glossy_resync = 0;
+      if (chirp_outl.glossy_gps_on)
+      {
+        chirp_outl.glossy_gps_on = 0;
+        GPS_Off();
+      }
+      // start at minute
+      if (node_id)
+        RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
+      else
+        GPS_Sleep(60);
 
 		/* default mode is MX_ARRANGE (task arrangement) */
 		chirp_outl.task = MX_ARRANGE;
-		chirp_outl.arrange_task = MX_ARRANGE;
+    if (node_id)
+      chirp_outl.arrange_task = MX_ARRANGE;
 
 		PRINTF("---------MX_ARRANGE---------\n");
 		// TODO: tune those parameters
@@ -1312,18 +1411,15 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
     chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 3, 1500000);
 		chirp_mx_payload_distribution(chirp_outl.task);
-
-    if (!node_id)
-			menu_wait_task(&chirp_outl);
-
 		if (!chirp_mx_round(node_id, &chirp_outl))
-		{
-      #if GPS_DATA
-      GPS_Sleep(60);
-      #endif
+    {
+      chirp_outl.task = MX_ARRANGE;
+      chirp_outl.arrange_task = MX_ARRANGE;
+
     }
 
 		free(payload_distribution);
+    }
 
 		/* into the assigned task */
 		chirp_outl.task = chirp_outl.arrange_task;
@@ -1388,8 +1484,11 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				free(payload_distribution);
 
 				#if GPS_DATA
-          gps_time = GPS_Get_Time();
-          time_t diff = GPS_Diff(&gps_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+          // gps_time = GPS_Get_Time();
+          // time_t diff = GPS_Diff(&gps_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+          DS3231_GetTime();
+          ds3231_time = DS3231_ShowTime();
+          diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
           assert_reset(diff > 5);
 					if (!chirp_outl.sniff_flag)
 					{
@@ -1401,10 +1500,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               DS3231_GetTime();
               /* Set alarm */
               TRACE_MSG("date:%lu, %lu, %lu, %lu\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
-              DS3231_ShowTime();
+              ds3231_time = DS3231_ShowTime();
               DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
               /* Waiting for bank switch */
-              GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+              // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+              diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+              RTC_Waiting_Count(diff);
               TRACE_MSG("---------CHIRP_BANK---------\n");
               #if BANK_1_RUN
               /* flash protect */
@@ -1420,7 +1521,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					else
           {
             /* Waiting for bank switch */
-            GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+            // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+            RTC_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
 						TRACE_MSG("---------sniff---------\n");
 						sniff_init(chirp_outl.sniff_net, chirp_outl.sniff_freq, chirp_outl.end_year, chirp_outl.end_month, chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
           }
@@ -1620,9 +1722,10 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         uint8_t i;
         for (i = 0; i < network_num_nodes; i++)
         {
-          #if GPS_DATA
-          GPS_Sleep(10);
-          #endif
+          // #if GPS_DATA
+          // GPS_Sleep(10);
+          // #endif
+          RTC_Waiting_Count(10);
           topo_round_robin(node_id, chirp_outl.num_nodes, i, deadline);
         }
 				topo_result(chirp_outl.num_nodes);

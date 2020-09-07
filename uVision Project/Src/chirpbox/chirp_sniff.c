@@ -329,9 +329,11 @@ void sniff_init(Sniff_Net LoRa_Net, uint32_t lora_frequency, uint16_t end_year, 
         if (node_expired)
         {
             /* examine gps time */
-            Chirp_Time gps_time = GPS_Get_Time();
+            // Chirp_Time gps_time = GPS_Get_Time();
 
-            time_t diff = GPS_Diff(&gps_time, sniff.sniff_end.chirp_year, sniff.sniff_end.chirp_month, sniff.sniff_end.chirp_date, sniff.sniff_end.chirp_hour, sniff.sniff_end.chirp_min, sniff.sniff_end.chirp_sec);
+            // time_t diff = GPS_Diff(&gps_time, sniff.sniff_end.chirp_year, sniff.sniff_end.chirp_month, sniff.sniff_end.chirp_date, sniff.sniff_end.chirp_hour, sniff.sniff_end.chirp_min, sniff.sniff_end.chirp_sec);
+            Chirp_Time gps_time = RTC_GetTime();
+            time_t diff = GPS_Diff(&gps_time, chirp_config.lbt_init_time.chirp_year, chirp_config.lbt_init_time.chirp_month, chirp_config.lbt_init_time.chirp_date, chirp_config.lbt_init_time.chirp_hour, chirp_config.lbt_init_time.chirp_min, chirp_config.lbt_init_time.chirp_sec);
             /* close to stop sniffer */
             if ((diff < 3) && (diff > 0))
             {

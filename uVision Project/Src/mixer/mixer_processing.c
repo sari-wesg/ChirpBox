@@ -1820,7 +1820,6 @@ PT_THREAD(mixer_update_slot())
     }
 	else
 	{
-		printf("hh:%lu, %lu\n", mx.slot_number, mx.events & BV(TX_READY));
 		if (mx.events & BV(TX_READY))
 		{
 			clear_event(TX_READY);
@@ -2772,7 +2771,6 @@ PT_THREAD(mixer_maintenance())
 			if ((mx.slot_number >= MX_ROUND_LENGTH) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0))
 			#endif
 			{
-				printf("slot_number:%lu, %lu, %lu\n", mx.slot_number, chirp_config.mx_round_length, chirp_config.update_slot);
 				#if MX_PSEUDO_CONFIG
 				mx.slot_number = chirp_config.mx_round_length;
 				#else

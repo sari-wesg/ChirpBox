@@ -376,6 +376,10 @@ static void MX_RTC_Init(void)
   {
     Error_Handler();
   }
+  /* Disable the write protection for RTC registers */
+  __HAL_RTC_WRITEPROTECTION_DISABLE(&hrtc);
+  // disable RTC wakeup
+  CLEAR_BIT(hrtc.Instance->CR, RTC_CR_WUTE);
 }
 
 #if MX_FLASH_FILE

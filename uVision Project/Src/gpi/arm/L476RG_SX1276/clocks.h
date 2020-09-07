@@ -67,6 +67,7 @@
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim5;
 extern LPTIM_HandleTypeDef hlptim1;
+extern RTC_HandleTypeDef hrtc;
 
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************

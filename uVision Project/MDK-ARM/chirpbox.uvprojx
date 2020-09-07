@@ -595,6 +595,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\chirpbox\chirp_lbt.c</FilePath>
             </File>
+            <File>
+              <FileName>chirp_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\chirpbox\chirp_rtc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -343,7 +343,7 @@ void GPS_Wakeup(uint32_t interval_sec)
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
     HAL_NVIC_EnableIRQ( EXTI0_IRQn );
-    sleep_sec += 1;
+    // sleep_sec += 1;
     if (sleep_sec > 0)
     {
         pps_count = 0;

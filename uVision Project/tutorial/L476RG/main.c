@@ -108,7 +108,8 @@ uint8_t test_round;
 #if MX_PSEUDO_CONFIG
 /* TODO: */
 static const uint32_t nodes[256] = {0x550033, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
-// static const uint32_t nodes[256] = {0x550033, 0x440032};
+// static const uint32_t nodes[256] = {0x550033, 0x260057, 0x26003E};
+// static const uint32_t nodes[256] = {0x550033, 0x260057, 0x26003E};
 
 #endif
 const uint8_t VERSION_MAJOR = 0x66, VERSION_NODE = 0xbc;
@@ -186,7 +187,7 @@ static uint8_t hardware_init()
 	#if (!MX_PSEUDO_CONFIG)
 	gpi_radio_init();
 	#endif
-
+	gpi_radio_init();
 	node_id_restore();
 
 #if MX_DOUBLE_BITMAP
@@ -233,13 +234,15 @@ static uint8_t hardware_init()
 	DS3231_ClearAlarm1_Time();
 	#endif
 	GPS_Init();
-	GPS_Waiting_PPS(3);
+	GPS_On();
+	GPS_Waiting_PPS(10);
 	Chirp_Time gps_time;
     memset(&gps_time, 0, sizeof(gps_time));
 	while(!gps_time.chirp_year)
 	{
 		gps_time = GPS_Get_Time();
 	}
+	RTC_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
 	#if BANK_1_RUN
 	time_t rtc_diff = 0x05;
 	uint8_t count = 0;

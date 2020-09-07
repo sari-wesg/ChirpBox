@@ -790,6 +790,10 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos), chirp_config.coding_vector.len);
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.info_vector.pos), chirp_config.info_vector.len);
 					#endif
+				if (chirp_config.task == MX_GLOSSY)
+				{
+					chirp_config.glossy_task = packet->flags.all;
+				}
 				#else
 				gpi_memcpy_dma_aligned(&mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)].phy_payload_begin, RxPacketBuffer, PHY_PAYLOAD_SIZE);
 				packet = &mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
@@ -2330,6 +2334,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
             }
 			#endif
 
+			if (chirp_config.task == MX_GLOSSY)
+				mx.tx_packet->flags.all = chirp_config.glossy_task;
 			#if MX_LBT_AFA
 				write_tx_fifo(&mx.tx_packet.phy_payload_begin,
 				NULL, offsetof(Packet, full_channel) - offsetof(Packet, phy_payload_begin));

@@ -89,7 +89,7 @@
 #ifdef __cplusplus
 	extern "C" {
 #endif
-
+void 			SystemClock_Config(void);
 void			gpi_platform_init(void);
 
 void			gpi_led_on(int id);
