@@ -2492,7 +2492,7 @@ PT_THREAD(mixer_process_rx_data())
 	}
 	else
 	{
-		// printf("rx\n");
+		printf("rx\n");
 		PT_YIELD(pt);
 	}
 	}

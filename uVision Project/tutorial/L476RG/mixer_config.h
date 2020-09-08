@@ -10,7 +10,7 @@
 	#define PSEUDO_CONF						1
 #endif
 
-#define DEBUG_CHIRPBOX 1
+#define DEBUG_CHIRPBOX 0
 #if DEBUG_CHIRPBOX
 
 #define PRINTF_CHIRP(...) printf(__VA_ARGS__)

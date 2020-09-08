@@ -678,7 +678,7 @@ uint8_t menu_pre_patch(uint8_t patch_bank, uint32_t old_firmware_size, uint32_t 
   menu_preSend(0);
 
   /* chose the place to write patch file */
-  uint8_t patch_page = (old_firmware_size + FLASH_PAGE - 1) / FLASH_PAGE + 1;
+  uint8_t patch_page = (old_firmware_size + FLASH_PAGE - 1) / FLASH_PAGE + 5;
   uint8_t patch_used_page = (patch_firmware_size + FLASH_PAGE - 1) / FLASH_PAGE;
 
   /* erase flash pages that may be used */
