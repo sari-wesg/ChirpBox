@@ -111,8 +111,18 @@ typedef struct Flash_FILE_tag
 
 #define DAEMON_DEBUG_ENERGY_LEN       (10 * 4) /* 40 bytes */
 #define DAEMON_DEBUG_ENERGY_LEN_64    (16 * 4) /* 64 bytes */
-#define DAEMON_DEBUG_ENERGY_LEN_192   (48 * 4) /* 64 bytes */
+#define DAEMON_DEBUG_ENERGY_LEN_192   (48 * 4) /* 192 bytes */
 
+// dis
+// C0
+// collect data
+// 240
+// 0807C800
+// 0807D000
+
+
+// 0807C8C0
+// 0807CA40
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
 

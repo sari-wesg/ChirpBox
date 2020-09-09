@@ -1039,7 +1039,10 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             mx.stat_counter.slot_decoded = 0;
         }
     }
+	if (chirp_config.task != MX_GLOSSY)
+	{
     free(mx.request);
+    }
 
     if (((chirp_config.full_rank) && (chirp_outl->task == MX_DISSEMINATE)) || (chirp_outl->task != MX_DISSEMINATE))
     {

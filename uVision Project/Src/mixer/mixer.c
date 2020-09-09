@@ -228,6 +228,8 @@ void mixer_init(uint8_t node_id)
 		mx.rx_queue[i] = (Packet *)&(mx.rx_queue[i-1]->packet_chunk[chirp_config.packet_chunk_len]);
 	memset(mx.rx_queue[0], 0, (sizeof(mx.rx_queue) / sizeof(mx.rx_queue[0])) * (chirp_config.packet_len));
 
+	if (chirp_config.task != MX_GLOSSY)
+	{
 	#if INFO_VECTOR_QUEUE
 	mx.code_queue[0] = (Packet_info_vector *)malloc((sizeof(mx.code_queue) / sizeof(mx.code_queue[0])) * (chirp_config.coding_vector.len));
 	for (i = 1; i < (sizeof(mx.code_queue) / sizeof(mx.code_queue[0])); i++)
@@ -239,14 +241,18 @@ void mixer_init(uint8_t node_id)
 		mx.info_queue[i] = (Packet_info_vector *)&(mx.info_queue[i-1]->vector[chirp_config.info_vector.len]);
 	memset(mx.info_queue[0], 0, (sizeof(mx.info_queue) / sizeof(mx.info_queue[0])) * (chirp_config.info_vector.len));
 	#endif
+	}
 
 	mx.tx_packet = (Packet *)malloc(chirp_config.packet_len);
 	memset(mx.tx_packet, 0, chirp_config.packet_len);
 
+	if (chirp_config.task != MX_GLOSSY)
+	{
 	mx.matrix[0] = (Matrix_Row *)malloc(chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)));
 	for (i = 1; i < chirp_config.mx_generation_size; i++)
 		mx.matrix[i] = (Matrix_Row *)&(mx.matrix[i-1]->matrix_chunk[chirp_config.matrix_chunk_32_len]);
 	memset(mx.matrix[0], 0, chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)));
+	}
 
 	mx.history[0] = (Node *)malloc((chirp_config.mx_num_nodes + 3) * (chirp_config.history_len_8));
 	for (i = 1; i < chirp_config.mx_num_nodes + 3; i++)
@@ -862,12 +868,16 @@ Gpi_Fast_Tick_Extended mixer_start()
 		free(mx.code_queue[0]);
 		free(mx.info_queue[0]);
 		#endif
-		free(mx.history[0]);
 		}
 		free(mx.tx_packet);
+		free(mx.history[0]);
 		#if MX_SMART_SHUTDOWN
 		free(mx.full_rank_map);
 		#endif
+		if (chirp_config.task == MX_GLOSSY)
+		{
+		free(mx.request);
+		}
 		// free(mx.request);
 	#endif
 

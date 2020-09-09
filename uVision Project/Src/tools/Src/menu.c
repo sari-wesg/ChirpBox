@@ -1438,7 +1438,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     if (node_id)
       chirp_outl.arrange_task = MX_ARRANGE;
 
-      free(payload_distribution);
+      // free(payload_distribution);
 
       #if ENERGEST_CONF_ON
         energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - chirp_config.mx_period_time_s - 2));
@@ -1475,7 +1475,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       ENERGEST_OFF(ENERGEST_TYPE_LPM);
       ENERGEST_ON(ENERGEST_TYPE_CPU);
-      if (chirp_outl.task == MX_DISSEMINATE)
+      if (chirp_outl.arrange_task == MX_DISSEMINATE)
       {
         FLASH_If_Erase_Pages(1, DAEMON_DEBUG_PAGE);
       }
