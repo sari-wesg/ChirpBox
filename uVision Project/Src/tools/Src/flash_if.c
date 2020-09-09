@@ -95,6 +95,7 @@ uint32_t FLASH_If_Erase(uint32_t bank_active)
   }
   #if ENERGEST_CONF_ON
     ENERGEST_ON(ENERGEST_TYPE_FLASH_ERASE);
+    ENERGEST_OFF(ENERGEST_TYPE_CPU);
   #endif
   /* Unlock the Flash to enable the flash control register access *************/
   HAL_FLASH_Unlock();
@@ -111,6 +112,7 @@ uint32_t FLASH_If_Erase(uint32_t bank_active)
   HAL_FLASH_Lock();
   #if ENERGEST_CONF_ON
     ENERGEST_OFF(ENERGEST_TYPE_FLASH_ERASE);
+    ENERGEST_ON(ENERGEST_TYPE_CPU);
   #endif
   if (status != HAL_OK)
   {
@@ -141,6 +143,7 @@ uint32_t FLASH_If_Erase_Pages(uint32_t bank_active, uint32_t page)
 
   #if ENERGEST_CONF_ON
     ENERGEST_ON(ENERGEST_TYPE_FLASH_ERASE);
+    ENERGEST_OFF(ENERGEST_TYPE_CPU);
   #endif
   /* Unlock the Flash to enable the flash control register access *************/
   HAL_FLASH_Unlock();
@@ -157,6 +160,7 @@ uint32_t FLASH_If_Erase_Pages(uint32_t bank_active, uint32_t page)
   HAL_FLASH_Lock();
   #if ENERGEST_CONF_ON
     ENERGEST_OFF(ENERGEST_TYPE_FLASH_ERASE);
+    ENERGEST_ON(ENERGEST_TYPE_CPU);
   #endif
   if (status != HAL_OK)
   {
@@ -201,6 +205,13 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
   uint32_t status = FLASHIF_OK;
   uint32_t i = 0;
 
+  #if ENERGEST_CONF_ON
+    if (destination >= FLASH_START_BANK2)
+      ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE_BANK2);
+    else
+      ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE_BANK1);
+    ENERGEST_OFF(ENERGEST_TYPE_CPU);
+  #endif
   /* Unlock the Flash to enable the flash control register access *************/
   HAL_FLASH_Unlock();
 
@@ -209,14 +220,8 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
   {
     /* Device voltage range supposed to be [2.7V to 3.6V], the operation will
        be done by word */
-    #if ENERGEST_CONF_ON
-      ENERGEST_ON(ENERGEST_TYPE_FLASH_WRITE);
-    #endif
     if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, destination, *((uint64_t *)(p_source + 2*i))) == HAL_OK)
     {
-    #if ENERGEST_CONF_ON
-      ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
-    #endif
       /* Check the written value */
       if (*(uint64_t*)destination != *(uint64_t *)(p_source + 2*i))
       {
@@ -229,9 +234,6 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
     }
     else
     {
-    #if ENERGEST_CONF_ON
-      ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE);
-    #endif
       /* Error occurred while writing data in Flash memory */
       status = FLASHIF_WRITING_ERROR;
       break;
@@ -241,7 +243,13 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
   /* Lock the Flash to disable the flash control register access (recommended
      to protect the FLASH memory against possible unwanted operation) *********/
   HAL_FLASH_Lock();
-
+  #if ENERGEST_CONF_ON
+    if (destination >= FLASH_START_BANK2)
+      ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE_BANK2);
+    else
+      ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE_BANK1);
+    ENERGEST_ON(ENERGEST_TYPE_CPU);
+  #endif
   return status;
 }
 

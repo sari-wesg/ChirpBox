@@ -856,12 +856,15 @@ Gpi_Fast_Tick_Extended mixer_start()
 
 	#if MX_PSEUDO_CONFIG
 		free(mx.rx_queue[0]);
+		if (chirp_config.task != MX_GLOSSY)
+		{
 		#if INFO_VECTOR_QUEUE
 		free(mx.code_queue[0]);
 		free(mx.info_queue[0]);
 		#endif
-		free(mx.tx_packet);
 		free(mx.history[0]);
+		}
+		free(mx.tx_packet);
 		#if MX_SMART_SHUTDOWN
 		free(mx.full_rank_map);
 		#endif

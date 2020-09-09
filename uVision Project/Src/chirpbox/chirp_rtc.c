@@ -9,7 +9,9 @@
 #ifdef MX_CONFIG_FILE
 #include STRINGIFY(MX_CONFIG_FILE)
 #endif
-
+#if ENERGEST_CONF_ON
+#include GPI_PLATFORM_PATH(energest.h)
+#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX
@@ -165,6 +167,48 @@ void RTC_Waiting_Count(uint32_t Count_wait)
                 /* wake by the timer interrupt */
                 gpi_int_enable();
                 SystemClock_Config();
+            }
+        }
+        rtc_count = 0;
+
+        /* Disable the Wakeup Timer */
+        HAL_RTCEx_DeactivateWakeUpTimer(&hrtc);
+    }
+}
+
+
+void RTC_Waiting_Count_Sleep(uint32_t Count_wait)
+{
+    PRINTF("RTC_Waiting_Count:%lu\n", Count_wait);
+
+    if (Count_wait > 1)
+    {
+        Count_wait = Count_wait;
+        RTC_Wakeup_Enable();
+        {
+            rtc_count = 0;
+            while (rtc_count <= Count_wait)
+            {
+                PRINTF("rtc:%lu\n", rtc_count);
+                // enter low-power mode
+                gpi_int_disable();
+
+                #if ENERGEST_CONF_ON
+                ENERGEST_OFF(ENERGEST_TYPE_CPU);
+                ENERGEST_ON(ENERGEST_TYPE_LPM);
+                #endif
+
+                gpi_sleep();
+                // HAL_PWREx_EnterSTOP1Mode(PWR_STOPENTRY_WFI);
+
+                #if ENERGEST_CONF_ON
+                ENERGEST_ON(ENERGEST_TYPE_CPU);
+                ENERGEST_OFF(ENERGEST_TYPE_LPM);
+                #endif
+
+                /* wake by the timer interrupt */
+                gpi_int_enable();
+                // SystemClock_Config();
             }
         }
         rtc_count = 0;

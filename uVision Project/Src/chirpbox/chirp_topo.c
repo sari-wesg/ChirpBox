@@ -21,7 +21,9 @@
 #endif
 
 #include "menu.h"
-
+#if ENERGEST_CONF_ON
+#include GPI_PLATFORM_PATH(energest.h)
+#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX
@@ -100,6 +102,10 @@ uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t paylo
 
 Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i, Gpi_Fast_Tick_Extended deadline)
 {
+    #if ENERGEST_CONF_ON
+        ENERGEST_ON(ENERGEST_TYPE_CPU);
+    #endif
+
     SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 	chirp_isr.state = ISR_TOPO;
 
@@ -127,7 +133,10 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
         SX1276Write( REG_LR_IFFREQ1, 0x40 );
 
         SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
-
+        #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+            ENERGEST_ON(ENERGEST_TYPE_LISTEN);
+        #endif
         topology_state = RX_RUNNING;
 
         deadline = gpi_tick_fast_extended() + GPI_TICK_US_TO_FAST2(round_length_us);
@@ -144,6 +153,10 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
         }
 
         node_topology[i].rx_num = rx_receive_num;
+        #if ENERGEST_CONF_ON
+            ENERGEST_ON(ENERGEST_TYPE_CPU);
+            ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+        #endif
     }
     else
     {
@@ -171,7 +184,10 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
         PRINTF("Topology---Tx\n");
         SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
-
+        #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+            ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
+        #endif
         tx_send_num++;
         topology_state = TX_RUNNING;
         deadline += GPI_TICK_US_TO_FAST2(round_length_us - packet_time_us * 3 - 1000000);
@@ -181,6 +197,10 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
             if (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) >= 0)
                 break;
         }
+        #if ENERGEST_CONF_ON
+            ENERGEST_ON(ENERGEST_TYPE_CPU);
+            ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
+        #endif
     }
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
     __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);

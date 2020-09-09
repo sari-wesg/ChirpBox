@@ -204,6 +204,24 @@ typedef struct Chirp_Stats_All_tag
 	Chirp_Stats		tx_on;
 } Chirp_Stats_All;
 
+
+typedef struct __attribute__((packed)) Chirp_Energy_tag
+{
+	uint32_t CPU;
+	uint32_t LPM;
+	uint32_t STOP;
+
+	uint32_t FLASH_WRITE_BANK1;
+	uint32_t FLASH_WRITE_BANK2;
+	uint32_t FLASH_ERASE;
+	uint32_t FLASH_VERIFY;
+
+	uint32_t TRANSMIT;
+	uint32_t LISTEN;
+
+	uint32_t GPS;
+} Chirp_Energy;
+
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 /* main */
@@ -221,6 +239,7 @@ extern Sniff_stat expired_node;
 
 /* stats */
 extern Chirp_Stats_All chirp_stats_all;
+extern Chirp_Energy chirp_stats_all_debug;
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
@@ -259,6 +278,7 @@ void chirp_dio3_isr();
 
 /* Stats */
 void Stats_value(uint8_t stats_type, uint32_t value);
+void Stats_value_debug(uint8_t energy_type, uint32_t value);
 void Stats_to_Flash(Mixer_Task task);
 
 /* LBT */
@@ -271,6 +291,7 @@ void RTC_ModifyTime(uint8_t year, uint8_t month, uint8_t date, uint8_t day, uint
 Chirp_Time RTC_GetTime(void);
 void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
 void RTC_Waiting_Count(uint32_t Count_wait);
+void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 
 //**************************************************************************************************
 /* Topology */

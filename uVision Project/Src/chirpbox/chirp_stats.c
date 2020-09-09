@@ -23,7 +23,9 @@
 #if MX_FLASH_FILE
 	#include "flash_if.h"
 #endif
-
+#if ENERGEST_CONF_ON
+#include GPI_PLATFORM_PATH(energest.h)
+#endif
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -43,7 +45,7 @@
 /* As events come in, buffer them completely, and calculate a running sum, count, min, max. */
 /* statistics */
 Chirp_Stats_All chirp_stats_all;
-
+Chirp_Energy chirp_stats_all_debug;
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
 
@@ -80,6 +82,48 @@ void Stats_value(uint8_t stats_type, uint32_t value)
     else
     {
         chirp_stats_temp->stats_none ++;
+    }
+}
+
+void Stats_value_debug(uint8_t energy_type, uint32_t value)
+{
+    // printf("value:%lu, %lu\n", energy_type, (uint32_t)gpi_tick_fast_to_us(value));
+    uint8_t i = energy_type - ENERGEST_TYPE_CPU;
+    uint32_t value_s = (uint32_t)gpi_tick_fast_to_us(value);
+    switch (energy_type)
+    {
+        case ENERGEST_TYPE_CPU:
+            chirp_stats_all_debug.CPU += value_s;
+            break;
+        case ENERGEST_TYPE_LPM:
+            chirp_stats_all_debug.LPM += value_s;
+            break;
+        case ENERGEST_TYPE_STOP:
+            chirp_stats_all_debug.STOP += value_s;
+            break;
+        case ENERGEST_TYPE_FLASH_WRITE_BANK1:
+            chirp_stats_all_debug.FLASH_WRITE_BANK1 += value_s;
+            break;
+        case ENERGEST_TYPE_FLASH_WRITE_BANK2:
+            chirp_stats_all_debug.FLASH_WRITE_BANK2 += value_s;
+            break;
+        case ENERGEST_TYPE_FLASH_ERASE:
+            chirp_stats_all_debug.FLASH_ERASE += value_s;
+            break;
+        case ENERGEST_TYPE_FLASH_VERIFY:
+            chirp_stats_all_debug.FLASH_VERIFY += value_s;
+            break;
+        case ENERGEST_TYPE_TRANSMIT:
+            chirp_stats_all_debug.TRANSMIT += value_s;
+            break;
+        case ENERGEST_TYPE_LISTEN:
+            chirp_stats_all_debug.LISTEN += value_s;
+            break;
+        case ENERGEST_TYPE_GPS:
+            chirp_stats_all_debug.GPS += value_s;
+            break;
+        default:
+            break;
     }
 }
 

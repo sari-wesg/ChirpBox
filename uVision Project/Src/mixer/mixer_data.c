@@ -1323,8 +1323,11 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             }
         }
     }
+    if (chirp_config.task != MX_GLOSSY)
+    {
     free(mx.matrix[0]);
     mx.matrix[0] = NULL;
+    }
 
     /* have received at least a packet */
     if (((chirp_outl->task == MX_COLLECT) ||(chirp_outl->task == CHIRP_TOPO) ||(chirp_outl->task == CHIRP_VERSION)))
@@ -1406,7 +1409,9 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
         /* init mixer */
         mixer_init(node_id);
-
+        #if ENERGEST_CONF_ON
+            ENERGEST_ON(ENERGEST_TYPE_CPU);
+        #endif
         /* except these two task that all nodes need to upload data, others only initiator transmit data */
         if ((chirp_outl->task != MX_COLLECT) && (chirp_outl->task != CHIRP_TOPO) && (chirp_outl->task != CHIRP_VERSION))
         {
@@ -1453,7 +1458,9 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
         #endif
 		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-
+        #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+        #endif
         /* used in mixer_write, and revalue before mixer round */
         chirp_config.full_rank = 0;
         chirp_config.full_column = UINT16_MAX;
@@ -1471,6 +1478,10 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         {
             Stats_value(RX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)));
             Stats_value(TX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
+            Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
+            Stats_value_debug(ENERGEST_TYPE_LPM, energest_type_time(ENERGEST_TYPE_LPM) - energest_type_time(ENERGEST_TYPE_TRANSMIT) - energest_type_time(ENERGEST_TYPE_LISTEN));
+            Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
+            Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
         }
 
         if (!chirp_recv(node_id, chirp_outl))
@@ -1535,7 +1546,10 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 /* dissemination session: disseminate files to all nodes */
                 if (!chirp_outl->disem_flag)
                 {
-                    PRINTF("ENERGEST_TYPE_LPM:%lu\n", (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LPM)));
+                    Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
+                    Stats_value_debug(ENERGEST_TYPE_LPM, energest_type_time(ENERGEST_TYPE_LPM) - energest_type_time(ENERGEST_TYPE_TRANSMIT) - energest_type_time(ENERGEST_TYPE_LISTEN));
+                    Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
+                    Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
                     free(payload_distribution);
                     chirp_mx_radio_config(chirp_outl->default_sf, 7, 1, 8, chirp_outl->default_tp, chirp_outl->default_freq);
                     /* If now is confirm, the initiator collect all nodes information about whether they are full rank last round, if so, then send the next file chunk, file index++, else do not increase file index */
@@ -1559,6 +1573,10 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     Stats_value(TX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
                     Stats_value(SLOT_STATS, mx.stat_counter.slot_decoded);
 
+                    Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
+                    Stats_value_debug(ENERGEST_TYPE_LPM, energest_type_time(ENERGEST_TYPE_LPM) - energest_type_time(ENERGEST_TYPE_TRANSMIT) - energest_type_time(ENERGEST_TYPE_LISTEN));
+                    Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
+                    Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
                     PRINTF("ENERGEST_TYPE_LPM:%lu\n", (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LPM)));
 
                     free(payload_distribution);

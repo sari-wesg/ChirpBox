@@ -942,6 +942,10 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	int8_t				tx_power;
 	uint8_t				topo_payload_len;
 
+	/* debug energy */
+	Chirp_Energy		chirp_energy[3];
+	// idle1, arrange1, start, idle2, arrange2, disfut, idle3, arrange3, collre, idle4, arrange4, connect, idle5, arrange5, colltopo
+
 	/* CHIRP_SNIFF */
 	uint8_t				sniff_nodes_num; /* number of sniff nodes */
 	uint8_t				sniff_flag; /* if the node itself is a sniffer */
