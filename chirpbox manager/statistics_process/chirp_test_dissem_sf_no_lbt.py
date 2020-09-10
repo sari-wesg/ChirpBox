@@ -23,8 +23,8 @@ def generate_command_dissem(com_serial):
     bitmap = '15'
     task_bitmap = '1fffff'
     sf_list = [7, 8, 9, 10, 11]
-    slot_number_list = [140, 120, 100, 90, 85]
-    slot_number_list_col = [80, 70, 65, 55, 50]
+    slot_number_list = [135, 115, 95, 80, 75]
+    slot_number_list_col = [75, 65, 60, 50, 45]
     payload_len_list = [232, 232, 184, 88, 48]
     for test_count in range(3):
         for i in range(len(sf_list)):
@@ -40,17 +40,17 @@ def generate_command_dissem(com_serial):
             print(task_coldata_run_1)
             cbmng.main(task_coldata_run_1.split())
 
-            task_topo_run = "cbmng.py " + "-connect " + str(used_sf) + " " + "470000 " + "0 " + "7 " + " " + "com11 " + "120 " + "8 " + "0 "
-            print(task_topo_run.split())
-            cbmng.main(task_topo_run.split())
+            # task_topo_run = "cbmng.py " + "-connect " + str(used_sf) + " " + "470000 " + "0 " + "7 " + " " + "com11 " + "120 " + "8 " + "0 "
+            # print(task_topo_run.split())
+            # cbmng.main(task_topo_run.split())
 
-            task_coltopo_run = "cbmng.py " + "-coltopo " + "2 " + "7 " + "120 " + "com11 " + "80 " + "14 "
-            print(task_coltopo_run.split())
-            cbmng.main(task_coltopo_run.split())
+            # task_coltopo_run = "cbmng.py " + "-coltopo " + "2 " + "7 " + "120 " + "com11 " + "80 " + "14 "
+            # print(task_coltopo_run.split())
+            # cbmng.main(task_coltopo_run.split())
 
-            task_coltopo_run = "cbmng.py " + "-start " + "0 " + "c839 " + "7 " + "com11 " + "1fffff " + "40 " + "14 "
-            print(task_coltopo_run.split())
-            cbmng.main(task_coltopo_run.split())
+            # task_coltopo_run = "cbmng.py " + "-start " + "0 " + "c839 " + "7 " + "com11 " + "1fffff " + "40 " + "14 "
+            # print(task_coltopo_run.split())
+            # cbmng.main(task_coltopo_run.split())
 
             task_coldata_run_2 = "cbmng.py " + "-coldata " + "232 " + "7 " + com_serial + "120 " + "14 " + "1fffff"
             print(task_coldata_run_2)
