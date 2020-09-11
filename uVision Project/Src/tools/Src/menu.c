@@ -1841,6 +1841,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
+          Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
+          Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
           Stats_value_debug(ENERGEST_TYPE_FLASH_WRITE_BANK1, energest_type_time(ENERGEST_TYPE_FLASH_WRITE_BANK1));
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[2]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
