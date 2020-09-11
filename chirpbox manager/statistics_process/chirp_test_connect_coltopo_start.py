@@ -15,14 +15,14 @@ def generate_command_dissem(com_serial):
     count = 0
     payload_len = 48
     dissem_back_sf = 7
-    dissem_back_slot = 100
+    dissem_back_slot = 80
     used_sf = 7
     generation_size = 1
     used_tp = 14
-    slot_number = 20
+    slot_number = 40
     bitmap = '15'
     task_bitmap = '1fffff'
-    for test_count in range(1):
+    for test_count in range(2):
         task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "ffdc " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + bitmap  + " " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + str(used_tp) + " " + task_bitmap + " "
         print(task_dissem_run)
         cbmng.main(task_dissem_run.split())
@@ -31,14 +31,13 @@ def generate_command_dissem(com_serial):
         print(task_topo_run.split())
         cbmng.main(task_topo_run.split())
 
-        task_coltopo_run = "cbmng.py " + "-coltopo " + "2 " + "7 " + "120 " + "com11 " + "130 " + "0 "
+        task_coltopo_run = "cbmng.py " + "-coltopo " + "2 " + "7 " + "120 " + "com11 " + "80 " + "14 "
         print(task_coltopo_run.split())
         cbmng.main(task_coltopo_run.split())
 
-        task_start_run = "cbmng.py " + "-start " + "0 " + "c839 " + "7 " + "com11 " + "1fffff " + "130 " + "0 "
+        task_start_run = "cbmng.py " + "-start " + "0 " + "c839 " + "7 " + "com11 " + "1fffff " + "40 " + "14 "
         print(task_start_run.split())
         cbmng.main(task_start_run.split())
-        time.sleep(180)
 
         task_coldata_run_2 = "cbmng.py " + "-coldata " + "232 " + "7 " + com_serial + "120 " + "14 " + "1fffff"
         print(task_coldata_run_2.split())
