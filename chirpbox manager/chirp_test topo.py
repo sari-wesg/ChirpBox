@@ -14,20 +14,20 @@ def generate_command_connect(slot_number, used_sf, used_payload_len):
     txpower = 0
     sf = 7
     topo_payload_len = 8
-    # freq = 470000
+    freq = 470000
     # for i in range(1, 50):
     for sf in np.array([7]):
         # for freq in np.array([480000]):
         # for freq in np.array([486300, 487100, 487700]):
-        for freq in np.array([486300, 487100, 487700]):
+        # for freq in np.array([486300, 487100, 487700]):
         # for topo_payload_len in np.array([1]):
-            task_topo_run = "cbmng.py " + "-connect " + str(sf) + " " + str(freq) + " " + str(txpower) + " " + str(used_sf) + " " + "com11 " + str(slot_number) + " " + str(topo_payload_len) + " " + "14 "
-            print(task_topo_run.split())
-            cbmng.main(task_topo_run.split())
-            task_coltopo_run = "cbmng.py " + "-coltopo " + "2 " + str(used_sf) + " " + str(used_payload_len) + " " + "com11 " + str(slot_number) + " " + "14 "
-            print(task_coltopo_run.split())
-            cbmng.main(task_coltopo_run.split())
-            count += 1
+        task_topo_run = "cbmng.py " + "-connect " + "7 " + "470000 " + "0 " + "7 " + " " + "com11 " + "80 " + "8 " + "14 "
+        print(task_topo_run.split())
+        cbmng.main(task_topo_run.split())
+        task_coltopo_run = "cbmng.py " + "-coltopo " + "2 " + "7 " + "120 " + "com11 " + "80 " + "14 "
+        print(task_coltopo_run.split())
+        cbmng.main(task_coltopo_run.split())
+        count += 1
     print("count", count)
     exit(0)
 

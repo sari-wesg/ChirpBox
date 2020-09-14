@@ -77,16 +77,17 @@ def main(argv):
 		if(cbmng_exp_start.check() == True):
 			cbmng_exp_start.assign_sniffer(int(argv[2]), argv[3], int(argv[4]), int(argv[5]))
 		# exit(0)
-	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 8)):
-		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
-			cbmng_exp_start.collect_data(argv[4], int(argv[2]), int(argv[3]), int(argv[5]), int(argv[6]), argv[7])
+	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 10)):
+		# if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
+		if((True) and (cbmng_exp_start.is_running() == False)):
+			cbmng_exp_start.collect_data(argv[4], int(argv[2]), int(argv[3]), int(argv[5]), int(argv[6]), argv[7], argv[8], argv[9])
 		# exit(0)
 	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 8)):
-		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
+		if((True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_topology(argv[5], int(argv[2]), int(argv[3]), int(argv[4]), int(argv[6]), int(argv[7]))
 		# exit(0)
 	elif(((argv[1] == "collect_version") or (argv[1] == "-colver")) and (len(argv) == 6)):
-		if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
+		if((True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_version(argv[3], int(argv[2]), int(argv[4]), int(argv[5]))
 		# exit(0)
 	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 14)):

@@ -23,7 +23,7 @@ def generate_command_dissem(com_serial):
     bitmap = '15'
     task_bitmap = '1fffff'
     for test_count in range(2):
-        task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "ffdc " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + bitmap  + " " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + str(used_tp) + " " + task_bitmap + " "
+        task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "81a5 " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + bitmap  + " " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + str(used_tp) + " " + task_bitmap + " "
         print(task_dissem_run)
         cbmng.main(task_dissem_run.split())
 

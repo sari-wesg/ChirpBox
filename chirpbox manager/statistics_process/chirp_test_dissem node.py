@@ -22,28 +22,32 @@ def generate_command_dissem(com_serial):
     slot_number = 140
     bitmap = '15'
     task_bitmap = '1fffff'
-    slot_number_list = [140, 120, 80, 50]
-    dissem_back_slot_list = [100, 80, 60, 30]
-    slot_number_list_col = [70, 50, 30, 20]
-    # 2,7,8,9,12
-    # 3,13,18,15,20
-    # 1,11,17,14,4
-    task_bitmap_list = ['1fffff', '16FB9F', '4F6C5', '6C5']
-    for test_count in range(3):
+    # slot_number_list = [130, 130, 80, 140]
+    # dissem_back_slot_list = [100, 100, 60, 50]
+    # slot_number_list_col = [130, 80, 50, 30]
+    # task_bitmap_list = ['1fffff', '17F4DF', '4F6C5', '844D']
+    # bitmap_list = ['15', '3', '3']
+    slot_number_list = [130, 80]
+    dissem_back_slot_list = [100, 60]
+    slot_number_list_col = [80, 50]
+    task_bitmap_list = ['17F4DF', '4F6C5']
+    bitmap_list = ['15', '3']
+    for test_count in range(2):
         for i in range(len(slot_number_list)):
             slot_number = slot_number_list[i]
             dissem_back_slot = dissem_back_slot_list[i]
             task_bitmap = task_bitmap_list[i]
-            task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "ffdc " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + bitmap  + " " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + str(used_tp) + " " + task_bitmap + " "
+            bitmap = bitmap_list[i]
+            task_dissem_run = "cbmng.py " + "-dissem " + '0 ' + "81a5 " + str(payload_len) + " " + str(generation_size) + " " + str(used_sf) + " " + com_serial + bitmap  + " " + str(slot_number) + " " + str(dissem_back_sf) + " " + str(dissem_back_slot) + " " + str(used_tp) + " " + task_bitmap + " "
             print(task_dissem_run)
             cbmng.main(task_dissem_run.split())
 
             slot_number = slot_number_list_col[i]
-            task_coldata_run_1 = "cbmng.py " + "-coldata " + str(payload_len) + " " + str(used_sf) + " " + com_serial + str(slot_number) + " " + "0 " + "1fffff"
+            task_coldata_run_1 = "cbmng.py " + "-coldata " + str(payload_len) + " " + str(used_sf) + " " + com_serial + str(slot_number) + " " + "0 " + task_bitmap + " "
             print(task_coldata_run_1)
             cbmng.main(task_coldata_run_1.split())
 
-            task_coldata_run_2 = "cbmng.py " + "-coldata " + "120 " + "7 " + com_serial + "120 " + "14 " + "1fffff"
+            task_coldata_run_2 = "cbmng.py " + "-coldata " + "232 " + "7 " + com_serial + "80 " + "14 " + "1fffff"
             print(task_coldata_run_2)
             cbmng.main(task_coldata_run_2.split())
             count += 1

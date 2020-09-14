@@ -81,7 +81,7 @@ def generate_json_for_upgrade():
 		"experiment_name": "Upgrade_daemon",
 		"experiment_description": "Upgrade_daemon",
 		"payload_length": 0,
-		"experiment_duration": 20,
+		"experiment_duration": 600,
 		"num_generated_packets": "False",
 		"num_received_packets": "False",
 		"e2e_latency": "False",
@@ -140,7 +140,7 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 				if line:
 					print (line)
 					if (line == "Input initiator task:"):
-						# slot_num = 100
+						slot_num = 100
 						# ser.write(str(task_index).encode()) # send commands
 						task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
 						print(task)
@@ -193,10 +193,11 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 
 	print("Done!")
 
+	# TODO:
 	print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
-	with open(running_status, "w") as f:
-		json.dump(running_dict, f)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
+	# with open(running_status, "w") as f:
+	# 	json.dump(running_dict, f)
 
 	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
 		return False
@@ -300,8 +301,8 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 	print("Done!")
-	if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
-		return False
+	# if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
+	# 	return False
 
 	return True
 
@@ -399,7 +400,7 @@ def assign_sniffer(command_sf, com_port, slot_num, used_tp):
 
 	return True
 
-def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitmap):
+def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitmap, start_address_col, end_address_col):
 	bitmap = "0"
 	dissem_back_sf = 0
 	dissem_back_slot = 0
@@ -421,18 +422,18 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 		load_dict = json.load(load_f)
 		filename = load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 
-	# time_now = datetime.datetime.now()
-	# start_time_t = time_now + datetime.timedelta(minutes = 0)
-	# start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	# end_time_t = start_time_t + datetime.timedelta(minutes = 0)
-	# end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	# exp_no = cbmng_common.tid_maker()
+	time_now = datetime.datetime.now()
+	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+	exp_no = cbmng_common.tid_maker()
 
-	# exp_name = "collect_data_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "command_len" + str(command_len) + "_slot_num" + str(slot_num) + "startaddress_" + str(start_addr) + "end_address" + str(end_addr)
-	# print(exp_name)
-	# running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
-	# with open(running_status, "w") as f:
-	# 	json.dump(running_dict, f)
+	exp_name = "collect_data_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "command_len" + str(command_len) + "_slot_num" + str(slot_num) + "startaddress_" + str(start_address_col) + "end_address" + str(end_address_col)
+	print(exp_name)
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
 
 	print("Collecting ...")
 
@@ -444,7 +445,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 	timeout_cnt = 0
 	sniffer_cnt = 0
 
-	filename_1 = "collect_data" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap) + ".txt"
+	filename_1 = "collect_data" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap) + "_addr"+str(start_address_col)+"_"+str(end_address_col) + ".txt"
 
 	with open(filename_1, 'w+') as f_1:
 		while True:
@@ -463,7 +464,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 						f_1.write(line_write + "\r")
 
 					if (line == "Waiting for parameter(s)..."):
-						para = "%08X" % int(start_addr, 16) + "," + "%08X" % int(end_addr, 16)
+						para = "%08X" % int(start_address_col, 16) + "," + "%08X" % int(end_address_col, 16)
 						print(para)
 						ser.write(str(para).encode()) # send commands
 						timeout_cnt = 0
@@ -491,7 +492,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 					print (line)
 					if (line == "output from initiator (collect):"):
 						start_read = 1
-					if (line == "Task list:"):
+					if (line == "---------MX_GLOSSY---------"):
 						timeout_cnt = 0
 						break
 					if(start_read == 1):
@@ -551,18 +552,22 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num, use
 							f_1.write(line + "\r")
 							line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 							f_1.write(line_write + "\r")
+							break
 
 						if (line == "output from initiator (topology):"):
 							start_read = 1
-						if (line == "Task list:"):
-							timeout_cnt = 0
-							break
+						# if (line == "---------MX_GLOSSY---------"):
+						# 	timeout_cnt = 0
+						# 	break
 						if(start_read == 1):
 							f.write(line + "\r")
 					if(timeout_cnt > 60000 * 20):
 						break
 				except:
 					pass
+	if(waiting_for_the_execution_timeout(ser, 60000 * 20) == False): # timeout: 800 seconds
+		return False
+
 	if(timeout_cnt > 60000 * 20):
 	 	print("Timeout...")
 	 	return False
@@ -648,7 +653,7 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 				 		# ser.write(str(task_index).encode()) # send commands
 				 	if (line == "output from initiator (version):"):
 				 		start_read = 1
-	 				if ((line == "Task list:") and (input == 1)):
+	 				if ((line == "---------MX_GLOSSY---------") and (input == 1)):
 	 					timeout_cnt = 0
 	 					input = 0
 	 					break
@@ -701,7 +706,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		json.dump(running_dict, f)
 
 	# !!!!!TODO:
-	test_dissem = True
+	test_dissem = False
 	if (test_dissem == False):
 		if(firmware_burned_existing == 1):
 			if(daemon_patch == 1):
@@ -748,7 +753,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	hash_md5 = md5(firmware)
 	print("hash_md5:", "%16X" % int(hash_md5, 16))
 
-	filename_1 = "disseminate" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap) + ".txt"
+	filename_1 = "disseminate" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap)+"_size"+str(FileSize) + ".txt"
 	with open(filename_1, 'w+') as f_1:
 
 		while True:
@@ -823,7 +828,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 			YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
 
-	if(waiting_for_the_execution_timeout(ser, 360) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 60000 * 20) == False): # timeout: 800 seconds
 		return False
 
 	if(daemon_patch == 1):
@@ -837,8 +842,8 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		f_1.write(line)
 		line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 		f_1.write(line_write + "\r")
-	if(waiting_for_the_execution_timeout(ser, 360) == False): # timeout: 800 seconds
-		return False
+	# if(waiting_for_the_execution_timeout(ser, 360) == False): # timeout: 800 seconds
+	# 	return False
 
 	return True
 
@@ -852,7 +857,7 @@ def waiting_for_the_execution_timeout(ser, timeout_value):
 			timeout_cnt = timeout_cnt + 1
 			if line:
 				print (line)
-				if (line == "Input initiator task:"):
+				if (line == "---------MX_GLOSSY---------"):
 	 				timeout_cnt = 0
 	 				break
 			if(timeout_cnt > timeout_value):
