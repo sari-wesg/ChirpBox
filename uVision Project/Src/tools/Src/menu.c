@@ -1260,6 +1260,34 @@ uint32_t Chirp_RSHash(uint8_t* str, uint32_t len)
     return hash;
 }
 
+uint8_t randInt(uint8_t begin, uint8_t end)
+{
+	uint8_t temp;
+	temp = begin + (rand() % (end - begin + 1));
+	return temp;
+}
+
+void randomPermutation1(uint8_t channel_sync, uint8_t n)
+{
+  bool boollist[n];
+  uint8_t *a = channel_sync;
+  bool *used = boollist;
+  for (uint8_t i = 0; i < n; i++)
+    used[i] = true;
+  uint8_t k = 0;
+  for (uint8_t i = 0; i < n; ++i)
+  {
+    k = randInt(1, n);
+    while (used[k] == false) {
+      k = randInt(1, n);
+    }
+
+    used[k] = false;
+    a[i] = k;
+    // printf("a[i]:%lu, %lu\n", a[i], i);
+  }
+}
+
 void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 {
   gpi_watchdog_periodic();
@@ -1279,10 +1307,27 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
   #if GPS_DATA
   GPS_Sleep(60);
-  GPS_Off();
   Chirp_Time ds3231_time;
   time_t diff;
   time_t sleep_sec;
+
+  Chirp_Time gps_time = GPS_Get_Time();
+  uint8_t gps_time_str[2];
+  memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
+  uint32_t channel_seed;
+  uint8_t sync_channel[LBT_CHANNEL_NUM];
+
+  uint8_t sync_channel_id = 0;
+  // channel_seed = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
+  // srand(channel_seed);
+  // randomPermutation1(sync_channel, LBT_CHANNEL_NUM);
+
+  chirp_config.lbt_channel_primary = 0;
+  gps_time = GPS_Get_Time();
+
+  sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
+  GPS_Off();
+
   #endif
 
   PRINTF("---------Chirpbox---------\n");
@@ -1296,11 +1341,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     // just finish a task
     if (chirp_config.glossy_task == 2)
     {
+      DS3231_GetTime();
+      /* Set alarm */
+      ds3231_time = DS3231_ShowTime();
+      sync_channel_id = (ds3231_time.chirp_min+1) % LBT_CHANNEL_NUM;
       if (node_id)
       {
-        DS3231_GetTime();
-        /* Set alarm */
-        ds3231_time = DS3231_ShowTime();
         diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
         sleep_sec = 60 - (time_t)(0 - diff) % 60;
         #if ENERGEST_CONF_ON
@@ -1351,9 +1397,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
     #endif
+    chirp_config.lbt_channel_primary = sync_channel_id;
+    SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
     // no task
 		if (chirp_mx_round(node_id, &chirp_outl) != 2)
 		{
+        sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           ENERGEST_OFF(ENERGEST_TYPE_LPM);
@@ -1391,6 +1440,10 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               chirp_outl.glossy_gps_on = 1;
               GPS_On();
               GPS_Waiting_PPS(10);
+              GPS_Sleep(60);
+              gps_time = GPS_Get_Time();
+              sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
+              sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
             }
           }
 
@@ -1427,11 +1480,11 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
         Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
       #endif
-      // start at minute
-      if (node_id)
-        RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
-      else
-        GPS_Sleep(60);
+      // // start at minute
+      // if (node_id)
+      //   RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
+      // else
+      //   GPS_Sleep(60);
 
 		/* default mode is MX_ARRANGE (task arrangement) */
 		chirp_outl.task = MX_ARRANGE;
@@ -1553,6 +1606,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
+          FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 
 				#if GPS_DATA
@@ -1728,6 +1783,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
+          FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 
         }
@@ -1784,6 +1841,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
+          FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 				break;
 			}
@@ -1848,6 +1907,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
+          FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 				break;
 			}
@@ -1895,6 +1956,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
+          FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 				break;
 			}

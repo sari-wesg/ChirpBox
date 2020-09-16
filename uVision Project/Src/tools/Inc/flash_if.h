@@ -97,6 +97,7 @@ typedef struct Flash_FILE_tag
 #define RESET_FLASH_ADDRESS           (FLASH_START_BANK2 - 5 * FLASH_PAGE) /* 807D800 */
 #define TRACE_FLASH_ADDRESS           (FLASH_START_BANK2 - 6 * FLASH_PAGE) /* 807D000 */
 #define DAEMON_DEBUG_FLASH_ADDRESS    (FLASH_START_BANK2 - 7 * FLASH_PAGE) /* 807C800 */
+#define DAEMON_DEBUG_LBT_ADDRESS      (FLASH_START_BANK2 - 8 * FLASH_PAGE) /* 807C000 */
 
 #define FIRMWARE_FLASH_ADDRESS_1      (FLASH_START_BANK2 - 3 * FLASH_PAGE) /* 0x0807 E800 */
 #define FIRMWARE_FLASH_ADDRESS_2      (USER_FLASH_END_ADDRESS - 3 * FLASH_PAGE) /* 0x080F E800 */
@@ -108,6 +109,7 @@ typedef struct Flash_FILE_tag
 #define RESET_PAGE                    (251)
 #define TRACE_PAGE                    (250)
 #define DAEMON_DEBUG_PAGE             (249)
+#define DAEMON_LBT_PAGE               (248)
 
 #define DAEMON_DEBUG_ENERGY_LEN       (10 * 4) /* 40 bytes */
 #define DAEMON_DEBUG_ENERGY_LEN_64    (16 * 4) /* 64 bytes */
