@@ -1460,7 +1460,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             if ((!chirp_outl->disem_flag) && (chirp_outl->task == MX_DISSEMINATE) && (chirp_outl->round >= 2))
             {
                 // chirp_config.lbt_channel_primary = (chirp_outl->round / 2) % LBT_CHANNEL_NUM;
-                chirp_config.lbt_channel_primary = (chirp_config.lbt_channel_primary - 1) % LBT_CHANNEL_NUM;
+                chirp_config.lbt_channel_primary = (chirp_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
             }
             }
             SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
