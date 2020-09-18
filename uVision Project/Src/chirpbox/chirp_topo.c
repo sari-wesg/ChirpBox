@@ -66,7 +66,10 @@ Topology_State topology_state;
 uint32_t packet_time_us;
 static uint32_t round_length_us;
 Topology_result *node_topology;
+Topology_result_link *node_topology_link;
 
+int8_t SnrValue;
+int16_t rssi_link, RssiValue_link;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
@@ -93,6 +96,10 @@ uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t paylo
     packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, tx_payload_len) + 50000;
     node_topology = (Topology_result *)malloc(nodes_num * sizeof(Topology_result));
     memset(node_topology, 0, nodes_num * sizeof(Topology_result));
+
+    node_topology_link = (Topology_result_link *)malloc(nodes_num * sizeof(Topology_result_link));
+    memset(node_topology_link, 0, nodes_num * sizeof(Topology_result_link));
+
     round_length_us = packet_time_us * (tx_num_max + 3) + 2000000;
 
     packet_prepare(node_id);
@@ -233,9 +240,12 @@ void topo_result(uint8_t nodes_num)
         FLASH_If_Erase_Pages(1, 255);
         FLASH_If_Write(TOPO_FLASH_ADDRESS, (uint32_t *)(topo_result), sizeof(topo_result) / sizeof(uint32_t));
         FLASH_If_Write(TOPO_FLASH_ADDRESS + sizeof(topo_result) + 8, (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
+        memcpy(topo_result, (uint32_t *)(node_topology_link), nodes_num * sizeof(Topology_result_link));
+        FLASH_If_Write(TOPO_FLASH_ADDRESS + sizeof(topo_result) + 8 + sizeof(temp_flash), (uint32_t *)(topo_result), sizeof(topo_result) / sizeof(uint32_t));
     #endif
 
     free(node_topology);
+    free(node_topology_link);
 }
 
 void topo_dio0_isr()
@@ -261,7 +271,28 @@ void topo_dio0_isr()
             {
                 // count++;
                 rx_receive_num++;
-                // add_rx_topology_count();
+
+                // Returns SNR value [dB] rounded to the nearest integer value
+                SnrValue = (((int8_t)SX1276Read(REG_LR_PKTSNRVALUE)) + 2) >> 2;
+                rssi_link = SX1276Read(REG_LR_PKTRSSIVALUE);
+
+                if (SnrValue < 0)
+                {
+                    if (chirp_config.lora_freq > RF_MID_BAND_THRESH)
+                        RssiValue_link = RSSI_OFFSET_HF + rssi_link + (rssi_link >> 4) + SnrValue;
+                    else
+                        RssiValue_link = RSSI_OFFSET_LF + rssi_link + (rssi_link >> 4) + SnrValue;
+                }
+                else
+                {
+                    if (chirp_config.lora_freq > RF_MID_BAND_THRESH)
+                        RssiValue_link = RSSI_OFFSET_HF + rssi_link + (rssi_link >> 4);
+                    else
+                        RssiValue_link = RSSI_OFFSET_LF + rssi_link + (rssi_link >> 4);
+                }
+                node_topology_link[Rx_Buffer[0]-1].snr_link = SnrValue;
+                node_topology_link[Rx_Buffer[0]-1].rssi_link = RssiValue_link;
+                // printf("rx-----------:%d, %d, %lu\n", SnrValue, RssiValue_link, Rx_Buffer[0]-1);
 
                 PRINTF("RX: %d\n", rx_receive_num);
             }

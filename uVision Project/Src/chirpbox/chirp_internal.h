@@ -136,6 +136,12 @@ typedef struct Topology_result_tag
 	uint16_t		reliability;
 } Topology_result;
 
+typedef struct Topology_result_link_tag
+{
+	int16_t			snr_link;
+	int16_t			rssi_link;
+} Topology_result_link;
+
 //sniff ********************************************************************************************
 typedef struct Sniff_Time_tag
 {

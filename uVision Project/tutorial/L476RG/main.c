@@ -109,10 +109,10 @@ uint8_t test_round;
 /* TODO: */
 static const uint32_t nodes[256] = {0x550033, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
 // static const uint32_t nodes[256] = {0x550033, 0x260057};
-// static const uint32_t nodes[256] = {0x550033, 0x21002E};
+// static const uint32_t nodes[256] = {0x550033, 0x21002E, 0x260057};
 
 #endif
-const uint8_t VERSION_MAJOR = 0x12, VERSION_NODE = 0x94;
+const uint8_t VERSION_MAJOR = 0x18, VERSION_NODE = 0x7c;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
