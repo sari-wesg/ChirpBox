@@ -1311,11 +1311,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
   time_t diff;
   time_t sleep_sec;
 
-  Chirp_Time gps_time = GPS_Get_Time();
-  uint8_t gps_time_str[2];
-  memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
-  uint32_t channel_seed;
-  uint8_t sync_channel[LBT_CHANNEL_NUM];
+  Chirp_Time gps_time;
+  gps_time = GPS_Get_Time();
+  // uint8_t gps_time_str[2];
+  // memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
+  // uint32_t channel_seed;
+  // uint8_t sync_channel[LBT_CHANNEL_NUM];
 
   uint8_t sync_channel_id = 0;
   // channel_seed = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
@@ -1323,7 +1324,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
   // randomPermutation1(sync_channel, LBT_CHANNEL_NUM);
 
   chirp_config.lbt_channel_primary = 0;
-  gps_time = GPS_Get_Time();
+  // gps_time = GPS_Get_Time();
 
   sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
   GPS_Off();
@@ -1441,6 +1442,12 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               GPS_On();
               GPS_Waiting_PPS(10);
               GPS_Sleep(60);
+              gps_time = GPS_Get_Time();
+              sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
+              sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
+            }
+            else if (chirp_outl.glossy_resync >= 5)
+            {
               gps_time = GPS_Get_Time();
               sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
               sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
