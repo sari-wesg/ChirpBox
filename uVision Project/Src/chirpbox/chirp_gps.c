@@ -163,14 +163,14 @@ static void change_unix(long ts, Chirp_Time *gps_time)
     gps_time->chirp_hour = (uint8_t)hour;
     gps_time->chirp_min = (uint8_t)minute;
     gps_time->chirp_sec = (uint8_t)second;
-    printf("%d-%d-%d %d:%d:%d week: %d\n", gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec, gps_time->chirp_day);
+    PRINTF("%d-%d-%d %d:%d:%d week: %d\n", gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec, gps_time->chirp_day);
 }
 
 void gps_pps_IRQ()
 {
     gpi_watchdog_periodic();
     pps_count++;
-    printf("pps:%lu\n", pps_count);
+    PRINTF("pps:%lu\n", pps_count);
 }
 
 //**************************************************************************************************
@@ -229,6 +229,7 @@ void GPS_Uart_Irq()
     // change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     gps_done = 2;
 
+    HAL_UART_Abort(&huart3);
     /* Disable usart, stop receiving data */
     __HAL_UART_DISABLE_IT(&huart3, UART_IT_RXNE);
     /* Disable Main Timer, since we have received GPS time */
@@ -257,7 +258,7 @@ Chirp_Time GPS_Get_Time()
         ;
     if (gps_done == 2)
     {
-        printf("chirp_time:%s\n", aRxBuffer);
+        PRINTF("chirp_time:%s\n", aRxBuffer);
         change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     }
     return chirp_time;
@@ -338,7 +339,7 @@ void GPS_Wakeup(uint32_t interval_sec)
     GPS_Get_Time();
     time_t diff = GPS_Diff(&chirp_time, 1970, 1, 1, 0, 0, 0);
     time_t sleep_sec = interval_sec - (time_t)(0 - diff) % interval_sec;
-    printf("sleep_sec:%lu, version: %x-%x\n", sleep_sec, VERSION_MAJOR, VERSION_NODE);
+    PRINTF("sleep_sec:%lu, version: %x-%x\n", sleep_sec, VERSION_MAJOR, VERSION_NODE);
     gps_state = GPS_WAKEUP;
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
