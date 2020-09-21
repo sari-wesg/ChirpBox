@@ -1398,6 +1398,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
     #endif
+    sync_channel_id = 0;
     chirp_config.lbt_channel_primary = sync_channel_id;
     SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
     // no task
