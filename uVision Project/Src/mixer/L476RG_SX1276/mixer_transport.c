@@ -94,10 +94,9 @@ GPI_TRACE_CONFIG(mixer_transport, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER)
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
+#if DEBUG_CHIRPBOX
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -751,7 +750,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		// if packet ok: process packet
 		else
 		{
-			// printf("ok\n");
+			PRINTF("ok\n");
 			#if MX_PREAMBLE_UPDATE
 				if (s.non_receive >= MAX_NON_RECEIVE)
 					s.non_receive = 0;

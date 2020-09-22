@@ -1631,7 +1631,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         else
         {
-            Gpi_Fast_Tick_Native resync_plus =  GPI_TICK_MS_TO_FAST2(((chirp_config.mx_slot_length_in_us * 5 / 2) * (chirp_config.mx_round_length / 2) / 1000) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));
+            Gpi_Fast_Tick_Native resync_plus =  GPI_TICK_MS_TO_FAST2(((chirp_config.mx_slot_length_in_us * 5 / 2) * (chirp_config.mx_round_length / 2 - 1) / 1000) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));
             if (!chirp_config.glossy_task)
                 deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
             else

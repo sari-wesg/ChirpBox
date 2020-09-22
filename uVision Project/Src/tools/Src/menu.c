@@ -1382,7 +1382,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_mx_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
 		chirp_mx_packet_config(chirp_outl.num_nodes, 0, 0);
     chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, 8);
-    chirp_mx_slot_config(chirp_outl.packet_time + 100000, 8, 10000000);
+    chirp_mx_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
 
     chirp_config.glossy_task = 0;
     if (!node_id)
@@ -1442,17 +1442,17 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               chirp_outl.glossy_gps_on = 1;
               GPS_On();
               GPS_Waiting_PPS(10);
-              GPS_Sleep(60);
-              gps_time = GPS_Get_Time();
-              sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
-              sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
+              // GPS_Sleep(60);
+              // gps_time = GPS_Get_Time();
+              // sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
+              // sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
             }
-            else if (chirp_outl.glossy_resync >= 5)
-            {
-              gps_time = GPS_Get_Time();
-              sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
-              sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
-            }
+            // else if (chirp_outl.glossy_resync >= 5)
+            // {
+            //   gps_time = GPS_Get_Time();
+            //   sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
+            //   sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
+            // }
           }
 
           // wait on each 60 seconds
