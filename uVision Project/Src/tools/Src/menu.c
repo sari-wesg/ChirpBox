@@ -1462,7 +1462,13 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           }
           else
           {
-            RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
+            // RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
+            DS3231_GetTime();
+            /* Set alarm */
+            ds3231_time = DS3231_ShowTime();
+            diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
+            sleep_sec = 60 - (time_t)(0 - diff) % 60;
+            RTC_Waiting_Count(sleep_sec);
           }
         }
         #if ENERGEST_CONF_ON
