@@ -750,7 +750,10 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		// if packet ok: process packet
 		else
 		{
-			PRINTF_CHIRP("ok\n");
+			if (chirp_config.task == MX_GLOSSY)
+			{
+				PRINTF_CHIRP("ok\n");
+			}
 			#if MX_PREAMBLE_UPDATE
 				if (s.non_receive >= MAX_NON_RECEIVE)
 					s.non_receive = 0;
