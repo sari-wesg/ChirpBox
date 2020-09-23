@@ -62,28 +62,28 @@ python cbmng.py -coldata 232 7 com11 130 0 1fffff
 
 no lbt
 python cbmng.py -dissem 0 81a5 232 16 8 com11 15 100 7 90 0 1fffff
-python cbmng.py -coldata 232 8 com11 120 0 1fffff
+python cbmng.py -coldata 232 8 com11 100 1fffff
 lbt
 python cbmng.py -dissem 0 81a5 232 16 8 com11 15 110 7 100 0 1fffff
-python cbmng.py -coldata 232 7 com11 130 0 1fffff
+python cbmng.py -coldata 232 7 com11 110 0 1fffff
 
 no lbt
 python cbmng.py -dissem 0 81a5 232 16 9 com11 15 90 7 90 0 1fffff
-python cbmng.py -coldata 184 9 com11 120 0 1fffff
+python cbmng.py -coldata 184 9 com11 90 0 1fffff
 lbt
 python cbmng.py -dissem 0 81a5 232 16 9 com11 15 95 7 100 0 1fffff
-python cbmng.py -coldata 184 9 com11 130 0 1fffff
+python cbmng.py -coldata 184 9 com11 95 0 1fffff
 
 no lbt
 python cbmng.py -dissem 0 81a5 232 16 10 com11 15 80 7 90 0 1fffff
-python cbmng.py -coldata 88 10 com11 120 0 1fffff
+python cbmng.py -coldata 88 10 com11 80 0 1fffff
 lbt
 python cbmng.py -dissem 0 81a5 232 16 10 com11 15 85 7 100 0 1fffff
-python cbmng.py -coldata 88 10 com11 130 0 1fffff
+python cbmng.py -coldata 88 10 com11 85 0 1fffff
 
 no lbt
 python cbmng.py -dissem 0 81a5 232 16 11 com11 15 70 7 90 0 1fffff
-python cbmng.py -coldata 48 11 com11 120 0 1fffff
+python cbmng.py -coldata 48 11 com11 70 0 1fffff
 lbt
 python cbmng.py -dissem 0 81a5 232 16 11 com11 15 75 7 100 0 1fffff
-python cbmng.py -coldata 48 11 com11 130 0 1fffff
+python cbmng.py -coldata 48 11 com11 75 0 1fffff

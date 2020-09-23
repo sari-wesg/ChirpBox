@@ -11,7 +11,7 @@ import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
 from matplotlib.colors import LinearSegmentedColormap
 
 from PIL import Image
-
+import statistics
 # Function to change the image size
 def changeImageSize(maxWidth,
                     maxHeight,
@@ -227,9 +227,13 @@ def topo_parser(filename, using_pos):
 
     # 2. generate connectivity matrix
     con_mat = np.zeros((node_num, node_num))
+    con_mat_rssi = np.zeros((node_num, node_num))
+    con_mat_snr = np.zeros((node_num, node_num))
     con_mat_temp = np.zeros((node_num, node_num))
     for cnt in range(node_num):
         con_mat[cnt, cnt] = 100
+        con_mat_rssi[cnt, cnt] = 100
+        con_mat_snr[cnt, cnt] = 100
 
     # temperature of each nodes
     node_temp = []
@@ -248,9 +252,18 @@ def topo_parser(filename, using_pos):
                         tx_id = int(tmp[cnt * 4 + 1], base = 16) + int(tmp[cnt * 4 + 2], base = 16) * 256
                         if (not (((cnt != 0) and (tx_id == 0)) or (tx_id > node_num - 1))):
                             reliability = (int(tmp[cnt * 4 + 3], base = 16) + int(tmp[cnt * 4 + 4], base = 16) * 256) / 100
+                            cnt_rssi = cnt + 26
+                            rssi = (int(tmp[cnt_rssi * 4 + 3], base = 16) + int(tmp[cnt_rssi * 4 + 4], base = 16) * 256)
+                            snr = (int(tmp[cnt_rssi * 4 + 1], base = 16) + int(tmp[cnt_rssi * 4 + 2], base = 16) * 256)
+                            if (snr > 256):
+                                snr = -(65535 - snr + 1)
+                            if (rssi > 256):
+                                rssi = -(65535 - rssi + 1)
+                            print(rssi,snr)
                             if(int(node_list.index(current_node_id)) != int(node_list.index(tx_id))):
                                 con_mat[node_list.index(current_node_id), node_list.index(tx_id)] = reliability
-
+                                con_mat_rssi[node_list.index(current_node_id), node_list.index(tx_id)] = rssi
+                                con_mat_snr[node_list.index(current_node_id), node_list.index(tx_id)] = snr
     # 4. update the connectivity matrix
     with open(filename, 'r') as f:
         for line in f:
@@ -275,7 +288,8 @@ def topo_parser(filename, using_pos):
                                 temperature = 255 - temperature
                             else:
                                 temperature = temperature * (-1)
-                            node_temp.append([current_node_id, temperature])
+                            # node_temp.append([current_node_id, temperature])
+                            node_temp.append(temperature)
 
     # 4. draw the connectivity matrix
     plt.rcParams["figure.figsize"] = (20, 20)
@@ -297,6 +311,7 @@ def topo_parser(filename, using_pos):
                         alpha_value = 1,
                         cbarlabel="Packet Reception Rate (%)")
 
+    filename = os.path.split(filename)[1]
     tmp = re.split(r'[().]', filename)
     # conf = tmp[0]
     txt_len = len("Chirpbox_connectivity_")
@@ -307,7 +322,7 @@ def topo_parser(filename, using_pos):
     fig.tight_layout()
     # TODO:
     # im.set_clim(0, 50)
-    plt.savefig("Connectivity matrix -- " + conf + " (" + sequence_num + ").pdf", bbox_inches='tight')
+    plt.savefig(conf + "Connectivity matrix -- " + " (" + sequence_num + ").pdf", bbox_inches='tight')
     #plt.show()
     Connectivity_png = "Connectivity matrix -- " + conf + " (" + sequence_num + ").png"
 
@@ -508,8 +523,31 @@ def topo_parser(filename, using_pos):
     # max_degree = 0
     # sym = [[0]*3]*3
     # node_temp = 0
+
+    # print(con_mat_rssi)
+    # print(con_mat_snr)
+    con_mat_snr_list = []
+    for i in range(node_num):
+        for k in range(node_num):
+            if ((con_mat_snr[i][k] != 100) and (con_mat_snr[i][k] != 0)):
+                con_mat_snr_list.append(con_mat_snr[i][k])
+
+    con_mat_rssi_list = []
+    for i in range(node_num):
+        for k in range(node_num):
+            if ((con_mat_rssi[i][k] != 100) and (con_mat_rssi[i][k] != 0)):
+                con_mat_rssi_list.append(con_mat_rssi[i][k])
+    print("...............")
+
+    # print(con_mat_snr_list)
+    con_mat_snr_list_min = min(con_mat_snr_list)
+    con_mat_snr_list_max = max(con_mat_snr_list)
+    con_mat_rssi_list_min = min(con_mat_rssi_list)
+    con_mat_rssi_list_max = max(con_mat_rssi_list)
+    node_temp_aver = statistics.mean(node_temp)
     print("hhhhhhhhhhhhhhhhhhhhhhhhhhhh")
-    print(max_hop, mean_degree, sym[0][0])
-    print(max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp)
+    print(str(con_mat_snr_list_min)+','+str(con_mat_snr_list_max)+','+str(con_mat_rssi_list_min)+','+str(con_mat_rssi_list_max)+','+str(node_temp_aver)+','+str(max_hop)+','+str(mean_degree)+','+str(min_degree)+','+str(max_degree)+','+str(sym[0][0]))
+    # print(max_hop, mean_degree, min_degree, max_degree, sym[0][0])
+    # print(max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp)
 
     return [max_hop, mean_degree, std_dev_degree, min_degree, max_degree, sym[0][0], node_temp]

@@ -33,7 +33,9 @@ def topo_process():
 # filename = "Chirpbox_connectivity_sf7ch470000tp14topo_payload_len1(20200805170357607773).txt"
 
 # filelist = ["Chirpbox_connectivity_sf7ch486300tp0topo_payload_len8(20200831173703125039).txt", "Chirpbox_connectivity_sf7ch487100tp0topo_payload_len8(20200831174416507619).txt",  "Chirpbox_connectivity_sf7ch487700tp0topo_payload_len8(20200831175154287705).txt", "Chirpbox_connectivity_sf12ch486300tp0topo_payload_len8(20200831181338788182).txt", "Chirpbox_connectivity_sf12ch487100tp0topo_payload_len8(20200831182818594542).txt", "Chirpbox_connectivity_sf12ch487700tp0topo_payload_len8(20200831175916501985).txt"]
-filelist = ["Chirpbox_connectivity_sf7ch486300tp10topo_payload_len8(20200831201808588934).txt"]
+# filelist = ["D:\TP\Study\wesg\Chirpbox\chirpbox manager\Chirpbox_connectivity_sf12ch470000tp0topo_payload_len6(20200918191043317009).txt"]
+# filelist = ["D:\TP\Study\wesg\Chirpbox\chirpbox manager\Chirpbox_connectivity_sf7ch470000tp0topo_payload_len6(20200918195920360729).txt"]
+filelist = ["D:\TP\Study\wesg\Chirpbox\chirpbox manager\Chirpbox_connectivity_sf7ch470000tp0topo_payload_len6(20200920163737168637).txt"]
 
 
 for i in range(len(filelist)):

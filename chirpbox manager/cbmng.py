@@ -90,13 +90,13 @@ def main(argv):
 		if((True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_version(argv[3], int(argv[2]), int(argv[4]), int(argv[5]))
 		# exit(0)
-	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 14)):
+	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 15)):
 		if(cbmng_exp_start.check() == True):
-			cbmng_exp_start.disseminate(argv[7], int(argv[2]), argv[3], int(argv[4]), int(argv[6]), int(argv[5]), argv[8], int(argv[9]), int(argv[10]), int(argv[11]), int(argv[12]), argv[13])
+			cbmng_exp_start.disseminate(argv[7], int(argv[2]), argv[3], int(argv[4]), int(argv[6]), int(argv[5]), argv[8], int(argv[9]), int(argv[10]), int(argv[11]), int(argv[12]), argv[13], argv[14])
 		# exit(0)
 	# TODO:
 	# if bitmap is not full should not use upgrade
-	elif(((argv[1] == "upgrade") or (argv[1] == "-upgrade")) and (len(argv) == 14)):
+	elif(((argv[1] == "upgrade") or (argv[1] == "-upgrade")) and (len(argv) == 15)):
 		if(expfirmapp.experiment_firmware(argv[2]) == True):
 			expfirmapp.read_configuration()
 		cbmng_exp_start.generate_json_for_upgrade()
@@ -104,7 +104,7 @@ def main(argv):
 			expconfapp.read_configuration()
 		if(expmethapp.experiment_methodology("tmp.json") == True):
 			expmethapp.read_configuration()
-		cbmng_exp_start.disseminate(argv[7], 1, argv[3], int(argv[4]), int(argv[6]), int(argv[5]), argv[8], int(argv[9]), int(argv[10]), int(argv[11]), int(argv[12]), argv[13])
+		cbmng_exp_start.disseminate(argv[7], 1, argv[3], int(argv[4]), int(argv[6]), int(argv[5]), argv[8], int(argv[9]), int(argv[10]), int(argv[11]), int(argv[12]), argv[13], argv[14])
 		cbmng_exp_start.start(argv[7], 0, argv[3], int(argv[6]), argv[8], int(argv[9]), int(argv[12]))
 		exit(0)
 	elif(((argv[1] == "help") or (argv[1] == "-h")) and (len(argv) == 2)):

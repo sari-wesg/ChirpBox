@@ -31,16 +31,19 @@ def Matrix_data_list_to_task_energy(Matrix_data,k,task_id):
         idle_list.append(Matrix_data[k][task_id*48+i])
         arrange_list.append(Matrix_data[k][task_id*48+16+i])
         task_list.append(Matrix_data[k][task_id*48+32+i])
-    print (idle_list, arrange_list, task_list)
+    # print (idle_list, arrange_list, task_list)
 
     return (idle_list, arrange_list, task_list, sum(task_list)/1e6)
 
 def task_list_to_energy(idle_list, arrange_list, task_list, task_id):
+    energy_total_idle = 0
     energy_total = 0
     energy_list_14 = [80.9633, 53.5069, 18.837, 47.7732, 72.84508, 62.39981, 80.9633, 287.6562, 181.71642, 0]
-    energy_list_0 = [80.9633, 53.5069, 18.837, 47.7732, 72.84508, 62.39981, 80.9633, 207.37644, 181.71642, 0]
+    energy_list_0 = [80.9633, 53.5069, 18.837, 47.7732, 72.84508, 62.39981, 80.9633, 287.6562, 181.71642, 0]
+    # energy_list_0 = [80.9633, 53.5069, 18.837, 47.7732, 72.84508, 62.39981, 80.9633, 207.37644, 181.71642, 0]
     for i in range(len(idle_list)):
-        energy_total = energy_total + idle_list[i] * energy_list_14[i]
+        idle_list[2] = 0
+        energy_total_idle = energy_total_idle + idle_list[i] * energy_list_14[i]
     for i in range(len(arrange_list)):
         energy_total = energy_total + arrange_list[i] * energy_list_14[i]
 
@@ -51,36 +54,49 @@ def task_list_to_energy(idle_list, arrange_list, task_list, task_id):
         for i in range(len(task_list)):
             energy_total = energy_total + task_list[i] * energy_list_0[i]
     for i in range(len(task_list)):
-        task_list[i] = task_list[i] + arrange_list[i] + idle_list[i]
+        task_list[i] = task_list[i] + arrange_list[i]
     total_time = 0
+    total_time_idle = 0
     for i in range(len(task_list)):
         total_time = total_time + task_list[i]
-    return(energy_total/1e6, total_time/1e6)
+    for i in range(len(idle_list)):
+        idle_list[2] = 0
+        total_time_idle = total_time_idle + idle_list[i]
+    return(energy_total_idle/1e6,energy_total/1e6, total_time_idle/1e6,total_time/1e6)
 
 def get_energy_list(task_id, filename):
     Matrix_data = coldata_to_list(filename, 21, (232 - 8))
+    energy_node_total_idle = []
     energy_node_total = []
     total_time_node_all = []
+    total_time_node_idle_all = []
     task_time_node_all = []
-    for i in range(1,21):
+    for i in range(0,21):
         idle_list, arrange_list, task_list, task_time = Matrix_data_list_to_task_energy(Matrix_data,i,task_id)
-        energy_node, total_time_node = task_list_to_energy(idle_list, arrange_list, task_list, task_id)
-        # if (((i != 5) and (i != 8) and (i != 9) and (i != 11) and (i != 99) and (i != 19) and (i != 3) and (i < 197))):
-        # if (((i == 2) or (i == 6) or (i == 7) or (i == 9) or (i == 10) or (i == 12) or (i == 13) or (i == 14) or (i == 15)  or (i == 18) and (i < 197))):
-        # if (((i == 2) or (i == 99) or (i == 6) or (i == 10) or (i == 15) and (i < 197))):
-        if (((i != 5)) and ((i != 9))):
-        # if (((i != 5))):
+        energy_node_idle, energy_node, total_time_node_idle, total_time_node = task_list_to_energy(idle_list, arrange_list, task_list, task_id)
+        if (((i ==2) or (i ==4) or (i ==0))):
+            energy_node_total_idle.append(energy_node_idle)
             energy_node_total.append(energy_node)
             total_time_node_all.append(total_time_node)
+            total_time_node_idle_all.append(total_time_node_idle)
             task_time_node_all.append(task_time)
 
+    energy_node_total_idle_mean = statistics.mean(energy_node_total_idle)
+    energy_node_total_idle_stdev = statistics.stdev(energy_node_total_idle)
     energy_node_total_mean = statistics.mean(energy_node_total)
     energy_node_total_stdev = statistics.stdev(energy_node_total)
     total_time_node_all_mean = statistics.mean(total_time_node_all)
-    print(energy_node_total,statistics.mean(task_time_node_all))
-    print(total_time_node_all_mean,total_time_node_all)
-    print(str((int(total_time_node_all_mean)))+','+str(energy_node_total[1])+','+str(energy_node_total[3])+','+str(energy_node_total_mean)+','+str(energy_node_total_stdev))
+    total_time_node_all_idle_mean = statistics.mean(total_time_node_idle_all)
 
-filename = "D:\TP\Study\wesg\Chirpbox\chirpbox manager\statistics_process\ewsn_data\sf_no_lbt\olbt_sf11_collect_data_command_len_48_used_sf11used_tp0command_len48_slot_num70startaddress_0807E000end_address0807E266(20200913192201859264).txt"
-# get_energy_list(0, filename)
+    # print("task_time_node_all", total_time_node_all_idle_mean)
+    # print(energy_node_total,statistics.mean(task_time_node_all))
+    # print(total_time_node_all_mean,total_time_node_all)
+    # print(str((int(total_time_node_all_idle_mean)))+','+str(energy_node_total_idle[1])+','+str(energy_node_total_idle[2])+','+str(energy_node_total_idle_mean)+','+str(energy_node_total_idle_stdev))
+    print(str((int(total_time_node_all_mean)))+','+str(energy_node_total[1])+','+str(energy_node_total[2])+','+str(energy_node_total_mean)+','+str(energy_node_total_stdev))
+
+filename = "D:\TP\Study\wesg\Chirpbox\chirpbox manager\collect_data_command_len_232_used_sf7used_tp14command_len232_slot_num120startaddress_0807E080end_address0807E0D0(20200922213601452555).txt"
+get_energy_list(0, filename)
 get_energy_list(1, filename)
+# get_energy_list(2, filename)
+
+

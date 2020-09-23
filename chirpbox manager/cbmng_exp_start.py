@@ -81,7 +81,7 @@ def generate_json_for_upgrade():
 		"experiment_name": "Upgrade_daemon",
 		"experiment_description": "Upgrade_daemon",
 		"payload_length": 0,
-		"experiment_duration": 600,
+		"experiment_duration": 20,
 		"num_generated_packets": "False",
 		"num_received_packets": "False",
 		"e2e_latency": "False",
@@ -140,7 +140,7 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 				if line:
 					print (line)
 					if (line == "Input initiator task:"):
-						slot_num = 100
+						# slot_num = 100
 						# ser.write(str(task_index).encode()) # send commands
 						task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
 						print(task)
@@ -671,7 +671,7 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 	return True
 
 
-def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp, task_bitmap):
+def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp, task_bitmap, file_name):
 	BANK2_SIZE = 512 * 1024
 
 	try:
@@ -698,15 +698,18 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 
-	FileSize = cbmng_common.get_FileSize(firmware)
+	# !!!!!TODO:
+	test_dissem = False
+	if (test_dissem == True):
+		FileSize = cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin")
+	else:
+		FileSize = cbmng_common.get_FileSize(firmware)
 	exp_name = "disseminate_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "_generate_size" + str(command_size) + "_slot_num" + str(slot_num) + "_bitmap" + str(task_bitmap) + "_FileSize" + str(FileSize) + "_dissem_back_sf" + str(dissem_back_sf) + "_dissem_back_slot" + str(dissem_back_slot)
 	print(exp_name)
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 
-	# !!!!!TODO:
-	test_dissem = False
 	if (test_dissem == False):
 		if(firmware_burned_existing == 1):
 			if(daemon_patch == 1):
@@ -753,6 +756,9 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	hash_md5 = md5(firmware)
 	print("hash_md5:", "%16X" % int(hash_md5, 16))
 
+	if (test_dissem == True):
+		hash_md5 = md5("patch "+str(file_name)+"k.bin")
+
 	filename_1 = "disseminate" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap)+"_size"+str(FileSize) + ".txt"
 	with open(filename_1, 'w+') as f_1:
 
@@ -777,13 +783,21 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 						if(using_patch == 1):
 							if(daemon_patch == 1):
 								para = "1,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+								if (test_dissem == True):
+									para = "1,0,"+ "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 							else:
 								para = "1,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+								if (test_dissem == True):
+									para = "1,1,"+ "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 						else:
 							if(daemon_patch == 1):
 								para = "0,0,"+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+								if (test_dissem == True):
+									para = "0,0,"+ "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 							else:
 								para = "0,1,"+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+								if (test_dissem == True):
+									para = "0,1,"+ "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%05X" % cbmng_common.get_FileSize("patch "+str(file_name)+"k.bin") + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 						print(para)
 						ser.write(str(para).encode()) # send commands
 						timeout_cnt = 0
@@ -822,10 +836,16 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	YMODEM_result = False
 	if(using_patch == 1):
 		while(YMODEM_result != True):
-			YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send('patch.bin')
+			if (test_dissem == True):
+				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send("patch "+str(file_name)+"k.bin")
+			else:
+				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send('patch.bin')
 	else:
 		while(YMODEM_result != True):
-			YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
+			if (test_dissem == True):
+				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send("patch "+str(file_name)+"k.bin")
+			else:
+				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
 
 	if(waiting_for_the_execution_timeout(ser, 60000 * 20) == False): # timeout: 800 seconds
