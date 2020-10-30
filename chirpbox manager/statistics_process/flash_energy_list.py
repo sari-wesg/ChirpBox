@@ -57,8 +57,10 @@ def task_list_to_energy(idle_list, arrange_list, task_list, task_id):
         task_list[i] = task_list[i] + arrange_list[i]
     total_time = 0
     total_time_idle = 0
+    # print(task_list)
     for i in range(len(task_list)):
         total_time = total_time + task_list[i]
+        # print(total_time,task_list[i])
     for i in range(len(idle_list)):
         idle_list[2] = 0
         total_time_idle = total_time_idle + idle_list[i]
@@ -73,8 +75,9 @@ def get_energy_list(task_id, filename):
     task_time_node_all = []
     for i in range(0,21):
         idle_list, arrange_list, task_list, task_time = Matrix_data_list_to_task_energy(Matrix_data,i,task_id)
+        # print(task_list)
         energy_node_idle, energy_node, total_time_node_idle, total_time_node = task_list_to_energy(idle_list, arrange_list, task_list, task_id)
-        if (((i ==2) or (i ==4) or (i ==0))):
+        if (((i ==1) or (i ==3) or (i ==0))):
             energy_node_total_idle.append(energy_node_idle)
             energy_node_total.append(energy_node)
             total_time_node_all.append(total_time_node)
@@ -94,7 +97,7 @@ def get_energy_list(task_id, filename):
     # print(str((int(total_time_node_all_idle_mean)))+','+str(energy_node_total_idle[1])+','+str(energy_node_total_idle[2])+','+str(energy_node_total_idle_mean)+','+str(energy_node_total_idle_stdev))
     print(str((int(total_time_node_all_mean)))+','+str(energy_node_total[1])+','+str(energy_node_total[2])+','+str(energy_node_total_mean)+','+str(energy_node_total_stdev))
 
-filename = "D:\TP\Study\wesg\Chirpbox\chirpbox manager\collect_data_command_len_232_used_sf7used_tp14command_len232_slot_num120startaddress_0807E080end_address0807E0D0(20200922213601452555).txt"
+filename = "D:\TP\Study\wesg\Chirpbox\chirpbox manager\collect_data_command_len_48_used_sf7used_tp14command_len48_slot_num90startaddress_0807E000end_address0807E400(20201001220801057284).txt"
 get_energy_list(0, filename)
 get_energy_list(1, filename)
 # get_energy_list(2, filename)

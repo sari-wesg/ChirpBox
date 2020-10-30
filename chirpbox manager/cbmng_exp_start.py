@@ -199,8 +199,39 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 	# with open(running_status, "w") as f:
 	# 	json.dump(running_dict, f)
 
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
-		return False
+	# filename_log = "log" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".txt"
+
+	# with open(filename_log, 'w+') as f:
+	# 	while True:
+	# 		try:
+	# 			line = ser.readline().decode('ascii').strip() # skip the empty data
+	# 			if line:
+	# 				print (line)
+	# 				if (line.startswith('counter') or line.startswith('reliability') or line.startswith('energest_init')):
+	# 					time_now = datetime.datetime.now()
+	# 					f.write(line + "\r")
+	# 					line_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	# 					f.write(line_time + "\r")
+	# 				if (line == "System running from STM32L476 *Bank 2*"):
+	# 					time_now = datetime.datetime.now()
+	# 					f.write(line + "\r")
+	# 					line_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	# 					f.write(line_time + "\r")
+	# 				if (line == "System running from STM32L476 *Bank 1*"):
+	# 					f.write(line + "\r")
+	# 					line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	# 					f.write(line_write + "\r")
+	# 					break
+	# 		except:
+	# 			pass
+	# with open(filename_log, 'a') as f:
+	# 	line = "end\r"
+	# 	f.write(line)
+	# 	line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	# 	f.write(line_write + "\r")
+
+	# if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+	# 	return False
 
 	return True
 

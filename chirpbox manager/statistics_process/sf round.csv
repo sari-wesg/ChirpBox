@@ -1,0 +1,27 @@
+sf 7, 61 s
+RTC_GetTime: 2020-10-4 12:58:56
+RTC_GetTime: 2020-10-4 12:59:57
+file size:102400, 30, 3584, 224
+file size:51200, 16, 3584, 224
+file size:25600, 9, 3584, 224
+file size:10240, 4, 3584, 224
+file size:5120, 3, 3584, 224
+SF 8, 84 s
+file size:51200, 16, 3584, 224
+RTC_GetTime: 2020-10-4 15:53:6
+RTC_GetTime: 2020-10-4 15:54:30
+SF 9, 106 s
+file size:51200, 20, 2816, 176
+RTC_GetTime: 2020-10-4 16:1:56
+RTC_GetTime: 2020-10-4 16:3:42
+SF 10, 111 s
+file size:51200, 41, 1280, 80
+RTC_GetTime: 2020-10-4 16:5:56
+RTC_GetTime: 2020-10-4 16:7:47
+SF 11, 158 s
+file size:51200, 81, 640, 40
+RTC_GetTime: 2020-10-4 16:9:56
+RTC_GetTime: 2020-10-4 16:12:34
+
+
+lorawan class A

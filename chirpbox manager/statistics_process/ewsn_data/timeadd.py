@@ -12,14 +12,20 @@ def time_add(time_string):
     t = datetime.datetime(time_list[0], time_list[1], time_list[2], time_list[3], time_list[4], time_list[5])
     add_t = t + datetime.timedelta(seconds=time_list[6])
     # print(time_list[6]*243.7507)
-    print("python3 process_pc_1.py -b " + str(t.year) + '-' + str(t.month) + '-' + str(t.day) + '-' + str(t.hour) + '-' + str(t.minute) + '-' + str(t.second) + ' -e ' + str(add_t.year) + '-' + str(add_t.month) + '-' + str(add_t.day) + '-' + str(add_t.hour) + '-' + str(add_t.minute) + '-' + str(add_t.second)+' -p ./gangting')
     print("python3 process_pc_1.py -b " + str(t.year) + '-' + str(t.month) + '-' + str(t.day) + '-' + str(t.hour) + '-' + str(t.minute) + '-' + str(t.second) + ' -e ' + str(add_t.year) + '-' + str(add_t.month) + '-' + str(add_t.day) + '-' + str(add_t.hour) + '-' + str(add_t.minute) + '-' + str(add_t.second)+' -p ./chepeng')
-    print(str(add_t.year) + '-' + str(add_t.month) + '-' + str(add_t.day) + ' ' + str(add_t.hour) + ':' + str(add_t.minute) + ':' + str(add_t.second))
+    print("python3 process_pc_1.py -b " + str(t.year) + '-' + str(t.month) + '-' + str(t.day) + '-' + str(t.hour) + '-' + str(t.minute) + '-' + str(t.second) + ' -e ' + str(add_t.year) + '-' + str(add_t.month) + '-' + str(add_t.day) + '-' + str(add_t.hour) + '-' + str(add_t.minute) + '-' + str(add_t.second)+' -p ./gangting')
+    # print(str(t.year) + '-' + str(t.month) + '-' + str(t.day) + ' ' + str(t.hour) + ':' + str(t.minute) + ':' + str(t.second)+','+str(add_t.year) + '-' + str(add_t.month) + '-' + str(add_t.day) + ' ' + str(add_t.hour) + ':' + str(add_t.minute) + ':' + str(add_t.second))
 
 
 # python3 process_pc.py -b 2020-9-11-14-4-1 -e 2020-9-11-14-38-1 -p ./gangting
 
+# time_list = []
+# print(len(time_list))
+# for i in range(len(time_list)):
+#     time_string = time_list[i]
+#     print(time_string)
+#     time_add(time_string)
 
-time_string = "2020-09-17 16:20:22,2020-09-17 16:06:00,102"
+time_string = "2020-09-30 08:26:11,2020-09-30 08:42:10,959"
 time_add(time_string)
 
