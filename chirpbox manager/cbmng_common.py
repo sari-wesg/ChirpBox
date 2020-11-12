@@ -46,7 +46,23 @@ class ExpMethodApproach:
 			print("File is not found.")
 			return False
 		except PermissionError:
-			print("You don't have permission to access this file.")		
+			print("You don't have permission to access this file.")
+			return False
+
+class ExpPrimitiveConf:
+	exp_primitive_conf = ''
+	def primitive_conf(self, exp_primitive_conf):
+		try:
+			f = open(exp_primitive_conf, mode = 'r')
+			f.close()
+			print("The file " + exp_primitive_conf + " has been read as primitive config file of Chirpbox.")
+			ExpPrimitiveConf.exp_primitive_conf = exp_primitive_conf
+			return True
+		except FileNotFoundError:
+			print("File is not found.")
+			return False
+		except PermissionError:
+			print("You don't have permission to access this file.")
 			return False
 
 def tid_maker():
@@ -56,5 +72,5 @@ def get_FileSize(filePath):
 	#filePath = unicode(filePath,'utf8')
 	fsize = os.path.getsize(filePath)
 	#fsize = fsize/float(1024*1024)
-	#return round(fsize,2)	
+	#return round(fsize,2)
 	return fsize

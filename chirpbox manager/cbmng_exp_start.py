@@ -14,6 +14,8 @@ import os
 """ Md5 """
 import hashlib
 
+import cbmng_exp_globaldef
+
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
 firmware_burned = "tmp_exp_firm_burned.bin"
@@ -25,6 +27,7 @@ running_status = "tmp_exp_running.json"
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
+exppriapp = cbmng_exp_config.myExpPrimitiveConf()
 
 EXPERIMENT_START = 0
 EXPERIMENT_DISSEMINATE = 1
@@ -105,6 +108,8 @@ def md5(fname):
 
 def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num, used_tp):
 	task_bitmap = "0"
+	if(exppriapp.primitive_conf(cbmng_exp_globaldef.exp_primitive_conf) == True):
+		print(exppriapp.read_configuration())
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
 		# time_now = datetime.datetime.now()

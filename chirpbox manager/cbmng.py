@@ -40,6 +40,12 @@ expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
 
+def experiment_check():
+	if(cbmng_exp_start.check() == True):
+		return True
+	else:
+		return False
+
 def main(argv):
 	print(argv)
 	if(((argv[1] == "version") or (argv[1] == "-v")) and (len(argv) == 2)):
@@ -60,8 +66,10 @@ def main(argv):
 		else:
 	 	 	exit(0)
 	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 9)):
-	 	if(cbmng_exp_start.check() == True):
+		if (experiment_check() == True):
 	 		cbmng_exp_start.start(argv[5], int(argv[2]), argv[3], int(argv[4]), argv[6], int(argv[7]), int(argv[8]))
+	 	# if(cbmng_exp_start.check() == True):
+	 	# 	cbmng_exp_start.start(argv[5], int(argv[2]), argv[3], int(argv[4]), argv[6], int(argv[7]), int(argv[8]))
 	 	# exit(0)
 	elif(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
 		if(cbmng_exp_start.is_running() == True):
