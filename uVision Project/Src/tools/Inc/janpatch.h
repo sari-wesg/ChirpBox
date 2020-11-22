@@ -48,7 +48,6 @@ typedef struct {
     // progress callback
     void   (*progress)(uint8_t);
 
-    void    (*flash_copy)(JANPATCH_STREAM*);
     // the combination of the size of both the source + patch files (that's the max. the target file can be)
     long   max_file_size;
 } janpatch_ctx;
@@ -149,17 +148,6 @@ static int jp_putc(int c, janpatch_ctx* ctx, janpatch_buffer* buffer) {
         // flush the page buffer...
         if (buffer->current_page != 0xFFFFFFFF) {
 
-            /* if new file's page oversteps old file's page, the old file will be covered and erased. So we move this page of old file*/
-            /* only happens when source file is in bank2 */
-            if ((page > ctx->source_buffer.current_page) && (ctx->source_buffer.stream->bank == 1))
-            {
-                ctx->flash_copy(ctx->source_buffer.stream);
-                ctx->source_buffer.current_page += 1;
-
-                jp_fseek(&ctx->source_buffer, buffer->size, SEEK_CUR);
-
-                ctx->fseek(ctx->source_buffer.stream, ctx->source_buffer.position, SEEK_SET);
-            }
             jp_fseek(buffer, buffer->current_page * buffer->size, SEEK_SET);
             jp_fwrite(ctx, buffer->buffer, 1, buffer->current_page_size, buffer);
 
@@ -422,7 +410,7 @@ int janpatch(janpatch_ctx ctx, JANPATCH_STREAM *source, JANPATCH_STREAM *patch, 
         }
     }
 
-    target->file_size = ctx.target_buffer.stream->now_page * ctx.target_buffer.size + jp_final_flush(&ctx, &ctx.target_buffer);
+    target->file_size = (ctx.target_buffer.stream->now_page - ctx.target_buffer.stream->origin_page) * ctx.target_buffer.size + jp_final_flush(&ctx, &ctx.target_buffer);
 
     return 0;
 }

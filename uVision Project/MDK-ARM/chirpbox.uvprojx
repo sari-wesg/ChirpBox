@@ -234,7 +234,7 @@
             <interw>1</interw>
             <bigend>0</bigend>
             <Strict>0</Strict>
-            <Optim>0</Optim>
+            <Optim>2</Optim>
             <wLevel>1</wLevel>
             <uThumb>1</uThumb>
             <VariousControls>
@@ -523,7 +523,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>Tools</GroupName>
+          <GroupName>Chirpbox Functions</GroupName>
           <Files>
             <File>
               <FileName>ll_flash.c</FileName>
@@ -559,6 +559,11 @@
               <FileName>trace_flash.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\tools\Src\trace_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>patch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\tools\Src\patch.c</FilePath>
             </File>
           </Files>
         </Group>

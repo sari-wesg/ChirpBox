@@ -58,6 +58,8 @@
 #if ENERGEST_CONF_ON
 #include GPI_PLATFORM_PATH(energest.h)
 #endif
+#include "chirpbox_func.h"
+
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
 volatile uint8_t uart_read_done;
@@ -1735,55 +1737,9 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         free(chirp_outl.disem_file_memory);
 				if (chirp_outl.patch_update)
 				{
-					TRACE_MSG("size: %lu, %lu\n", chirp_outl.old_firmware_size, chirp_outl.firmware_size);
-
-					uint8_t source_bank = chirp_outl.patch_bank;
-					uint8_t patch_bank = chirp_outl.patch_bank;
-					uint8_t dest_bank = 1;
-					uint32_t new_firmware_size = Filepatch(source_bank, 0, chirp_outl.old_firmware_size, patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, dest_bank, 0);
-					if (new_firmware_size)
-						TRACE_MSG("Patch success!:%lu\n", new_firmware_size);
-					else
-          {
-            TRACE_MSG("Patch failed!\n");
-            FLASH_If_Erase(0);
+          if(!FirmwarePatch(chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5));
             break;
-          }
-          uint32_t firmware_size_buffer[1];
-          firmware_size_buffer[0] = new_firmware_size;
-          FLASH_If_Erase_Pages(0, 253);
-          FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size_buffer, 2);
-          chirp_outl.firmware_size = new_firmware_size;
 				}
-        uint8_t i;
-        TRACE_MSG("Md5 check: %lu\n", chirp_outl.firmware_size);
-        for (i = 0; i < 16; i++)
-        {
-          PRINTF("%02X", chirp_outl.firmware_md5[i]);
-        }
-        PRINTF("\n");
-        if (!MD5_File(1, 0, chirp_outl.firmware_size, chirp_outl.firmware_md5))
-        {
-          TRACE_MSG("md5 error\n");
-          FLASH_If_Erase(0);
-          break;
-        }
-        TRACE_MSG("version_hash:%lu, %lu\n", ((VERSION_MAJOR << 8) | (VERSION_NODE)), chirp_outl.version_hash);
-        if (chirp_outl.version_hash != ((VERSION_MAJOR << 8) | (VERSION_NODE)))
-        {
-          PRINTF("version wrong\n");
-          FLASH_If_Erase(0);
-        }
-        else
-          PRINTF("version right\n");
-        if (!(chirp_outl.firmware_bitmap[task_node_id / 32] & (1 << (task_node_id % 32))))
-        {
-          TRACE_MSG("bitmap wrong\n");
-          FLASH_If_Erase(0);
-        }
-        else
-          TRACE_MSG("bitmap right\n");
-
         Stats_to_Flash(chirp_outl.task);
 
         #if ENERGEST_CONF_ON

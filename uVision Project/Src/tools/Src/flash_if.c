@@ -51,8 +51,6 @@
 #include "flash_if.h"
 #include<string.h>
 #include<stdlib.h>
-#define JANPATCH_STREAM     Flash_FILE        // use POSIX FILE
-#include "janpatch.h"
 #include "menu.h"
 
 #if ENERGEST_CONF_ON
@@ -68,7 +66,6 @@
 #define PRINTF(...)
 #endif
 
-uint8_t copy_count = 0;
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
 
@@ -336,117 +333,5 @@ HAL_StatusTypeDef FLASH_If_BankSwitch(void)
   return result;
 }
 
-//**************************************************************************************************
-//**************************************************************************************************
-int the_fseek(Flash_FILE *file, long int offset, int origin)
-{
-  if (origin == SEEK_SET) {
-    file->now_page = file->origin_page + offset / FLASH_PAGE;
-  }
-  else if (origin == SEEK_CUR) {
-    file->now_page += offset / FLASH_PAGE;
-  }
-  else {
-      return -1;
-  }
-  return 0;
-}
-
-size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file)
-{
-  // uint32_t BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
-  uint8_t bank_active = 0;
-  /* self update or another bank */
-  if (!(file->bank))
-    bank_active = 1;
-  else
-    bank_active = 0;
-
-  FLASH_If_Erase_Pages(bank_active, file->now_page);
-  uint32_t flash_bank_address = (bank_active == 1)? FLASH_START_BANK1 : FLASH_START_BANK2;
-  // The flash write below is in the double-word form,
-  // so we need to ensure the count is multiple of sizeof(uint64_t)
-  if (count % 8)
-    count += 8 - (count % 8);
-  FLASH_If_Write(flash_bank_address + file->now_page * FLASH_PAGE, (uint32_t *)ptr, count / sizeof(uint32_t));
-  return count;
-}
-
-size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE* file)
-{
-  uint8_t bank_active = 0;
-  /* self update or another bank */
-  if (!(file->bank))
-    bank_active = 1;
-  else
-    bank_active = 0;
-
-  uint32_t flash_bank_address = (bank_active == 1)? FLASH_START_BANK1 : FLASH_START_BANK2;
-
-  memcpy((uint32_t *)ptr, (uint32_t *)(flash_bank_address + file->now_page * FLASH_PAGE), count);
-  uint32_t left_count = file->file_size - (file->now_page - file->origin_page + file->page_offset) * FLASH_PAGE;
-  // Ensure the real useful bytes are no larger than left bytes
-  if ((count > left_count) && (file->file_size))
-    count = left_count;
-  return count;
-}
-
-static void progress(uint8_t percentage) {
-  printf("Patch progress: %d%%\n", percentage);
-}
-
-static void the_flash_copy(Flash_FILE* file)
-{
-  uint32_t BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
-  uint32_t flash_bank_address = (BankActive == 1)? FLASH_START_BANK1 : FLASH_START_BANK2;
-
-  uint32_t firmware_size = file->file_size - (file->now_page - file->page_offset) * FLASH_PAGE;
-  /* processed page num */
-  uint32_t processed_page = file->now_page - file->page_offset;
-  file->page_offset += processed_page;
-
-  /* move pages one by one */
-  uint32_t copy_page_num = (firmware_size + FLASH_PAGE - 1) / FLASH_PAGE + 1;
-  for (uint32_t i = copy_page_num; i > 0; i--)
-  {
-    FLASH_If_Erase_Pages(BankActive, file->now_page + i);
-    Flash_Bank_Copy_Bank(FLASH_START_BANK2 + (file->now_page + i - 1) * FLASH_PAGE, FLASH_START_BANK2 + (file->now_page + i) * FLASH_PAGE, FLASH_PAGE, 0);
-  }
-  copy_count++;
-}
-
-uint32_t Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t newBank, uint32_t newPage)
-{
-  copy_count = 0;
-  janpatch_ctx ctx = {
-      // fread/fwrite buffers for every file, minimum size is 1 byte
-      // when you run on an embedded system with block size flash, set it to the size of a block for best performance
-      { (unsigned char*)malloc(FLASH_PAGE), FLASH_PAGE },
-      { (unsigned char*)malloc(FLASH_PAGE), FLASH_PAGE },
-      { (unsigned char*)malloc(FLASH_PAGE), FLASH_PAGE },
-
-      &the_fread,
-      &the_fwrite,
-      &the_fseek,
-      &progress,
-      &the_flash_copy
-  };
-
-  Flash_FILE originalFile = {originalBank, originalPage, 0, originalPage, originalSize};
-  Flash_FILE patchFile = {patchBank, patchPage, 0, 0, patchSize};
-  Flash_FILE newFile = {newBank, newPage};
-
-  int jpr = janpatch(ctx, &originalFile, &patchFile, &newFile);
-
-  free(ctx.source_buffer.buffer);
-  free(ctx.patch_buffer.buffer);
-  free(ctx.target_buffer.buffer);
-
-  printf("size:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", newFile.file_size, originalBank, originalPage, originalSize, patchBank, patchSize, newBank, newPage);
-  if (!jpr)
-    return newFile.file_size;
-    // return 0;
-  else return 0;
-}
 //**************************************************************************************************
 //**************************************************************************************************

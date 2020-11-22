@@ -11,13 +11,14 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   // ---------------config all gpio as reset---------------
-  HAL_GPIO_WritePin(GPIOA, 0xffff, GPIO_PIN_RESET);
+  /* except PA14 (SWCLK) and PA13 (SWDIO) */
+  HAL_GPIO_WritePin(GPIOA, 0x9FFF, GPIO_PIN_RESET);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
-  HW_GPIO_Init(GPIOA, 0xffff, &GPIO_InitStruct );
-  HAL_GPIO_WritePin(GPIOA, 0xffff, GPIO_PIN_RESET);
+  HW_GPIO_Init(GPIOA, 0x9FFF, &GPIO_InitStruct );
+  HAL_GPIO_WritePin(GPIOA, 0x9FFF, GPIO_PIN_RESET);
 
   HAL_GPIO_WritePin(GPIOB, 0xffff, GPIO_PIN_RESET);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -34,18 +35,6 @@ void MX_GPIO_Init(void)
 
   HW_GPIO_Init(GPIOC, 0xffff, &GPIO_InitStruct );
   HAL_GPIO_WritePin(GPIOC, 0xffff, GPIO_PIN_RESET);
-
-  // ---------------config pc13 as input---------------
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HW_GPIO_Init(GPIOC, GPIO_PIN_13, &GPIO_InitStruct );
-
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure LED pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED1|LED2|LED3|LED4|LED5|LED6, GPIO_PIN_RESET);

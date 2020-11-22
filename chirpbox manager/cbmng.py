@@ -46,6 +46,10 @@ def experiment_check():
 	else:
 		return False
 
+# python cbmng.py -dissem 0 ade0 232 16 7 com11 1fFFFF 80 7 80 14 1fffff 1
+# python cbmng.py -colver 7 com8 80 14
+# python cbmng.py -start 0 ade0 7 com8 1fFFFF 100 14
+# python cbmng.py -upgrade ade0.bin ade0 48 4 7 com8 1DFFDF 100 7 100 14 1fffff f
 def main(argv):
 	print(argv)
 	if(((argv[1] == "version") or (argv[1] == "-v")) and (len(argv) == 2)):

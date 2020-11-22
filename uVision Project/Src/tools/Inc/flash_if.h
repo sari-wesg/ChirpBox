@@ -73,15 +73,6 @@ enum {
   FLASHIF_WRP_DISABLE
 };
 
-typedef struct Flash_FILE_tag
-{
-  uint8_t  bank;
-  uint32_t origin_page;
-  uint32_t now_page;
-  uint32_t page_offset;
-  uint32_t file_size;
-} Flash_FILE;
-
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 
@@ -105,6 +96,7 @@ typedef struct Flash_FILE_tag
 #define FLASH_PAGE                    ((uint32_t)0x800)
 
 
+#define FIRMWARE_PAGE                 (253)
 #define DAEMON_PAGE                   (252)
 #define RESET_PAGE                    (251)
 #define TRACE_PAGE                    (250)
@@ -146,8 +138,4 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
 uint32_t FLASH_If_WriteProtectionClear( void );
 HAL_StatusTypeDef FLASH_If_BankSwitch( void );
 
-size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file);
-size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE *file);
-int the_fseek(Flash_FILE *file, long int offset, int origin);
-uint32_t Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t newBank, uint32_t newPage);
 #endif  /* __FLASH_IF_H__ */

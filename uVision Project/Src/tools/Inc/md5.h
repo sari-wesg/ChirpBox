@@ -4,9 +4,9 @@
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
 
-#include "flash_if.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "chirpbox_func.h"
 
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
@@ -63,6 +63,6 @@ void MD5Encode(unsigned char *output, unsigned int *input, unsigned int len);
 void MD5Decode(unsigned int *output, unsigned char *input, unsigned int len);
 
 int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value);
-bool MD5_File(uint8_t fileBank, uint32_t filePage, uint32_t fileSize, uint8_t *md5_check);
+bool MD5_File(Flash_FILE md5File, uint8_t *md5_check);
 
 #endif  /* __MD5_H__ */

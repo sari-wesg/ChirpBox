@@ -221,6 +221,7 @@ int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value)
 	#if ENERGEST_CONF_ON
 		ENERGEST_ON(ENERGEST_TYPE_FLASH_VERIFY);
 	#endif
+	the_fseek(file, 0, SEEK_SET);
 	while (1)
 	{
 		ret = the_fread(data, 1, FLASH_PAGE, file);
@@ -242,11 +243,10 @@ int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value)
 	return 0;
 }
 
-bool MD5_File(uint8_t fileBank, uint32_t filePage, uint32_t fileSize, uint8_t *md5_check)
+bool MD5_File(Flash_FILE md5File, uint8_t *md5_check)
 {
 	int ret;
-    Flash_FILE md5File = {fileBank, filePage, 0, 0, fileSize};
-    PRINTF_CHIRP("MD5 File size:%lu\n", fileSize);
+    PRINTF_CHIRP("MD5 File size:%lu\n", md5File.file_size);
 	uint8_t md5_value[MD5_SIZE];
 
 	// test file md5
