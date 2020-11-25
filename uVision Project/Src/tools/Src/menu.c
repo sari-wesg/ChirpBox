@@ -1735,11 +1735,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         }
 				free(payload_distribution);
         free(chirp_outl.disem_file_memory);
-				if (chirp_outl.patch_update)
-				{
-          if(!FirmwarePatch(chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5));
-            break;
-				}
+        if(!FirmwareUpgrade(chirp_outl.patch_update, chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5));
+          break;
         Stats_to_Flash(chirp_outl.task);
 
         #if ENERGEST_CONF_ON

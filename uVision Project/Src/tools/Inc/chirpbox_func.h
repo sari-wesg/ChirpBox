@@ -19,6 +19,6 @@ size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file);
 size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE *file);
 int the_fseek(Flash_FILE *file, long int offset, int origin);
 Flash_FILE Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t newBank, uint32_t newPage);
-bool FirmwarePatch(uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t *md5_code);
+bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t *md5_code);
 
 #endif  /* __CHIRPBOX_FUNC_H__ */

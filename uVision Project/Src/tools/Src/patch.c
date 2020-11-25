@@ -48,11 +48,13 @@ size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file)
 
     FLASH_If_Erase_Pages(bank_active, file->now_page);
     uint32_t flash_bank_address = (bank_active == 1) ? FLASH_START_BANK1 : FLASH_START_BANK2;
-    // The flash write below is in the double-word form,
-    // so we need to ensure the count is multiple of sizeof(uint64_t)
+    /* The flash write below is in the double-word form, so we need to ensure the count is multiple of sizeof(uint64_t) */
+    /* restore current count */
+    size_t temp_count = count;
     if (count % 8)
         count += 8 - (count % 8);
     FLASH_If_Write(flash_bank_address + file->now_page * FLASH_PAGE, (uint32_t *)ptr, count / sizeof(uint32_t));
+    count = temp_count;
     return count;
 }
 
@@ -114,7 +116,7 @@ Flash_FILE Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t origi
     return newFile;
 }
 
-bool FirmwarePatch(uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t *md5_code)
+bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t *md5_code)
 {
     /* Note:
     When patching daemon firmware, source file (page 0) and patch file (decided by the size of source file) are located at BANK1, new file (page 0) at BANK2;
@@ -123,38 +125,47 @@ bool FirmwarePatch(uint8_t originalBank, uint32_t originalPage, uint32_t origina
 
     /* 0. The whole process must in bank 1 */
     assert(!READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE));
-
-    /* 1. config patch */
-    uint8_t newPage;
-    /*The generated new file must located in bank 2, otherwise it may harm the daemon file */
-    uint8_t newBank = 1;
-    /* Original file and patch file are in the same bank, original files (daemon or FUT) are in the first page by default, patch file must after the original file */
-    assert_reset((originalBank == patchBank) && (originalPage == 0) && (patchPage >= (originalSize + FLASH_PAGE - 1) / FLASH_PAGE));
-    /* If original file is in bank 1, we patch the daemon, then we generating new file in bank 2 page 0, otherwise in bank 2 page after patch */
-    if (!originalBank)
-        newPage = 0;
-    else
-        newPage = patchPage + (patchSize + FLASH_PAGE - 1) / FLASH_PAGE;
-    Flash_FILE newFile = Filepatch(originalBank, originalPage, originalSize, patchBank, patchPage, patchSize, newBank, newPage);
-
-    /* 2. check patch result */
-    uint8_t i;
-    if (newFile.file_size)
-        PRINTF("Patch success!:%lu, %lu, %lu\n", newFile.file_size, newFile.origin_page, newFile.now_page);
-    else
+    Flash_FILE newFile;
+    uint8_t i, newPage;
+    if (patch_update)
     {
-        PRINTF("Patch failed!\n");
-        /* If new file is daemon, erase the whole bank 2, else, erase patch file and new file in bank 2 */
+        /* 1. config patch */
+        /*The generated new file must located in bank 2, otherwise it may harm the daemon file */
+        uint8_t newBank = 1;
+        /* Original file and patch file are in the same bank, original files (daemon or FUT) are in the first page by default, patch file must after the original file */
+        assert_reset((originalBank == patchBank) && (originalPage == 0) && (patchPage >= (originalSize + FLASH_PAGE - 1) / FLASH_PAGE));
+        /* If original file is in bank 1, we patch the daemon, then we generating new file in bank 2 page 0, otherwise in bank 2 page after patch */
         if (!originalBank)
-            FLASH_If_Erase(0);
+            newPage = 0;
+        else
+            newPage = patchPage + (patchSize + FLASH_PAGE - 1) / FLASH_PAGE;
+        newFile = Filepatch(originalBank, originalPage, originalSize, patchBank, patchPage, patchSize, newBank, newPage);
+
+        /* 2. check patch result */
+        if (newFile.file_size)
+            PRINTF("Patch success!:%lu, %lu, %lu\n", newFile.file_size, newFile.origin_page, newFile.now_page);
         else
         {
-            for (i = patchPage; i < newPage + (newFile.file_size + FLASH_PAGE - 1) / FLASH_PAGE; i++)
+            PRINTF("Patch failed!\n");
+            /* If new file is daemon, erase the whole bank 2, else, erase patch file and new file in bank 2 */
+            if (!originalBank)
+                FLASH_If_Erase(0);
+            else
             {
-                FLASH_If_Erase_Pages(0, i);
+                for (i = patchPage; i < newPage + (newFile.file_size + FLASH_PAGE - 1) / FLASH_PAGE; i++)
+                {
+                    FLASH_If_Erase_Pages(0, i);
+                }
             }
+            return false;
         }
-        return false;
+    }
+    else
+    {
+        newFile.bank = 1;
+        newFile.file_size = patchSize;
+        newFile.now_page = 0;
+        newFile.origin_page = 0;
     }
 
     /* 3. check file integrity */
@@ -165,12 +176,16 @@ bool FirmwarePatch(uint8_t originalBank, uint32_t originalPage, uint32_t origina
     }
     PRINTF("\n");
 
-    // if (!MD5_File(newBank, newPage, newSize, md5_code))
     if (!MD5_File(newFile, md5_code))
     {
         PRINTF("md5 error\n");
-        /* If new file is daemon, erase the whole bank 2, else, erase patch file and new file in bank 2 */
-        if (!originalBank)
+        /*
+        patching:
+        If new file is daemon, erase the whole bank 2, else, erase patch file and new file in bank 2
+        no patching:
+        erase the whole bank 2
+        */
+        if ((!originalBank)||(!patch_update))
             FLASH_If_Erase(0);
         else
         {
@@ -183,7 +198,8 @@ bool FirmwarePatch(uint8_t originalBank, uint32_t originalPage, uint32_t origina
     }
     else
     {
-        if (originalBank)
+        /* if patching, move the new file */
+        if ((originalBank)&&(patch_update))
         {
             /* Move the FUT new firmware to page 0 */
             for (i = 0; i < (newFile.file_size + FLASH_PAGE - 1) / FLASH_PAGE; i++)
