@@ -565,6 +565,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\tools\Src\patch.c</FilePath>
             </File>
+            <File>
+              <FileName>lzss.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\tools\Src\lzss.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
