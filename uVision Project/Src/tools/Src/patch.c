@@ -377,7 +377,6 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	//前向缓冲区没数据可操作了即为压缩结束
 	while (wPreBufCnt += process_fread(&ctx, &ctx.source_buffer, wPreBufSize - wPreBufCnt, &bPreBuf[wPreBufCnt]))
 	{
-		printf("wPreBufCnt:%lu, %lu\n", wPreBufCnt, wPreBufSize - wPreBufCnt);
 		wMatchStringCnt = 0;  //刚开始没有匹配到数据
 		wMatchIndex = 0xFFFF;  //初始化一个最大值，表示没匹配到
 
@@ -425,7 +424,6 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 			bPreBuf[i] = bPreBuf[i + wMatchStringCnt];
 		}
 		wPreBufCnt -= wMatchStringCnt;
-		printf("wPreBufCnt1:%lu\n", wPreBufCnt);
 
 		//如果滑动窗口将要溢出，先提前把前面的部分数据移出窗口
 		if ((wWindowBufCnt + wMatchStringCnt) >  wWindowBufSize)
@@ -441,7 +439,6 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 		//将刚刚匹配过的数据加入滑动窗口
 		memcpy((BYTE *)&bWindowBuf[wWindowBufCnt], bMatchString, wMatchStringCnt);
 		wWindowBufCnt += wMatchStringCnt;
-		printf("wPreBufCnt2:%lu\n", wPreBufCnt);
 	}
 
 	//文件最后可能不满一组数据量，直接写到文件里
@@ -454,6 +451,7 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 		}
 	}
 
+    jp_final_flush(&ctx, &ctx.target_buffer);
 	// fclose(pfRead);
 	// fclose(pfWrite);
     free(bPreBuf);
@@ -467,100 +465,113 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	return 0;
 }
 
-// uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
-// {
-//     janpatch_ctx ctx = {
-//         // fread/fwrite buffers for every file, minimum size is 1 byte
-//         // when you run on an embedded system with block size flash, set it to the size of a block for best performance
-//         {(unsigned char *)malloc(FLASH_PAGE), FLASH_PAGE},
-//         {(unsigned char *)malloc(FLASH_PAGE), FLASH_PAGE},
-//         {(unsigned char *)malloc(FLASH_PAGE), FLASH_PAGE},
+uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
+{
+    janpatch_ctx ctx = {
+        // fread/fwrite buffers for every file, minimum size is 1 byte
+        // when you run on an embedded system with block size flash, set it to the size of a block for best performance
+        {(unsigned char *)malloc(FLASH_PAGE), FLASH_PAGE},
+        {(unsigned char *)malloc(FLASH_PAGE), FLASH_PAGE},
+        {(unsigned char *)malloc(FLASH_PAGE), FLASH_PAGE},
 
-//         &the_fread,
-//         &the_fwrite,
-//         &the_fseek,
-// 		NULL};
+        &the_fread,
+        &the_fwrite,
+        &the_fseek,
+		NULL};
 
-//     ctx.source_buffer.current_page = 0xffffffff;
-//     ctx.patch_buffer.current_page = 0xffffffff;
-//     ctx.target_buffer.current_page = 0xffffffff;
+    ctx.source_buffer.current_page = 0xffffffff;
+    ctx.patch_buffer.current_page = 0xffffffff;
+    ctx.target_buffer.current_page = 0xffffffff;
 
-//     ctx.source_buffer.position = 0;
-//     ctx.patch_buffer.position = 0;
-//     ctx.target_buffer.position = 0;
+    ctx.source_buffer.position = 0;
+    ctx.patch_buffer.position = 0;
+    ctx.target_buffer.position = 0;
 
-//     ctx.source_buffer.stream = pbReadFileName;
-//     // ctx.patch_buffer.stream = patch;
-//     ctx.target_buffer.stream = pbWriteFileName;
+    ctx.source_buffer.stream = pbReadFileName;
+    // ctx.patch_buffer.stream = patch;
+    ctx.target_buffer.stream = pbWriteFileName;
 
-// 	WORD i, j;
-// 	BYTE bItemNum;
-// 	BYTE bFlag;
-// 	WORD wStart;
-// 	WORD wMatchStringCnt = 0;
-// 	WORD wWindowBufCnt = 0;
-// 	Flash_FILE *pfRead = pbReadFileName;
-// 	Flash_FILE *pfWrite = pbWriteFileName;
+	bThreshold = 2;
+	bPreBufSizeBits = 6;
+	bWindowBufSizeBits = 16 - bPreBufSizeBits;
+	wPreBufSize = ((WORD)1 << bPreBufSizeBits) - 1 + bThreshold;
+	wWindowBufSize = ((WORD)1 << bWindowBufSizeBits) - 1 + bThreshold;
 
-//     BYTE *bPreBuf = (BYTE *)malloc(1024);
-//     BYTE *bWindowBuf = (BYTE *)malloc(4196);
-//     BYTE *bMatchString = (BYTE *)malloc(1024);
+	WORD i, j;
+	BYTE bItemNum;
+	BYTE bFlag;
+	WORD wStart;
+	WORD wMatchStringCnt = 0;
+	WORD wWindowBufCnt = 0;
+	Flash_FILE *pfRead = pbReadFileName;
+	Flash_FILE *pfWrite = pbWriteFileName;
 
-// 	while (0 != jp_fread(&bFlag, 1, 1, pfRead))  //先读一个标记字节以确定接下来怎么解压数据
-// 	{
-// 		for (bItemNum = 0; bItemNum < 8; bItemNum++)  //8个项目为一组进行解压
-// 		{
-// 			//从标记字节的最高位开始解析，0代表原始数据，1代表(下标，匹配数)解析
-// 			if (0 == (bFlag & ((BYTE)1 << (7 - bItemNum))))
-// 			{
-// 				if (jp_fread(bPreBuf, 1, 1, pfRead) < 1)
-// 				{
-// 					goto LZSS_decode_out_;
-// 				}
-// 				jp_putc(bPreBuf[0], &ctx, &ctx.target_buffer);
+    BYTE *bPreBuf = (BYTE *)malloc(1024);
+    BYTE *bWindowBuf = (BYTE *)malloc(4196);
+    BYTE *bMatchString = (BYTE *)malloc(1024);
 
-// 				bMatchString[0] = bPreBuf[0];
-// 				wMatchStringCnt = 1;
-// 			}
-// 			else
-// 			{
-// 				if (jp_fread(bPreBuf, 1, 2, pfRead) < 2)
-// 				{
-// 					goto LZSS_decode_out_;
-// 				}
-// 				//取出高位的滑动窗口匹配串下标
-// 				wStart = ((WORD)bPreBuf[0] | ((WORD)bPreBuf[1] << 8)) / ((WORD)1 << bPreBufSizeBits);
-// 				//取出低位的匹配长度
-// 				wMatchStringCnt = ((WORD)bPreBuf[0] | ((WORD)bPreBuf[1] << 8)) % ((WORD)1 << bPreBufSizeBits) + bThreshold;
-// 				//将解压出的数据写入文件
-// 				jp_fwrite(&bWindowBuf[wStart], 1, wMatchStringCnt, pfWrite);
-// 				memcpy(bMatchString, &bWindowBuf[wStart], wMatchStringCnt);
-// 			}
+	while (0 != process_fread(&ctx, &ctx.source_buffer, 1, &bFlag))  //先读一个标记字节以确定接下来怎么解压数据
+	{
+		for (bItemNum = 0; bItemNum < 8; bItemNum++)  //8个项目为一组进行解压
+		{
+			//从标记字节的最高位开始解析，0代表原始数据，1代表(下标，匹配数)解析
+			if (0 == (bFlag & ((BYTE)1 << (7 - bItemNum))))
+			{
+				if (process_fread(&ctx, &ctx.source_buffer, 1, bPreBuf) < 1)
+				{
+					goto LZSS_decode_out_;
+				}
+                process_fwrite(&ctx, &ctx.target_buffer, 1, bPreBuf);
 
-// 			//如果滑动窗口将要溢出，先提前把前面的部分数据移出窗口
-// 			if ((wWindowBufCnt + wMatchStringCnt) > wWindowBufSize)
-// 			{
-// 				j = (wWindowBufCnt + wMatchStringCnt) - wWindowBufSize;
-// 				for (i = 0; i < wWindowBufCnt - j; i++)
-// 				{
-// 					bWindowBuf[i] = bWindowBuf[i + j];
-// 				}
-// 				wWindowBufCnt -= j;
-// 			}
+				bMatchString[0] = bPreBuf[0];
+				wMatchStringCnt = 1;
+			}
+			else
+			{
+				if (process_fread(&ctx, &ctx.source_buffer, 2, bPreBuf) < 2)
+				{
+					goto LZSS_decode_out_;
+				}
+				//取出高位的滑动窗口匹配串下标
+				wStart = ((WORD)bPreBuf[0] | ((WORD)bPreBuf[1] << 8)) / ((WORD)1 << bPreBufSizeBits);
+				//取出低位的匹配长度
+				wMatchStringCnt = ((WORD)bPreBuf[0] | ((WORD)bPreBuf[1] << 8)) % ((WORD)1 << bPreBufSizeBits) + bThreshold;
+				//将解压出的数据写入文件
+                process_fwrite(&ctx, &ctx.target_buffer, wMatchStringCnt, &bWindowBuf[wStart]);
+				memcpy(bMatchString, &bWindowBuf[wStart], wMatchStringCnt);
+			}
+			// printf("1wMatchStringCnt:%lu, %lu, %lu\n", wMatchStringCnt, wWindowBufCnt, wWindowBufSize);
+			//如果滑动窗口将要溢出，先提前把前面的部分数据移出窗口
+			if ((wWindowBufCnt + wMatchStringCnt) > wWindowBufSize)
+			{
+				j = (wWindowBufCnt + wMatchStringCnt) - wWindowBufSize;
+				for (i = 0; i < wWindowBufCnt - j; i++)
+				{
+					bWindowBuf[i] = bWindowBuf[i + j];
+				}
+				wWindowBufCnt -= j;
+				// printf("2wMatchStringCnt:%lu, %lu, %lu\n", wMatchStringCnt, wWindowBufCnt, wWindowBufSize);
+			}
 
-// 			//将解压处的数据同步写入到滑动窗口
-// 			memcpy(&bWindowBuf[wWindowBufCnt], bMatchString, wMatchStringCnt);
-// 			wWindowBufCnt += wMatchStringCnt;
-// 		}
-// 	}
+			//将解压处的数据同步写入到滑动窗口
+			memcpy(&bWindowBuf[wWindowBufCnt], bMatchString, wMatchStringCnt);
+			wWindowBufCnt += wMatchStringCnt;
+			// printf("3wMatchStringCnt:%lu, %lu, %lu\n", wMatchStringCnt, wWindowBufCnt, wWindowBufSize);
+		}
+	}
 
-// LZSS_decode_out_:
+LZSS_decode_out_:
+    jp_final_flush(&ctx, &ctx.target_buffer);
 
-//     free(bPreBuf);
-//     free(bWindowBuf);
-//     free(bMatchString);
+    free(bPreBuf);
+    free(bWindowBuf);
+    free(bMatchString);
 
-// 	// fclose(pfRead);
-// 	// fclose(pfWrite);
-// 	return 0;
-// }
+    free(ctx.source_buffer.buffer);
+    free(ctx.patch_buffer.buffer);
+    free(ctx.target_buffer.buffer);
+
+	// fclose(pfRead);
+	// fclose(pfWrite);
+	return 0;
+}
