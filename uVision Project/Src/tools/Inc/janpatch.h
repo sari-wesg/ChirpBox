@@ -188,7 +188,7 @@ static uint32_t jp_final_flush(janpatch_ctx* ctx, janpatch_buffer* buffer) {
     }
 
     // flush the new page buffer
-    jp_fseek(buffer, buffer->current_page * buffer->size, SEEK_SET);
+    jp_fseek(buffer, page * buffer->size, SEEK_SET);
     uint32_t last_size = jp_fwrite(ctx, buffer->buffer, 1, position_in_page, buffer);
 
     if (ctx->progress) {
@@ -410,7 +410,7 @@ int janpatch(janpatch_ctx ctx, JANPATCH_STREAM *source, JANPATCH_STREAM *patch, 
         }
     }
 
-    target->file_size = (ctx.target_buffer.stream->now_page - ctx.target_buffer.stream->origin_page) * ctx.target_buffer.size + jp_final_flush(&ctx, &ctx.target_buffer);
+    target->file_size = jp_final_flush(&ctx, &ctx.target_buffer) + (ctx.target_buffer.stream->now_page - ctx.target_buffer.stream->origin_page) * ctx.target_buffer.size;
 
     return 0;
 }

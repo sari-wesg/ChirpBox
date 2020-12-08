@@ -445,15 +445,11 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	if (0 != bRestoreBufCnt)
 	{
         process_fwrite(&ctx, &ctx.target_buffer, bRestoreBufCnt, bRestoreBuf);
-		for (i = 0; i < bRestoreBufCnt; i++)
-		{
-			printf("%02x\n", bRestoreBuf[i]);
-		}
 	}
 
-    jp_final_flush(&ctx, &ctx.target_buffer);
-	// fclose(pfRead);
-	// fclose(pfWrite);
+    ctx.target_buffer.stream->file_size = jp_final_flush(&ctx, &ctx.target_buffer) + (ctx.target_buffer.stream->now_page - ctx.target_buffer.stream->origin_page) * ctx.target_buffer.size;
+    printf("target:%lu\n", ctx.target_buffer.stream->file_size);
+
     free(bPreBuf);
     free(bWindowBuf);
     free(bMatchString);
@@ -462,7 +458,7 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
     free(ctx.patch_buffer.buffer);
     free(ctx.target_buffer.buffer);
 
-	return 0;
+	return (ctx.target_buffer.stream->file_size);
 }
 
 uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
@@ -540,7 +536,6 @@ uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
                 process_fwrite(&ctx, &ctx.target_buffer, wMatchStringCnt, &bWindowBuf[wStart]);
 				memcpy(bMatchString, &bWindowBuf[wStart], wMatchStringCnt);
 			}
-			// printf("1wMatchStringCnt:%lu, %lu, %lu\n", wMatchStringCnt, wWindowBufCnt, wWindowBufSize);
 			//如果滑动窗口将要溢出，先提前把前面的部分数据移出窗口
 			if ((wWindowBufCnt + wMatchStringCnt) > wWindowBufSize)
 			{
@@ -550,7 +545,6 @@ uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 					bWindowBuf[i] = bWindowBuf[i + j];
 				}
 				wWindowBufCnt -= j;
-				// printf("2wMatchStringCnt:%lu, %lu, %lu\n", wMatchStringCnt, wWindowBufCnt, wWindowBufSize);
 			}
 
 			//将解压处的数据同步写入到滑动窗口
@@ -561,7 +555,8 @@ uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	}
 
 LZSS_decode_out_:
-    jp_final_flush(&ctx, &ctx.target_buffer);
+    ctx.target_buffer.stream->file_size = jp_final_flush(&ctx, &ctx.target_buffer) + (ctx.target_buffer.stream->now_page - ctx.target_buffer.stream->origin_page) * ctx.target_buffer.size;
+    printf("target:%lu\n", ctx.target_buffer.stream->file_size);
 
     free(bPreBuf);
     free(bWindowBuf);
@@ -571,7 +566,5 @@ LZSS_decode_out_:
     free(ctx.patch_buffer.buffer);
     free(ctx.target_buffer.buffer);
 
-	// fclose(pfRead);
-	// fclose(pfWrite);
-	return 0;
+	return (ctx.target_buffer.stream->file_size);
 }
