@@ -288,7 +288,7 @@ static int find_length(janpatch_ctx *ctx, janpatch_buffer *buffer) {
     // it's fine if we get over the end of the stream here, will be caught by the next function
 }
 
-int janpatch(janpatch_ctx ctx, JANPATCH_STREAM *source, JANPATCH_STREAM *patch, JANPATCH_STREAM *target) {
+static int janpatch(janpatch_ctx ctx, JANPATCH_STREAM *source, JANPATCH_STREAM *patch, JANPATCH_STREAM *target) {
 
     ctx.source_buffer.current_page = 0xffffffff;
     ctx.patch_buffer.current_page = 0xffffffff;

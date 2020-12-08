@@ -14,6 +14,11 @@ typedef struct Flash_FILE_tag
     uint32_t file_size;
 } Flash_FILE;
 
+#include "flash_if.h"
+#ifndef JANPATCH_STREAM
+#define JANPATCH_STREAM Flash_FILE // use POSIX FILE
+#endif
+#include "janpatch.h"
 
 size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file);
 size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE *file);
