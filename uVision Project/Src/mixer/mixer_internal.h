@@ -918,6 +918,8 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				firmware_md5[16];
 	uint16_t			version_hash;
 
+	uint32_t			file_compression;
+
 	uint8_t				patch_update;
 	uint8_t 			patch_bank;
 

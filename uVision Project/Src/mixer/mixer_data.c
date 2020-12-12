@@ -754,17 +754,18 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                         file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->patch_bank;
                         file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->version_hash >> 8;
                         file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->version_hash;
-                        /* k = 8 */
-                        memcpy(&(file_data[DATA_HEADER_LENGTH + 8]), &(chirp_outl->firmware_md5[0]), 16);
-                        /* k = 24 */
+                        file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->file_compression;
+                        /* k = 9 */
+                        memcpy(&(file_data[DATA_HEADER_LENGTH + 9]), &(chirp_outl->firmware_md5[0]), 16);
+                        /* k = 25 */
                         if (chirp_outl->patch_update)
                         {
-                            k = 24;
+                            k = 28;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 24;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 16;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 8;
                             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size;
-                            /* k = 28 */
+                            /* k = 32 */
                         }
                         k = 0;
                     }
@@ -1136,16 +1137,17 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                         {
                                             memcpy(&(chirp_outl->disem_file_memory[0]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
 
-                                            memcpy(data, &(chirp_outl->disem_file_memory[0]), DATA_HEADER_LENGTH);
+                                            memcpy(data, &(chirp_outl->disem_file_memory[0]), DATA_HEADER_LENGTH + 1);
                                             chirp_outl->firmware_size = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
                                             chirp_outl->patch_update = data[4];
                                             chirp_outl->patch_bank = data[5];
                                             chirp_outl->disem_file_max = (chirp_outl->firmware_size + chirp_outl->file_chunk_len - 1) / chirp_outl->file_chunk_len  + 1;
                                             chirp_outl->version_hash = (data[6] << 8) | (data[7]);
+                                            chirp_outl->file_compression = data[8];
                                             PRINTF("version_hash:%x, %x, %x\n", chirp_outl->version_hash, data[6], data[7]);
-                                            PRINTF("MX_DISSEMINATE: %lu, %lu, %lu, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len);
+                                            PRINTF("MX_DISSEMINATE: %lu, %lu, %lu, %lu, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len, chirp_outl->file_compression);
 
-                                            memcpy(&(chirp_outl->firmware_md5[0]), (uint8_t *)(p + 16), 16);
+                                            memcpy(&(chirp_outl->firmware_md5[0]), (uint8_t *)(p + 17), 16);
                                             /* update whole firmware */
                                             if ((!chirp_outl->patch_update) && (i == 0))
                                             {
@@ -1157,7 +1159,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             /* patch firmware */
                                             else if ((chirp_outl->patch_update) && (i == 0))
                                             {
-                                                memcpy(data, &(chirp_outl->disem_file_memory[6]), 4);
+                                                memcpy(data, &(chirp_outl->disem_file_memory[7]), 4);
                                                 k = 0;
 
                                                 chirp_outl->old_firmware_size = (data[k++] << 24) | (data[k++] << 16) | (data[k++] << 8) | (data[k++]);

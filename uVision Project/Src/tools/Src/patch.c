@@ -114,8 +114,45 @@ Flash_FILE Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t origi
     return newFile;
 }
 
-bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t *md5_code)
+bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t *md5_code, uint8_t file_compression)
 {
+    printf("FirmwareUpgrade:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", patch_update, originalBank, originalPage, originalSize, patchBank, patchPage, patchSize, file_compression);
+    uint8_t i;
+    if(file_compression)
+    {
+        /* encode for patch:
+        patch daemon: decode file behind patch and move it to the patch location;
+        patch FUT: decode file behind patch and move it to the patch location;
+        encode for whole firmware:
+        decode file behind encode file and move it to the encode location; */
+        Flash_FILE encode_file, decode_file;
+        encode_file.bank = patch_update?originalBank:1;
+        encode_file.origin_page = patch_update?patchPage:0;
+        encode_file.file_size = patchSize;
+        decode_file.bank = encode_file.bank;
+        decode_file.origin_page = encode_file.origin_page + (patchSize + FLASH_PAGE - 1) / FLASH_PAGE;
+        decode_file.file_size = LZSS_decode(&encode_file, &decode_file);
+        PRINTF("LZSS_decode:%lu\n", decode_file.file_size);
+        if(!decode_file.file_size)
+            return false;
+        else
+        {
+            uint8_t flash_erase_bank = decode_file.bank?0:1;
+            uint32_t flash_copy_addr = decode_file.bank?FLASH_START_BANK2:FLASH_START_BANK1;
+            /* Move the decode file to encode file */
+            for (i = 0; i < (decode_file.file_size + FLASH_PAGE - 1) / FLASH_PAGE; i++)
+            {
+                FLASH_If_Erase_Pages(flash_erase_bank, encode_file.origin_page + i);
+                Flash_Bank_Copy_Bank(flash_copy_addr + (decode_file.origin_page + i) * FLASH_PAGE, flash_copy_addr + (encode_file.origin_page + i) * FLASH_PAGE, FLASH_PAGE, 0);
+            }
+            /* Erase page to the end of decode file */
+            for (i = encode_file.origin_page + (decode_file.file_size + FLASH_PAGE - 1) / FLASH_PAGE; i < decode_file.origin_page + (decode_file.file_size + FLASH_PAGE - 1) / FLASH_PAGE; i++)
+                FLASH_If_Erase_Pages(flash_erase_bank, i);
+
+            patchSize = decode_file.file_size;
+        }
+    }
+
     /* Note:
     When patching daemon firmware, source file (page 0) and patch file (decided by the size of source file) are located at BANK1, new file (page 0) at BANK2;
     When patching FUT, source file (page 0) and patch file (decided by the size of source file) are located at BANK2, new file (decided by the size of source file and patch file) at BANK2;
@@ -124,7 +161,7 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
     /* 0. The whole process must in bank 1 */
     assert(!READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE));
     Flash_FILE newFile;
-    uint8_t i, newPage;
+    uint8_t newPage;
     if (patch_update)
     {
         /* 1. config patch */

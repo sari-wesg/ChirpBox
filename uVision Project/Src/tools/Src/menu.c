@@ -879,7 +879,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
       }
       case MX_DISSEMINATE:
       {
-          rxbuffer_len = 53;
+          rxbuffer_len = 55;
           break;
       }
       case MX_COLLECT:
@@ -1037,44 +1037,50 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
               pow_num = 2;
               chirp_outl->patch_bank += data * pow(10,(pow_num-i));
             }
-            else if (i < 9)
+            else if (i < 5)
             {
-              pow_num = 8;
+              data =  data - '0';
+              pow_num = 4;
+              chirp_outl->file_compression += data * pow(10,(pow_num-i));
+            }
+            else if (i < 11)
+            {
+              pow_num = 10;
               if ((data >= '0') && (data <= '9'))
                 data = data - '0';
               else
                 data = 10 + data - 'A';
               chirp_outl->old_firmware_size += data * pow(16,(pow_num-i));
             }
-            else if (i < 15)
+            else if (i < 17)
             {
-              pow_num = 14;
+              pow_num = 16;
               if ((data >= '0') && (data <= '9'))
                 data = data - '0';
               else
                 data = 10 + data - 'A';
               chirp_outl->firmware_size += data * pow(16,(pow_num-i));
             }
-            else if (i < 20)
+            else if (i < 22)
             {
-              pow_num = 19;
+              pow_num = 21;
               if ((data >= '0') && (data <= '9'))
                 data = data - '0';
               else
                 data = 10 + data - 'A';
               chirp_outl->version_hash += data * pow(16,(pow_num-i));
             }
-            else if (i < 53)
+            else if (i < 55)
             {
               if ((data >= '0') && (data <= '9'))
                 data = data - '0';
               else
                 data = 10 + data - 'A';
-              chirp_outl->firmware_md5[(i - 21) / 2] += data * pow(16,((i - 20) % 2));
+              chirp_outl->firmware_md5[(i - 23) / 2] += data * pow(16,((i - 22) % 2));
             }
           }
         }
-        PRINTF("MX_DISSEMINATE:%lu, %lu, %lu, %lu, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash);
+        PRINTF("MX_DISSEMINATE:%lu, %lu, %lu, %lu, %lu, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash, chirp_outl->file_compression);
         for (i = 0; i < 16; i++)
         {
           PRINTF("%02X", chirp_outl->firmware_md5[i]);
@@ -1735,7 +1741,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         }
 				free(payload_distribution);
         free(chirp_outl.disem_file_memory);
-        if(!FirmwareUpgrade(chirp_outl.patch_update, chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5));
+        if(!FirmwareUpgrade(chirp_outl.patch_update, chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5, chirp_outl.file_compression));
           break;
         Stats_to_Flash(chirp_outl.task);
 

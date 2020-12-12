@@ -137,7 +137,7 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
     ctx.target_buffer.stream = pbWriteFileName;
 
 	bThreshold = 2;
-	bPreBufSizeBits = 6;
+	bPreBufSizeBits = 7;
 	bWindowBufSizeBits = 16 - bPreBufSizeBits;
 	wPreBufSize = ((WORD)1 << bPreBufSizeBits) - 1 + bThreshold;
 	wWindowBufSize = ((WORD)1 << bWindowBufSizeBits) - 1 + bThreshold;
@@ -271,7 +271,7 @@ uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
     ctx.target_buffer.stream = pbWriteFileName;
 
 	bThreshold = 2;
-	bPreBufSizeBits = 6;
+	bPreBufSizeBits = 7;
 	bWindowBufSizeBits = 16 - bPreBufSizeBits;
 	wPreBufSize = ((WORD)1 << bPreBufSizeBits) - 1 + bThreshold;
 	wWindowBufSize = ((WORD)1 << bWindowBufSizeBits) - 1 + bThreshold;
