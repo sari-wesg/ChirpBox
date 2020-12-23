@@ -1020,14 +1020,9 @@ void 			wrap_chunk(uint8_t *p);
 #endif
 
 void 			clear_data();
-void 			startup_message(uint32_t mixer_round, uint8_t node_id, uint8_t mx_task);
-uint8_t 		read_message(uint32_t *round, uint8_t *mx_task);
 
-uint8_t 		update_new_message(uint16_t slot_number);
-void 			clear_dataset();
-
-void 		uart_read_data(uint8_t uart_isr_flag, uint8_t buffer_len);
-void 		uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
+void 			uart_read_data(uint8_t uart_isr_flag, uint8_t buffer_len);
+void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 #if MX_PSEUDO_CONFIG
 	void 		chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
 	void 		chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
