@@ -53,14 +53,6 @@ uint16_t    calu_payload_hash, rece_hash;
 //***** Global Variables ***************************************************************************
 extern uint8_t node_id_allocate;
 
-#if TEST_ROUND
-    extern Sta_result test_sensor_reliability;
-    extern Sta_result test_sensor_latency;
-    extern Sta_result test_energy;
-    extern Sta_result test_action_reliability;
-    extern Sta_result test_action_latency;
-#endif
-
 #if MX_FLASH_FILE
     uint8_t                     uartRxBuffer[128];
 
@@ -299,72 +291,6 @@ void sensor_send_results_in_mixer(uint8_t send_case)
 }
 
 //**************************************************************************************************
-
-#if TEST_ROUND
-void sensor_result_message(uint32_t mixer_round, uint8_t node_id)
-{
-	unsigned int		i;
-
-    data_result[0] = payload_distribution[node_id] + 1;
-    data_result[1] = mixer_round >> 8;
-    data_result[2] = mixer_round;
-    data_result[3] = node_id;
-    data_result[4] = 0xFE;
-    data_result[5] = LORA_NODE_ID >> 16;
-    data_result[6] = LORA_NODE_ID >> 8;
-    data_result[7] = LORA_NODE_ID;
-
-    memcpy(data_result + RESULT_POSITION + 0 * 4, &test_sensor_reliability.mean, 4);
-    memcpy(data_result + RESULT_POSITION + 1 * 4, &test_sensor_reliability.std, 4);
-    memcpy(data_result + RESULT_POSITION + 2 * 4, &test_sensor_latency.mean, 4);
-    memcpy(data_result + RESULT_POSITION + 3 * 4, &test_sensor_latency.std, 4);
-    memcpy(data_result + RESULT_POSITION + 4 * 4, &test_energy.mean, 4);
-    memcpy(data_result + RESULT_POSITION + 5 * 4, &test_energy.std, 4);
-    memcpy(data_result + RESULT_POSITION + 6 * 4, &test_action_reliability.mean, 4);
-    memcpy(data_result + RESULT_POSITION + 7 * 4, &test_action_reliability.std, 4);
-    memcpy(data_result + RESULT_POSITION + 8 * 4, &test_action_latency.mean, 4);
-    memcpy(data_result + RESULT_POSITION + 9 * 4, &test_action_latency.std, 4);
-
-    #if MX_PSEUDO_CONFIG
-    for (i = 0; i < chirp_config.mx_generation_size; i++)
-    #else
-    for (i = 0; i < MX_GENERATION_SIZE; i++)
-    #endif
-    {
-        if (payload_distribution[i] == node_id)
-        {
-            #if MX_PSEUDO_CONFIG
-            mixer_write(i, data_result, MIN(sizeof(data_result), chirp_config.mx_payload_size));
-            #else
-            mixer_write(i, data_result, MIN(sizeof(data_result), MX_PAYLOAD_SIZE));
-            #endif
-        }
-    }
-
-    round = mixer_round;
-}
-
-
-//**************************************************************************************************
-
-void decode_sensor_results(uint8_t *data_result)
-{
-	uint8_t	 results[4];
-    uint32_t real_results;
-    uint8_t i;
-    for ( i = 0; i < 10; i++)
-    {
-        memcpy(&results, data_result + RESULT_POSITION + i * 4, 4);
-        real_results = results[3] << 24 | results[2] << 16 | results[1] << 8 | results[0];
-        if ((i == 4) | (i == 5))
-            PRINTF("%lu.%03lu%%, ", real_results / 1000, real_results % 1000);
-        else
-            PRINTF("%lu.%02lu%%, ", real_results / 100, real_results % 100);
-
-    }
-}
-
-#endif	// TEST_ROUND
 
 #endif	// SEND_RESULT
 
