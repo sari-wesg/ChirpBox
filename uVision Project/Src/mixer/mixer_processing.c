@@ -90,10 +90,6 @@ GPI_TRACE_CONFIG(mixer_processing, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER
 	#error unsupported architecture
 #endif
 
-#if MX_DUTY_CYCLE
-	#include "L476RG_SX1276/mixer_transport.h"
-#endif
-
 #if MX_VERBOSE_PROFILE
 	GPI_PROFILE_SETUP("mixer_processing.c", 1800, 4);
 #endif
