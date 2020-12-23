@@ -1482,19 +1482,10 @@ PT_THREAD(mixer_update_slot())
 
 		next_task = RX;
 
-		#if MX_DUTY_CYCLE
-				if ((p && (mixer_rand() <= p)) & (mx.slot_number - mx.last_tx_slot >= SLOT_INTERVAL))
-		#else
-				if (p && (mixer_rand() <= p))
-		#endif
-				{
-					next_task = TX;
-				}
-
-		#if MX_DUTY_CYCLE
-			if (next_task == TX)
-				mx.last_tx_slot = mx.slot_number;
-		#endif
+		if (p && (mixer_rand() <= p))
+		{
+			next_task = TX;
+		}
 
 		clear_event(TX_READY);
 

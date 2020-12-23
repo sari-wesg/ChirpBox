@@ -359,10 +359,6 @@ void mixer_init(uint8_t node_id)
 	#endif
 	mx.tx_sideload = NULL;
 
-	#if MX_DUTY_CYCLE
-		mx.last_tx_slot = 0;
-	#endif
-
 	#if MX_SMART_SHUTDOWN
 		mx.have_full_rank_neighbor = 0;
 		#if MX_SMART_SHUTDOWN_MAP

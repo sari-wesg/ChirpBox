@@ -152,10 +152,6 @@
 	#define MX_BENCHMARK_PSEUDO_PAYLOAD				0
 #endif
 // TP added:
-#ifndef MX_DUTY_CYCLE
-	#define MX_DUTY_CYCLE							0
-#endif
-
 #ifndef MX_PACKET_TABLE
 	#define MX_PACKET_TABLE							0
 #endif
@@ -985,10 +981,6 @@ extern struct mx
 
 #if MX_VERBOSE_STATISTICS
 	Gpi_Fast_Tick_Native		wake_up_timestamp;
-#endif
-
-#if MX_DUTY_CYCLE
-	uint_fast_t					last_tx_slot;
 #endif
 } mx;
 
