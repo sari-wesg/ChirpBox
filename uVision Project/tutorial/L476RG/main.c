@@ -109,8 +109,6 @@ uint8_t test_round;
 /* TODO: */
 static const uint32_t nodes[256] = {0x350045, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
 // static const uint32_t nodes[256] = {0x350045, 0x1D004E};
-// static const uint32_t nodes[256] = {0x550033, 0x260057};
-// static const uint32_t nodes[256] = {0x550033, 0x3A0016};
 
 #endif
 const uint8_t VERSION_MAJOR = 0x48, VERSION_NODE = 0x84;
@@ -275,183 +273,16 @@ static uint8_t hardware_init()
 
 int main(void)
 {
-	uint32_t round;
-	Gpi_Fast_Tick_Native deadline;
-	unsigned int i;
-	uint8_t failed_round = 0;
-
+	/****************************** HARDWARE INITIALIZATION ***************************/
 	uint8_t node_id = hardware_init();
-
 	node_id_allocate = node_id;
-
-	/************************************ Sniff ************************************/
-	// chirp_mx_radio_config(7, 7, 1, 8, 14, 470000);
-
-	// if (!node_id)
-	// {
-	// 	sniff_init(STATE_LORA_FORM, 470000, 2020, 6, 16, 13, 37, 40);
-	// }
-	// else
-	// {
-	// 	sniff_tx(node_id);
-	// }
-	// PRINTF("mixer\n");
-	// while (1)
-	// 	;
 
 	/************************************ Chirpbox ************************************/
 	#if ((MX_PSEUDO_CONFIG) && (CHIRP_OUTLINE))
 		chirp_start(node_id, MX_NUM_NODES_CONF);
 	#endif
 
-	/************************************ Mixer ***************************************/
-	#if MX_PSEUDO_CONFIG
-		chirp_mx_packet_config(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, 8);
-		chirp_mx_radio_config(7, 7, 1, 8, 14, 470000);
-		uint32_t packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size);
-		printf("packet_time:%lu\n", packet_time);
-		chirp_mx_slot_config(packet_time + 100000, MX_NUM_NODES_CONF * 6, 1500000);
-		chirp_mx_payload_distribution(MX_COLLECT);
-	#endif
-
-	/* test for 3 times */
-	for (test_round = 0; test_round < 3; test_round++)
-	{
-		// deadline for first round is now (-> start as soon as possible)
-		// deadline = gpi_tick_hybrid();
-		// deadline = gpi_tick_hybrid() + UPDATE_PERIOD;
-		// deadline = gpi_tick_fast_native() + UPDATE_PERIOD;
-		// if (node_id_allocate < SENSOR_NUM * GROUP_NUM)
-		// 	deadline += 1 * MX_SLOT_LENGTH;
-		deadline = gpi_tick_fast_native();
-		// clear:
-		clear_data();
-#if MX_DOUBLE_BITMAP
-		clear_start_up_flag();
-#endif
-		round = 1;
-
-		while (1)
-		{
-			gpi_radio_init();
-
-			// init mixer
-			mixer_init(node_id);
-
-			startup_message(round, node_id, mx_task);
-
-			// arm mixer, node 0 = initiator
-			// start first round with infinite scan
-			// -> nodes join next available round, does not require simultaneous boot-up
-			// mixer_arm(((!node_id) ? MX_ARM_INITIATOR : 0) | ((1 == round) ? MX_ARM_INFINITE_SCAN : 0));
-            mixer_arm(((!node_id) ? MX_ARM_INITIATOR : 0) | ((1 == 0) ? MX_ARM_INFINITE_SCAN : 0));
-
-			// delay initiator a bit
-			// -> increase probability that all nodes are ready when initiator starts the round
-			// -> avoid problems in view of limited deadline accuracy
-			if (!node_id)
-			{
-				#if MX_PSEUDO_CONFIG
-				deadline += 2 * chirp_config.mx_slot_length;
-				#else
-				deadline += 2 * MX_SLOT_LENGTH;
-				#endif
-			}
-
-			// start when deadline reached
-			// ATTENTION: don't delay after the polling loop (-> print before)
-			// while (gpi_tick_compare_hybrid(gpi_tick_hybrid(), deadline) < 0);
-			while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-
-			deadline = mixer_start();
-
-			if (!read_message(&round, &mx_task))
-			{
-				failed_round++;
-				printf("failed_round:%lu\n", failed_round);
-				if (failed_round > 3)
-				{
-					__disable_fault_irq();
-					NVIC_SystemReset();
-				}
-			}
-            while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-
-			printf("round:%lu\n", round);
-
-#if MX_DOUBLE_BITMAP
-			if (test_round >= ECHO_INTERVAL_NUM)
-				set_start_up_flag();
-			if (mx.start_up_flag)
-			{
-				gpi_radio_init();
-				break;
-			}
-#endif
-			#if MX_PSEUDO_CONFIG
-			Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_HYBRID2(((chirp_config.mx_period_time_s * 1000) / 1) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));
-			deadline += update_period;
-			#else
-			deadline += UPDATE_PERIOD;
-			#endif
-
-			round++;
-		}
-
-		PRINTF("----------Echo started----------\n");
-// go into the next step: save the former message
-#if MX_DOUBLE_BITMAP
-		mixer_init(node_id);
-		for (i = 0; i < MX_GENERATION_SIZE; i++)
-		{
-			startup_message(0, i, 0);
-		}
-#if GPS_DATA
-		// read_GPS();
-		read_GPS_num(3);
-		wait_til_gps_time(GPS_ECHO_HOUR, GPS_ECHO_MINUTE, GPS_ECHO_SECOND);
-#endif
-		mixer_start();
-#if MX_PACKET_TABLE
-		read_packet_table();
-		get_real_packet_group();
-		if (node_id_allocate >= SENSOR_NUM * GROUP_NUM)
-			calculate_action_time();
-		evaluation_results();
-#endif
-#endif
-	}
-
-	// send_packet in all to all
-	statistics_results();
-
-#if SEND_RESULT
-	//******************************************************************
-	// clear:
-	PRINTF("----------Sensor results----------\n");
-	clear_data_result();
-#if MX_DOUBLE_BITMAP
-	clear_start_up_flag();
-#endif
-	PRINTF("----------READ_RESULTS----------\n");
-	sensor_send_results_in_mixer(READ_RESULTS);
-	PRINTF("----------READ_TOPOLOGY----------\n");
-	sensor_send_results_in_mixer(READ_TOPOLOGY);
-	// re-assign the node_id for actuators:
-	if (node_id < SENSOR_NUM * GROUP_NUM)
-		node_id += ACTUATOR_NUM * GROUP_NUM;
-	else
-		node_id -= SENSOR_NUM * GROUP_NUM;
-	node_id_allocate = node_id;
-	PRINTF("----------Actuator results----------\n");
-	PRINTF("----------READ_RESULTS----------\n");
-	sensor_send_results_in_mixer(READ_RESULTS);
-	PRINTF("----------READ_TOPOLOGY----------\n");
-	sensor_send_results_in_mixer(READ_TOPOLOGY);
-#endif
-
 	return 0;
-	// GPI_TRACE_RETURN(0);
 }
 
 //**************************************************************************************************

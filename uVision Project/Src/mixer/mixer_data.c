@@ -21,6 +21,9 @@
 #if ENERGEST_CONF_ON
 #include GPI_PLATFORM_PATH(energest.h)
 #endif
+
+#include "loradisc.h"
+
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX
@@ -477,7 +480,7 @@ void uart_read_command(uint8_t *p, uint8_t rxbuffer_len)
  * @param mx_payload_size: length of payload (MX_PAYLOAD_CONF_SIZE)
  * @return: None
  */
-void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size)
+void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive)
 {
     memset(&chirp_config, 0, offsetof(Chirp_Config, mx_slot_length_in_us));
     // chirp_config
@@ -1571,7 +1574,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         PRINTF("full receive\n");
                     }
                     PRINTF("next: disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
-                    chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL);
+                    chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
                     chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
                     chirp_mx_payload_distribution(chirp_outl->task);
@@ -1595,7 +1598,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         chirp_mx_radio_config(chirp_outl->dissem_back_sf, 7, 1, 8, 14, chirp_outl->default_freq);
                     PRINTF("next: collect disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
-                    chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL);
+                    chirp_mx_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL, COLLECTION);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
                     if (chirp_outl->dissem_back_slot_num == 0)
                         chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
