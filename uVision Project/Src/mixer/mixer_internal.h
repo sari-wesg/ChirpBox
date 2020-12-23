@@ -152,10 +152,6 @@
 	#define MX_BENCHMARK_PSEUDO_PAYLOAD				0
 #endif
 // TP added:
-#ifndef MX_PACKET_TABLE
-	#define MX_PACKET_TABLE							0
-#endif
-
 #ifndef GPS_DATA
 	#define GPS_DATA								1
 #endif
@@ -757,27 +753,6 @@ typedef struct Request_Data_tag
 } Request_Data;
 
 //**************************************************************************************************
-#if MX_PACKET_TABLE
-typedef struct Packet_table_tag
-{
-	uint8_t				flag;
-	uint16_t			latency;
-	uint8_t				node_id;
-	uint16_t			gps_time;
-	uint8_t				set;
-} Packet_table;
-
-typedef struct Result_packet_tag
-{
-	uint32_t			sensor_reliability;
-	uint32_t			sensor_latency;
-	uint32_t			energy;
-	// ------------------------------------//
-	uint32_t			action_reliability;
-	uint32_t			action_latency;
-} Result_packet;
-#endif
-
 typedef struct __attribute__((packed)) Chirp_Outline_tag
 {
 	Mixer_Task 			task;
@@ -984,14 +959,6 @@ extern struct mx
 #endif
 } mx;
 
-#if MX_PACKET_TABLE
-extern struct evaluation
-{
-	Packet_table				packet_table[MX_PACKET_TABLE_SIZE];
-	Result_packet				result_packet;
-} evaluation;
-#endif
-
 #if (!MX_PSEUDO_CONFIG)
 #if MX_COORDINATED_TX
 	static Node* const			mx_absent_head = &mx.history[NUM_ELEMENTS(mx.history) - 3];
@@ -1088,13 +1055,6 @@ void 			clear_dataset();
 		uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
 		uint8_t		chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl);
 	#endif
-#endif
-
-#if MX_PACKET_TABLE
-	void 			update_packet_table();
-	void 			read_packet_table();
-	void 			get_real_packet_group();
-	void 			calculate_action_time();
 #endif
 #ifdef __cplusplus
 	}

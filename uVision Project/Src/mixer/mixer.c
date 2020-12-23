@@ -110,9 +110,6 @@ GPI_TRACE_CONFIG(mixer, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 // mixer internal data
 struct mx		mx;
 
-#if MX_PACKET_TABLE
-struct evaluation evaluation;
-#endif
 
 /* Mixer packet and node configuration, Radio (LoRa) configuration */
 Chirp_Config chirp_config;
