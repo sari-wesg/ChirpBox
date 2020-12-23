@@ -45,13 +45,6 @@ extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 //***** Local (Static) Variables *******************************************************************
 // static uint32_t			round;
 static uint8_t	        data[DATA_HEADER_LENGTH];
-
-#if MX_DOUBLE_BITMAP
-    extern uint32_t         LORA_NODE_ID;
-    static uint16_t			beat = 0;
-    static uint16_t			set_beat = 0;
-#endif
-
 static uint8_t	        data_result[44];
 
 static uint16_t    deadline_dog, count_dog;
@@ -187,64 +180,8 @@ uint8_t read_message(uint32_t *round, uint8_t *mx_task)
             recv_num++;
         }
     }
-    #if MX_DOUBLE_BITMAP
-        if (round >= SETUP_MIXER_ROUND)
-            set_start_up_flag();
-    #endif
     return recv_num;
 }
-
-//**************************************************************************************************
-
-#if MX_DOUBLE_BITMAP
-
-void clear_dataset()
-{
-    beat = 0;
-    set_beat = 0;
-}
-
-uint8_t update_new_message(uint16_t slot_number)
-{
-    #if GPS_DATA
-        uint16_t now_time = now_pps_count();
-    #else
-        uint16_t now_time = slot_number;
-    #endif
-    // PRINTF("now_time:%d, %d, %d\n", beat, now_time, new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]);
-    if ((now_time >= new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]) && (beat < node_generate_num[mx.tx_packet.sender_id]))
-    {
-        PRINTF("----update:%d, %d, %d\n", beat, now_time, new_packets_time[node_generate[mx.tx_packet.sender_id][beat]]);
-        beat++;
-        data[0] = payload_distribution[mx.tx_packet.sender_id] + 1;
-        data[1] = beat >> 8;
-        data[2] = beat;
-        PRINTF("data:%d, %d\n", data[1], data[2]);
-        data[3] = mx.tx_packet.sender_id;
-        if(set_packet[mx.tx_packet.sender_id][set_beat] == node_generate[mx.tx_packet.sender_id][beat - 1])
-        {
-            data[4] = 1;
-            set_beat ++;
-        }
-        else
-            data[4] = 0;
-        data[5] = LORA_NODE_ID >> 16;
-        data[6] = LORA_NODE_ID >> 8;
-        data[7] = LORA_NODE_ID;
-        #if MX_PSEUDO_CONFIG
-        mixer_rewrite(mx.tx_packet.sender_id, data, MIN(sizeof(data), chirp_config.mx_payload_size));
-        #else
-        mixer_rewrite(mx.tx_packet.sender_id, data, MIN(sizeof(data), MX_PAYLOAD_SIZE));
-        #endif
-        return UPDATE_NOW;
-    }
-    else if ((beat < node_generate_num[mx.tx_packet.sender_id]) && (new_packets_time[node_generate[mx.tx_packet.sender_id][beat]] - now_time) < 3)
-        return UPDATE_CLOSE;
-
-    return 0;
-}
-
-#endif	// MX_DOUBLE_BITMAP
 
 //**************************************************************************************************
 
@@ -357,14 +294,6 @@ void sensor_send_results_in_mixer(uint8_t send_case)
 		deadline = mixer_start();
 
 		round = read_result_message(send_case);
-
-		#if MX_DOUBLE_BITMAP
-			if(round >= RESULTS_ROUND)
-			{
-				gpi_radio_init();
-				break;
-			}
-		#endif
 
 		deadline += UPDATE_PERIOD;
 		round++;
@@ -497,9 +426,6 @@ void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
 	chirp_config._padding_2.pos = chirp_config.info_vector.pos + chirp_config.info_vector.len;
 	chirp_config._padding_2.len = PADDING_MAX(0,
 							PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-			#if MX_DOUBLE_BITMAP
-							+ PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-			#endif
 							+ PADDING_SIZE(chirp_config.mx_payload_size)
 			#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
 							- ((chirp_config.mx_generation_size + 7) / 8)
@@ -510,18 +436,12 @@ void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
 	chirp_config._padding_3.pos = chirp_config.rand.pos + chirp_config.rand.len;
 	chirp_config._padding_3.len = PADDING_SIZE(
 								((chirp_config.mx_generation_size + 7) / 8) +	// coding_vector
-	#if MX_DOUBLE_BITMAP
-								((chirp_config.mx_generation_size + 7) / 8) +		// coding_vector_2
-	#endif
 								chirp_config.mx_payload_size +					// payload
 #if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
 								((chirp_config.mx_generation_size + 7) / 8) +	// info_vector
 	#if !GPI_ARCH_IS_BOARD(TMOTE)
 								PADDING_MAX(0,						// _padding_2
 									PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-		#if MX_DOUBLE_BITMAP
-									+ PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-		#endif
 									+ PADDING_SIZE(chirp_config.mx_payload_size)
 									- ((chirp_config.mx_generation_size + 7) / 8)
 									) +
@@ -530,9 +450,6 @@ void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
 	#if !GPI_ARCH_IS_BOARD(TMOTE)
 								PADDING_MAX(0,						// _padding_2
 									PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-		#if MX_DOUBLE_BITMAP
-									+ PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-		#endif
 									+ PADDING_SIZE(chirp_config.mx_payload_size)) +
 	#endif
 #endif

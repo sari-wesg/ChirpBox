@@ -125,9 +125,6 @@ void unwrap_chunk(uint8_t *p)
 // 	ASSERT_CT(
 // 		offsetof(Packet, payload) ==
 // 			offsetof(Packet, coding_vector) +
-// #if MX_DOUBLE_BITMAP
-// 			sizeof_member(Packet, coding_vector) +
-// #endif
 // 			sizeof_member(Packet, coding_vector),
 // 		inconsistent_alignment);
 	assert_reset(
@@ -136,15 +133,9 @@ void unwrap_chunk(uint8_t *p)
 		chirp_config.coding_vector.len);
 
 	/* double-check alignment of matrix row fields */
-	// ASSERT_CT(
-	// 	!(offsetof(Matrix_Row, coding_vector) % sizeof(uint_fast_t)),
-	// 	inconsistent_alignment);
-	ASSERT_CT(
-		!(offsetof(Matrix_Row, matrix_chunk) % sizeof(uint_fast_t)),
-		inconsistent_alignment);
-	// ASSERT_CT(
-	// 	!(offsetof(Matrix_Row, payload) % sizeof(uint_fast_t)),
-	// 	inconsistent_alignment);
+	// ASSERT_CT(!(offsetof(Matrix_Row, coding_vector) % sizeof(uint_fast_t)),inconsistent_alignment);
+	// ASSERT_CT(!(offsetof(Matrix_Row, matrix_chunk) % sizeof(uint_fast_t)),inconsistent_alignment);
+	// ASSERT_CT(!(offsetof(Matrix_Row, payload) % sizeof(uint_fast_t)),inconsistent_alignment);
 	assert_reset(!((chirp_config.matrix_payload.pos * sizeof(uint_fast_t)) % sizeof(uint_fast_t)));
 	// ASSERT_CT(
 	// 	offsetof(Matrix_Row, coding_vector_8) == offsetof(Matrix_Row, coding_vector),

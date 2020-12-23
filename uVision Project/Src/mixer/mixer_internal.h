@@ -156,13 +156,6 @@
 	#define MX_DATA_SET								1
 #endif
 
-#ifndef MX_DOUBLE_BITMAP
-	#define MX_DOUBLE_BITMAP						0
-
-	#undef  MX_PREAMBLE_UPDATE
-	#define MX_PREAMBLE_UPDATE						0
-#endif
-
 #ifndef MX_DUTY_CYCLE
 	#define MX_DUTY_CYCLE							0
 #endif
@@ -526,9 +519,6 @@ typedef union __attribute__((packed)) Packet_tag
 #else
 
 		uint8_t			coding_vector[(MX_GENERATION_SIZE + 7) / 8];
-		#if MX_DOUBLE_BITMAP
-		uint8_t			coding_vector_2[(MX_GENERATION_SIZE + 7) / 8];
-		#endif
 		uint8_t			payload[MX_PAYLOAD_SIZE];
 
 		#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
@@ -542,9 +532,6 @@ typedef union __attribute__((packed)) Packet_tag
 			// padding that absorbs unwrapping of coding_vector and payload
 			int8_t		_padding_2[PADDING_MAX(0,
 							PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-			#if MX_DOUBLE_BITMAP
-							+ PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-			#endif
 							+ PADDING_SIZE(MX_PAYLOAD_SIZE)
 			#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
 							- ((MX_GENERATION_SIZE + 7) / 8)
@@ -597,18 +584,12 @@ typedef union __attribute__((packed)) Packet_tag
 		// would not align the offset of _padding, only its members)
 		int8_t			_padding_3[PADDING_SIZE(
 								((MX_GENERATION_SIZE + 7) / 8) +	// coding_vector
-	#if MX_DOUBLE_BITMAP
-								((MX_GENERATION_SIZE + 7) / 8) +		// coding_vector_2
-	#endif
 								MX_PAYLOAD_SIZE +					// payload
 #if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
 								((MX_GENERATION_SIZE + 7) / 8) +	// info_vector
 	#if !GPI_ARCH_IS_BOARD(TMOTE)
 								PADDING_MAX(0,						// _padding_2
 									PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-		#if MX_DOUBLE_BITMAP
-									+ PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-		#endif
 									+ PADDING_SIZE(MX_PAYLOAD_SIZE)
 									- ((MX_GENERATION_SIZE + 7) / 8)
 									) +
@@ -617,9 +598,6 @@ typedef union __attribute__((packed)) Packet_tag
 	#if !GPI_ARCH_IS_BOARD(TMOTE)
 								PADDING_MAX(0,						// _padding_2
 									PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-		#if MX_DOUBLE_BITMAP
-									+ PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-		#endif
 									+ PADDING_SIZE(MX_PAYLOAD_SIZE)) +
 	#endif
 #endif
@@ -787,41 +765,6 @@ typedef struct Request_Data_tag
 } Request_Data;
 
 //**************************************************************************************************
-#if MX_DOUBLE_BITMAP
-
-typedef struct Double_map_tag
-{
-	uint8_t			coding_vector_8_1[(MX_GENERATION_SIZE + 7) / 8];
-	uint8_t			coding_vector_8_2[(MX_GENERATION_SIZE + 7) / 8];
-} Double_map;
-
-typedef struct Bitmapping_tag
-{
-	union
-	{
-		struct
-		{
-			uint8_t				coding_vector_8[(MX_GENERATION_SIZE + 7) / 8];
-		};
-
-		struct
-		{
-			uint_fast_t			coding_vector[
-									(MX_GENERATION_SIZE + (sizeof(uint_fast_t) * 8) - 1) /
-									(sizeof(uint_fast_t) * 8)	];	// -> potentially longer
-		};
-	};
-} Bitmapping;
-
-
-typedef struct Time_table_tag
-{
-	Double_map			time_bit;
-	uint8_t				time_value[MX_GENERATION_SIZE * 2];
-} Time_table;
-#endif
-
-//**************************************************************************************************
 #if MX_PACKET_TABLE
 typedef struct Packet_table_tag
 {
@@ -963,24 +906,6 @@ typedef enum Event_tag
 } Event;
 
 //**************************************************************************************************
-#if MX_DOUBLE_BITMAP
-
-typedef enum Bitmap_Update_Mode_tag
-{
-	OTHER_UPDATE			= 1,
-	OWN_UPDATE				= 2,
-
-} Bitmap_Update_Mode;
-
-typedef enum Update_Message_tag
-{
-	UPDATE_NOW				= 1,
-	UPDATE_CLOSE			= 2,
-
-} Update_Message;
-
-#endif
-//**************************************************************************************************
 #if MX_DATA_SET
 typedef enum Data_read_tag
 {
@@ -1078,25 +1003,6 @@ extern struct mx
 	Gpi_Fast_Tick_Native		wake_up_timestamp;
 #endif
 
-#if MX_DOUBLE_BITMAP
-	// flags
-	uint8_t						start_up_flag;
-	uint8_t						decode_done;
-	uint8_t 					is_local_map_full;
-	uint8_t 					non_update;
-	uint8_t 					update_flag;
-	uint8_t 					next_task_own_update;
-	// coding_vector mask
-	uint_fast_t					coding_vector_mask;
-
-	Double_map					local_double_map;
-	Double_map					sideload_coding_vector;
-
-	Bitmapping					altered_coding_vector;
-	Time_table					transition_time_table;
-	uint_fast_t					update_row[(sizeof_member(Matrix_Row, coding_vector) + sizeof_member(Matrix_Row, payload)) / sizeof(uint_fast_t)];
-#endif
-
 #if MX_DUTY_CYCLE
 	uint_fast_t					last_tx_slot;
 #endif
@@ -1174,28 +1080,6 @@ void 			wrap_chunk(uint8_t *p);
 
 #endif
 
-#if MX_DOUBLE_BITMAP
-	// processing layer
-	PT_THREAD(		mixer_update_matrix());
-
-	void 			unwrap_coding_vector(uint8_t *coding_vector_1, uint8_t *coding_vector_2, uint8_t self_unwrap);
-	void 			unwrap_tx_sideload(uint8_t *tx_sideload);
-	void 			wrap_coding_vector(uint8_t *coding_vector_2, uint8_t *coding_vector_1);
-
-	// mixer_bitmap
-	void 			set_start_up_flag();
-	void 			clear_start_up_flag();
-	uint8_t 		fill_local_map(uint8_t *p_packet_coding);
-	uint8_t 		bitmap_update_check(uint8_t *p_packet_coding, uint8_t node_id);
-	void 			add_to_time_table(uint8_t x, uint8_t index);
-	void			clear_time_table();
-
-	#if MX_PREAMBLE_UPDATE
-		uint8_t 		bitmap_update_check_header(uint8_t *p_packet_coding, uint8_t node_id);
-	#endif
-#endif
-
-
 #if MX_DATA_SET
 	void 			clear_data();
 	void 			startup_message(uint32_t mixer_round, uint8_t node_id, uint8_t mx_task);
@@ -1256,9 +1140,6 @@ static inline __attribute__((always_inline)) void unwrap_chunk(uint8_t *p)
 	ASSERT_CT(
 		offsetof(Packet, payload) ==
 			offsetof(Packet, coding_vector) +
-#if MX_DOUBLE_BITMAP
-			sizeof_member(Packet, coding_vector) +
-#endif
 			sizeof_member(Packet, coding_vector),
 		inconsistent_alignment);
 

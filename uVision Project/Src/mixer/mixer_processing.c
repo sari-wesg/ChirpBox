@@ -196,21 +196,6 @@ static void trace_packet(const Packet *p)
 
 	ps += sprintf(ps, " - ");
 
-	#if MX_DOUBLE_BITMAP
-
-		#if MX_PSEUDO_CONFIG
-		for (i = 0; i < chirp_config.coding_vector.len; i++)
-		#else
-		for (i = 0; i < sizeof(p->coding_vector); i++)
-		#endif
-		{
-			ps += sprintf(ps, "%02" PRIx8, p->coding_vector_2[i]);
-		}
-
-		ps += sprintf(ps, " - ");
-
-	#endif
-
 	// for (i = 0; i < sizeof(p->payload); i++)
 	// 	ps += sprintf(ps, "%02" PRIx8, p->payload[i]);
 
@@ -502,15 +487,11 @@ static void prepare_tx_packet()
 	assert_msg(NULL != mx.tx_reserve, "Tx without data -> must not happen");
 
 	// clear mx.tx_packet by adding itself to the xor list
-#if (!MX_DOUBLE_BITMAP)
 	#if MX_PSEUDO_CONFIG
 	pp[pp_used++] = &(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]);
 	#else
 	pp[pp_used++] = &mx.tx_packet.coding_vector;
 	#endif
-#else
-	pp[pp_used++] = &mx.tx_packet.coding_vector_2;
-#endif
 
 #if !MX_BENCHMARK_NO_SYSTEMATIC_STARTUP
 
@@ -634,14 +615,10 @@ static void prepare_tx_packet()
 
 				// NOTE: calling with NUM_ELEMENTS(pp) instead of pp_used leads to a bit better
 				// code because NUM_ELEMENTS(pp) is a constant (msp430-gcc 4.6.3)
-				#if (!MX_DOUBLE_BITMAP)
 				#if MX_PSEUDO_CONFIG
 				memxor_block(&(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]), pp, CHUNK_SIZE, NUM_ELEMENTS(pp));
 				#else
 				memxor_block(mx.tx_packet.coding_vector, pp, CHUNK_SIZE, NUM_ELEMENTS(pp));
-				#endif
-				#else
-				memxor_block(mx.tx_packet.coding_vector_2, pp, CHUNK_SIZE, NUM_ELEMENTS(pp));
 				#endif
 				pp_used = 0;
 
@@ -659,9 +636,6 @@ static void prepare_tx_packet()
 			#else
 			ASSERT_CT(offsetof(Packet, payload) ==
 					offsetof(Packet, coding_vector) +
-		#if MX_DOUBLE_BITMAP
-					sizeof_member(Packet, coding_vector) +
-		#endif
 					sizeof_member(Packet, coding_vector),
 				inconsistent_program);
 			ASSERT_CT(offsetof(Matrix_Row, payload_8) ==
@@ -711,21 +685,12 @@ static void prepare_tx_packet()
 	// work through the xor list
 	if (pp_used)
 	{
-	#if (!MX_DOUBLE_BITMAP)
 		#if MX_PSEUDO_CONFIG
 		memxor_block(&(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]), pp, CHUNK_SIZE, pp_used);
 		#else
 		memxor_block(mx.tx_packet.coding_vector, pp, CHUNK_SIZE, pp_used);
 		#endif
-	#else
-		memxor_block(mx.tx_packet.coding_vector_2, pp, CHUNK_SIZE, pp_used);
-	#endif
 	}
-
-#if MX_DOUBLE_BITMAP
-	unwrap_coding_vector(mx.tx_packet.coding_vector, mx.tx_packet.coding_vector_2, 1);
-	PRINTF("packet1:%x, %x, %x\n", mx.tx_packet.coding_vector[0], mx.tx_packet.coding_vector_2[0], mx.tx_packet.payload[0]);
-#endif
 
 	PROFILE("prepare_tx_packet() return");
 	#if MX_PSEUDO_CONFIG
@@ -1140,15 +1105,11 @@ PT_THREAD(mixer_update_slot())
 						if (mx.tx_packet.is_ready)
 						#endif
 						{
-						#if (!MX_DOUBLE_BITMAP)
 							#if MX_PSEUDO_CONFIG
 							if (mx_get_leading_index(&(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos])) <= help_index)
 							#else
 							if (mx_get_leading_index(mx.tx_packet.coding_vector) <= help_index)
 							#endif
-						#else
-							if (MIN(mx_get_leading_index(mx.tx_packet.coding_vector), mx_get_leading_index(mx.tx_packet.coding_vector_2)) <= help_index)
-						#endif
 							{
 								#if MX_PSEUDO_CONFIG
 								mx.tx_packet->packet_chunk[chirp_config.rand.pos] &= PACKET_IS_READY_MASK;
@@ -1528,47 +1489,7 @@ PT_THREAD(mixer_update_slot())
 		#endif
 				{
 					next_task = TX;
-					#if MX_DOUBLE_BITMAP
-						mx.next_task_own_update = 0;
-					#endif
 				}
-
-		// nodes should generate new message according to the interval
-		#if MX_DOUBLE_BITMAP
-			uint8_t update_now = 0;
-			if (mx.start_up_flag)
-			{
-				if (node_id_allocate < SENSOR_NUM * GROUP_NUM)
-					update_now = update_new_message(mx.slot_number);
-				else
-					mx.non_update++;
-
-				if (update_now & UPDATE_NOW)
-				{
-					#if MX_DUTY_CYCLE
-						if (mx.slot_number - mx.last_tx_slot >= SLOT_INTERVAL)
-					#endif
-						{
-							next_task = TX;
-							mx.tx_packet.is_ready = 0;
-							mx.non_update = 0;
-							mx.next_task_own_update = 0;
-						}
-				}
-				else if (((update_now & UPDATE_CLOSE) && (next_task == TX)) | (mx.non_update > 100))
-					next_task = RX;
-				else if (mx.next_task_own_update)
-				{
-					next_task = TX;
-					mx.next_task_own_update = 0;
-				}
-
-				if (update_now != UPDATE_NOW)
-					mx.non_update++;
-
-				clear_time_table();
-			}
-		#endif
 
 		#if MX_DUTY_CYCLE
 			if (next_task == TX)
@@ -1590,11 +1511,6 @@ PT_THREAD(mixer_update_slot())
 			#endif
 			{
 				int ie = gpi_int_lock();
-
-				#if MX_DOUBLE_BITMAP
-					if (update_now & UPDATE_NOW)
-						mx.tx_sideload = mx.matrix[mx.tx_packet.sender_id].coding_vector;
-				#endif
 
 				if (NULL == mx.tx_sideload)
 				{
@@ -1860,45 +1776,6 @@ PT_THREAD(mixer_process_rx_data())
 				#endif
 			}
 
-			#if MX_DOUBLE_BITMAP
-				if (!mx.is_local_map_full)
-					mx.is_local_map_full = fill_local_map(p->coding_vector);
-				// clear_time_table();
-				else if (mx.start_up_flag)
-				{
-					uint8_t update_check = bitmap_update_check(p->coding_vector, mx.tx_packet.sender_id);
-					PRINTF("check:%d\n", update_check);
-					#if (!MX_PREAMBLE_UPDATE)
-						if (update_check & OWN_UPDATE)
-						{
-							gpi_memcpy_dma_aligned(mx.tx_packet.coding_vector_2, mx.matrix[mx.tx_packet.sender_id].coding_vector, sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
-							unwrap_coding_vector(mx.tx_packet.coding_vector, mx.tx_packet.coding_vector_2, 1);
-							mx.tx_packet.is_ready = 1;
-							mx.tx_sideload = NULL;
-
-							mx.next_task_own_update = 1;
-						}
-						else if (update_check & OTHER_UPDATE)
-					#else
-						if (update_check & OTHER_UPDATE)
-					#endif
-						{
-							#if (!MX_PREAMBLE_UPDATE)
-								mx.non_update = 0;
-							#endif
-							static Pt_Context	pt_update_matrix;
-							PT_INIT(&pt_update_matrix);
-							while (PT_SCHEDULE(mixer_update_matrix(&pt_update_matrix)));
-
-							mx.tx_packet.is_ready = 0;
-
-							mx.tx_sideload = &(p->coding_vector[0]);
-
-							goto continue_;
-						}
-				}
-			#endif
-
 			// update full-rank map
 			#if MX_SMART_SHUTDOWN_MAP
 				if (p->flags.is_full_rank)
@@ -1929,10 +1806,6 @@ PT_THREAD(mixer_process_rx_data())
 			}
 
 			PROFILE("mixer_process_rx_data() checkpoint 1");
-
-			#if MX_DOUBLE_BITMAP
-				wrap_coding_vector(p->coding_vector_2, p->coding_vector);
-			#endif
 
 			// if mx.tx_sideload points to current packet: move mx.tx_sideload away because data in
 			// Rx queue slot will become invalid while processing
@@ -1971,19 +1844,14 @@ PT_THREAD(mixer_process_rx_data())
 					pr = &(mx.empty_row->coding_vector_8[0]);
 					#endif
 
-					#if (!MX_DOUBLE_BITMAP)
-						#if MX_PSEUDO_CONFIG
-						gpi_memcpy_dma_aligned(pr, &(p->packet_chunk[chirp_config.coding_vector.pos]),
-							(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-						// gpi_memcpy_dma_aligned(pr, p->coding_vector,
-						// 	(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-						#else
-						gpi_memcpy_dma_aligned(pr, p->coding_vector,
-							sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
-						#endif
+					#if MX_PSEUDO_CONFIG
+					gpi_memcpy_dma_aligned(pr, &(p->packet_chunk[chirp_config.coding_vector.pos]),
+						(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
+					// gpi_memcpy_dma_aligned(pr, p->coding_vector,
+					// 	(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
 					#else
-						gpi_memcpy_dma_aligned(pr, p->coding_vector_2,
-							sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
+					gpi_memcpy_dma_aligned(pr, p->coding_vector,
+						sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
 					#endif
 
 					#if MX_BENCHMARK_PSEUDO_PAYLOAD
@@ -2014,14 +1882,10 @@ PT_THREAD(mixer_process_rx_data())
             }
 
 			// align packet elements
-			#if (!MX_DOUBLE_BITMAP)
-				#if MX_PSEUDO_CONFIG
-				unwrap_chunk(&(p->packet_chunk[chirp_config.coding_vector.pos]));
-				#else
-				unwrap_chunk(&(p->coding_vector[0]));
-				#endif
+			#if MX_PSEUDO_CONFIG
+			unwrap_chunk(&(p->packet_chunk[chirp_config.coding_vector.pos]));
 			#else
-				unwrap_chunk(&(p->coding_vector_2[0]));
+			unwrap_chunk(&(p->coding_vector[0]));
 			#endif
 
 			PROFILE("mixer_process_rx_data() checkpoint 2");
@@ -2033,14 +1897,10 @@ PT_THREAD(mixer_process_rx_data())
 				PROFILE("mixer_process_rx_data() matrix iteration begin");
 
 				// get leading coefficient
-				#if (!MX_DOUBLE_BITMAP)
-					#if MX_PSEUDO_CONFIG
-					i = mx_get_leading_index(&(p->packet_chunk[chirp_config.coding_vector.pos]));
-					#else
-					i = mx_get_leading_index(p->coding_vector);
-					#endif
+				#if MX_PSEUDO_CONFIG
+				i = mx_get_leading_index(&(p->packet_chunk[chirp_config.coding_vector.pos]));
 				#else
-					i = mx_get_leading_index(p->coding_vector_2);
+				i = mx_get_leading_index(p->coding_vector);
 				#endif
 
 				if (i < 0)
@@ -2081,9 +1941,6 @@ PT_THREAD(mixer_process_rx_data())
 					#else
 					ASSERT_CT(offsetof(Packet, payload) ==
 							offsetof(Packet, coding_vector) +
-					#if MX_DOUBLE_BITMAP
-							sizeof_member(Packet, coding_vector) +
-					#endif
 							sizeof_member(Packet, coding_vector),
 						inconsistent_program);
 					ASSERT_CT(offsetof(Matrix_Row, payload) ==
@@ -2144,17 +2001,14 @@ PT_THREAD(mixer_process_rx_data())
 						if (ABS(mx.request.help_index) - 1 == i)
 						#endif
 						{
-							#if MX_DOUBLE_BITMAP
-								if (!mx.start_up_flag)
-							#endif
-								{
-									#if MX_PSEUDO_CONFIG
-									assert_reset(ABS(mx.request->help_index) - 1 != i);
-									#else
-									assert_reset(ABS(mx.request.help_index) - 1 != i);
-									#endif
-									GPI_TRACE_MSG_FAST(TRACE_ERROR, "!!! request help index points to empty row -> check program, must not happen !!!");
-								}
+							{
+								#if MX_PSEUDO_CONFIG
+								assert_reset(ABS(mx.request->help_index) - 1 != i);
+								#else
+								assert_reset(ABS(mx.request.help_index) - 1 != i);
+								#endif
+								GPI_TRACE_MSG_FAST(TRACE_ERROR, "!!! request help index points to empty row -> check program, must not happen !!!");
+							}
 							#if MX_PSEUDO_CONFIG
 							mx.request->help_index = 0;
 							#else
@@ -2166,19 +2020,14 @@ PT_THREAD(mixer_process_rx_data())
 					}
 					#endif
 
-					#if (!MX_DOUBLE_BITMAP)
-							#if MX_PSEUDO_CONFIG
-							gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]),
-								(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-							// gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), p->coding_vector,
-							// 								(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-							#else
-							gpi_memcpy_dma_aligned(mx.matrix[i].coding_vector, p->coding_vector,
-								sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
-							#endif
+					#if MX_PSEUDO_CONFIG
+					gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]),
+						(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
+					// gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), p->coding_vector,
+					// 								(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
 					#else
-							gpi_memcpy_dma_aligned(mx.matrix[i].coding_vector, p->coding_vector_2,
-								sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
+					gpi_memcpy_dma_aligned(mx.matrix[i].coding_vector, p->coding_vector,
+						sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
 					#endif
 
 					#if MX_BENCHMARK_PSEUDO_PAYLOAD
@@ -2323,19 +2172,16 @@ PT_THREAD(mixer_process_rx_data())
 						// (e.g. on 8 bit machines)
 						REORDER_BARRIER();		// make sure that mx.rank is written back
 						int ie = gpi_int_lock();
-						#if MX_DOUBLE_BITMAP
-							if (!mx.start_up_flag)
-						#endif
+						{
+							#if MX_PSEUDO_CONFIG
+							if ((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY)>> PACKET_IS_READY_POS)
+							#else
+							if (mx.tx_packet.is_ready)
+							#endif
 							{
-								#if MX_PSEUDO_CONFIG
-								if ((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY)>> PACKET_IS_READY_POS)
-								#else
-								if (mx.tx_packet.is_ready)
-								#endif
-								{
-									mx.tx_sideload = NULL;
-								}
+								mx.tx_sideload = NULL;
 							}
+						}
 						gpi_int_unlock(ie);
 
 						// yield because packet processing may already have taken some time
@@ -2365,15 +2211,11 @@ PT_THREAD(mixer_process_rx_data())
 				PROFILE("mixer_process_rx_data() matrix iteration checkpoint A");
 
 				// else substitute
-				#if (!MX_DOUBLE_BITMAP)
-					#if MX_PSEUDO_CONFIG
-					memxor(&(p->packet_chunk[chirp_config.coding_vector.pos]), &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-					// memxor(p->coding_vector, &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-					#else
-					memxor(p->coding_vector, mx.matrix[i].coding_vector, sizeof(mx.matrix[0].coding_vector));
-					#endif
+				#if MX_PSEUDO_CONFIG
+				memxor(&(p->packet_chunk[chirp_config.coding_vector.pos]), &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+				// memxor(p->coding_vector, &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 				#else
-					memxor(p->coding_vector_2, mx.matrix[i].coding_vector, sizeof(mx.matrix[0].coding_vector));
+				memxor(p->coding_vector, mx.matrix[i].coding_vector, sizeof(mx.matrix[0].coding_vector));
 				#endif
 
 				#if MX_PSEUDO_CONFIG
@@ -2429,10 +2271,6 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 	PT_BEGIN(pt);
 
 	static int_fast16_t		i;
-
-	#if MX_DOUBLE_BITMAP
-		mx.decode_done = 0;
-	#endif
 
 	GPI_TRACE_MSG_FAST(TRACE_INFO, "start decoding...");
 	PROFILE("mixer_decode() entry");
@@ -2638,12 +2476,6 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 
 	GPI_TRACE_MSG(TRACE_INFO, "decoding done");
 
-	#if MX_DOUBLE_BITMAP
-		mx.decode_done = 1;
-		if (mx.start_up_flag)
-			update_packet_table();
-	#endif
-
 	TRACE_MATRIX();
 
 	PT_END(pt);
@@ -2682,477 +2514,89 @@ PT_THREAD(mixer_maintenance())
 		// NOTE: we test once per slot, and STOP executes gracefully at the next slot boundary
 		// (or both a bit relaxed during RESYNC). Hence, the timing (e.g. when in the slot is
 		// "now"?) is not very critical here.
-	#if MX_DOUBLE_BITMAP
-		if (!mx.start_up_flag)
+		#if MX_PSEUDO_CONFIG
+		if (((mx.slot_number >= chirp_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0)) || ((chirp_config.task == MX_ARRANGE) && (!mx.rank) && (chirp_config.update_slot >= 6)))
+		// if (((mx.slot_number >= chirp_config.mx_round_length) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0)) || ((chirp_config.task == MX_ARRANGE) && (!mx.rank) && (chirp_config.update_slot >= 5)))
+		#else
+		if ((mx.slot_number >= MX_ROUND_LENGTH) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0))
+		#endif
 		{
-	#endif
 			#if MX_PSEUDO_CONFIG
-			if (((mx.slot_number >= chirp_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0)) || ((chirp_config.task == MX_ARRANGE) && (!mx.rank) && (chirp_config.update_slot >= 6)))
-			// if (((mx.slot_number >= chirp_config.mx_round_length) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0)) || ((chirp_config.task == MX_ARRANGE) && (!mx.rank) && (chirp_config.update_slot >= 5)))
+			mx.slot_number = chirp_config.mx_round_length;
 			#else
-			if ((mx.slot_number >= MX_ROUND_LENGTH) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0))
+			mx.slot_number = MX_ROUND_LENGTH;
 			#endif
+			mx.round_deadline_update_slot = mx.slot_number;
+
+			#if MX_PSEUDO_CONFIG
+			mx.round_deadline = now +
+				gpi_mulu_32x16to64((Gpi_Fast_Tick_Native)chirp_config.mx_slot_length, (typeof(mx.slot_number))chirp_config.mx_round_length - mx.slot_number);
+			#else
+			mx.round_deadline = now +
+				gpi_mulu((Gpi_Fast_Tick_Native)MX_SLOT_LENGTH, (typeof(mx.slot_number))MX_ROUND_LENGTH - mx.slot_number);
+			#endif
+
+			GPI_TRACE_MSG(TRACE_INFO, "max. round length reached -> STOP initiated");
+
+			gpi_atomic_set(&mx.events, BV(DEADLINE_REACHED));
+
+			while (!mixer_transport_set_next_slot_task(STOP));
+			PT_EXIT(pt);
+		}
+		else if (mx.round_deadline_update_slot != mx.slot_number)
+		{
+			// ATTENTION: updating round deadline only on slot_number updates is important
+			// for right behaviour during RESYNC phases
+			#if MX_PSEUDO_CONFIG
+			assert_reset((GPI_TICK_FAST_MAX / 2) / chirp_config.mx_slot_length >= chirp_config.mx_round_length);
+			#else
+			ASSERT_CT((GPI_TICK_HYBRID_MAX / 2) / MX_SLOT_LENGTH >= MX_ROUND_LENGTH, round_period_overflow);
+			#endif
+
+			mx.round_deadline_update_slot = mx.slot_number;
+			#if MX_PSEUDO_CONFIG
+			mx.round_deadline = now +
+				gpi_mulu_32x16to64((Gpi_Fast_Tick_Native)chirp_config.mx_slot_length, (typeof(mx.slot_number))chirp_config.mx_round_length - mx.slot_number);
+			#else
+			mx.round_deadline = now +
+				gpi_mulu((Gpi_Fast_Tick_Native)MX_SLOT_LENGTH, (typeof(mx.slot_number))MX_ROUND_LENGTH - mx.slot_number);
+			#endif
+
+			GPI_TRACE_MSG(TRACE_INFO, "round deadline: %lu (%luus from now)",
+				(unsigned long)mx.round_deadline, (unsigned long)gpi_tick_fast_to_us(mx.round_deadline - now));
+		}
+
+		#if MX_VERBOSE_PROFILE
+
+			static unsigned int s_snapshot_index = 0;
+
+			Gpi_Profile_Ticket	ticket;
+			const char			*module_name;
+			uint16_t			line;
+			uint32_t			timestamp;
+
+			gpi_milli_sleep(10);
+
+			s_snapshot_index++;
+
+			memset(&ticket, 0, sizeof(ticket));
+
+			while (gpi_profile_read(&ticket, &module_name, &line, &timestamp))
 			{
-				#if MX_PSEUDO_CONFIG
-				mx.slot_number = chirp_config.mx_round_length;
-				#else
-				mx.slot_number = MX_ROUND_LENGTH;
-				#endif
-				mx.round_deadline_update_slot = mx.slot_number;
-
-				#if MX_PSEUDO_CONFIG
-				mx.round_deadline = now +
-					gpi_mulu_32x16to64((Gpi_Fast_Tick_Native)chirp_config.mx_slot_length, (typeof(mx.slot_number))chirp_config.mx_round_length - mx.slot_number);
-				#else
-				mx.round_deadline = now +
-					gpi_mulu((Gpi_Fast_Tick_Native)MX_SLOT_LENGTH, (typeof(mx.slot_number))MX_ROUND_LENGTH - mx.slot_number);
-				#endif
-
-				GPI_TRACE_MSG(TRACE_INFO, "max. round length reached -> STOP initiated");
-
-				gpi_atomic_set(&mx.events, BV(DEADLINE_REACHED));
-
-				while (!mixer_transport_set_next_slot_task(STOP));
-				PT_EXIT(pt);
-			}
-			else if (mx.round_deadline_update_slot != mx.slot_number)
-			{
-				// ATTENTION: updating round deadline only on slot_number updates is important
-				// for right behaviour during RESYNC phases
-				#if MX_PSEUDO_CONFIG
-				assert_reset((GPI_TICK_FAST_MAX / 2) / chirp_config.mx_slot_length >= chirp_config.mx_round_length);
-				#else
-				ASSERT_CT((GPI_TICK_HYBRID_MAX / 2) / MX_SLOT_LENGTH >= MX_ROUND_LENGTH, round_period_overflow);
-				#endif
-
-				mx.round_deadline_update_slot = mx.slot_number;
-				#if MX_PSEUDO_CONFIG
-				mx.round_deadline = now +
-					gpi_mulu_32x16to64((Gpi_Fast_Tick_Native)chirp_config.mx_slot_length, (typeof(mx.slot_number))chirp_config.mx_round_length - mx.slot_number);
-				#else
-				mx.round_deadline = now +
-					gpi_mulu((Gpi_Fast_Tick_Native)MX_SLOT_LENGTH, (typeof(mx.slot_number))MX_ROUND_LENGTH - mx.slot_number);
-				#endif
-
-				GPI_TRACE_MSG(TRACE_INFO, "round deadline: %lu (%luus from now)",
-					(unsigned long)mx.round_deadline, (unsigned long)gpi_tick_fast_to_us(mx.round_deadline - now));
-			}
-
-			#if MX_VERBOSE_PROFILE
-
-				static unsigned int s_snapshot_index = 0;
-
-				Gpi_Profile_Ticket	ticket;
-				const char			*module_name;
-				uint16_t			line;
-				uint32_t			timestamp;
-
-				gpi_milli_sleep(10);
-
-				s_snapshot_index++;
-
-				memset(&ticket, 0, sizeof(ticket));
-
-				while (gpi_profile_read(&ticket, &module_name, &line, &timestamp))
-				{
-					#if !(GPI_ARCH_IS_BOARD(TMOTE_FLOCKLAB) || GPI_ARCH_IS_BOARD(TMOTE_INDRIYA))
-						#if MX_PSEUDO_CONFIG
-						PRINTF_CHIRP("# ID:%u ", mx.tx_packet->sender_id + 1);
-						#else
-						PRINTF_CHIRP("# ID:%u ", mx.tx_packet.sender_id + 1);
-						#endif
+				#if !(GPI_ARCH_IS_BOARD(TMOTE_FLOCKLAB) || GPI_ARCH_IS_BOARD(TMOTE_INDRIYA))
+					#if MX_PSEUDO_CONFIG
+					PRINTF_CHIRP("# ID:%u ", mx.tx_packet->sender_id + 1);
+					#else
+					PRINTF_CHIRP("# ID:%u ", mx.tx_packet.sender_id + 1);
 					#endif
+				#endif
 
-					PRINTF_CHIRP("profile %u %s %4" PRIu16 ": %" PRIu32 "\n", s_snapshot_index, module_name, line, timestamp);
-				}
-
-			#endif
-	#if MX_DOUBLE_BITMAP
-		}
-	#endif
-
-	#if MX_DOUBLE_BITMAP
-		if (mx.start_up_flag)
-		{
-			#if GPS_DATA
-				if ( now_pps_count() >= MX_SESSION_LENGTH )
-			#else
-				if ( mx.slot_number >= MX_SESSION_LENGTH )
-			#endif
-				{
-					GPI_TRACE_MSG(TRACE_INFO, "max. round length reached -> STOP initiated");
-					PRINTF_CHIRP("MX_SESSION_LENGTH\n");
-					gpi_atomic_set(&mx.events, BV(DEADLINE_REACHED));
-
-					while (!mixer_transport_set_next_slot_task(STOP));
-					PT_EXIT(pt);
-				}
-		}
-	#endif
+				PRINTF_CHIRP("profile %u %s %4" PRIu16 ": %" PRIu32 "\n", s_snapshot_index, module_name, line, timestamp);
+			}
+		#endif
 	}
 
 	PT_END(pt);
 }
 
-//**************************************************************************************************
-
-#if MX_DOUBLE_BITMAP
-
-// update a packet using mixer_update_matrix not mixer_write
-PT_THREAD(mixer_update_matrix(Pt_Context *pt))
-{
-	PT_BEGIN(pt);
-	PRINTF("mixer_update_matrix\n");
-	PRINTF("local1:%x, %x\n", mx.local_double_map.coding_vector_8_1[0], mx.local_double_map.coding_vector_8_2[0]);
-
-	// step0: find the (x_lsb) of the updated matrix for added into matrix
-	// step1: find the (x_msb) to eliminate from x_msb
-	// step2: (check) if we need to decode the matrix, else, goto step4
-	// step3: if decode is needed, (decode) matrix, then step4
-	// step4: (eliminate) the corrsponding rows and (add) lsb row into matrix
-
-	// handled by mx.rx_queue[] or directly by matrix, so we should provided the related row number
-	// ----------------------------------------------------------
-	static uint8_t	x_msb = 0, x_lsb = 0, x_msb_index = 0, x_lsb_index = 0;
-	static uint8_t	x_lsb_alter = 0, x_lsb_index_alter = 0;
-	uint_fast_t		*pc;
-
-	// step0:
-	// int ie = gpi_int_lock();
-	uint_fast_t		updated_coding_vector[sizeof_member(Matrix_Row, coding_vector) / sizeof(uint_fast_t)];
-	uint_fast_t		updated_coding_vector_alter[sizeof_member(Matrix_Row, coding_vector) / sizeof(uint_fast_t)];
-	gpi_memcpy_dma_aligned(updated_coding_vector, mx.update_row, sizeof(updated_coding_vector));
-	gpi_memcpy_dma_aligned(updated_coding_vector_alter, mx.altered_coding_vector.coding_vector, sizeof(updated_coding_vector_alter));
-	updated_coding_vector[NUM_ELEMENTS(updated_coding_vector) - 1] &= mx.coding_vector_mask;
-	updated_coding_vector_alter[NUM_ELEMENTS(updated_coding_vector_alter) - 1] &= mx.coding_vector_mask;
-
-	printf("alter:%lu, %lu\n", updated_coding_vector[0], updated_coding_vector_alter[0]);
-
-	pc = &updated_coding_vector[0];
-	for (; pc < &updated_coding_vector[NUM_ELEMENTS(updated_coding_vector)];)
-	{
-		if(!(*pc))
-		{
-			pc++;
-			continue;
-		}
-
-		x_lsb = gpi_get_lsb_32(*pc);
-		x_lsb_index = ARRAY_INDEX(pc, updated_coding_vector);
-		break;
-	}
-
-	pc = &updated_coding_vector_alter[0];
-	for (; pc < &updated_coding_vector_alter[NUM_ELEMENTS(updated_coding_vector_alter)];)
-	{
-		if(!(*pc))
-		{
-			pc++;
-			continue;
-		}
-
-		x_lsb_alter = gpi_get_lsb_32(*pc);
-		x_lsb_index_alter = ARRAY_INDEX(pc, updated_coding_vector_alter);
-		break;
-	}
-
-	// gpi_int_unlock(ie);
-	PRINTF("x_lsb: %lu, %lu, %lu\n", updated_coding_vector[0], x_lsb, x_lsb_index);
-	PRINTF("pc: %lu, %lu\n", updated_coding_vector[0], *pc);
-	// ----------------------------------------------------------
-	// ie = gpi_int_lock();
-
-	Matrix_Row		*p;
-	pc = &mx.altered_coding_vector.coding_vector[NUM_ELEMENTS(mx.altered_coding_vector.coding_vector) - 1];
-	uint_fast_t		x;
-	uint_fast_t		x_msb_isolate = 0;
-	uint8_t 		x_index = ARRAY_INDEX(pc, mx.altered_coding_vector.coding_vector);
-	static uint8_t	need_decode = 0;
-
-	// for step 4
-	Matrix_Row				*pr;
-	uint_fast_t				*q;
-	uint8_t 				coding_index;
-	static uint8_t			matrix_index;
-
-	for ( x = *pc; pc >= &(mx.altered_coding_vector.coding_vector[0]); )
-	{
-		if(!x)
-		{
-			x = *(--pc);
-			x_index--;
-			continue;
-		}
-
-		// step1
-		x_msb = gpi_get_msb_32(x);
-		x_msb_index = x_index;
-
-		PRINTF("x_msb: %lu, %lu, %lu\n", x, x_msb, x_msb_index);
-		PRINTF("pc: %lu, %lu\n", updated_coding_vector[0], *pc);
-
-		if ((MX_GENERATION_SIZE == mx.rank) && (mx.decode_done))
-			goto continue_eliminate;
-
-		// step2
-		x_msb_isolate = gpi_slu_32(1, x_msb);		// isolate MSB
-
-		p = &mx.matrix[x_index * sizeof(uint_fast_t) * 8 + gpi_get_msb_32(x_msb_isolate)];
-
-		for (; p >= &mx.matrix[0]; p--)
-		{
-			// check if row is empty
-			if (UINT16_MAX == p->birth_slot)
-				continue;
-
-			if(p->coding_vector[x_index] & x_msb_isolate)
-			{
-				need_decode = 1;
-				goto continue_decode;
-			}
-		}
-
-		// clear bit in x
-		x &= ~x_msb_isolate;
-	}
-	// gpi_int_unlock(ie);
-
-	// PT_YIELD(pt);
-	// ----------------------------------------------------------
-	// step3
-	continue_decode:
-	PRINTF("continue_decode\n");
-	// TODO: needed to change tx_sideload and tx_reserve
-
-	if(need_decode)
-	{
-		static Pt_Context	pt_decode;
-		PT_INIT(&pt_decode);
-		// while (PT_SCHEDULE(mixer_decode(&pt_decode)))
-		// 	PT_YIELD(pt);
-		while (PT_SCHEDULE(mixer_decode(&pt_decode)));
-	}
-
-	// ----------------------------------------------------------
-	// step4
-	continue_eliminate:
-	matrix_index = x_msb_index * sizeof(uint_fast_t) * 8 + x_msb + 1;
-
-	PRINTF("continue_eliminate\n");
-	PRINTF("0: %x, %x, %x, %x\n", matrix_index, x_msb_index, x_msb, x_msb_index * sizeof(uint_fast_t) * 8 + x_msb + 1);
-
-	while (matrix_index)
-	{
-		pr = &mx.matrix[--matrix_index];
-
-		// // add the lsb row into matrix
-		// if (ARRAY_INDEX(pr, mx.matrix) == (x_lsb_index * sizeof(uint_fast_t) * 8 + x_lsb))
-		// {
-		// 	PRINTF("2: %x, %x, %x\n", matrix_index, ARRAY_INDEX(pr, mx.matrix),(x_lsb_index * sizeof(uint_fast_t) * 8 + x_lsb));
-		// 	ie = gpi_int_lock();
-
-		// 	gpi_memcpy_dma_aligned(&(pr->coding_vector[0]), &mx.update_row, sizeof(mx.update_row));
-		// 	if (pr->birth_slot == UINT16_MAX)
-		// 		mx.rank ++;
-		// 	pr->birth_slot = mx.slot_number;
-		// 	gpi_int_unlock(ie);
-
-		// 	PT_YIELD(pt);
-		// 	continue;
-		// }
-
-		// check if row is empty
-		// else if (UINT16_MAX == pr->birth_slot)
-		if (UINT16_MAX == pr->birth_slot)
-			continue;
-		else
-		{
-			q = &(pr->coding_vector[x_msb_index]);
-			coding_index = x_msb_index;
-
-			// ie = gpi_int_lock();
-
-			for (; q >= &(pr->coding_vector[0]); coding_index--, q--)
-			{
-				if ((*q) & mx.altered_coding_vector.coding_vector[coding_index])
-				{
-					pr->birth_slot = UINT16_MAX;
-					mx.rank--;
-					break;
-				}
-			}
-
-			// gpi_int_unlock(ie);
-			// PT_YIELD(pt);
-		}
-		memset(&mx.altered_coding_vector, 0, sizeof(mx.altered_coding_vector));
-	}
-
-	// step5: add the altered_coding_vector into the matrix, while memxor the low-order bit
-	uint8_t 		alter_add_to_matrix = 0;
-	if (x_lsb_index_alter * sizeof(uint_fast_t) * 8 + x_lsb_alter > x_lsb_index * sizeof(uint_fast_t) * 8 + x_lsb)
-	{
-		pr = &mx.matrix[x_lsb_index_alter * sizeof(uint_fast_t) * 8 + x_lsb_alter - 1];
-		for (; pr >= &mx.matrix[x_lsb_index * sizeof(uint_fast_t) * 8 + x_lsb]; pr--)
-		{
-			matrix_index = ARRAY_INDEX(pr, mx.matrix);
-			if (mx.update_row[matrix_index / (sizeof(uint_fast_t) * 8)] & (1 << (matrix_index % (sizeof(uint_fast_t) * 8))))
-			{
-				if (pr->birth_slot != UINT16_MAX)
-					memxor(mx.update_row, pr->coding_vector, sizeof(mx.update_row));
-				else
-				{
-					alter_add_to_matrix = 1;
-					break;
-				}
-			}
-		}
-	}
-
-	if (alter_add_to_matrix)
-	{
-		pr = &mx.matrix[matrix_index];
-	}
-	else
-	{
-		pr = &mx.matrix[x_lsb_index_alter * sizeof(uint_fast_t) * 8 + x_lsb_alter];
-	}
-	printf("add:%lu, %lu, %lu, %lu, %lu, %lu\n", x_lsb_index_alter, x_lsb_alter, x_lsb_index, x_lsb, alter_add_to_matrix, matrix_index);
-	printf("matrix0:%d, %d, %d, %d, %d, %d\n", mx.matrix[0].coding_vector_8[0], mx.matrix[1].coding_vector_8[0], mx.matrix[2].coding_vector_8[0],
-	mx.matrix[3].coding_vector_8[0], mx.matrix[4].coding_vector_8[0], mx.matrix[5].coding_vector_8[0]);
-	uint8_t i;
-	for ( i = 0; i < MX_GENERATION_SIZE; i++)
-	{
-	printf("p0:%d, %d, %d, %d, %d, %d, %d, %d\n", mx.matrix[i].payload_8[0], mx.matrix[i].payload_8[1], mx.matrix[i].payload_8[2],
-	mx.matrix[i].payload_8[3], mx.matrix[i].payload_8[4], mx.matrix[i].payload_8[5], mx.matrix[i].payload_8[6],
-	mx.matrix[i].payload_8[7]);
-	}
-	if (pr->birth_slot == UINT16_MAX)
-		mx.rank ++;
-	pr->birth_slot = mx.slot_number;
-	gpi_memcpy_dma_aligned(&(pr->coding_vector[0]), &mx.update_row, sizeof(mx.update_row));
-
-	printf("mx.rank:%d\n", mx.rank);
-	printf("matrix1:%d, %d, %d, %d, %d, %d\n", mx.matrix[0].coding_vector_8[0], mx.matrix[1].coding_vector_8[0], mx.matrix[2].coding_vector_8[0],
-	mx.matrix[3].coding_vector_8[0], mx.matrix[4].coding_vector_8[0], mx.matrix[5].coding_vector_8[0]);
-	for ( i = 0; i < MX_GENERATION_SIZE; i++)
-	{
-	printf("p1:%d, %d, %d, %d, %d, %d, %d, %d\n", mx.matrix[i].payload_8[0], mx.matrix[i].payload_8[1], mx.matrix[i].payload_8[2],
-	mx.matrix[i].payload_8[3], mx.matrix[i].payload_8[4], mx.matrix[i].payload_8[5], mx.matrix[i].payload_8[6],
-	mx.matrix[i].payload_8[7]);
-	}
-
-	static Pt_Context	pt_decode;
-	PT_INIT(&pt_decode);
-	while (PT_SCHEDULE(mixer_decode(&pt_decode)));
-	printf("matrix2:%d, %d, %d, %d, %d, %d\n", mx.matrix[0].coding_vector_8[0], mx.matrix[1].coding_vector_8[0], mx.matrix[2].coding_vector_8[0],
-	mx.matrix[3].coding_vector_8[0], mx.matrix[4].coding_vector_8[0], mx.matrix[5].coding_vector_8[0]);
-	for ( i = 0; i < MX_GENERATION_SIZE; i++)
-	{
-	printf("p2:%d, %d, %d, %d, %d, %d, %d, %d\n", mx.matrix[i].payload_8[0], mx.matrix[i].payload_8[1], mx.matrix[i].payload_8[2],
-	mx.matrix[i].payload_8[3], mx.matrix[i].payload_8[4], mx.matrix[i].payload_8[5], mx.matrix[i].payload_8[6],
-	mx.matrix[i].payload_8[7]);
-	}
-
-	PT_END(pt);
-}
-
-
-void unwrap_coding_vector(uint8_t *coding_vector_1, uint8_t *coding_vector_2, uint8_t self_unwrap)
-{
-	const uint16_t	BITMAP_SIZE = sizeof_member(Packet, coding_vector);
-	gpi_memcpy_dma_inline(coding_vector_1, coding_vector_2, BITMAP_SIZE);
-	if (!self_unwrap)
-		gpi_memcpy_dma_inline(coding_vector_1 + BITMAP_SIZE, coding_vector_2, BITMAP_SIZE);
-
-	uint8_t *pc = coding_vector_1;
-	uint8_t *pl = mx.local_double_map.coding_vector_8_1;
-	for ( ; pc < coding_vector_1 + BITMAP_SIZE * 2; )
-		*(pc++) &= *(pl++);
-}
-
-void unwrap_tx_sideload(uint8_t *tx_sideload)
-{
-	unwrap_coding_vector(mx.sideload_coding_vector.coding_vector_8_1, tx_sideload, 0);
-}
-
-
-void wrap_coding_vector(uint8_t *coding_vector_2, uint8_t *coding_vector_1)
-{
-	const uint16_t	BITMAP_SIZE = sizeof_member(Packet, coding_vector);
-	uint8_t *p2 = coding_vector_2;
-	uint8_t *p1 = coding_vector_1;
-	for ( ; p2 < coding_vector_2 + BITMAP_SIZE; )
-		*(p2++) |= *(p1++);
-}
-
-
-
-size_t mixer_rewrite(unsigned int i, const void *msg, size_t size)
-{
-	GPI_TRACE_FUNCTION();
-
-	assert_reset(i < MX_GENERATION_SIZE);
-
-	size = MIN(size, sizeof(mx.matrix[0].payload_8));
-
-	gpi_memcpy_dma(mx.matrix[i].payload_8, msg, size);
-
-	unwrap_row(i);
-
-	memset(mx.matrix[i].coding_vector, 0, sizeof(mx.matrix[0].coding_vector));
-	mx.matrix[i].coding_vector_8[i / 8] |= 1 << (i % 8);
-
-	wrap_chunk(mx.matrix[i].coding_vector_8);
-
-	if(UINT16_MAX == mx.matrix[i].birth_slot)
-	{
-		mx.matrix[i].birth_slot = mx.slot_number;
-		mx.recent_innovative_slot = mx.slot_number;
-		mx.rank++;
-	}
-
-	// PRINTF("matrix1\n");
-	// int j;
-	// for ( j = 0; j < MX_GENERATION_SIZE; j++)
-	// {
-	// 	PRINTF("%d:%x, %x, %x\n", j, mx.matrix[j].payload[1], mx.matrix[j].payload[0], mx.matrix[j].coding_vector[0]);
-	// }
-
-	if (NULL == mx.tx_reserve)
-		mx.tx_reserve = &mx.matrix[i];
-
-	if (mx.next_own_row > &mx.matrix[i])
-		mx.next_own_row = &mx.matrix[i];
-
-	// update local bitmap and the whole matrix with related row
-	mx.local_double_map.coding_vector_8_1[i / 8] ^= mx.matrix[i].coding_vector_8[i / 8];
-	mx.local_double_map.coding_vector_8_2[i / 8] ^= mx.matrix[i].coding_vector_8[i / 8];
-
-	mx.altered_coding_vector.coding_vector_8[i / 8] = 1 << (i % 8);
-	// update matrix with the i row
-	gpi_memcpy_dma(mx.update_row, mx.matrix[i].coding_vector, sizeof(mx.update_row));
-
-	// mixer_update_matrix
-	static Pt_Context	pt_update_matrix;
-	PT_INIT(&pt_update_matrix);
-	while (PT_SCHEDULE(mixer_update_matrix(&pt_update_matrix)));
-
-	// PRINTF("matrix2\n");
-	// for ( j = 0; j < MX_GENERATION_SIZE; j++)
-	// {
-	// 	PRINTF("%d:%x, %x, %x\n", j, mx.matrix[j].payload[1], mx.matrix[j].payload[0], mx.matrix[j].coding_vector[0]);
-	// }
-	PRINTF("local:%x, %x\n", mx.local_double_map.coding_vector_8_1[0], mx.local_double_map.coding_vector_8_2[0]);
-
-
-	// tx_sideload
-	mx.tx_sideload = mx.matrix[i].coding_vector_8;
-
-	GPI_TRACE_RETURN(size);
-}
-
-#endif
-
-//**************************************************************************************************
 //**************************************************************************************************

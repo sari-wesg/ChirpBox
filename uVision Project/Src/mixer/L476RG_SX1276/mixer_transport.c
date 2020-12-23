@@ -133,16 +133,6 @@ extern uint8_t node_id_allocate;
 
 // #define AFTER_HEADER_TIME   	( ( PAYLOAD_TIME ) - ( HEADER_TIME_SHORT ) )			//expected rxdone time after a valid header detection
 
-// #if MX_DOUBLE_BITMAP
-// 	// #define BITMAP_BYTE   			( (MX_GENERATION_SIZE + 7) / 8 ) * 2
-// 	#define BITMAP_BYTE   			(offsetof(Packet, payload) - offsetof(Packet, phy_payload_begin))
-// 	#define BITMAP_TMP			    (uint32_t)(ceil( (int32_t)( 8 * BITMAP_BYTE - 4 * LORA_SPREADING_FACTOR + 28) / \
-// 									(double)( 4 * LORA_SPREADING_FACTOR ) ) * ( 1 + 4 ))
-// 	#define BITMAP_NUM          	8 + ( ( (BITMAP_TMP) > 0 ) ? (BITMAP_TMP) : 0 )
-// 	#define BITMAP_TIME         	( ( BITMAP_NUM ) * ( SYMBOL_TIME ) + PREAMBLE_TIME )
-// 	#define AFTER_HEADER_BITMAP   	( ( BITMAP_TIME ) - ( HEADER_TIME ) )				//expected rxdone time after a valid header detection
-// #endif
-
 // //**************************************************************************************************
 // ASSERT_CT_STATIC(IS_POWER_OF_2(FAST_HYBRID_RATIO), unefficient_FAST_HYBRID_RATIO);
 
@@ -323,10 +313,6 @@ static struct
 
 // TODO: NJTRST
 // uint8_t Dio3Irq = 0;
-
-#if MX_DOUBLE_BITMAP
-	static uint8_t BITMAP_FIFO[BITMAP_BYTE];
-#endif
 
 #if MX_HEADER_CHECK
 	static uint8_t APP_HEADER_FIFO[HASH_HEADER];
@@ -742,12 +728,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			if ((hash_code_rx == code_tail_hash_rx) && (hash_code_rx))
 			#endif
 			{
-				#if MX_DOUBLE_BITMAP
-				for(j = 0; j < BITMAP_BYTE ; j++){
-					PRINTF("%d ", BITMAP_FIFO[j]);
-				}
-				PRINTF("\n");
-				#endif
 				// allocate rx queue destination slot
 				Packet	*packet;
 				#if MX_PSEUDO_CONFIG
@@ -945,11 +925,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 								GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "tx decision: has_next_payload set");
 								s.next_slot_task = TX;
 							}
-
-							#if MX_DOUBLE_BITMAP
-								if ((mx.start_up_flag) & (mx.non_update > 2))
-									s.next_slot_task = RX;
-							#endif
 						}
 					#endif
 
@@ -1355,17 +1330,9 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 		if (s.slot_state == RX_RUNNING)
 		{
 			// widen Rx time window
-			#if MX_DOUBLE_BITMAP
-				if (mx.start_up_flag)
-					s.rx_trigger_offset = s.rx_trigger_offset;
-					// s.rx_trigger_offset += RX_WINDOW_INCREMENT / 2;
-				else
-			#endif
-				{
-					{
-						// s.rx_trigger_offset += radio.rx_window_increment;
-					}
-				}
+			{
+				// s.rx_trigger_offset += radio.rx_window_increment;
+			}
 		}
 
 		// if Rx window exceeds limit: start RESYNC
@@ -1967,9 +1934,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			#else
 			ASSERT_CT(offsetof(Packet, payload) ==
 				offsetof(Packet, coding_vector) +
-			#if MX_DOUBLE_BITMAP
-				sizeof(mx.tx_packet.coding_vector) +
-			#endif
 				sizeof(mx.tx_packet.coding_vector),
 				inconsistent_program);
 			#endif
@@ -1977,16 +1941,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			#if MX_PSEUDO_CONFIG
 			const unsigned int	CHUNK_SIZE = chirp_config.coding_vector.len + chirp_config.payload.len;
 			#else
-			const unsigned int	CHUNK_SIZE = sizeof(mx.tx_packet.coding_vector) +
-			#if MX_DOUBLE_BITMAP
-				sizeof(mx.tx_packet.coding_vector) +
-			#endif
-			sizeof(mx.tx_packet.payload);
-			#endif
-
-			#if MX_DOUBLE_BITMAP
-			const unsigned int	BITMAP_SIZE = sizeof(mx.tx_packet.coding_vector);
-			const unsigned int	PAYLOAD_SIZE = sizeof(mx.tx_packet.payload);
+			const unsigned int	CHUNK_SIZE = sizeof(mx.tx_packet.coding_vector) + sizeof(mx.tx_packet.payload);
 			#endif
 
 			#if MX_PSEUDO_CONFIG
@@ -2008,12 +1963,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// printf("ps1:%lu\n", ps);
 			if(mx.tx_sideload == NULL)
 				PRINTF("sideload == NULL\n");
-
-			#if MX_DOUBLE_BITMAP
-				// if the tx_sideload points to the matrix, coding_vector and payload will be written separately.
-				uint8_t ps_is_martix = 0;
-				uint8_t *pc;
-			#endif
 
 			#if MX_REQUEST
 
@@ -2106,26 +2055,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					// 	printf("%d ", ps[k]);
 					// }
 					// printf("\n");
-					#if MX_DOUBLE_BITMAP
-						ps_is_martix = 1;
-						unwrap_tx_sideload(ps);
-						pc = &mx.sideload_coding_vector.coding_vector_8_1;
-	PRINTF("packet2:%x, %x, %x\n", mx.sideload_coding_vector.coding_vector_8_1[0], mx.sideload_coding_vector.coding_vector_8_2[0], ps[1]);
-					#endif
 				}
-			#if MX_DOUBLE_BITMAP
-				else
-				{
-					if (ps != NULL)
-					{
-						// tx_sideload points to rx queue packet coding_vector_2
-						unwrap_tx_sideload(ps + BITMAP_SIZE);
-						pc = &mx.sideload_coding_vector.coding_vector_8_1;
-	PRINTF("packet3:%x, %x, %x\n", mx.sideload_coding_vector.coding_vector_8_1[0], mx.sideload_coding_vector.coding_vector_8_2[0], ps[1]);
-
-					}
-				}
-			#endif
             }
 
 			#if MX_PSEUDO_CONFIG
@@ -2137,15 +2067,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				assert_reset(NULL != ps);
 				PRINTF("!mx.tx_packet.is_ready\n");
 
-				#if MX_DOUBLE_BITMAP
-					write_tx_fifo(pc, NULL, BITMAP_SIZE * 2);
-					if (ps_is_martix)
-						write_tx_fifo(ps + BITMAP_SIZE, NULL, PAYLOAD_SIZE);
-					else
-						write_tx_fifo(ps + BITMAP_SIZE * 2, NULL, PAYLOAD_SIZE);
-				#else
-					write_tx_fifo(ps, NULL, CHUNK_SIZE);
-				#endif
+				write_tx_fifo(ps, NULL, CHUNK_SIZE);
 
 				#if MX_VERBOSE_PACKETS || MX_REQUEST
 					// mark the packet as broken since it could be possible that we interrupt
@@ -2177,27 +2099,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				// (that is non-zero coding vector). Processing the full chunk at once not only
 				// saves the second call, it also keeps the alignment(!). We expect that this way
 				// is more efficient with relatively moderate packet sizes as in IEEE 802.15.4.
-				#if MX_DOUBLE_BITMAP
-				if (ps != NULL)
-				{
-					if (!write_tx_fifo(p, pc, BITMAP_SIZE * 2))
-						p = NULL;
-					else
-					{
-						if (ps_is_martix)
-							write_tx_fifo(p + BITMAP_SIZE * 2, ps + BITMAP_SIZE, PAYLOAD_SIZE);
-						else
-							write_tx_fifo(p + BITMAP_SIZE * 2, ps + BITMAP_SIZE * 2, PAYLOAD_SIZE);
-					}
-					PRINTF("p:%x, %x\n", mx.tx_packet.coding_vector[0], mx.tx_packet.coding_vector_2[0]);
-					PRINTF("pc:%x, %x\n", mx.sideload_coding_vector.coding_vector_8_1[0], mx.sideload_coding_vector.coding_vector_8_2[0]);
-				}
-				else
-				#endif
-				{
-					if (!write_tx_fifo(p, ps, CHUNK_SIZE))
-						p = NULL;
-				}
+				if (!write_tx_fifo(p, ps, CHUNK_SIZE))
+					p = NULL;
 			}
 		}
 

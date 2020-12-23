@@ -269,128 +269,83 @@ void mixer_init(uint8_t node_id)
 	mx.request = (Request_Data *)malloc(offsetof(Request_Data, mask) + 6 * chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 	#endif
 
-	#if MX_DOUBLE_BITMAP
-		if (!mx.start_up_flag)
-		{
+	mixer_transport_init();
+
+	mx.rx_queue_num_writing = 0;
+	mx.rx_queue_num_written = 0;
+	mx.rx_queue_num_read = 0;
+
+	#if MX_PSEUDO_CONFIG
+	mx.tx_packet->sender_id = node_id;
+	mx.tx_packet->flags.all = 0;
+	#else
+	mx.tx_packet.sender_id = node_id;
+	mx.tx_packet.flags.all = 0;
 	#endif
-			mixer_transport_init();
+	mx.tx_reserve = NULL;
 
-			mx.rx_queue_num_writing = 0;
-			mx.rx_queue_num_written = 0;
-			mx.rx_queue_num_read = 0;
-
-			#if MX_PSEUDO_CONFIG
-			mx.tx_packet->sender_id = node_id;
-			mx.tx_packet->flags.all = 0;
-			#else
-			mx.tx_packet.sender_id = node_id;
-			mx.tx_packet.flags.all = 0;
-			#endif
-			mx.tx_reserve = NULL;
-
-			#if MX_PSEUDO_CONFIG
-			for (i = 0; i < chirp_config.mx_generation_size; i++)
-				mx.matrix[i]->birth_slot = UINT16_MAX;
-			#else
-			for (i = 0; i < MX_GENERATION_SIZE; i++)
-				mx.matrix[i].birth_slot = UINT16_MAX;
-			#endif
-
-			mx.rank = 0;
-			#if MX_PSEUDO_CONFIG
-			mx.next_own_row = (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]);
-			#else
-			mx.next_own_row = &mx.matrix[NUM_ELEMENTS(mx.matrix)];
-			#endif
-			mx.recent_innovative_slot = 0;
-
-			mx.events = 0;
-
-			memset(&mx.stat_counter, 0, sizeof(mx.stat_counter));
-
-			for (i = 0; i < NUM_ELEMENTS(pt_data); ++i)
-				PT_INIT(&pt_data[i]);
-
-			#if MX_REQUEST
-				#if MX_PSEUDO_CONFIG
-				memset(mx.request, 0, offsetof(Request_Data, mask) + 6 * chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-				memset(&(mx.request->mask[chirp_config.my_row_mask.pos]), -1, chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-				memset(&(mx.request->mask[chirp_config.my_column_mask.pos]), -1, chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-
-				// ATTENTION: signed is important
-				int_fast_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
-				for (i = chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t) * 8; i-- > chirp_config.mx_generation_size;)
-					mask >>= 1;
-				mx.request->padding_mask = ~(mask << 1);
-				GPI_TRACE_MSG(TRACE_VERBOSE, "request padding mask: %0*x",
-					sizeof(uint_fast_t) * 2, mx.request->padding_mask);
-
-				i = chirp_config.matrix_coding_vector.len - 1;
-				mx.request->mask[chirp_config.my_row_mask.pos + i] &= mx.request->padding_mask;
-				mx.request->mask[chirp_config.my_column_mask.pos + i] &= mx.request->padding_mask;
-				#else
-				memset(&mx.request, 0, sizeof(mx.request));
-				memset(&mx.request.my_row_mask, -1, sizeof(mx.request.my_row_mask));
-				memset(&mx.request.my_column_mask, -1, sizeof(mx.request.my_column_mask));
-
-				// ATTENTION: signed is important
-				int_fast_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
-				for (i = sizeof(mx.request.my_row_mask) * 8; i-- > MX_GENERATION_SIZE;)
-					mask >>= 1;
-				mx.request.padding_mask = ~(mask << 1);
-
-				GPI_TRACE_MSG(TRACE_VERBOSE, "request padding mask: %0*x",
-					sizeof(mx.request.padding_mask) * 2, mx.request.padding_mask);
-
-				i = NUM_ELEMENTS(mx.request.my_row_mask) - 1;
-				mx.request.my_row_mask[i] &= mx.request.padding_mask;
-				mx.request.my_column_mask[i] &= mx.request.padding_mask;
-				#endif
-			#endif
-
-			#if MX_COORDINATED_TX
-				mx_init_history();
-			#endif
-
-			#if MX_DOUBLE_BITMAP
-				mx.start_up_flag = 0;
-				mx.decode_done = 0;
-				mx.is_local_map_full = 0;
-				memset(&mx.altered_coding_vector, 0, sizeof(mx.altered_coding_vector));
-				memset(&mx.transition_time_table.time_bit, -1, sizeof(mx.transition_time_table.time_bit));
-				memset(&mx.transition_time_table.time_value, 0, sizeof(mx.transition_time_table.time_value));
-				i = NUM_ELEMENTS(mx.request.my_row_mask) - 1;
-				mx.transition_time_table.time_bit.coding_vector_8_1[i] &= mx.coding_vector_mask;
-				mx.transition_time_table.time_bit.coding_vector_8_2[i] &= mx.coding_vector_mask;
-				#if MX_REQUEST
-					mx.coding_vector_mask = mx.request.padding_mask;
-				#else
-					int_fast_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
-					for (i = sizeof_member(Matrix_Row, coding_vector) * 8; i-- > MX_GENERATION_SIZE;)
-						mask >>= 1;
-					mx.coding_vector_mask = ~(mask << 1);
-				#endif
-
-			#endif
-
-	#if MX_DOUBLE_BITMAP
-		}
+	#if MX_PSEUDO_CONFIG
+	for (i = 0; i < chirp_config.mx_generation_size; i++)
+		mx.matrix[i]->birth_slot = UINT16_MAX;
+	#else
+	for (i = 0; i < MX_GENERATION_SIZE; i++)
+		mx.matrix[i].birth_slot = UINT16_MAX;
 	#endif
 
-	#if MX_DOUBLE_BITMAP
-		#if MX_PACKET_TABLE
-			if (mx.start_up_flag)
-			{
-				memset(&evaluation.packet_table, 0, sizeof(evaluation.packet_table));
-				memset(&evaluation.result_packet, 0, sizeof(evaluation.result_packet));
-				#if TEST_ROUND
-					clear_real_packet();
-				#endif
-			}
+	mx.rank = 0;
+	#if MX_PSEUDO_CONFIG
+	mx.next_own_row = (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]);
+	#else
+	mx.next_own_row = &mx.matrix[NUM_ELEMENTS(mx.matrix)];
+	#endif
+	mx.recent_innovative_slot = 0;
+
+	mx.events = 0;
+
+	memset(&mx.stat_counter, 0, sizeof(mx.stat_counter));
+
+	for (i = 0; i < NUM_ELEMENTS(pt_data); ++i)
+		PT_INIT(&pt_data[i]);
+
+	#if MX_REQUEST
+		#if MX_PSEUDO_CONFIG
+		memset(mx.request, 0, offsetof(Request_Data, mask) + 6 * chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		memset(&(mx.request->mask[chirp_config.my_row_mask.pos]), -1, chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		memset(&(mx.request->mask[chirp_config.my_column_mask.pos]), -1, chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+
+		// ATTENTION: signed is important
+		int_fast_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
+		for (i = chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t) * 8; i-- > chirp_config.mx_generation_size;)
+			mask >>= 1;
+		mx.request->padding_mask = ~(mask << 1);
+		GPI_TRACE_MSG(TRACE_VERBOSE, "request padding mask: %0*x",
+			sizeof(uint_fast_t) * 2, mx.request->padding_mask);
+
+		i = chirp_config.matrix_coding_vector.len - 1;
+		mx.request->mask[chirp_config.my_row_mask.pos + i] &= mx.request->padding_mask;
+		mx.request->mask[chirp_config.my_column_mask.pos + i] &= mx.request->padding_mask;
+		#else
+		memset(&mx.request, 0, sizeof(mx.request));
+		memset(&mx.request.my_row_mask, -1, sizeof(mx.request.my_row_mask));
+		memset(&mx.request.my_column_mask, -1, sizeof(mx.request.my_column_mask));
+
+		// ATTENTION: signed is important
+		int_fast_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
+		for (i = sizeof(mx.request.my_row_mask) * 8; i-- > MX_GENERATION_SIZE;)
+			mask >>= 1;
+		mx.request.padding_mask = ~(mask << 1);
+
+		GPI_TRACE_MSG(TRACE_VERBOSE, "request padding mask: %0*x",
+			sizeof(mx.request.padding_mask) * 2, mx.request.padding_mask);
+
+		i = NUM_ELEMENTS(mx.request.my_row_mask) - 1;
+		mx.request.my_row_mask[i] &= mx.request.padding_mask;
+		mx.request.my_column_mask[i] &= mx.request.padding_mask;
 		#endif
-		#if MX_DATA_SET
-			clear_dataset();
-		#endif
+	#endif
+
+	#if MX_COORDINATED_TX
+		mx_init_history();
 	#endif
 
 	mx.rx_queue_num_read = mx.rx_queue_num_written;
@@ -403,32 +358,6 @@ void mixer_init(uint8_t node_id)
 	mx.tx_packet.is_ready = 0;
 	#endif
 	mx.tx_sideload = NULL;
-
-	#if MX_DOUBLE_BITMAP
-		if ((mx.start_up_flag) & (!node_id))
-			mx.tx_sideload = &(mx.tx_reserve->coding_vector_8[0]);
-		mx.non_update = 0;
-		mx.next_task_own_update = 0;
-		if (!mx.start_up_flag)
-		{
-			memset(&mx.local_double_map, 0, sizeof(mx.local_double_map));
-			memset(&mx.sideload_coding_vector, 0, sizeof(mx.sideload_coding_vector));
-			memset(&mx.transition_time_table.time_bit, -1, sizeof(mx.transition_time_table.time_bit));
-			memset(&mx.transition_time_table.time_value, 0, sizeof(mx.transition_time_table.time_value));
-			i = NUM_ELEMENTS(mx.request.my_row_mask) - 1;
-			mx.transition_time_table.time_bit.coding_vector_8_1[i] &= mx.coding_vector_mask;
-			mx.transition_time_table.time_bit.coding_vector_8_2[i] &= mx.coding_vector_mask;
-		}
-		else
-		{
-			// TODO:
-			memset(&mx.local_double_map.coding_vector_8_1, -1, sizeof(mx.local_double_map.coding_vector_8_1));
-			i = NUM_ELEMENTS(mx.request.my_row_mask) - 1;
-			mx.local_double_map.coding_vector_8_1[i] &= mx.coding_vector_mask;
-			mx.is_local_map_full = 1;
-			mx.rank = 0;
-		}
-	#endif
 
 	#if MX_DUTY_CYCLE
 		mx.last_tx_slot = 0;
@@ -534,10 +463,6 @@ size_t mixer_write(unsigned int i, const void *msg, size_t size)
 		#endif
 	#endif
 
-	#if MX_DOUBLE_BITMAP
-		// only use the first bitmap before start up done
-		mx.local_double_map.coding_vector_8_1[i / 8] |= 1 << (i % 8);
-	#endif
 	GPI_TRACE_RETURN(size);
 }
 
@@ -669,16 +594,11 @@ Gpi_Fast_Tick_Extended mixer_start()
 						// in RESYNC when stopping.
 						if (mx.events & BV(DEADLINE_REACHED))
 						{
-							#if MX_DOUBLE_BITMAP
-								if (!mx.start_up_flag)
+							#if MX_PSEUDO_CONFIG
+							mx.slot_number = chirp_config.mx_round_length;
+							#else
+							mx.slot_number = MX_ROUND_LENGTH;
 							#endif
-								{
-									#if MX_PSEUDO_CONFIG
-									mx.slot_number = chirp_config.mx_round_length;
-									#else
-									mx.slot_number = MX_ROUND_LENGTH;
-									#endif
-								}
 						}
 
 						// exit loop

@@ -280,11 +280,6 @@ void mx_update_request(const Packet *p)
 
 	// snoop coding vector and update any_pending data
 
-	#if MX_DOUBLE_BITMAP
-		uint8_t			wrapped_coding_vector[(MX_GENERATION_SIZE + 7) / 8];
-		wrap_coding_vector(wrapped_coding_vector, p->coding_vector);
-	#endif
-
 	#if MX_PSEUDO_CONFIG
 	if (mx.request->column_any_pending)
 	#else
@@ -297,20 +292,14 @@ void mx_update_request(const Packet *p)
 		uint_fast16_t last = mx.request.column.any_pending;
 		#endif
 
-		#if MX_DOUBLE_BITMAP
-			mx.request.column.any_pending =
-				request_clear(mx.request.column.any_mask, wrapped_coding_vector, sizeof(mx.request.column.any_mask));
-			request_clear(mx.request.column.all_mask, wrapped_coding_vector, sizeof(mx.request.column.all_mask));
+		#if MX_PSEUDO_CONFIG
+		mx.request->column_any_pending =
+			request_clear((uint_fast_t *)&(mx.request->mask[chirp_config.column_any_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		request_clear(&(mx.request->mask[chirp_config.column_all_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 		#else
-			#if MX_PSEUDO_CONFIG
-			mx.request->column_any_pending =
-				request_clear((uint_fast_t *)&(mx.request->mask[chirp_config.column_any_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-			request_clear(&(mx.request->mask[chirp_config.column_all_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-			#else
-			mx.request.column.any_pending =
-				request_clear(mx.request.column.any_mask, p->coding_vector, sizeof(mx.request.column.any_mask));
-			request_clear(mx.request.column.all_mask, p->coding_vector, sizeof(mx.request.column.all_mask));
-			#endif
+		mx.request.column.any_pending =
+			request_clear(mx.request.column.any_mask, p->coding_vector, sizeof(mx.request.column.any_mask));
+		request_clear(mx.request.column.all_mask, p->coding_vector, sizeof(mx.request.column.all_mask));
 		#endif
 
 		#if MX_PSEUDO_CONFIG
@@ -328,14 +317,10 @@ void mx_update_request(const Packet *p)
 	if (mx.request.row.any_pending)
 	#endif
 	{
-		#if MX_DOUBLE_BITMAP
-			int_fast16_t i = mx_get_leading_index(wrapped_coding_vector);
+		#if MX_PSEUDO_CONFIG
+		int_fast16_t i = mx_get_leading_index(&(p->packet_chunk[chirp_config.coding_vector.pos]));
 		#else
-			#if MX_PSEUDO_CONFIG
-			int_fast16_t i = mx_get_leading_index(&(p->packet_chunk[chirp_config.coding_vector.pos]));
-			#else
-			int_fast16_t i = mx_get_leading_index(p->coding_vector);
-			#endif
+		int_fast16_t i = mx_get_leading_index(p->coding_vector);
 		#endif
 		if (i >= 0)
 		{
