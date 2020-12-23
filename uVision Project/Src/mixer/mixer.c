@@ -409,10 +409,6 @@ void mixer_init(uint8_t node_id)
 			mx.tx_sideload = &(mx.tx_reserve->coding_vector_8[0]);
 		mx.non_update = 0;
 		mx.next_task_own_update = 0;
-		#if MX_PREAMBLE_UPDATE
-			mx.preamble_update_abort_rx = 0;
-			memset(&mx.packet_header, 0, sizeof(mx.packet_header));
-		#endif
 		if (!mx.start_up_flag)
 		{
 			memset(&mx.local_double_map, 0, sizeof(mx.local_double_map));

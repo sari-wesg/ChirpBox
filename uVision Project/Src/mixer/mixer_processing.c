@@ -905,28 +905,6 @@ PT_THREAD(mixer_update_slot())
 				PROFILE("mixer_update_slot() update history end");
 			}
 
-			#if MX_PREAMBLE_UPDATE
-				if (mx.preamble_update_abort_rx)
-				{
-					uint8_t  		sender_id   = mx.packet_header.sender_id;
-					#if MX_COORDINATED_TX
-						uint16_t	slot_number = mx.packet_header.slot_number;
-									flags		= mx.packet_header.flags;
-					#endif
-
-					#if MX_REQUEST
-						mx_update_request(&mx.packet_header);
-					#endif
-
-					#if MX_COORDINATED_TX
-						mx_update_history(sender_id, flags, slot_number);
-						GPI_TRACE_MSG(TRACE_INFO, "node %u history update", sender_id);
-					#endif
-
-					memset(&mx.packet_header, 0, sizeof(mx.packet_header));
-					mx.preamble_update_abort_rx = 0;
-				}
-			#endif
 		#endif
 
 		PROFILE("mixer_update_slot() tx decision begin");
@@ -1890,11 +1868,6 @@ PT_THREAD(mixer_process_rx_data())
 				{
 					uint8_t update_check = bitmap_update_check(p->coding_vector, mx.tx_packet.sender_id);
 					PRINTF("check:%d\n", update_check);
-					#if (!MX_PREAMBLE_UPDATE)
-						if(update_check != OTHER_UPDATE)
-							mx.non_update += 2;
-					#endif
-
 					#if (!MX_PREAMBLE_UPDATE)
 						if (update_check & OWN_UPDATE)
 						{

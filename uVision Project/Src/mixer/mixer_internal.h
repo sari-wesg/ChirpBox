@@ -1086,10 +1086,6 @@ extern struct mx
 	uint8_t 					non_update;
 	uint8_t 					update_flag;
 	uint8_t 					next_task_own_update;
-	#if MX_PREAMBLE_UPDATE
-		uint8_t 					preamble_update_abort_rx;
-		Packet						packet_header;
-	#endif
 	// coding_vector mask
 	uint_fast_t					coding_vector_mask;
 

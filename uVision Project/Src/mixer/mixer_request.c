@@ -269,16 +269,11 @@ void mx_update_request(const Packet *p)
 					return;
 				}
 
-				#if MX_PREAMBLE_UPDATE
-				if (!mx.preamble_update_abort_rx)
+				#if MX_PSEUDO_CONFIG
+				gpi_memcpy_dma_inline(&(mx.history[sender_id]->row_map_chunk[0]), &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+				#else
+				gpi_memcpy_dma_inline(mx.history[sender_id].row_map, p->info_vector, sizeof(mx.history[0].row_map));
 				#endif
-				{
-					#if MX_PSEUDO_CONFIG
-					gpi_memcpy_dma_inline(&(mx.history[sender_id]->row_map_chunk[0]), &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-					#else
-					gpi_memcpy_dma_inline(mx.history[sender_id].row_map, p->info_vector, sizeof(mx.history[0].row_map));
-					#endif
-				}
 			}
 		#endif
 	}

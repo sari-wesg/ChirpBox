@@ -303,11 +303,6 @@ static struct
 	Gpi_Fast_Tick_Native	radio_start_timestamp;
 #endif
 
-#if MX_PREAMBLE_UPDATE
-	uint8_t					valid_preamble;
-	uint8_t					non_receive;
-#endif
-
 #if MX_HEADER_CHECK
 	uint8_t					valid_header;
 #endif
@@ -728,10 +723,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			{
 				PRINTF_CHIRP("ok\n");
 			}
-			#if MX_PREAMBLE_UPDATE
-				if (s.non_receive >= MAX_NON_RECEIVE)
-					s.non_receive = 0;
-			#endif
 
 			uint8_t RxPacketBuffer[packet_len];
 			memset( RxPacketBuffer, 0, ( size_t )packet_len );
@@ -1118,36 +1109,26 @@ void LED_ISR(mixer_dio3_isr, LED_DIO3_ISR)
 				GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "header detected");
 
 				// REG_LR_RXNBBYTES cannot be read before a valid packet is received, so we do not check the payload length here
-				ASSERT_CT(~(MX_PREAMBLE_UPDATE), inconsistent_program);
+				{
+					// MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(PAYLOAD_TIME);
+					Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
+					// s.slow_trigger = r.hybrid_tick + GPI_TICK_US_TO_HYBRID2(AFTER_HEADER_TIME);
+					s.slow_trigger = r.hybrid_tick + radio.packet_air_time;
+					MAIN_TIMER_CC_REG = r.fast_capture + (s.slow_trigger - r.hybrid_tick) * FAST_HYBRID_RATIO;
+					__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
+					LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 5 * radio.max_tb_interval / HYBRID_SLOW_RATIO;
+					while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 
-				#if MX_PREAMBLE_UPDATE
-					if ((mx.start_up_flag) && (mx.slot_number > 1) && ( RESYNC != s.slot_state ))
+					s.grid_timer_flag = 0;
+
+					#if MX_HEADER_CHECK
+					if (RESYNC != s.slot_state)
 					{
-						s.valid_preamble = 1;
-						MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(AFTER_HEADER_BITMAP);
+						s.valid_header = 1;
+						MAIN_TIMER_CC_REG = r.fast_capture + radio.after_header_hybrid * FAST_HYBRID_RATIO;
 					}
-					else
-				#endif
-					{
-						// MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(PAYLOAD_TIME);
-						Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
-						// s.slow_trigger = r.hybrid_tick + GPI_TICK_US_TO_HYBRID2(AFTER_HEADER_TIME);
-						s.slow_trigger = r.hybrid_tick + radio.packet_air_time;
-						MAIN_TIMER_CC_REG = r.fast_capture + (s.slow_trigger - r.hybrid_tick) * FAST_HYBRID_RATIO;
-						__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
-						LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + 5 * radio.max_tb_interval / HYBRID_SLOW_RATIO;
-						while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
-
-						s.grid_timer_flag = 0;
-
-						#if MX_HEADER_CHECK
-						if (RESYNC != s.slot_state)
-						{
-							s.valid_header = 1;
-							MAIN_TIMER_CC_REG = r.fast_capture + radio.after_header_hybrid * FAST_HYBRID_RATIO;
-						}
-						#endif
-					}
+					#endif
+				}
 				unmask_main_timer(1);
 				unmask_slow_timer(1);
 			}
@@ -1258,8 +1239,6 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 	mask_slow_timer();
 	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
 
-	ASSERT_CT(~(MX_PREAMBLE_UPDATE), inconsistent_program);
-
 	#if MX_LBT_ACCESS
 	if (s.lbt_rx_on)
 	{
@@ -1351,88 +1330,6 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 	}
 	#endif
 	// NOTE: being here implies that Rx is active (state = RESYNC or RX_RUNNING)
-	#if MX_PREAMBLE_UPDATE
-		if ((s.valid_preamble) && (mx.start_up_flag))
-		{
-			s.valid_preamble = 0;
-			memset( BITMAP_FIFO, 0, BITMAP_BYTE );
-			// SX1276Write( REG_LR_FIFOADDRPTR, 0 );
-			SX1276Write( REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ));
-			SX1276ReadFifo( BITMAP_FIFO, BITMAP_BYTE );
-			// printf("----id:%d, %d, %d, %d, %d, %d\n", BITMAP_FIFO[0], BITMAP_FIFO[1], BITMAP_FIFO[2], BITMAP_FIFO[3],
-			// BITMAP_FIFO[4], BITMAP_FIFO[5]);
-			memcpy(&mx.packet_header.phy_payload_begin, BITMAP_FIFO, BITMAP_BYTE);
-			// printf("slot:%d, %d\n", mx.packet_header.slot_number, mx.packet_header.sender_id);
-
-			// if (1)
-			if (mx.packet_header.sender_id < MX_NUM_NODES)
-			{
-				uint8_t update = 0;
-				update = bitmap_update_check_header(&(BITMAP_FIFO[offsetof(Packet, coding_vector)]), mx.tx_packet.sender_id);
-				// PRINTF("update:%d\n", update);
-				// if ((!update) && (s.non_receive < MAX_NON_RECEIVE))
-				if (((!update) || (update == OWN_UPDATE)) && (s.non_receive < MAX_NON_RECEIVE))
-				{
-					if (update == OWN_UPDATE)
-					{
-						gpi_memcpy_dma_aligned(mx.tx_packet.coding_vector_2, mx.matrix[mx.tx_packet.sender_id].coding_vector, sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
-						unwrap_coding_vector(mx.tx_packet.coding_vector, mx.tx_packet.coding_vector_2, 1);
-						mx.tx_packet.is_ready = 1;
-						mx.tx_sideload = NULL;
-
-						mx.next_task_own_update = 1;
-					}
-					mx.preamble_update_abort_rx = 1;
-
-					s.non_receive ++;
-
-					mx.non_update += 2;
-
-					// mask interrupts (radio)
-					// NOTE: stopping timeout timer is not needed since this is done implicitely below
-					SX1276Write( REG_LR_IRQFLAGSMASK, 0xFFFF );
-
-					// turn radio off
-					SX1276SetOpMode( RFLR_OPMODE_SLEEP );
-					gpi_led_off(LED_RX | LED_TX);
-
-					#if MX_VERBOSE_STATISTICS
-					if (s.radio_start_timestamp & 1)
-					{
-						mx.stat_counter.radio_on_time += gpi_tick_fast_native() - s.radio_start_timestamp;
-						s.radio_start_timestamp = 0;
-					}
-					#endif
-
-					#if ENERGEST_CONF_ON
-						ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
-					#endif
-
-					// update next trigger tick
-					s.next_trigger_tick = s.next_grid_tick -
-						((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
-
-					s.next_trigger_tick_slow = s.next_grid_tick_slow -
-						(Gpi_Slow_Tick_Native)((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset) / HYBRID_SLOW_RATIO;
-
-					// handover to grid timer
-					// NOTE: this is done automatically while RESYNC is running
-					// (more precisely: if RESYNC was active before entering current function)
-					start_grid_timer();
-
-					GPI_TRACE_RETURN_FAST();
-				}
-				if (s.non_receive < MAX_NON_RECEIVE)
-					mx.non_update = 0;
-			}
-
-			MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(PAYLOAD_TIME);
-			unmask_main_timer(1);
-
-			GPI_TRACE_RETURN_FAST();
-		}
-	#endif
-
 	// mask interrupts (radio)
 	// NOTE: stopping timeout timer is not needed since this is done implicitely below
 	SX1276Write( REG_LR_IRQFLAGSMASK, 0xFFFF );
@@ -1651,10 +1548,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		#if MX_HEADER_CHECK
 			s.valid_header = 0;
-		#endif
-
-		#if MX_PREAMBLE_UPDATE
-			s.valid_preamble = 0;
 		#endif
 
 		// allocate rx queue destination slot
