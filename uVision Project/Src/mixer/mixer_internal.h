@@ -179,10 +179,6 @@
 	#define TEST_ROUND								0
 #endif
 
-#ifndef MX_LBT_AFA
-	#define MX_LBT_AFA								0
-#endif
-
 #ifndef MX_FLASH_FILE
 	#define MX_FLASH_FILE							1
 #endif
@@ -529,13 +525,6 @@ typedef union __attribute__((packed)) Packet_tag
 		uint8_t 		packet_chunk[0];
 #else
 
-		#if MX_LBT_AFA
-			uint8_t			full_channel[AFA_CHANNEL_NUM];
-			#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-				uint8_t			info_vector[(MX_GENERATION_SIZE + 7) / 8];
-			#endif
-		#endif
-
 		uint8_t			coding_vector[(MX_GENERATION_SIZE + 7) / 8];
 		#if MX_DOUBLE_BITMAP
 		uint8_t			coding_vector_2[(MX_GENERATION_SIZE + 7) / 8];
@@ -543,11 +532,7 @@ typedef union __attribute__((packed)) Packet_tag
 		uint8_t			payload[MX_PAYLOAD_SIZE];
 
 		#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-			#if MX_LBT_AFA
-					uint8_t			padding_info_vector[(MX_GENERATION_SIZE + 7) / 8];
-			#else
-					uint8_t			info_vector[(MX_GENERATION_SIZE + 7) / 8];
-			#endif
+			uint8_t			info_vector[(MX_GENERATION_SIZE + 7) / 8];
 		#endif
 
 		union __attribute__((packed))
@@ -611,10 +596,6 @@ typedef union __attribute__((packed)) Packet_tag
 		// int_fast_t __attribute__((aligned)) _padding[0]; would not work because the attribute
 		// would not align the offset of _padding, only its members)
 		int8_t			_padding_3[PADDING_SIZE(
-	#if MX_LBT_AFA
-								AFA_CHANNEL_NUM +
-								((MX_GENERATION_SIZE + 7) / 8) +		// coding_vector_2
-	#endif
 								((MX_GENERATION_SIZE + 7) / 8) +	// coding_vector
 	#if MX_DOUBLE_BITMAP
 								((MX_GENERATION_SIZE + 7) / 8) +		// coding_vector_2
@@ -1123,18 +1104,6 @@ extern struct mx
 #if MX_DUTY_CYCLE
 	uint_fast_t					last_tx_slot;
 #endif
-
-#if MX_LBT_AFA
-	uint8_t						current_channel[AFA_CHANNEL_NUM]; // current using channel: 3, 1, 4
-	uint8_t						current_channel_used_num[AFA_CHANNEL_NUM]; //for all nodes
-	uint8_t 					current_channel_occupy; // for tx channel
-	uint8_t						occupied_channel_flag; // if channel is full, flag is 1, if use a new channel, flag is 0
-
-	uint8_t						coding_vector_map[(MX_GENERATION_SIZE + 7) / 8];
-	Packet						lbt_packet_header;
-	uint8_t 					lbt_coding_check_abort_rx;
-#endif
-
 } mx;
 
 #if MX_PACKET_TABLE
@@ -1273,14 +1242,6 @@ void 			wrap_chunk(uint8_t *p);
 	void 			get_real_packet_group();
 	void 			calculate_action_time();
 #endif
-
-#if MX_LBT_AFA
-	uint8_t			assign_tx_channel(uint8_t tx_channel);
-	uint8_t 		coding_vector_check(uint8_t *p_packet_coding);
-	uint8_t 		update_tx_channel(uint8_t tx_channel);
-	void			update_rx_channel(uint8_t *current_channel_used_num);
-#endif
-
 #ifdef __cplusplus
 	}
 #endif
@@ -1293,15 +1254,9 @@ void 			wrap_chunk(uint8_t *p);
 static inline __attribute__((always_inline)) void unwrap_chunk(uint8_t *p)
 {
 	// double-check alignment of packet fields
-	#if MX_LBT_AFA
-		ASSERT_CT(
-			!((offsetof(Packet, coding_vector) - sizeof_member(Packet, info_vector) - sizeof_member(Packet, full_channel)) % sizeof(uint_fast_t)),
-			inconsistent_alignment);
-	#else
-		ASSERT_CT(
-			!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)),
-			inconsistent_alignment);
-	#endif
+	ASSERT_CT(
+		!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)),
+		inconsistent_alignment);
 	ASSERT_CT(
 		offsetof(Packet, payload) ==
 			offsetof(Packet, coding_vector) +

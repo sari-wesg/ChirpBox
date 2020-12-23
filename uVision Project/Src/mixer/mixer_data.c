@@ -509,10 +509,6 @@ void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
 	chirp_config.rand.len = 1;
 	chirp_config._padding_3.pos = chirp_config.rand.pos + chirp_config.rand.len;
 	chirp_config._padding_3.len = PADDING_SIZE(
-	#if MX_LBT_AFA
-								AFA_CHANNEL_NUM +
-								((chirp_config.mx_generation_size + 7) / 8) +		// coding_vector_2
-	#endif
 								((chirp_config.mx_generation_size + 7) / 8) +	// coding_vector
 	#if MX_DOUBLE_BITMAP
 								((chirp_config.mx_generation_size + 7) / 8) +		// coding_vector_2

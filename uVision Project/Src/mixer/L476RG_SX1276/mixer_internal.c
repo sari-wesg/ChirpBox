@@ -120,14 +120,8 @@ int_fast16_t mx_get_leading_index(const uint8_t *pcv)
 void unwrap_chunk(uint8_t *p)
 {
 	/* double-check alignment of packet fields */
-	#if MX_LBT_AFA
-		ASSERT_CT(
-			!((offsetof(Packet, coding_vector) - sizeof_member(Packet, info_vector) - sizeof_member(Packet, full_channel)) % sizeof(uint_fast_t)),
-			inconsistent_alignment);
-	#else
-		// ASSERT_CT(!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)), inconsistent_alignment);
-		assert_reset(!((offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin)) % sizeof(uint_fast_t)));
-	#endif
+	// ASSERT_CT(!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)), inconsistent_alignment);
+	assert_reset(!((offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin)) % sizeof(uint_fast_t)));
 // 	ASSERT_CT(
 // 		offsetof(Packet, payload) ==
 // 			offsetof(Packet, coding_vector) +

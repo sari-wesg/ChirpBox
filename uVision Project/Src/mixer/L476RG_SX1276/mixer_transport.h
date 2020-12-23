@@ -41,27 +41,6 @@
 	#define AFTER_HEADER_BITMAP   	( ( BITMAP_TIME ) - ( HEADER_TIME ) )			//expected rxdone time after a valid header detection
 #endif
 
-#if MX_LBT_AFA
-	#define BITMAP_BYTE_INFO   			(offsetof(Packet, payload) - offsetof(Packet, phy_payload_begin))
-	#define BITMAP_TMP_INFO			    (uint32_t)(ceil( (int32_t)( 8 * BITMAP_BYTE_INFO - 4 * LORA_SPREADING_FACTOR + 28) / \
-										(double)( 4 * LORA_SPREADING_FACTOR ) ) * ( 1 + 4 ))
-	#define BITMAP_NUM_INFO          	8 + ( ( (BITMAP_TMP_INFO) > 0 ) ? (BITMAP_TMP_INFO) : 0 )
-	#define BITMAP_TIME_INFO         	( ( BITMAP_NUM_INFO ) * ( SYMBOL_TIME ) + PREAMBLE_TIME )
-	#define AFTER_HEADER_BITMAP_INFO   	( ( BITMAP_TIME_INFO ) - ( HEADER_TIME ) )			//expected rxdone time after a valid header detection
-
-	#define AFA_GUARD_TIME         		GPI_TICK_MS_TO_SLOW(5)
-	#define CCA_INTERVAL         		GPI_TICK_MS_TO_SLOW(5)
-	#define DEAD_TIME	         		GPI_TICK_MS_TO_SLOW(5)
-	#define BITMAP_TIME_SLOW       		GPI_TICK_MS_TO_SLOW(BITMAP_TIME_INFO / 1000)
-	#define CHANNEL_DURATION         	(AFA_GUARD_TIME + CCA_INTERVAL + DEAD_TIME + BITMAP_TIME_SLOW)
-
-	#define SENSITIVITY_IN_DBM      	(3 * (LORA_BANDWIDTH - 7) - 81)
-	#define MAX_RX_TIME_IN_GRID      	(AFA_CHANNEL_NUM - 1)
-	#define MAX_TX_TIME_IN_GRID      	AFA_CHANNEL_NUM
-
-	#define MAX_TX_COUNT		      	((uint32_t)(LBT_DURATION * 1e6) / PAYLOAD_AIR_TIME)
-#endif
-
 //**************************************************************************************************
 ASSERT_CT_STATIC(IS_POWER_OF_2(FAST_HYBRID_RATIO), unefficient_FAST_HYBRID_RATIO);
 

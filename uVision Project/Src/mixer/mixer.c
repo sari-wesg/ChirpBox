@@ -438,18 +438,6 @@ void mixer_init(uint8_t node_id)
 		mx.last_tx_slot = 0;
 	#endif
 
-	#if MX_LBT_AFA
-		for ( i = 0; i < AFA_CHANNEL_NUM; i++)
-			mx.current_channel[i] = i;
-		memset(&mx.current_channel_used_num, 0, sizeof(mx.current_channel_used_num));
-		mx.current_channel_occupy = (1 << AFA_CHANNEL_NUM) -1;
-		mx.occupied_channel_flag = 0;
-
-		memset(&mx.coding_vector_map, 0, sizeof(mx.coding_vector_map));
-		memset(&mx.lbt_packet_header, 0, sizeof(mx.lbt_packet_header));
-		mx.lbt_coding_check_abort_rx = 0;
-	#endif
-
 	#if MX_SMART_SHUTDOWN
 		mx.have_full_rank_neighbor = 0;
 		#if MX_SMART_SHUTDOWN_MAP
@@ -517,10 +505,6 @@ size_t mixer_write(unsigned int i, const void *msg, size_t size)
 	memset(mx.matrix[i].coding_vector, 0, sizeof(mx.matrix[0].coding_vector));
 	mx.matrix[i].coding_vector_8[i / 8] |= 1 << (i % 8);
 	mx.matrix[i].birth_slot = 0;
-	#endif
-
-	#if MX_LBT_AFA
-		mx.coding_vector_map[i / 8] |= 1 << (i % 8);
 	#endif
 
 	mx.rank++;

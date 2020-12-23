@@ -652,14 +652,10 @@ static void prepare_tx_packet()
 				PROFILE("prepare_tx_packet() memxor_block(full) end");
 			}
 
-			#if MX_LBT_AFA
-				ASSERT_CT(!((offsetof(Packet, coding_vector) - sizeof_member(Packet, info_vector) - sizeof_member(Packet, full_channel)) % sizeof(uint_fast_t)), alignment_issue);
+			#if MX_PSEUDO_CONFIG
+			assert_reset(!((offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos) % sizeof(uint_fast_t)));
 			#else
-				#if MX_PSEUDO_CONFIG
-				assert_reset(!((offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos) % sizeof(uint_fast_t)));
-				#else
-				ASSERT_CT(!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)), alignment_issue);
-				#endif
+			ASSERT_CT(!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)), alignment_issue);
 			#endif
 			#if MX_PSEUDO_CONFIG
 			assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
@@ -933,45 +929,6 @@ PT_THREAD(mixer_update_slot())
 
 					memset(&mx.packet_header, 0, sizeof(mx.packet_header));
 					mx.preamble_update_abort_rx = 0;
-				}
-			#endif
-
-			#if MX_LBT_AFA
-				if ((mx.lbt_coding_check_abort_rx) && (mx.lbt_packet_header.sender_id < MX_NUM_NODES))
-				{
-					uint8_t  		sender_id   = mx.lbt_packet_header.sender_id;
-					#if MX_COORDINATED_TX
-						uint16_t	slot_number = mx.lbt_packet_header.slot_number;
-									flags		= mx.lbt_packet_header.flags;
-					#endif
-
-					#if MX_REQUEST
-						mx_update_request(&mx.lbt_packet_header);
-					#endif
-
-					#if MX_COORDINATED_TX
-
-						mx_update_history(sender_id, flags, slot_number);
-						GPI_TRACE_MSG(TRACE_INFO, "node %u history update", sender_id);
-					#endif
-
-					memset(&mx.lbt_packet_header, 0, sizeof(mx.lbt_packet_header));
-
-					Packet	*pp = &mx.lbt_packet_header;
-					// update full-rank map
-					#if MX_SMART_SHUTDOWN_MAP
-						if (pp->flags.is_full_rank)
-						{
-							update_full_rank_map(pp);
-
-							// if we are not finished: yield
-							// because update_full_rank_map() might have taken a bit of time
-							if (mx.rank < MX_GENERATION_SIZE)
-								PT_YIELD(pt);
-						}
-					#endif
-
-					mx.lbt_coding_check_abort_rx = 0;
 				}
 			#endif
 		#endif
@@ -2148,10 +2105,6 @@ PT_THREAD(mixer_process_rx_data())
 					mx.matrix[i].birth_slot = p->slot_number;
 					#endif
 					mx.recent_innovative_slot = p->slot_number;
-
-					#if MX_LBT_AFA
-						mx.coding_vector_map[i / 8] |= 1 << (i % 8);
-					#endif
 
 					#if MX_PSEUDO_CONFIG
 					assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
