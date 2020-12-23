@@ -4,8 +4,6 @@
 #include "mixer_internal.h"
 #include "chirp_internal.h"
 
-#if MX_DATA_SET
-
 #ifdef MX_CONFIG_FILE
 	#include STRINGIFY(MX_CONFIG_FILE)
 #endif
@@ -1580,5 +1578,3 @@ void DOG_TIMER_ISR_NAME(void)
 
 //**************************************************************************************************
 //**************************************************************************************************
-
-#endif	// MX_DATA_SET

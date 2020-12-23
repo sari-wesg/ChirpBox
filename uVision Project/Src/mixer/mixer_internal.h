@@ -152,10 +152,6 @@
 	#define MX_BENCHMARK_PSEUDO_PAYLOAD				0
 #endif
 // TP added:
-#ifndef MX_DATA_SET
-	#define MX_DATA_SET								1
-#endif
-
 #ifndef MX_DUTY_CYCLE
 	#define MX_DUTY_CYCLE							0
 #endif
@@ -906,18 +902,6 @@ typedef enum Event_tag
 } Event;
 
 //**************************************************************************************************
-#if MX_DATA_SET
-typedef enum Data_read_tag
-{
-	NO_READ			= 0,
-	READ_RESULTS	= 1,
-	READ_TOPOLOGY	= 2
-
-} Data_read;
-#endif
-//**************************************************************************************************
-
-//**************************************************************************************************
 
 typedef struct pt 	Pt_Context;
 
@@ -1080,39 +1064,37 @@ void 			wrap_chunk(uint8_t *p);
 
 #endif
 
-#if MX_DATA_SET
-	void 			clear_data();
-	void 			startup_message(uint32_t mixer_round, uint8_t node_id, uint8_t mx_task);
-	uint8_t 		read_message(uint32_t *round, uint8_t *mx_task);
+void 			clear_data();
+void 			startup_message(uint32_t mixer_round, uint8_t node_id, uint8_t mx_task);
+uint8_t 		read_message(uint32_t *round, uint8_t *mx_task);
 
-	uint8_t 		update_new_message(uint16_t slot_number);
-	void 			clear_dataset();
+uint8_t 		update_new_message(uint16_t slot_number);
+void 			clear_dataset();
 
 
-	#if SEND_RESULT
-		void 		clear_data_result();
-		uint32_t 	read_result_message(uint8_t read_case);
-		void 		sensor_send_results_in_mixer(uint8_t send_case);
-		// send results
-		void 		sensor_result_message(uint32_t mixer_round, uint8_t node_id);
-		void 		decode_sensor_results(uint8_t *data_result);
-		// send topology
-		void 		sensor_topology_write(uint32_t mixer_round, uint8_t node_id);
-		void 		decode_topology_results(uint8_t *data_result);
-	#endif
-		void 		uart_read_data(uint8_t uart_isr_flag, uint8_t buffer_len);
-		void 		uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
-	#if MX_PSEUDO_CONFIG
-		void 		chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
-		void 		chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
-		void 		chirp_mx_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency);
-		void 		chirp_mx_payload_distribution(Mixer_Task mx_task);
+#if SEND_RESULT
+	void 		clear_data_result();
+	uint32_t 	read_result_message(uint8_t read_case);
+	void 		sensor_send_results_in_mixer(uint8_t send_case);
+	// send results
+	void 		sensor_result_message(uint32_t mixer_round, uint8_t node_id);
+	void 		decode_sensor_results(uint8_t *data_result);
+	// send topology
+	void 		sensor_topology_write(uint32_t mixer_round, uint8_t node_id);
+	void 		decode_topology_results(uint8_t *data_result);
+#endif
+	void 		uart_read_data(uint8_t uart_isr_flag, uint8_t buffer_len);
+	void 		uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
+#if MX_PSEUDO_CONFIG
+	void 		chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
+	void 		chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
+	void 		chirp_mx_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency);
+	void 		chirp_mx_payload_distribution(Mixer_Task mx_task);
 
-		#if CHIRP_OUTLINE
-			void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);
-			uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
-			uint8_t		chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl);
-		#endif
+	#if CHIRP_OUTLINE
+		void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);
+		uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
+		uint8_t		chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl);
 	#endif
 #endif
 
