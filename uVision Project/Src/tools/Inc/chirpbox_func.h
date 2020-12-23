@@ -3,9 +3,13 @@
 #ifndef __CHIRPBOX_FUNC_H__
 #define __CHIRPBOX_FUNC_H__
 
+//**************************************************************************************************
+//***** Includes ***********************************************************************************
 #include <stdbool.h>
 #include <stddef.h>
 
+//**************************************************************************************************
+//***** Global Typedefs and Class Declarations *****************************************************
 typedef struct Flash_FILE_tag
 {
     uint8_t  bank;
@@ -20,6 +24,18 @@ typedef struct Flash_FILE_tag
 #endif
 #include "janpatch.h"
 
+//**************************************************************************************************
+//***** Global (Public) Defines and Consts *********************************************************
+
+/* defined according to local region */
+#define LORABAND 460000U
+
+//**************************************************************************************************
+//***** Global Variables ***************************************************************************
+
+
+//**************************************************************************************************
+//***** Prototypes of Global Functions *************************************************************
 size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file);
 size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE *file);
 int the_fseek(Flash_FILE *file, long int offset, int origin);
