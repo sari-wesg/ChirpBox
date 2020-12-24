@@ -28,7 +28,7 @@ typedef struct Flash_FILE_tag
 //***** Global (Public) Defines and Consts *********************************************************
 
 /* defined according to local region */
-#define LORABAND 460000U
+#define LORABAND 470000U
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************

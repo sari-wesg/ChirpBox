@@ -131,9 +131,6 @@ uint8_t mx_task = 0;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
-#if MX_DOUBLE_BITMAP
-	uint32_t LORA_NODE_ID = 0;
-#endif
 uint8_t node_id_allocate;
 
 #if MX_PSEUDO_CONFIG
@@ -188,10 +185,6 @@ static uint8_t hardware_init()
 	#endif
 	gpi_radio_init();
 	node_id_restore();
-
-#if MX_DOUBLE_BITMAP
-	LORA_NODE_ID = TOS_NODE_ID;
-#endif
 
 	PRINTF("\tStarting node 0x%X \n", TOS_NODE_ID);
 
