@@ -645,9 +645,9 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             mx.stat_counter.slot_decoded = 0;
         }
     }
-	if (chirp_config.task != MX_GLOSSY)
+	if (chirp_config.primitive != FLOODING)
 	{
-    free(mx.request);
+        free(mx.request);
     }
 
     if (((chirp_config.full_rank) && (chirp_outl->task == MX_DISSEMINATE)) || (chirp_outl->task != MX_DISSEMINATE))
@@ -905,7 +905,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             }
         }
     }
-    if (chirp_config.task != MX_GLOSSY)
+	if (chirp_config.primitive != FLOODING)
     {
     free(mx.matrix[0]);
     mx.matrix[0] = NULL;
@@ -978,10 +978,10 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     chirp_config.task = chirp_outl->task;
 
-    if (chirp_config.task != MX_GLOSSY)
-        chirp_config.packet_hash = CHIRP_HEADER;
+	if (chirp_config.primitive != FLOODING)
+        chirp_config.packet_hash = DISC_HEADER;
     else
-        chirp_config.packet_hash = GLOSSY_HEADER;
+        chirp_config.packet_hash = FLOODING_HEADER;
 
 	while (1)
 	{
@@ -1030,13 +1030,11 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         #if MX_LBT_ACCESS
             lbt_check_time();
             chirp_isr.state = ISR_MIXER;
-            if (chirp_config.task != MX_GLOSSY)
+            if (chirp_config.primitive != FLOODING)
             {
-            // chirp_config.lbt_channel_primary = (chirp_outl->round - 1) % LBT_CHANNEL_NUM;
             chirp_config.lbt_channel_primary = (chirp_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
             if ((!chirp_outl->disem_flag) && (chirp_outl->task == MX_DISSEMINATE) && (chirp_outl->round >= 2))
             {
-                // chirp_config.lbt_channel_primary = (chirp_outl->round / 2) % LBT_CHANNEL_NUM;
                 chirp_config.lbt_channel_primary = (chirp_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
             }
             }
@@ -1058,7 +1056,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
         __HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);
 
-        if (chirp_config.task != MX_GLOSSY)
+        if (chirp_config.primitive != FLOODING)
         {
         if (chirp_outl->task != MX_DISSEMINATE)
         {

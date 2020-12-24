@@ -731,7 +731,7 @@ PT_THREAD(mixer_update_slot())
 	{
 		PT_WAIT_UNTIL(pt, mx.events & BV(SLOT_UPDATE));
 		clear_event(SLOT_UPDATE);
-		if (chirp_config.task != MX_GLOSSY)
+		if (chirp_config.primitive != FLOODING)
 		{
 		gpi_watchdog_periodic();
 		#if MX_VERBOSE_PACKETS
@@ -743,18 +743,6 @@ PT_THREAD(mixer_update_slot())
 				#else
 				TRACE_PACKET(&mx.tx_packet);
 				#endif
-				// #if (!BANK_1_RUN)
-				// if (chirp_config.task == CHIRP_VERSION)
-				// {
-				// 	uint_fast32_t tx_flash[2];
-				// 	memset(tx_flash, 0, sizeof(tx_flash));
-				// 	tx_flash[0] |= 1 << 24;
-				// 	memcpy(&(tx_flash[0]), &(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.coding_vector.len);
-				// 	memcpy(&(tx_flash[1]), &(mx.tx_packet->packet_chunk[chirp_config.payload.pos + 8]), 3);
-				// 	tx_flash[1] |= mx.slot_number << 24;
-				// 	FLASH_If_Write(TOPO_FLASH_ADDRESS + mx.slot_number * 8, (uint32_t *)(&(tx_flash[0])), sizeof(tx_flash) / sizeof(uint32_t));
-				// }
-				// #endif
 			}
 		#endif
 
@@ -1705,7 +1693,7 @@ PT_THREAD(mixer_process_rx_data())
 		PT_WAIT_UNTIL(pt, mx.events & BV(RX_READY));
 
 		clear_event(RX_READY);
-		if (chirp_config.task != MX_GLOSSY)
+		if (chirp_config.primitive != FLOODING)
 		{
 		while (mx.rx_queue_num_read != mx.rx_queue_num_written)
 		{
@@ -1741,17 +1729,6 @@ PT_THREAD(mixer_process_rx_data())
 			PRINTF_CHIRP("Rx: ");
 
 			TRACE_PACKET(p);
-			// #if (!BANK_1_RUN)
-			// if (chirp_config.task == CHIRP_VERSION)
-			// {
-			// 	uint_fast32_t rx_flash[2];
-			// 	memset(rx_flash, 0, sizeof(rx_flash));
-			// 	memcpy(&(rx_flash[0]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.coding_vector.len);
-			// 	memcpy(&(rx_flash[1]), &(p->packet_chunk[chirp_config.payload.pos + 8]), 3);
-			// 	rx_flash[1] |= mx.slot_number << 24;
-			// 	FLASH_If_Write(TOPO_FLASH_ADDRESS + mx.slot_number * 8, (uint32_t *)(&(rx_flash[0])), sizeof(rx_flash) / sizeof(uint32_t));
-			// }
-			// #endif
 
 			/* when receive a packet at first time */
 			if ((!mx.rank) && (chirp_config.disem_copy))
@@ -2507,7 +2484,6 @@ PT_THREAD(mixer_maintenance())
 		// "now"?) is not very critical here.
 		#if MX_PSEUDO_CONFIG
 		if (((mx.slot_number >= chirp_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0)) || ((chirp_config.task == MX_ARRANGE) && (!mx.rank) && (chirp_config.update_slot >= 6)))
-		// if (((mx.slot_number >= chirp_config.mx_round_length) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0)) || ((chirp_config.task == MX_ARRANGE) && (!mx.rank) && (chirp_config.update_slot >= 5)))
 		#else
 		if ((mx.slot_number >= MX_ROUND_LENGTH) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0))
 		#endif

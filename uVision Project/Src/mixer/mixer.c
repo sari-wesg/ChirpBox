@@ -225,7 +225,7 @@ void mixer_init(uint8_t node_id)
 		mx.rx_queue[i] = (Packet *)&(mx.rx_queue[i-1]->packet_chunk[chirp_config.packet_chunk_len]);
 	memset(mx.rx_queue[0], 0, (sizeof(mx.rx_queue) / sizeof(mx.rx_queue[0])) * (chirp_config.packet_len));
 
-	if (chirp_config.task != MX_GLOSSY)
+	if (chirp_config.primitive != FLOODING)
 	{
 	#if INFO_VECTOR_QUEUE
 	mx.code_queue[0] = (Packet_info_vector *)malloc((sizeof(mx.code_queue) / sizeof(mx.code_queue[0])) * (chirp_config.coding_vector.len));
@@ -243,7 +243,7 @@ void mixer_init(uint8_t node_id)
 	mx.tx_packet = (Packet *)malloc(chirp_config.packet_len);
 	memset(mx.tx_packet, 0, chirp_config.packet_len);
 
-	if (chirp_config.task != MX_GLOSSY)
+	if (chirp_config.primitive != FLOODING)
 	{
 	mx.matrix[0] = (Matrix_Row *)malloc(chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)));
 	for (i = 1; i < chirp_config.mx_generation_size; i++)
@@ -464,7 +464,7 @@ size_t mixer_write(unsigned int i, const void *msg, size_t size)
 void mixer_arm(Mixer_Start_Mode mode)
 {
 	GPI_TRACE_FUNCTION();
-	if (chirp_config.task != MX_GLOSSY)
+	if (chirp_config.primitive != FLOODING)
 	{
 	// mark an empty row (used by rx processing)
 	mx.empty_row = NULL;
@@ -755,7 +755,7 @@ Gpi_Fast_Tick_Extended mixer_start()
 
 	#if MX_PSEUDO_CONFIG
 		free(mx.rx_queue[0]);
-		if (chirp_config.task != MX_GLOSSY)
+		if (chirp_config.primitive != FLOODING)
 		{
 		#if INFO_VECTOR_QUEUE
 		free(mx.code_queue[0]);
@@ -767,7 +767,7 @@ Gpi_Fast_Tick_Extended mixer_start()
 		#if MX_SMART_SHUTDOWN
 		free(mx.full_rank_map);
 		#endif
-		if (chirp_config.task == MX_GLOSSY)
+		if (chirp_config.primitive == FLOODING)
 		{
 		free(mx.request);
 		}

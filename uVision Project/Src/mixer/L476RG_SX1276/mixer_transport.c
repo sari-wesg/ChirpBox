@@ -705,7 +705,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		// if packet ok: process packet
 		else
 		{
-			if (chirp_config.task == MX_GLOSSY)
+			if (chirp_config.primitive == FLOODING)
 			{
 				PRINTF_CHIRP("ok\n");
 			}
@@ -737,7 +737,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos), chirp_config.coding_vector.len);
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.info_vector.pos), chirp_config.info_vector.len);
 					#endif
-				if (chirp_config.task == MX_GLOSSY)
+				if (chirp_config.primitive == FLOODING)
 				{
 					chirp_config.glossy_task = packet->flags.all;
 				}
@@ -797,7 +797,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 						mx.slot_number = packet->slot_number;
 						GPI_TRACE_MSG_FAST(TRACE_INFO, "(re)synchronized to slot %u", mx.slot_number);
-						if (chirp_config.task == MX_GLOSSY)
+						if (chirp_config.primitive == FLOODING)
 						{
 							//once receive a packet, tx in next slot
 							set_event(SLOT_UPDATE);
@@ -1914,7 +1914,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
             }
 			#endif
 
-			if (chirp_config.task == MX_GLOSSY)
+			if (chirp_config.primitive == FLOODING)
 				mx.tx_packet->flags.all = chirp_config.glossy_task;
 
 			#if MX_PSEUDO_CONFIG
@@ -1926,7 +1926,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			#endif
 		}
 
-		if (chirp_config.task != MX_GLOSSY)
+		if (chirp_config.primitive != FLOODING)
 		// write coding vector and payload
 		{
 			#if MX_PSEUDO_CONFIG
@@ -2104,7 +2104,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			}
 		}
 
-		if (chirp_config.task != MX_GLOSSY)
+		if (chirp_config.primitive != FLOODING)
 		{
 			// write info vector
 			if (NULL != p)
@@ -2172,7 +2172,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			}
 		}
 		// if zero packet: abort transmission
-		if ((NULL == p) && (chirp_config.task != MX_GLOSSY))
+		if ((NULL == p) && (chirp_config.primitive != FLOODING))
 		{
 			#if MX_LBT_ACCESS
 				tx_failed_:
@@ -2376,7 +2376,7 @@ void mixer_transport_start()
 	GPI_TRACE_FUNCTION_FAST();
 
 	GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "start grid timer");
-	if (chirp_config.task != MX_GLOSSY)
+	if (chirp_config.primitive != FLOODING)
 	{
 	if (mx.tx_sideload)		// if initiator
 		enter_resync(2);

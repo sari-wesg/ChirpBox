@@ -11,10 +11,9 @@
 
 typedef enum Disc_Primitive_tag
 {
-    SYNCHRONIZATION = 1,
-	FLOODING = 2,
-	DISSEMINATION = 3,
-	COLLECTION = 4
+	FLOODING = 1,
+	DISSEMINATION = 2,
+	COLLECTION = 3
 } Disc_Primitive;
 
 //**************************************************************************************************
