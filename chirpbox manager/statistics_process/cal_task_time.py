@@ -8,13 +8,12 @@ class CHIRP_TASK(enum.Enum):
 	MX_COLLECT          = 3
 	CHIRP_CONNECTIVITY  = 4
 	CHIRP_TOPO          = 5
-	CHIRP_SNIFF         = 6
-	CHIRP_VERSION       = 7
+	CHIRP_VERSION       = 6
 
-	MX_ARRANGE          = 8
+	MX_ARRANGE          = 7
 
 	MX_TASK_FIRST       = 1
-	MX_TASK_LAST        = 8
+	MX_TASK_LAST        = 7
 
 LBT_DELAY_IN_US = 10000
 CHANNEL_ALTER   = 2
@@ -98,11 +97,6 @@ def task_slot(task, payload_len, slot_num, sf, default_generate_size, node_num):
         payload_len = 15
     elif(task == CHIRP_TASK.CHIRP_TOPO):
         mx_generation_size = mx_num_nodes
-    elif(task == CHIRP_TASK.CHIRP_SNIFF):
-        mx_generation_size = mx_num_nodes
-        # TODO:
-        sniff_nodes_num = 1
-        payload_len = 8 + sniff_nodes_num * 5
     elif(task == CHIRP_TASK.CHIRP_VERSION):
         mx_generation_size = mx_num_nodes
         payload_len = 11

@@ -34,8 +34,7 @@ As soon as all the steps mentioned above have been configured properly, then one
 8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [used_SF] [com_port] [slot_num] [topo_payload_len][used_tp] \" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
 9) \"python cbmng.py -coltopo [using_pos] [used_SF] [payload_len] [com_port] [slot_num] \" to obtain the topology. If using_pos is 0, the layout of topology is generated randomly; if using_pos is 1, the previously generated layout is used; if using_pos is 2, a specific layout for SARI is used.\n\
 10) \"python cbmng.py -colver [used_SF] [com_port] [slot_num][used_tp]\" to obtain the daemon version.\n\
-11) \"python cbmng.py -assignsnf [used_SF] [com_port] [slot_num] [used_tp]\" to assign a node to work as a sniffer at a given channel (KHz). Sniffers and channels are given in the methodology file.\n\
-12) \"python cbmng.py -upgrade [filename] [ver_hash] [payload_len] [generate_size_in_round] [used_SF] [com_port] [bitmap] [slot_num][dissem_back_sf][dissem_back_slot][used_tp][task_bitmap]\" to upgrade the daemon. The filename is the updated daemon.bin.")
+11) \"python cbmng.py -upgrade [filename] [ver_hash] [payload_len] [generate_size_in_round] [used_SF] [com_port] [bitmap] [slot_num][dissem_back_sf][dissem_back_slot][used_tp][task_bitmap]\" to upgrade the daemon. The filename is the updated daemon.bin.")
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
@@ -85,10 +84,6 @@ def main(argv):
 	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 10)):
 		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), argv[6], int(argv[7]), int(argv[8]), int(argv[9]))
 		# exit(1)
-	elif(((argv[1] == "assign_sniffer") or (argv[1] == "-assignsnf")) and (len(argv) == 6)):
-		if(cbmng_exp_start.check() == True):
-			cbmng_exp_start.assign_sniffer(int(argv[2]), argv[3], int(argv[4]), int(argv[5]))
-		# exit(0)
 	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 10)):
 		# if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 		if((True) and (cbmng_exp_start.is_running() == False)):

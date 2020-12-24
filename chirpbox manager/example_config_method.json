@@ -8,8 +8,6 @@
 	"e2e_latency": "True",
 	"tx_energy": "True",
 	"rx_energy": "True",
-	"sniffer_type": 1,
-	"sniffer_and_channels": [],
 	"start_address": "0807E000",
 	"end_address": "0807E266",
 	"command_sf": 7

@@ -22,36 +22,10 @@
 typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 {
 	ISR_MIXER = 0,
-	ISR_SNIFF = 4,
-	ISR_TOPO  = 8,
-	ISR_GPS   = 12,
+	ISR_TOPO  = 4,
+	ISR_GPS   = 8,
 } Chirp_ISR;
 
-//**************************************************************************************************
-typedef enum Sniff_Net_tag
-{
-	STATE_LORAWAN = 0, /* sniff LoRaWAN Network */
-	STATE_LORA_FORM,   /* sniff LoRa Network with knowing the packet format in advance */
-} Sniff_Net;
-
-typedef enum Sniff_State_tag  /* State for timer */
-{
-	SNIFF_CAD_DETECT = 0,
-	SNIFF_VALID_HEADER,
-} Sniff_State;
-
-typedef enum Sniff_Radio_tag  /* State of radio */
-{
-	SNIFF_RX = 0,
-	SNIFF_TX,
-	SNIFF_CAD,
-} Sniff_Radio;
-
-typedef enum Sniff_Trigger_tag  /* Trigger that jump out of sniff */
-{
-	SNIFF_TIME_TRIGGER = 0,
-	SNIFF_RADIO_TRIGGER,
-} Sniff_Trigger;
 //**************************************************************************************************
 
  /* TIMER2 */
@@ -92,7 +66,7 @@ typedef enum Sniff_Trigger_tag  /* Trigger that jump out of sniff */
 
 typedef enum Mixer_Task_tag
 {
-	/* copy packet: CHIRP_START, CHIRP_CONNECTIVITY, CHIRP_SNIFF, MX_ARRANGE */
+	/* copy packet: CHIRP_START, CHIRP_CONNECTIVITY, MX_ARRANGE */
 	/* all to all: MX_COLLECT, CHIRP_TOPO, CHIRP_VERSION */
 	/* one to all: MX_DISSEMINATE */
 	CHIRP_START,
@@ -100,7 +74,6 @@ typedef enum Mixer_Task_tag
 	MX_COLLECT,
 	CHIRP_CONNECTIVITY,
 	CHIRP_TOPO,
-	CHIRP_SNIFF,
 	CHIRP_VERSION,
 
 	MX_ARRANGE,
@@ -141,49 +114,6 @@ typedef struct Topology_result_link_tag
 	int16_t			snr_link;
 	int16_t			rssi_link;
 } Topology_result_link;
-
-//sniff ********************************************************************************************
-typedef struct Sniff_Time_tag
-{
-	uint8_t Hour;
-	uint8_t Minute;
-	uint8_t Second;
-} Sniff_Time;
-
-typedef struct Sniff_stat_tag
-{
-	uint32_t node_id;			 /* detected node_id */
-	uint32_t radio_on_time;		 /* total radio on time (us) in 1 hour */
-	Sniff_Time last_active_time; /* The last active time of radio on */
-	Sniff_Time begin_stat_time;	 /* The begin time of calculating the radio on time */
-	struct Sniff_stat_tag *next;
-} Sniff_stat;
-
-typedef struct __attribute__((packed)) Sniff_RF_tag
-{
-	uint8_t sf;
-	uint8_t bw;
-	uint8_t cr;
-	uint8_t preamble;
-	uint8_t tx_power;
-	uint32_t frequency;
-} Sniff_RF;
-
-typedef struct Sniff_tag
-{
-	Sniff_Net net;
-	Sniff_State state; /* the task/state in execution */
-	Sniff_Radio radio; /* for choose the corresponding handler function */
-	Sniff_RF rf;
-	Gpi_Fast_Tick_Native sf_switch;
-	Chirp_Time sniff_end;
-} Sniff;
-
-typedef struct __attribute__((packed)) Sniff_Config_tag
-{
-	uint8_t	sniff_id;
-	uint32_t sniff_freq_khz;
-} Sniff_Config;
 
 //Stats ********************************************************************************************
 
@@ -240,9 +170,6 @@ extern Chirpbox_ISR chirp_isr;
 /* gps */
 extern uint8_t node_id_allocate;
 
-/* sniff */
-extern Sniff_stat expired_node;
-
 /* stats */
 extern Chirp_Stats_All chirp_stats_all;
 extern Chirp_Energy chirp_stats_all_debug;
@@ -273,14 +200,6 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
 void topo_result(uint8_t nodes_num);
 void topo_dio0_isr();
 void topo_main_timer_isr();
-
-/* Sniff */
-void sniff_init(Sniff_Net LoRa_Net, uint32_t lora_frequency, uint16_t end_year, uint8_t end_month, uint8_t end_date, uint8_t end_hour, uint8_t end_min, uint8_t end_sec);
-void sniff_cad();
-void sniff_rx();
-void sniff_tx(uint32_t node_id);
-void chirp_dio0_isr();
-void chirp_dio3_isr();
 
 /* Stats */
 void Stats_value(uint8_t stats_type, uint32_t value);

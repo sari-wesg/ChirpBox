@@ -37,8 +37,7 @@ EXPERIMENT_DISSEMINATE = 1
 EXPERIMENT_COLDATA = 2
 EXPERIMENT_CONNECT = 3
 EXPERIMENT_COLTOPO = 4
-EXPERIMENT_ASSIGNSNF = 5
-EXPERIMENT_COLVER = 6
+EXPERIMENT_COLVER = 5
 
 
 def check():
@@ -93,8 +92,6 @@ def generate_json_for_upgrade():
 		"e2e_latency": "False",
 		"tx_energy": "False",
 		"rx_energy": "False",
-		"sniffer_and_channels": [],
-		"sniffer_type": [],
 		"start_address": "0807E000",
 		"end_address": "0807E0D0",
 		"command_sf": 12
@@ -354,100 +351,6 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 
 	return True
 
-def assign_sniffer(command_sf, com_port, slot_num, used_tp):
-	bitmap = "0"
-	task_bitmap = "0"
-	dissem_back_sf = 0
-	dissem_back_slot = 0
-
-	if(expmethapp.experiment_methodology(exp_meth) == True):
-		expmethapp.read_configuration()
-		time_now = datetime.datetime.now()
-		pairs = expmethapp.sniffer_and_channels
-		num = len(pairs) / 2
-		print("Sniffers and channels: " + str(pairs))
-	else:
-		return False
-	if(expconfapp.experiment_configuration(exp_conf) == True):
-		expconfapp.read_configuration()
-	else:
-		return False
-
-	time_now = datetime.datetime.now()
-	start_time_t = time_now + datetime.timedelta(minutes = 0)
-	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
-	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	exp_no = cbmng_common.tid_maker()
-
-	FileSize = cbmng_common.get_FileSize(firmware)
-	exp_name = "all_to_all" + "_used_sf" + str(command_sf) + "_slot_num" + str(slot_num) + "_payload_len_8"
-	print(exp_name)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
-	with open(running_status, "w") as f:
-		json.dump(running_dict, f)
-
-	# config and open the serial port
-	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
-	# corresponded task number
-	task_index = EXPERIMENT_ASSIGNSNF
-
-	timeout_cnt = 0
-	sniffer_cnt = 0
-
-	while True:
-		try:
-			line = ser.readline().decode('ascii').strip() # skip the empty data
-			timeout_cnt = timeout_cnt + 1
-			para = '{0:01}'.format(int(expmethapp.sniffer_type)) + ',' + '{0:03}'.format(int(num))
-			if line:
-			 	print (line)
-			 	if (line == "Input initiator task:"):
-			 		# ser.write(str(task_index).encode()) # send commands
-			 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
-			 		print(task)
-			 		ser.write(str(task).encode()) # send commands
-			 	if (line == "Waiting for parameter(s)..."):
-			 		# para = '{0:01}'.format(int(expmethapp.sniffer_type)) + ',' + '{0:03}'.format(int(num))
-			 		# para = ser.write(str(expmethapp.sniffer_type).encode()) # send commands
-			 		ser.write(str(para).encode()) # send commands
-			 		print(para)
-			 		if(num == 0):
-			 	 		break
-			 	# if (line == "Input num_nodes:"):
-			 	#  	if(num == 1):
-			 	#  		print("There is one sniffer.")
-			 	#  	if(num > 1):
-			 	#  		print("There are " + str(int(num)) + " sniffers.")
-			 	#  	ser.write(str('{0:03}'.format(int(num))).encode()) # send commands
-			 	#  	timeout_cnt = 0
-			 	#  	if(num == 0):
-			 	#  		break
-			 	if (line == "Sniffer config..."):
-			 		para = '{0:03}'.format(int(pairs[sniffer_cnt])) + ',{0:06}'.format(int(pairs[sniffer_cnt + 1]))
-			 		print(para)
-			 		ser.write(str(para).encode()) # send commands
-			 		sniffer_cnt = sniffer_cnt + 2
-			 		timeout_cnt = 0
-			 		if(sniffer_cnt >= len(pairs)):
-			 			break
-			if(timeout_cnt > 6000 * 3):
-				break
-		except:
-			pass
-	if(timeout_cnt > 6000 * 3):
-		print("Timeout...")
-		return False
-
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 10 seconds
-		return False
-
-	print("Done!")
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
-		return False
-
-	return True
-
 def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitmap, start_address_col, end_address_col):
 	bitmap = "0"
 	dissem_back_sf = 0
@@ -491,7 +394,6 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 	task_index = EXPERIMENT_COLDATA
 
 	timeout_cnt = 0
-	sniffer_cnt = 0
 
 	filename_1 = "collect_data" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap) + "_addr"+str(start_address_col)+"_"+str(end_address_col) + ".txt"
 
@@ -578,7 +480,6 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num, use
 	task_index = EXPERIMENT_COLTOPO
 
 	timeout_cnt = 0
-	sniffer_cnt = 0
 	filename_1 = "collect_topology" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".txt"
 	with open(filename_1, 'w+') as f_1:
 
@@ -681,7 +582,6 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 	task_index = EXPERIMENT_COLVER
 
 	timeout_cnt = 0
-	sniffer_cnt = 0
 	input = 0
 
 	with open(filename, 'w+') as f:

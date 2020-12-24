@@ -737,7 +737,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t task_wait = 0;
 
   uint8_t task[28 + DISSEM_BITMAP_32 * 8 + DISSEM_BITMAP_32 * 8 + 1];
-  PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_SNIFF\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_SNIFF, CHIRP_VERSION);
+  PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
 
@@ -838,15 +838,6 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
       PRINTF("CHIRP_TOPO\n");
       break;
     }
-    case CHIRP_SNIFF:
-    {
-      PRINTF("CHIRP_SNIFF\n");
-      menu_initiator_read_command(chirp_outl);
-      #if GPS_DATA
-      // GPS_Sleep(60);
-      #endif
-      break;
-    }
     case CHIRP_VERSION:
     {
       PRINTF("CHIRP_VERSION\n");
@@ -891,11 +882,6 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
       case CHIRP_CONNECTIVITY:
       {
           rxbuffer_len = 17;
-          break;
-      }
-      case CHIRP_SNIFF:
-      {
-          rxbuffer_len = 5;
           break;
       }
       default:
@@ -1130,7 +1116,7 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
       {
         // "09,478600,-01"
         uint8_t tx_sign = 0;
-        memset(&(chirp_outl->sf), 0, offsetof(Chirp_Outl, sniff_nodes_num) - offsetof(Chirp_Outl, sf));
+        memset(&(chirp_outl->sf), 0, offsetof(Chirp_Outl, chirp_energy) - offsetof(Chirp_Outl, sf));
         for (i = 0; i < rxbuffer_len; i++)
         {
           data = (uint8_t)command_buffer[k++] - '0';
@@ -1171,80 +1157,6 @@ void menu_initiator_read_command(Chirp_Outl *chirp_outl)
           chirp_outl->tx_power = 0 - chirp_outl->tx_power;
 
         PRINTF("Spreading factor: %lu, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
-        break;
-      }
-      case CHIRP_SNIFF:
-      {
-        // 0/1,004(LoRaWAN / LORA_FORM),(number of sniffer nodes)
-        // 001,470000 (sniffer config: node_id, radio frequency in kHz)
-        // 003,486300
-        // 056,486500
-        // 012,486300
-        memset(&(chirp_outl->sniff_net), 0, offsetof(Chirp_Outl, sniff_node) - offsetof(Chirp_Outl, sniff_nodes_num));
-        for (i = 0; i < rxbuffer_len; i++)
-        {
-          data = (uint8_t)command_buffer[k++];
-          if (((data >= '0') && (data <= '9')) || ((data >= 'A') && (data <= 'F')))
-          {
-            if (i < 1)
-            {
-              data = data - '0';
-              pow_num = 0;
-              chirp_outl->sniff_net += data * pow(10,(pow_num-i));
-            }
-            else if (i < 5)
-            {
-              pow_num = 4;
-              data = data - '0';
-              chirp_outl->sniff_nodes_num += data * pow(10,(pow_num-i));
-            }
-          }
-        }
-        free(command_buffer);
-        PRINTF("Sniffer num:%lu\n", chirp_outl->sniff_nodes_num);
-
-        chirp_outl->sniff_node[0] = (Sniff_Config *)malloc(sizeof(Sniff_Config) * chirp_outl->sniff_nodes_num);
-        /* allocate space for sniffer nodes */
-        for (i = 1; i < chirp_outl->sniff_nodes_num; i++)
-          chirp_outl->sniff_node[i] = (Sniff_Config *)(chirp_outl->sniff_node[i-1] + 1);
-        memset(chirp_outl->sniff_node[0], 0, (sizeof(Sniff_Config) * chirp_outl->sniff_nodes_num));
-
-        rxbuffer_len = 10;
-        command_buffer = (uint8_t *)malloc(rxbuffer_len);
-        uint8_t p;
-        for (i = 0; i < chirp_outl->sniff_nodes_num; i++)
-        {
-          PRINTF("Sniffer config...\n");
-          k = 0;
-          uart_read_data(0, rxbuffer_len);
-          while(!uart_read_done);
-
-          uart_read_command(command_buffer, rxbuffer_len);
-
-          for (p = 0; p < rxbuffer_len; p++)
-          {
-            data = (uint8_t)command_buffer[k++] - '0';
-            if ((data >= 0) && (data <= 9))
-            {
-              if (p < 3)
-              {
-                pow_num = 2;
-                chirp_outl->sniff_node[i]->sniff_id += data * pow(10,(pow_num-p));
-              }
-              else if (i < 10)
-              {
-                pow_num = 9;
-                chirp_outl->sniff_node[i]->sniff_freq_khz += data * pow(10,(pow_num-p));
-              }
-            }
-          }
-        }
-
-        for (i = 0; i < chirp_outl->sniff_nodes_num; i++)
-        {
-          PRINTF("sniffer:%lu, %lu kHz\n", chirp_outl->sniff_node[i]->sniff_id, chirp_outl->sniff_node[i]->sniff_freq_khz);
-        }
-
         break;
       }
       default:
@@ -1640,41 +1552,30 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           ds3231_time = DS3231_ShowTime();
           diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
           assert_reset(diff > 5);
-					if (!chirp_outl.sniff_flag)
-					{
-            if (((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE)))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))))
-            {
-              /* erase the user flash page */
-              FLASH_If_Erase_Pages(0, 255);
-
-              DS3231_GetTime();
-              /* Set alarm */
-              TRACE_MSG("date:%lu, %lu, %lu, %lu\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
-              ds3231_time = DS3231_ShowTime();
-              DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
-              /* Waiting for bank switch */
-              // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-              diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-              RTC_Waiting_Count(diff);
-              TRACE_MSG("---------CHIRP_BANK---------\n");
-              #if BANK_1_RUN
-              /* flash protect */
-              if (chirp_outl.flash_protection)
-                Bank1_WRP(0, 255);
-              else
-                Bank1_nWRP();
-              #endif
-              /* switch to bank2 */
-              STMFLASH_BankSwitch();
-            }
-					}
-					else
+          if (((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE)))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))))
           {
+            /* erase the user flash page */
+            FLASH_If_Erase_Pages(0, 255);
+
+            DS3231_GetTime();
+            /* Set alarm */
+            TRACE_MSG("date:%lu, %lu, %lu, %lu\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
+            ds3231_time = DS3231_ShowTime();
+            DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
             /* Waiting for bank switch */
             // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-            RTC_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-						TRACE_MSG("---------sniff---------\n");
-						sniff_init(chirp_outl.sniff_net, chirp_outl.sniff_freq, chirp_outl.end_year, chirp_outl.end_month, chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
+            diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+            RTC_Waiting_Count(diff);
+            TRACE_MSG("---------CHIRP_BANK---------\n");
+            #if BANK_1_RUN
+            /* flash protect */
+            if (chirp_outl.flash_protection)
+              Bank1_WRP(0, 255);
+            else
+              Bank1_nWRP();
+            #endif
+            /* switch to bank2 */
+            STMFLASH_BankSwitch();
           }
 				#endif
 				break;
@@ -1933,33 +1834,6 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
           FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
-				break;
-			}
-			case CHIRP_SNIFF:
-			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
-				TRACE_MSG("---------CHIRP_SNIFF---------\n");
-				chirp_outl.num_nodes = network_num_nodes;
-				chirp_outl.generation_size = network_num_nodes;
-        /* payload is composed of: data_header and config of each sniffer (1 byte node id and 4 bytes sniff frequency) */
-				chirp_outl.payload_len = DATA_HEADER_LENGTH + chirp_outl.sniff_nodes_num * (sizeof(uint32_t) + sizeof(uint8_t));
-				chirp_outl.round_setup = 1;
-				chirp_outl.round_max = chirp_outl.round_setup;
-
-				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, FLOODING);
-
-        /* config the slot according to the payload length */
-        chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-        chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
-				chirp_mx_payload_distribution(chirp_outl.task);
-        while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_mx_round(node_id, &chirp_outl);
-        if (!chirp_mx_round(node_id, &chirp_outl))
-        {
-          free(payload_distribution);
-          break;
-        }
-				free(payload_distribution);
 				break;
 			}
 			case CHIRP_VERSION:

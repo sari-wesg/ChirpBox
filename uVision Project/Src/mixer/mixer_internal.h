@@ -460,6 +460,7 @@ typedef struct __attribute__((packed)) Chirp_Config_tag
 		uint32_t 	lbt_channel_time_stats_us[LBT_CHANNEL_NUM];
 	#endif
 	uint8_t		glossy_task;
+	Disc_Primitive primitive;
 } Chirp_Config;
 
 #if INFO_VECTOR_QUEUE
@@ -774,7 +775,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				dissem_back_slot_num;
 
 	uint32_t			hash_header;
-	/* CHIRP_SNIFF */
+
 	uint8_t				glossy_resync;
 	uint8_t				glossy_gps_on;
 
@@ -835,13 +836,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	/* debug energy */
 	Chirp_Energy		chirp_energy[3];
 	// idle1, arrange1, start, idle2, arrange2, disfut, idle3, arrange3, collre, idle4, arrange4, connect, idle5, arrange5, colltopo
-
-	/* CHIRP_SNIFF */
-	uint8_t				sniff_nodes_num; /* number of sniff nodes */
-	uint8_t				sniff_flag; /* if the node itself is a sniffer */
-	Sniff_Net			sniff_net;
-	uint32_t			sniff_freq; /* sniff frequency (if the node is a sniffer) */
-	Sniff_Config		*sniff_node[0];
 } Chirp_Outl;
 
 //**************************************************************************************************

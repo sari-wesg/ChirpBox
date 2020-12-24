@@ -210,6 +210,8 @@ void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
 	chirp_config.my_row_mask.len = chirp_config.matrix_coding_vector.len;
 	chirp_config.my_column_mask.pos = chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len;
 	chirp_config.my_column_mask.len = chirp_config.matrix_coding_vector.len;
+
+	chirp_config.primitive = primitive;
 }
 
 /* slot length is mx_slot_length_in_us microseconds,
@@ -255,7 +257,7 @@ void chirp_mx_payload_distribution(Mixer_Task mx_task)
     uint8_t i;
     chirp_config.disem_copy = 0;
     // free(payload_distribution);
-    if ((mx_task == MX_COLLECT) || (mx_task == CHIRP_TOPO) || (mx_task == CHIRP_VERSION) || (mx_task == MX_ARRANGE) || (mx_task == CHIRP_START) || (mx_task == CHIRP_CONNECTIVITY) || (mx_task == CHIRP_SNIFF))
+    if ((mx_task == MX_COLLECT) || (mx_task == CHIRP_TOPO) || (mx_task == CHIRP_VERSION) || (mx_task == MX_ARRANGE) || (mx_task == CHIRP_START) || (mx_task == CHIRP_CONNECTIVITY))
     {
         /* Each node has a packet */
         assert_reset(chirp_config.mx_num_nodes == chirp_config.mx_generation_size);
@@ -264,7 +266,7 @@ void chirp_mx_payload_distribution(Mixer_Task mx_task)
         for (i = 0; i < chirp_config.mx_num_nodes; i++)
             payload_distribution[i] = i;
 
-        if ((mx_task == MX_ARRANGE) || (mx_task == CHIRP_START) || (mx_task == CHIRP_CONNECTIVITY) || (mx_task == CHIRP_SNIFF))
+        if ((mx_task == MX_ARRANGE) || (mx_task == CHIRP_START) || (mx_task == CHIRP_CONNECTIVITY))
             chirp_config.disem_copy = 1;
     }
     else
@@ -456,24 +458,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             file_data[DATA_HEADER_LENGTH + 6] = chirp_outl->topo_payload_len;
             break;
         }
-        case CHIRP_SNIFF:
-        {
-            data[k++] = chirp_outl->round_max >> 8;
-            data[k++] = chirp_outl->round_max;
-            data[k++] = chirp_outl->sniff_net;
-            memcpy(file_data, data, DATA_HEADER_LENGTH);
-            for (i = 0; i < chirp_outl->sniff_nodes_num; i++)
-            {
-                file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t))] = chirp_outl->sniff_node[i]->sniff_id;
-                file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 1] = chirp_outl->sniff_node[i]->sniff_freq_khz >> 24;
-                file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 2] = chirp_outl->sniff_node[i]->sniff_freq_khz >> 16;
-                file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 3] = chirp_outl->sniff_node[i]->sniff_freq_khz >> 8;
-                file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 4] = chirp_outl->sniff_node[i]->sniff_freq_khz;
-                PRINTF("fre: %lu, %lu, %lu, %lu\n", file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 1], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 2], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 3], file_data[DATA_HEADER_LENGTH + i * (sizeof(uint8_t) + sizeof(uint32_t)) + 4]);
-            }
-            k = 0;
-            break;
-        }
         case CHIRP_VERSION:
         {
             data[k++] = VERSION_MAJOR;
@@ -496,9 +480,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             data[k++] = chirp_outl->default_sf;
             data[k++] = chirp_outl->default_payload_len;
             data[k++] = chirp_outl->arrange_task;
-            /* Only sniff add parameter in the arrange packet, since the length of its packet is related to the num nodes parameter */
-            if (chirp_outl->arrange_task == CHIRP_SNIFF)
-                data[5] = chirp_outl->sniff_nodes_num;
             data[ROUND_HEADER_LENGTH - 1] = chirp_outl->default_generate_size;
             memcpy(file_data, data, DATA_HEADER_LENGTH);
             k = 0;
@@ -571,11 +552,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                     break;
                 }
                 case CHIRP_CONNECTIVITY:
-                {
-                    mixer_write(i, file_data, chirp_outl->payload_len);
-                    break;
-                }
-                case CHIRP_SNIFF:
                 {
                     mixer_write(i, file_data, chirp_outl->payload_len);
                     break;
@@ -890,28 +866,6 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             }
                             break;
                         }
-                        case CHIRP_SNIFF:
-                        {
-                            if (node_id)
-                            {
-                                PRINTF("CHIRP_SNIFF\n");
-
-                                chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
-                                chirp_outl->sniff_net = data[k++];
-                                memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
-                                for (k = 0; k < chirp_outl->sniff_nodes_num; k++)
-                                {
-                                    if (task_data[k * (sizeof(uint8_t) + sizeof(uint32_t))] == node_id)
-                                    {
-                                        chirp_outl->sniff_flag = 1;
-                                        chirp_outl->sniff_freq = task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 1] << 24 | task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 2] << 16 | task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 3] << 8 | task_data[k * (sizeof(uint8_t) + sizeof(uint32_t)) + 4];
-                                        PRINTF("freq:%lu, %lu, %lu\n", k, chirp_outl->sniff_freq, chirp_outl->sniff_net);
-                                        break;
-                                    }
-                                }
-                            }
-                            break;
-                        }
                         case CHIRP_VERSION:
                         {
                             memcpy(data, p + DATA_HEADER_LENGTH, chirp_outl->payload_len - DATA_HEADER_LENGTH);
@@ -937,12 +891,6 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             // chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
                             // chirp_outl->arrange_task = data[k++];
                             chirp_outl->default_generate_size = data[ROUND_HEADER_LENGTH - 1];
-                            if (chirp_outl->arrange_task == CHIRP_SNIFF)
-                            {
-                                chirp_outl->sniff_nodes_num = data[5];
-                                chirp_outl->default_payload_len = 40;
-                                PRINTF("sniff_nodes_num:%lu\n", chirp_outl->sniff_nodes_num);
-                            }
                             if (node_id)
                             {
                                 memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
