@@ -8,7 +8,6 @@
 	#include STRINGIFY(MX_CONFIG_FILE)
 #endif
 
-#include "evaluation.h"
 #include "gpi/olf.h"
 #include GPI_PLATFORM_PATH(radio.h)
 
@@ -256,8 +255,14 @@ void chirp_mx_payload_distribution(Mixer_Task mx_task)
 {
     uint8_t i;
     chirp_config.disem_copy = 0;
-    // free(payload_distribution);
-    if ((mx_task == MX_COLLECT) || (mx_task == CHIRP_TOPO) || (mx_task == CHIRP_VERSION) || (mx_task == MX_ARRANGE) || (mx_task == CHIRP_START) || (mx_task == CHIRP_CONNECTIVITY))
+    if ((mx_task == MX_DISSEMINATE))
+    {
+        payload_distribution = (uint8_t *)malloc(chirp_config.mx_generation_size);
+        /* Only the initiator has packets */
+        for (i = 0; i < chirp_config.mx_generation_size; i++)
+            payload_distribution[i] = 0;
+    }
+    else
     {
         /* Each node has a packet */
         assert_reset(chirp_config.mx_num_nodes == chirp_config.mx_generation_size);
@@ -268,13 +273,6 @@ void chirp_mx_payload_distribution(Mixer_Task mx_task)
 
         if ((mx_task == MX_ARRANGE) || (mx_task == CHIRP_START) || (mx_task == CHIRP_CONNECTIVITY))
             chirp_config.disem_copy = 1;
-    }
-    else
-    {
-        payload_distribution = (uint8_t *)malloc(chirp_config.mx_generation_size);
-        /* Only the initiator has packets */
-        for (i = 0; i < chirp_config.mx_generation_size; i++)
-            payload_distribution[i] = 0;
     }
 }
 
@@ -289,7 +287,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
     uint16_t k = 0;
     uint32_t flash_addr;
 
-    /* MX_DISSEMINATE / MX_COLLECT / CHIRP_TOPO */
     if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO))
     {
         assert_reset(!(chirp_outl->file_chunk_len % sizeof(uint64_t)));
@@ -537,7 +534,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 {
                     if (chirp_outl->round <= chirp_outl->round_setup)
                     {
-                        // if (((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT)) && (!node_id))
                         if (chirp_outl->task == MX_COLLECT)
                             mixer_write(i, file_data, chirp_outl->payload_len);
                         else
@@ -999,11 +995,9 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             ENERGEST_ON(ENERGEST_TYPE_CPU);
         #endif
         /* except these two task that all nodes need to upload data, others only initiator transmit data */
-        if ((chirp_outl->task != MX_COLLECT) && (chirp_outl->task != CHIRP_TOPO) && (chirp_outl->task != CHIRP_VERSION))
+        if (chirp_config.primitive == DISSEMINATION)
         {
-            if ((chirp_outl->task == MX_DISSEMINATE) && (!chirp_outl->disem_flag) && (chirp_config.disem_copy))
-                chirp_write(node_id, chirp_outl);
-            else if (!node_id)
+            if (!node_id)
                 chirp_write(node_id, chirp_outl);
         }
         else
