@@ -100,7 +100,6 @@ GPI_TRACE_CONFIG(mixer_transport, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER)
 #define PRINTF(...)
 #endif
 
-extern uint8_t node_id_allocate;
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 
@@ -2384,7 +2383,7 @@ void mixer_transport_start()
 	}
 	else
 	{
-		if (!node_id_allocate)		// if initiator
+		if (!MX_NUM_NODES_CONF)		// if initiator
 			enter_resync(2);
 		else
 			enter_resync(1);

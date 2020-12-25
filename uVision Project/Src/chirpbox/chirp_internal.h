@@ -161,14 +161,10 @@ typedef struct __attribute__((packed)) Chirp_Energy_tag
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 /* main */
-uint8_t MX_NUM_NODES_CONF;
-extern uint8_t node_id_allocate;
+extern uint8_t MX_NUM_NODES_CONF;
 
 /* ISR */
 extern Chirpbox_ISR chirp_isr;
-
-/* gps */
-extern uint8_t node_id_allocate;
 
 /* stats */
 extern Chirp_Stats_All chirp_stats_all;

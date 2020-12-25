@@ -50,7 +50,6 @@ static uint16_t    rece_dissem_index;
 uint16_t    calu_payload_hash, rece_hash;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
-extern uint8_t node_id_allocate;
 
 #if MX_FLASH_FILE
     uint8_t                     uartRxBuffer[128];
