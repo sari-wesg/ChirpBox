@@ -2383,7 +2383,7 @@ void mixer_transport_start()
 	}
 	else
 	{
-		if (!MX_NUM_NODES_CONF)		// if initiator
+		if (!node_id_allocate)		// if initiator
 			enter_resync(2);
 		else
 			enter_resync(1);

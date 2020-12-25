@@ -1731,12 +1731,12 @@ PT_THREAD(mixer_process_rx_data())
 			if ((!mx.rank) && (chirp_config.disem_copy))
 			{
 				#if MX_PSEUDO_CONFIG
-				mixer_write(MX_NUM_NODES_CONF, &(p->packet_chunk[chirp_config.payload.pos]), chirp_config.mx_payload_size);
-				if (MX_NUM_NODES_CONF == chirp_config.mx_generation_size - 1)
+				mixer_write(node_id_allocate, &(p->packet_chunk[chirp_config.payload.pos]), chirp_config.mx_payload_size);
+				if (node_id_allocate == chirp_config.mx_generation_size - 1)
 					mx.empty_row -= chirp_config.matrix_size_32;
 				#else
-				mixer_write(MX_NUM_NODES_CONF, p->coding_vector, chirp_config.mx_payload_size);
-				if (MX_NUM_NODES_CONF == MX_GENERATION_SIZE - 1)
+				mixer_write(node_id_allocate, p->coding_vector, chirp_config.mx_payload_size);
+				if (node_id_allocate == MX_GENERATION_SIZE - 1)
 					mx.empty_row --;
 				#endif
 			}
