@@ -132,11 +132,11 @@ uint32_t menu_serialDownload(uint32_t offset_page, uint8_t bank_update);
 COM_StatusTypeDef menu_ymodem_receive(uint32_t *p_size, uint32_t bank, uint32_t offset);
 uint8_t menu_pre_patch(uint8_t patch_bank, uint32_t old_firmware_size, uint32_t patch_firmware_size);
 uint32_t menu_initiator_read_file(void);
-#if CHIRP_OUTLINE
+
+/* chirpbox */
 uint8_t menu_wait_task(Chirp_Outl *chirp_outl);
 void menu_initiator_read_command(Chirp_Outl *chirp_outl);
 uint32_t Chirp_RSHash(uint8_t* str, uint32_t len);
 void chirp_start(uint8_t node_id, uint8_t network_num_nodes);
-#endif
 
 #endif  /* __MENU_H__ */

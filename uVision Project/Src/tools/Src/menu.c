@@ -717,8 +717,6 @@ uint32_t menu_initiator_read_file(void)
   return size;
 }
 
-#if CHIRP_OUTLINE
-
 /**
  * @description: To chose the task according through serial input
  * @param
@@ -1868,6 +1866,5 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 	}
 }
 
-#endif
 //**************************************************************************************************
 //**************************************************************************************************

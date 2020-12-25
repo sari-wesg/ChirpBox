@@ -324,26 +324,16 @@ static struct
 
 static void mixer_transport_initiate_radio()
 {
-	#if MX_PSEUDO_CONFIG
 	uint32_t symbol_bandwidth = ( chirp_config.lora_bw > 8) ? 500000 : ( ( chirp_config.lora_bw - 6) * 125000 );
 	uint32_t symbol_rate = ( ( symbol_bandwidth ) / ( 1 << chirp_config.lora_sf ) );
-	#else
-	uint32_t symbol_bandwidth = ( LORA_BANDWIDTH > 8) ? 500000 : ( ( LORA_BANDWIDTH - 6) * 125000 );
-	uint32_t symbol_rate = ( ( symbol_bandwidth ) / ( 1 << LORA_SPREADING_FACTOR ) );
-	#endif
+
 	uint32_t symbol_time = (uint32_t)1e6 / symbol_rate;
-	#if MX_PSEUDO_CONFIG
+
 	uint32_t payload_air_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, chirp_config.lora_cr, 0, chirp_config.lora_plen, chirp_config.phy_payload_size + HASH_TAIL_CODE);
 	uint32_t drift_tolerance = MIN(2500, MAX((chirp_config.mx_slot_length + 999) / 1000, 1));
-	#else
-	uint32_t payload_air_time = SX1276GetPacketTime(LORA_SPREADING_FACTOR, LORA_BANDWIDTH, LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH, PHY_PAYLOAD_SIZE);
-	uint32_t drift_tolerance = MIN(2500, MAX((MX_SLOT_LENGTH + 999) / 1000, 1));
-	#endif
-	#if MX_PSEUDO_CONFIG
+
 	radio.header_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, chirp_config.lora_cr, 1, chirp_config.lora_plen, 2);
-	#else
-	radio.header_time = SX1276GetPacketTime(LORA_SPREADING_FACTOR, LORA_BANDWIDTH, LORA_CODINGRATE, 1, LORA_PREAMBLE_LENGTH, 2);
-	#endif
+
 	radio.after_header_time = payload_air_time - radio.header_time;
 
 	radio.max_propagation_delay = GPI_TICK_US_TO_HYBRID(2);
@@ -353,15 +343,13 @@ static void mixer_transport_initiate_radio()
 	radio.tx_to_grid_offset = (0 + GPI_TICK_US_TO_HYBRID(130));
 
 	radio.rx_window_increment = 2 * drift_tolerance;
-	#if MX_PSEUDO_CONFIG
-		#if (!MX_LBT_ACCESS)
-			radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (chirp_config.mx_slot_length - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
-		#else
-			radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (GPI_TICK_US_TO_HYBRID(symbol_time)) / 2));
-		#endif
+
+	#if (!MX_LBT_ACCESS)
+		radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (chirp_config.mx_slot_length - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
 	#else
-	radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (MX_SLOT_LENGTH - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
+		radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (GPI_TICK_US_TO_HYBRID(symbol_time)) / 2));
 	#endif
+
 	radio.rx_window_min = MIN(radio.rx_window_max / 2, MAX(2 * radio.rx_window_increment, GPI_TICK_US_TO_HYBRID(1)));
 
 	radio.grid_drift_filter_div = 4;
@@ -380,7 +368,7 @@ static void mixer_transport_initiate_radio()
 
 	#if MX_HEADER_CHECK
 	uint32_t after_header_us = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, chirp_config.lora_cr, 0, chirp_config.lora_plen, HASH_HEADER) - radio.header_time + 2 * symbol_time;
-	// printf("after_header_us:%lu\n", after_header_us);
+
 	radio.after_header_hybrid = GPI_TICK_US_TO_HYBRID2(after_header_us);
 	#endif
 
@@ -679,16 +667,11 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		// if LEN or CRC not ok: regard packet as invisible
 		volatile uint8_t packet_len = (uint8_t)SX1276Read( REG_LR_RXNBBYTES );
 		volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
-		if( ( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR )
-		#if MX_PSEUDO_CONFIG
-		|| ( packet_len != chirp_config.phy_payload_size + HASH_TAIL_CODE )
-		#else
-		|| ( packet_len != PHY_PAYLOAD_SIZE )
-		#endif
+		if( ( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR ) || ( packet_len != chirp_config.phy_payload_size + HASH_TAIL_CODE )
 		)
 		{
 			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
-			// printf("wrong:%lu, %lu, %lu\n", packet_len, irqFlags, chirp_config.phy_payload_size);
+
 			GPI_TRACE_MSG_FAST(TRACE_INFO, "broken packet received, LEN: %d, CRC:error", (int)(packet_len));
 
 			#if MX_VERBOSE_STATISTICS
@@ -715,27 +698,20 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			SX1276Write( REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
 			SX1276ReadFifo( RxPacketBuffer, packet_len );
 			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
-			int j;
-			PRINTF("rxpacket:\n");
-			for(j = 0; j < 8; j++){
-				PRINTF("%d ", RxPacketBuffer[j]);
-			}
-			PRINTF("\ncoding:\n");
-			#if MX_PSEUDO_CONFIG
+
 			uint16_t code_tail_hash_rx = Chirp_RSHash((uint8_t *)RxPacketBuffer, chirp_config.phy_payload_size);
 			uint16_t hash_code_rx = RxPacketBuffer[packet_len - 2] << 8 | RxPacketBuffer[packet_len - 1];
 			if ((hash_code_rx == code_tail_hash_rx) && (hash_code_rx))
-			#endif
 			{
 				// allocate rx queue destination slot
 				Packet	*packet;
-				#if MX_PSEUDO_CONFIG
+
 				gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, chirp_config.phy_payload_size);
 				packet = mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
 					#if INFO_VECTOR_QUEUE
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos), chirp_config.coding_vector.len);
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.info_vector.pos), chirp_config.info_vector.len);
-					#endif
+
 				if (chirp_config.primitive == FLOODING)
 				{
 					chirp_config.glossy_task = packet->flags.all;
@@ -767,7 +743,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					/* see "Longshot", ipsn 2019 */
 					uint32_t rx_processing_time[6] = {682, 1372, 2850, 5970, 12800, 27000};
 					Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow - GPI_TICK_US_TO_HYBRID2(rx_processing_time[chirp_config.lora_sf - 7]);
-					// printf("l1:%lu\n", event_tick);
 
 					ASSERT_CT(sizeof(Gpi_Slow_Tick_Native) >= sizeof(uint16_t));
 
@@ -778,11 +753,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
 						#endif
 
-						#if MX_PSEUDO_CONFIG
 						s.next_grid_tick = event_tick - radio.packet_air_time + chirp_config.mx_slot_length;
-						#else
-						s.next_grid_tick = event_tick - radio.packet_air_time + MX_SLOT_LENGTH;
-						#endif
 
 						s.grid_drift = 0;
 						s.grid_drift_cumulative = 0;
@@ -850,7 +821,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 						gd = s.grid_drift;
 						gd += (int32_t)event_tick;
 						s.grid_drift = gd;
-						// printf("gd:%ld, %lu\n", gd, 500 * radio.grid_drift_max);
 
 						// if drift exceeds limit: start RESYNC
 						// NOTE: saturation could also help since obviously we are still able to receive
@@ -905,22 +875,14 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 					// special handling during start-up phase, see tx decision for details
 					#if (MX_COORDINATED_TX && !MX_BENCHMARK_NO_COORDINATED_STARTUP)
-						#if MX_PSEUDO_CONFIG
 						if (!strobe_resync && (mx.slot_number < chirp_config.mx_generation_size) && packet->flags.has_next_payload)
-						#else
-						if (!strobe_resync && (mx.slot_number < MX_GENERATION_SIZE) && packet->flags.has_next_payload)
-						#endif
 						{
 							// ATTENTION: don't rely on mx.tx_sideload or mx.tx_reserve at this point
 							// (mx.tx_sideload may change between here and next trigger tick, mx.tx_reserve
 							// may point to an incosistent row since it is not guarded w.r.t. ISR level).
 							// Instead, there is a very high probability that mx.tx_packet is ready since
 							// we did not TX in current slot (otherwise we wouldn't be here).
-							#if MX_PSEUDO_CONFIG
 							if (((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS) && (STOP != s.next_slot_task))
-							#else
-							if (mx.tx_packet.is_ready && (STOP != s.next_slot_task))
-							#endif
 							{
 								GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "tx decision: has_next_payload set");
 								s.next_slot_task = TX;
@@ -946,17 +908,9 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					mx.rx_queue_num_written++;
 
 					// use packet as next Tx sideload (-> fast tx update)
-					#if MX_PSEUDO_CONFIG
 					if (chirp_config.mx_generation_size != mx.rank)
-					#else
-					if (MX_GENERATION_SIZE != mx.rank)
-					#endif
 					{
-						#if MX_PSEUDO_CONFIG
 						mx.tx_sideload = &(packet->packet_chunk[chirp_config.coding_vector.pos]);
-						#else
-						mx.tx_sideload = &(packet->coding_vector[0]);
-						#endif
 					}
 
 					set_event(RX_READY);
@@ -970,11 +924,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				{
 					GPI_TRACE_MSG_FAST(TRACE_INFO, "Rx queue overflow, NW: %u, NR: %u", mx.rx_queue_num_writing, mx.rx_queue_num_read);
 
-					#if MX_PSEUDO_CONFIG
 					if (mx.rank < chirp_config.mx_generation_size)
-					#else
-					if (mx.rank < MX_GENERATION_SIZE)
-					#endif
 					{
 						mx.stat_counter.num_rx_queue_overflow++;
 					}
@@ -986,7 +936,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				// start RESYNC if requested
 				if (strobe_resync)
 				{
-					// printf("strobe_resync\n");
 					#if MX_VERBOSE_STATISTICS
 						mx.stat_counter.num_resync++;
 					#endif
@@ -995,13 +944,11 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				// handover to grid timer (if not already done by enter_resync())
 				else
 				{
-					// printf("start_grid_timer\n");
 					start_grid_timer();
 				}
 
 				PROFILE_ISR("radio ISR process Rx packet end");
 			}
-			#if MX_PSEUDO_CONFIG
 			else
 			{
 				// trigger timeout timer (immediately) -> do error handling there
@@ -1009,7 +956,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				trigger_main_timer(0);
 				unmask_main_timer(1);
 			}
-			#endif
 		}
     }
 
@@ -1379,7 +1325,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 	GPI_TRACE_FUNCTION_FAST();
 	PROFILE_ISR("grid timer ISR entry");
-	// printf("grid_timer_isr\n");
 	mask_main_timer();
 
 	//clear IRQ
@@ -1387,9 +1332,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 	mask_slow_timer();
 	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
-	// printf("header:%d, %d, %d, %d\n", AFTER_HEADER_BITMAP, BITMAP_TIME, HEADER_TIME, BITMAP_BYTE);
-	// printf("header:%lu, %lu, %lu\n", PACKET_AIR_TIME, GPI_TICK_US_TO_HYBRID2(42000));
-	// printf("header1:%lu, %lu, %lu\n", GRID_DRIFT_MAX, AFTER_HEADER_TIME, HEADER_TIME);
 
 	// if STOP requested: stop
 	if (STOP == s.next_slot_task)
@@ -1427,23 +1369,14 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		// trigger_tick_slow = LP_TIMER_CMP_REG + (Gpi_Slow_Tick_Native)((Gpi_Fast_Tick_Native)(ISR_LATENCY_SLOW) / (Gpi_Fast_Tick_Native)HYBRID_SLOW_RATIO);
 
 		// rx begin
-		#if MX_PSEUDO_CONFIG
 		assert_reset((chirp_config.lora_bw >= 7)&&(chirp_config.lora_bw <= 9));
-		#else
-		ASSERT_CT((LORA_BANDWIDTH >= 7)&&(LORA_BANDWIDTH <= 9), worked_LORA_BANDWIDTH);
-		#endif
 
 		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
 		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 
 		SX1276Write( REG_LR_DETECTOPTIMIZE, SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
 		SX1276Write( REG_LR_IFFREQ2, 0x00 );
-		#if MX_PSEUDO_CONFIG
 		if(chirp_config.lora_bw != 9)
-		#else
-		if(LORA_BANDWIDTH != 9)
-		#endif
-
 		{
 			SX1276Write( REG_LR_IFFREQ1, 0x40 );
 		}
@@ -1528,17 +1461,12 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		// NOTE: timeout timer is called implicitly while RESYNC
 		if (s.slot_state == RESYNC)
 		{
-			// printf("s.slot_state == RESYNC\n");
 			// ATTENTION: don't do s.next_grid_tick += MX_SLOT_LENGTH_RESYNC because grid timer is also
 			// triggered by frames from interferers (Rx -> SFD -> ... (broken/invalid) -> timeout
 			// -> grid timer) and hence current time might be far away from s.next_grid_tick. With
 			// s.next_grid_tick += MX_SLOT_LENGTH_RESYNC, s.next_grid_tick could end up in the far
 			// future if it gets incremented frequently.
-			#if MX_PSEUDO_CONFIG
 			s.next_grid_tick = r.hybrid_tick + ((chirp_config.mx_slot_length * 5) / 2);
-			#else
-			s.next_grid_tick = r.hybrid_tick + MX_SLOT_LENGTH_RESYNC;
-			#endif
 			s.next_trigger_tick = s.next_grid_tick;
 			start_grid_timer();
 		}
@@ -1592,11 +1520,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 	{
 		PROFILE_ISR("grid timer ISR start Tx begin");
 
-		#if MX_PSEUDO_CONFIG
 		assert_reset(!(chirp_config.packet_len % sizeof(uint_fast_t)));
-		#else
-		ASSERT_CT(!((uintptr_t)&mx.tx_packet % sizeof(uint_fast_t)), alignment_issue);
-		#endif
 		ASSERT_CT(!((uintptr_t)&s.tx_fifo % sizeof(uint_fast_t)), alignment_issue);
 
 		Gpi_Fast_Tick_Native 	trigger_tick;
@@ -1771,11 +1695,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
         }
 
 		// init FIFO
-		#if MX_PSEUDO_CONFIG
 		SX1276Write( REG_LR_PAYLOADLENGTH, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-		#else
-		SX1276Write( REG_LR_PAYLOADLENGTH, PHY_PAYLOAD_SIZE );
-		#endif
 		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
 		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 		// Full buffer used for Tx
@@ -1799,63 +1719,32 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		// finalize header
 		{
-			#if MX_PSEUDO_CONFIG
 			mx.tx_packet->app_header = chirp_config.packet_hash;
-			#endif
 			uint16_t slot_number = mx.slot_number + 1;
 
-			#if MX_PSEUDO_CONFIG
 			mx.tx_packet->slot_number = slot_number;
 			mx.tx_packet->flags.all = 0;
-			#else
-			mx.tx_packet.slot_number = slot_number;
-			mx.tx_packet.flags.all = 0;
-			#endif
 
-			#if MX_PSEUDO_CONFIG
 			if ((slot_number < chirp_config.mx_generation_size) && (0 == mx.matrix[slot_number]->birth_slot))
-			#else
-			if ((slot_number < MX_GENERATION_SIZE) && (0 == mx.matrix[slot_number].birth_slot))
-			#endif
 			{
-				#if MX_PSEUDO_CONFIG
 				mx.tx_packet->flags.has_next_payload = 1;
-				#else
-				mx.tx_packet.flags.has_next_payload = 1;
-				#endif
 			}
 
-			#if MX_PSEUDO_CONFIG
 			if (chirp_config.mx_generation_size == mx.rank)
-			#else
-			if (MX_GENERATION_SIZE == mx.rank)
-			#endif
 			{
-				#if MX_PSEUDO_CONFIG
 				mx.tx_packet->flags.is_full_rank = 1;
-				#else
-				mx.tx_packet.flags.is_full_rank = 1;
-				#endif
 				#if MX_SMART_SHUTDOWN
 					// ATTENTION: testing mx.have_full_rank_neighbor is important
 					// to avoid that initiator turns off immediately in 1-to-all scenarios
 					if ((0 == mx_present_head->mx_num_nodes) && (mx.have_full_rank_neighbor))
 					{
-						#if MX_PSEUDO_CONFIG
 						mx.tx_packet->flags.radio_off = 1;
-						#else
-						mx.tx_packet.flags.radio_off = 1;
-						#endif
 					}
 				#endif
             }
 
 			#if MX_REQUEST
-			#if MX_PSEUDO_CONFIG
 			else if (slot_number >= chirp_config.mx_generation_size)
-			#else
-			else if (slot_number >= MX_GENERATION_SIZE)
-			#endif
 			{
 				// f(x) = (1 - 2 ^ (-0.125 * x)) / (1 - 2 ^ (-0.125))
 				static const uint8_t LUT1[] =
@@ -1870,17 +1759,10 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				// -> could be computed directly, but the (small) LUT is the faster variant
 				static const uint8_t LUT2[] = {0x3f, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
-				#if MX_PSEUDO_CONFIG
 				uint8_t  	x = LUT1[MIN(chirp_config.mx_generation_size - mx.rank, NUM_ELEMENTS(LUT1) - 1)];
-				#else
-				uint8_t  	x = LUT1[MIN(MX_GENERATION_SIZE - mx.rank, NUM_ELEMENTS(LUT1) - 1)];
-				#endif
 				uint16_t 	age = slot_number - mx.recent_innovative_slot;
-				#if MX_PSEUDO_CONFIG
+
 				uint8_t	 	rand = mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_RAND;		// prepared on thread level
-				#else
-				uint8_t	 	rand = mx.tx_packet.rand;		// prepared on thread level
-				#endif
 
 			#if MX_COORDINATED_TX
 				if ((age >= x) || (0 == mx_present_head->mx_num_nodes))
@@ -1888,25 +1770,13 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				if ((age >= x))
 			#endif
 				{
-					#if MX_PSEUDO_CONFIG
 					if (rand < LUT2[MIN(mx.request->my_column_pending, NUM_ELEMENTS(LUT2) - 1)])
-					#else
-					if (rand < LUT2[MIN(mx.request.my_column_pending, NUM_ELEMENTS(LUT2) - 1)])
-					#endif
 					{
-						#if MX_PSEUDO_CONFIG
 						mx.tx_packet->flags.request_row = 1;
-						#else
-						mx.tx_packet.flags.request_row = 1;
-						#endif
 					}
 					else
 					{
-						#if MX_PSEUDO_CONFIG
 						mx.tx_packet->flags.request_column = 1;
-						#else
-						mx.tx_packet.flags.request_column = 1;
-						#endif
 					}
                 }
             }
@@ -1915,88 +1785,36 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			if (chirp_config.primitive == FLOODING)
 				mx.tx_packet->flags.all = chirp_config.glossy_task;
 
-			#if MX_PSEUDO_CONFIG
 			write_tx_fifo(&(mx.tx_packet->phy_payload_begin),
 			NULL, offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.coding_vector.pos);
-			#else
-			write_tx_fifo(&mx.tx_packet.phy_payload_begin,
-			NULL, offsetof(Packet, coding_vector) - offsetof(Packet, phy_payload_begin));
-			#endif
 		}
 
 		if (chirp_config.primitive != FLOODING)
 		// write coding vector and payload
 		{
-			#if MX_PSEUDO_CONFIG
 			assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
-			#else
-			ASSERT_CT(offsetof(Packet, payload) ==
-				offsetof(Packet, coding_vector) +
-				sizeof(mx.tx_packet.coding_vector),
-				inconsistent_program);
-			#endif
 
-			#if MX_PSEUDO_CONFIG
 			const unsigned int	CHUNK_SIZE = chirp_config.coding_vector.len + chirp_config.payload.len;
-			#else
-			const unsigned int	CHUNK_SIZE = sizeof(mx.tx_packet.coding_vector) + sizeof(mx.tx_packet.payload);
-			#endif
 
-			#if MX_PSEUDO_CONFIG
 			p = &(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]);
-			#else
-			p = &(mx.tx_packet.coding_vector[0]);
-			#endif
-			// printf("p:%lu\n", p);
-			// uint8_t k;
-			// for ( k = 0; k < 4; k++)
-			// {
-			// 	printf("%d ", p[k]);
-			// }
-			// printf("\n");
+
 			// NOTE: we cast const away which is a bit dirty. We need this only to restore
 			// sideload's packed version which is such a negligible change that we prefer
 			// mx.tx_sideload to appear as const.
 			uint8_t	*ps = (uint8_t*)mx.tx_sideload;
-			// printf("ps1:%lu\n", ps);
-			if(mx.tx_sideload == NULL)
-				PRINTF("sideload == NULL\n");
 
 			#if MX_REQUEST
 
-				#if MX_PSEUDO_CONFIG
 				int16_t help_index = mx.request->help_index;
-				#else
-				int16_t help_index = mx.request.help_index;
-				#endif
 				if (help_index > 0)
 				{
 					help_index--;
 					if (
-						#if MX_PSEUDO_CONFIG
-						(!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))
-						#else
-						!mx.tx_packet.is_ready
-						#endif
-						||
-						#if MX_PSEUDO_CONFIG
-						!(((uint_fast_t*)p)[help_index / (sizeof(uint_fast_t) * 8)] & mx.request->help_bitmask)
-						#else
-						!(((uint_fast_t*)p)[help_index / (sizeof(uint_fast_t) * 8)] & mx.request.help_bitmask)
-						#endif
-						)
+						(!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))||!(((uint_fast_t*)p)[help_index / (sizeof(uint_fast_t) * 8)] & mx.request->help_bitmask))
 						{
-						#if MX_PSEUDO_CONFIG
 						ps = &(mx.matrix[help_index]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
-						#else
-						ps = &(mx.matrix[help_index].coding_vector_8[0]);
-						#endif
 						}
-					#if MX_PSEUDO_CONFIG
 					mx.request->last_update_slot = mx.slot_number + 1;
-					#else
-					mx.request.last_update_slot = mx.slot_number + 1;
-					#endif
 				}
 				else if (help_index < 0)
 				{
@@ -2007,19 +1825,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					// is not ready, it is right to do the sideload anyway.
 					// if (!mx.tx_packet.is_ready || (help_index < mx_get_leading_index(p)))
 					{
-						#if MX_PSEUDO_CONFIG
 						ps = &(mx.matrix[help_index]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
-						#else
-						ps = &(mx.matrix[help_index].coding_vector_8[0]);
-						#endif
-			// printf("ps3:%lu\n", ps);
 
-						#if MX_PSEUDO_CONFIG
 						mx.request->last_update_slot = mx.slot_number + 1;
-						#else
-						mx.request.last_update_slot = mx.slot_number + 1;
-						#endif
-						PRINTF("coding_vector_8[0]\n");
 					}
 				}
 
@@ -2031,50 +1839,24 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// point), but it is very easy to forget about that. Hence we do it here to avoid
 			// programming mistakes.
 			// NOTE: the outer condition is resolved at compile time
-			#if MX_PSEUDO_CONFIG
 			if (chirp_config.matrix_payload_8.pos != chirp_config.matrix_payload_8.pos * sizeof(uint_fast_t))
-			#else
-			if (offsetof(Matrix_Row, payload_8) != offsetof(Matrix_Row, payload))
-			#endif
 			{
-				#if MX_PSEUDO_CONFIG
-				// printf("p4s:%lu, %lu\n", ps, &(mx.matrix[0]->birth_slot));
 				if ((uintptr_t)ps - (uintptr_t)&(mx.matrix[0]->birth_slot) < chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)))
-				#else
-				// printf("ps4:%lu, %lu\n", ps, &mx.matrix);
-				if ((uintptr_t)ps - (uintptr_t)&mx.matrix < sizeof(mx.matrix))
-				#endif
 				{
-					// printf("wrap_chunk \n");
 					wrap_chunk(ps);
-					// uint8_t k;
-					// for ( k = 0; k < 8; k++)
-					// {
-					// 	printf("%d ", ps[k]);
-					// }
-					// printf("\n");
 				}
             }
 
-			#if MX_PSEUDO_CONFIG
 			if (!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))
-			#else
-			if (!mx.tx_packet.is_ready)
-			#endif
 			{
 				assert_reset(NULL != ps);
-				PRINTF("!mx.tx_packet.is_ready\n");
 
 				write_tx_fifo(ps, NULL, CHUNK_SIZE);
 
 				#if MX_VERBOSE_PACKETS || MX_REQUEST
 					// mark the packet as broken since it could be possible that we interrupt
 					// prepare_tx_packet() right now, hence writing data may damage the packet
-					#if MX_PSEUDO_CONFIG
 					mx.tx_packet->packet_chunk[chirp_config.rand.pos] &= PACKET_IS_VALID_MASK;
-					#else
-					mx.tx_packet.is_valid = 0;
-					#endif
 				#endif
 			}
 
@@ -2083,9 +1865,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				#if MX_BENCHMARK_NO_SIDELOAD
 					ps = NULL;
 				#endif
-
-//				if (!mx.tx_packet.use_sideload)
-//					ps = NULL;
 
 				// write coding vector with sideload and test if result is a zero packet;
 				// if so: abort (below)
@@ -2109,63 +1888,29 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			{
 				#if MX_REQUEST || MX_SMART_SHUTDOWN_MAP
 
-					#if MX_PSEUDO_CONFIG
 					assert_reset(chirp_config.info_vector.pos == chirp_config.payload.pos + chirp_config.payload.len);
-					#else
-					ASSERT_CT(offsetof(Packet, info_vector) ==
-						offsetof(Packet, payload) + sizeof(mx.tx_packet.payload),
-						inconsistent_program);
-					#endif
 
 					void *ps;
 
 					#if MX_SMART_SHUTDOWN_MAP && MX_REQUEST
-						#if MX_PSEUDO_CONFIG
 						if (mx.tx_packet->flags.is_full_rank)
-						#else
-						if (mx.tx_packet.flags.is_full_rank)
-						#endif
 						{
-							#if MX_PSEUDO_CONFIG
 							ps = (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.hash.pos + 0]);
-							#else
-							ps = &mx.full_rank_map.hash[0];
-							#endif
 						}
-						#if MX_PSEUDO_CONFIG
 						else if (mx.tx_packet->flags.request_column)
 							ps = &(mx.request->mask[chirp_config.my_column_mask.pos]);
 						else ps = &(mx.request->mask[chirp_config.my_row_mask.pos]);
-						#else
-						else if (mx.tx_packet.flags.request_column)
-							ps = &mx.request.my_column_mask[0];
-						else ps = &mx.request.my_row_mask[0];
-						#endif
 					#elif MX_SMART_SHUTDOWN_MAP
-						#if MX_PSEUDO_CONFIG
 						ps = (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.hash.pos + 0]);
-						#else
-						ps = &mx.full_rank_map.hash[0];
-						#endif
 					#elif MX_REQUEST
-						#if MX_PSEUDO_CONFIG
 						if (mx.tx_packet->flags.request_column)
 							ps = &(mx.request->mask[chirp_config.my_column_mask.pos]);
 						else ps = &(mx.request->mask[chirp_config.my_row_mask.pos]);
-						#else
-						if (mx.tx_packet.flags.request_column)
-							ps = &mx.request.my_column_mask[0];
-						else ps = &mx.request.my_row_mask[0];
-						#endif
 					#else
 						#error inconsistent code
 					#endif
 
-					#if MX_PSEUDO_CONFIG
 					write_tx_fifo(ps, NULL, chirp_config.info_vector.len);
-					#else
-					write_tx_fifo(ps, NULL, sizeof(mx.tx_packet.info_vector));
-					#endif
 				#endif
 			}
 		}
@@ -2177,7 +1922,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				s.lbt_tx_on = CCA_NONE;
 				s.lbt_channel_seq_no = 0;
 			#endif
-			PRINTF("NULL == p\n");
 
 			// turn radio off
 			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
@@ -2208,33 +1952,18 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// NOTE: not all fields are needed for MX_REQUEST,
 			// particularly payload could be dropped (e.g. if time is critical)
 			// TODO:
-			#if MX_PSEUDO_CONFIG
 			uint8_t Buffer2[chirp_config.phy_payload_size];
-			#else
-			uint8_t Buffer2[PHY_PAYLOAD_SIZE];
-			#endif
 
 			SX1276Write( REG_LR_FIFOADDRPTR, 0);
-			#if MX_PSEUDO_CONFIG
 			SX1276ReadBuffer( 0, Buffer2, chirp_config.phy_payload_size );
-			#else
-			SX1276ReadBuffer( 0, Buffer2, PHY_PAYLOAD_SIZE );
-			#endif
-			// uint8_t j;
-			// for ( j = 0; j < 50; j++)
-			// {
-			// 	printf("%d %d,", j, Buffer2[j]);
-			// }
-			// printf("\n");
 			SX1276Write( REG_LR_FIFOADDRPTR, 0);
-			#if MX_PSEUDO_CONFIG
+
 			uint16_t code_tail_hash_tx = Chirp_RSHash((uint8_t *)Buffer2, chirp_config.phy_payload_size);
 			uint8_t hash_code_tx[2];
 			hash_code_tx[0] = code_tail_hash_tx >> 8;
 			hash_code_tx[1] = code_tail_hash_tx;
 			SX1276Write( REG_LR_FIFOADDRPTR, chirp_config.phy_payload_size );
 			write_tx_fifo(hash_code_tx, NULL, HASH_TAIL_CODE);
-			#endif
 
 			// unmask IRQ
 			SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
@@ -2249,11 +1978,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// DIO0=TxDone
 			SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
 
-			#if MX_PSEUDO_CONFIG
 			gpi_memcpy_dma_aligned(&(mx.tx_packet->phy_payload_begin), Buffer2, chirp_config.phy_payload_size);
-			#else
-			gpi_memcpy_dma_aligned(&mx.tx_packet.phy_payload_begin, Buffer2, PHY_PAYLOAD_SIZE);
-			#endif
 
 			set_event(TX_READY);
 
@@ -2265,13 +1990,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		s.slot_state = TX_RUNNING;
 
-		#if MX_PSEUDO_CONFIG
 		mx.tx_packet->packet_chunk[chirp_config.rand.pos] &= PACKET_IS_READY_MASK;
-		#else
-		mx.tx_packet.is_ready = 0;
-		#endif
 		mx.tx_sideload = NULL;
-		PRINTF("NULL 5\n");
 		s.next_slot_task = RX;
 		PROFILE_ISR("grid timer ISR start Tx end");
 	}
@@ -2282,11 +2002,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		mx.slot_number++;
 		set_event(SLOT_UPDATE);
 
-		#if MX_PSEUDO_CONFIG
 		s.next_grid_tick += chirp_config.mx_slot_length + s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
-		#else
-		s.next_grid_tick += MX_SLOT_LENGTH + s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
-		#endif
+
 		s.hybrid_trigger = s.next_grid_tick;
 
 		s.next_trigger_tick = s.next_grid_tick -

@@ -1778,15 +1778,11 @@ void gpi_radio_init()
     SX1276IoInit();
     spi_init();
     SX1276Init();
-	#if MX_PSEUDO_CONFIG
+
     SX1276SetChannel(chirp_config.lora_freq);
-    #else
-    gpi_radio_set_channel(LORA_CHANNEL);
-    #endif
 
 #if defined( USE_MODEM_LORA )
 
-	#if MX_PSEUDO_CONFIG
     SX1276SetTxConfig( MODEM_LORA, chirp_config.lora_tx_pwr, 0, chirp_config.lora_bw,
                     chirp_config.lora_sf, chirp_config.lora_cr,
                     chirp_config.lora_plen, LORA_FIX_LENGTH_PAYLOAD_ON,
@@ -1796,17 +1792,6 @@ void gpi_radio_init()
                     chirp_config.lora_cr, 0, chirp_config.lora_plen,
                     LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                     0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-    #else
-    SX1276SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
-                    LORA_SPREADING_FACTOR, LORA_CODINGRATE,
-                    LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                    true, 0, 0, LORA_IQ_INVERSION_ON, TX_TIMEOUT_VALUE );
-
-    SX1276SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
-                    LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
-                    LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-                    0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-    #endif
 
 #elif defined( USE_MODEM_FSK )
     #error "Please define FSK parameters."

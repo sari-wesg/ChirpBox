@@ -115,8 +115,6 @@ void uart_read_command(uint8_t *p, uint8_t rxbuffer_len)
 
 //**************************************************************************************************
 
-#if MX_PSEUDO_CONFIG
-
 /**
  * @description: mixer configurations
  * @param mx_num_nodes: number of nodes in the mixer network (NUM_ELEMENTS(nodes))
@@ -272,9 +270,6 @@ void chirp_mx_payload_distribution(Mixer_Task mx_task)
             chirp_config.disem_copy = 1;
     }
 }
-
-
-#if CHIRP_OUTLINE
 
 void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
 {
@@ -495,11 +490,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     assert_reset(k <= DATA_HEADER_LENGTH);
 
-    #if MX_PSEUDO_CONFIG
     for (i = 0; i < chirp_config.mx_generation_size; i++)
-    #else
-    for (i = 0; i < MX_GENERATION_SIZE; i++)
-    #endif
     {
         if (payload_distribution[i] == node_id)
         {
@@ -610,11 +601,8 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             if (pending == 0)
                 chirp_config.full_column = 0;
         }
-        #if MX_PSEUDO_CONFIG
+
         for (i = 0; i < chirp_config.mx_generation_size; i++)
-        #else
-        for (i = 0; i < MX_GENERATION_SIZE; i++)
-        #endif
         {
             void *p = mixer_read(i);
             if (NULL != p)
@@ -649,11 +637,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     if (((chirp_config.full_rank) && (chirp_outl->task == MX_DISSEMINATE)) || (chirp_outl->task != MX_DISSEMINATE))
     {
-        #if MX_PSEUDO_CONFIG
         for (i = 0; i < chirp_config.mx_generation_size; i++)
-        #else
-        for (i = 0; i < MX_GENERATION_SIZE; i++)
-        #endif
         {
             void *p = mixer_read(i);
             if (NULL != p)
@@ -682,11 +666,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                     if (chirp_outl->task != MX_ARRANGE)
                     {
                         /* check/adapt round number by message 0 (initiator) */
-                        #if MX_PSEUDO_CONFIG
                         if ((0 == i) && (chirp_outl->payload_len >= 7))
-                        #else
-                        if ((0 == i) && (MX_PAYLOAD_SIZE >= 7))
-                        #endif
                         {
                             Generic32	r;
                             r.u8_ll = data[2];
@@ -1227,10 +1207,6 @@ void DOG_TIMER_ISR_NAME(void)
     }
     __HAL_TIM_ENABLE_IT(&htim5, TIM_IT_UPDATE);
 }
-
-#endif	// CHIRP_OUTLINE
-
-#endif	// MX_PSEUDO_CONFIG
 
 //**************************************************************************************************
 //**************************************************************************************************

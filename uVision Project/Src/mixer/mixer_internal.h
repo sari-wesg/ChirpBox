@@ -82,38 +82,6 @@
 	#define INFO_VECTOR_QUEUE						1
 #endif
 
-#if PSEUDO_CONF
-	#define MX_PSEUDO_CONFIG						1
-#endif
-
-#if MX_PSEUDO_CONFIG
-	#ifndef CHIRP_OUTLINE
-		#define CHIRP_OUTLINE							1
-	#endif
-#endif
-
-#if (!MX_PSEUDO_CONFIG)
-#ifndef MX_NUM_NODES
-	#error MX_NUM_NODES is undefined
-#endif
-
-#ifndef MX_GENERATION_SIZE
-	#error MX_GENERATION_SIZE is undefined
-#endif
-
-#if !MX_PAYLOAD_SIZE
-	#error MX_PAYLOAD_SIZE is invalid
-#endif
-
-#ifndef MX_SLOT_LENGTH
-	#error MX_SLOT_LENGTH is undefined
-#endif
-
-#if !MX_ROUND_LENGTH
-	#error MX_ROUND_LENGTH is invalid
-#endif
-#endif
-
 // default values for optional settings
 
 #ifndef MX_COORDINATED_TX
@@ -172,14 +140,6 @@
 	#define BANK_1_RUN								1
 #endif
 
-#if (!MX_PSEUDO_CONFIG)
-// internal settings
-#define MX_SLOT_LENGTH_RESYNC						((MX_SLOT_LENGTH * 5) / 2)
-
-#define MX_HISTORY_WINDOW							(3 * MX_NUM_NODES)
-#define MX_HISTORY_WINDOW_FINISHED					(1 * MX_NUM_NODES)
-#endif
-
 #ifndef MX_AGE_TO_INCLUDE_PROBABILITY
 	// uint16_t
 	#define MX_AGE_TO_INCLUDE_PROBABILITY			{ 32768 }
@@ -225,7 +185,6 @@
 	#undef MX_SMART_SHUTDOWN_MAP
 #endif
 
-#if MX_PSEUDO_CONFIG
 	#define PACKET_RAND_MASK					0xC0
 	#define PACKET_RAND                  		0x3F
 
@@ -236,16 +195,11 @@
 	#define PACKET_IS_READY_MASK                0x7F
 	#define PACKET_IS_READY                  	0x80
 	#define PACKET_IS_READY_POS                	0x07
-#endif
 //**************************************************************************************************
 //***** Local (Private) Defines and Consts *********************************************************
 
 #define FAST_HYBRID_RATIO		(GPI_FAST_CLOCK_RATE / GPI_HYBRID_CLOCK_RATE)
 #define HYBRID_SLOW_RATIO		(GPI_HYBRID_CLOCK_RATE / GPI_SLOW_CLOCK_RATE)
-
-#if (!MX_PSEUDO_CONFIG)
-#define PHY_PAYLOAD_SIZE		(offsetof(Packet, phy_payload_end) - offsetof(Packet, phy_payload_begin))
-#endif
 
 // NOTE: PADDING_SIZE() uses sizeof(uint_fast_t) instead of ALIGNMENT (from gpi/tools.h)
 // because ALIGNMENT maybe greater than sizeof(uint_fast_t), which isn't necessary here
@@ -466,11 +420,7 @@ typedef struct __attribute__((packed)) Chirp_Config_tag
 #if INFO_VECTOR_QUEUE
 typedef struct Packet_info_vector_tag
 {
-	#if MX_PSEUDO_CONFIG
 	uint8_t		vector[0];
-	#else
-	uint8_t		vector[((MX_GENERATION_SIZE + 7) / 8)];
-	#endif
 } Packet_info_vector;
 #endif
 
@@ -499,103 +449,11 @@ typedef union __attribute__((packed)) Packet_tag
 		uint8_t			sender_id;
 		Packet_Flags	flags;
 
-#if MX_PSEUDO_CONFIG
 		uint8_t 		packet_chunk[0];
-#else
-
-		uint8_t			coding_vector[(MX_GENERATION_SIZE + 7) / 8];
-		uint8_t			payload[MX_PAYLOAD_SIZE];
-
-		#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-			uint8_t			info_vector[(MX_GENERATION_SIZE + 7) / 8];
-		#endif
-
-		union __attribute__((packed))
-		{
-			int8_t		phy_payload_end[0];	// just a marker (e.g. for offsetof(Packet, phy_payload_end))
-
-			// padding that absorbs unwrapping of coding_vector and payload
-			int8_t		_padding_2[PADDING_MAX(0,
-							PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-							+ PADDING_SIZE(MX_PAYLOAD_SIZE)
-			#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-							- ((MX_GENERATION_SIZE + 7) / 8)
-			#endif
-							)];
-
-#if GPI_ARCH_IS_BOARD(TMOTE)
-			struct __attribute__((packed))
-			{
-				int8_t		rssi;
-
-				union __attribute__((packed))
-				{
-					int8_t		crc_corr;
-
-					struct __attribute__((packed))
-					{
-						uint8_t		correlation		: 7;
-						uint8_t		crc_ok			: 1;
-					};
-				};
-            };
-#endif
-		};
-
-		// ATTENTION: members near to phy_payload_end may be overwritten by word based operations
-		// (e.g. memxor()), so don't overlay sensitive information there
-		union __attribute__((packed))
-		{
-			struct __attribute__((packed))
-			{
-				uint8_t		rand			: 6;
-				uint8_t		is_valid		: 1;	// meaning while is_ready == 0
-				uint8_t		is_ready		: 1;
-            };
-
-//			struct __attribute__((packed))
-//			{
-//				uint8_t						: 6;
-//				uint8_t		use_sideload	: 1;	// meaning while is_ready == 1
-//				uint8_t						: 1;
-//			};
-        };
-
-		// pad such that sizeof(Packet) is aligned
-		// ATTENTION: ensures that aligned fields are also aligned in memory in every Rx queue slot.
-		// This is an important prerequisite to enable fast word based operations.
-		// NOTE: manual computation is needed because outer struct is packed (constructs like
-		// int_fast_t __attribute__((aligned)) _padding[0]; would not work because the attribute
-		// would not align the offset of _padding, only its members)
-		int8_t			_padding_3[PADDING_SIZE(
-								((MX_GENERATION_SIZE + 7) / 8) +	// coding_vector
-								MX_PAYLOAD_SIZE +					// payload
-#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-								((MX_GENERATION_SIZE + 7) / 8) +	// info_vector
-	#if !GPI_ARCH_IS_BOARD(TMOTE)
-								PADDING_MAX(0,						// _padding_2
-									PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-									+ PADDING_SIZE(MX_PAYLOAD_SIZE)
-									- ((MX_GENERATION_SIZE + 7) / 8)
-									) +
-	#endif
-#else
-	#if !GPI_ARCH_IS_BOARD(TMOTE)
-								PADDING_MAX(0,						// _padding_2
-									PADDING_SIZE((MX_GENERATION_SIZE + 7) / 8)
-									+ PADDING_SIZE(MX_PAYLOAD_SIZE)) +
-	#endif
-#endif
-								1)];								// flags
-#endif
 	};
 } Packet;
 
-#if MX_PSEUDO_CONFIG
 ASSERT_CT_STATIC(!(offsetof(Packet, packet_chunk) % sizeof(uint_fast_t)), alignment_issue);
-#else
-ASSERT_CT_STATIC(!(sizeof(Packet) % sizeof(uint_fast_t)), alignment_issue);
-#endif
 
 //**************************************************************************************************
 
@@ -611,36 +469,12 @@ typedef struct Matrix_Row_tag
 	{
 		struct
 		{
-			#if MX_PSEUDO_CONFIG
 			uint8_t 			matrix_chunk_8[0];
-			#else
-			uint8_t				coding_vector_8[(MX_GENERATION_SIZE + 7) / 8];
-
-			#if MX_BENCHMARK_PSEUDO_PAYLOAD
-				uint8_t			payload_8[0];
-			#else
-				uint8_t			payload_8[MX_PAYLOAD_SIZE];
-			#endif
-			#endif
 		};
 
 		struct
 		{
-			#if MX_PSEUDO_CONFIG
 			uint_fast_t			matrix_chunk[0];
-			#else
-			uint_fast_t			coding_vector[
-									(MX_GENERATION_SIZE + (sizeof(uint_fast_t) * 8) - 1) /
-									(sizeof(uint_fast_t) * 8)	];	// -> potentially longer
-
-			#if MX_BENCHMARK_PSEUDO_PAYLOAD
-				uint_fast_t		payload[0];
-			#else
-				uint_fast_t		payload[
-									(MX_PAYLOAD_SIZE + sizeof(uint_fast_t) - 1) /
-									sizeof(uint_fast_t)	];	// -> potentially shifted and longer
-			#endif
-			#endif
 		};
 	};
 
@@ -677,11 +511,7 @@ typedef struct Node_tag
     };
 
 #if (MX_REQUEST_HEURISTIC > 1)
-	#if MX_PSEUDO_CONFIG
 	uint_fast_t			row_map_chunk[0];
-	#else
-	uint_fast_t			row_map[sizeof_member(Matrix_Row, coding_vector) / sizeof(uint_fast_t)];
-	#endif
 #endif
 
 	// value is either the slot in which the node was heard last or the number of nodes in the list
@@ -696,32 +526,13 @@ typedef struct Node_tag
 
 typedef struct Full_Rank_Map_tag
 {
-	#if MX_PSEUDO_CONFIG
 	uint8_t		map_hash[0];
-	#else
-//	#define HASH_FACTOR		((MX_NUM_NODES + MX_GENERATION_SIZE - 1) / MX_GENERATION_SIZE)
-	#define HASH_FACTOR		(((MX_NUM_NODES + 7) / 8 + sizeof_member(Packet, info_vector) - 1) / sizeof_member(Packet, info_vector))
-
-	uint8_t		map[HASH_FACTOR * sizeof_member(Packet, info_vector)];
-	uint8_t		hash[sizeof_member(Packet, info_vector)];
-	#endif
 } Full_Rank_Map;
 
 #endif
 //**************************************************************************************************
-#if (!MX_PSEUDO_CONFIG)
-typedef struct Request_Marker_tag
-{
-	uint_fast_t		all_mask[sizeof_member(Matrix_Row, coding_vector) / sizeof(uint_fast_t)];
-	uint_fast_t		any_mask[sizeof_member(Matrix_Row, coding_vector) / sizeof(uint_fast_t)];
-	uint_fast16_t	any_pending;
-
-} Request_Marker;
-#endif
-
 typedef struct Request_Data_tag
 {
-	#if MX_PSEUDO_CONFIG
 	uint_fast16_t	row_any_pending;
 	uint_fast16_t	column_any_pending;
 
@@ -734,19 +545,6 @@ typedef struct Request_Data_tag
 	uint_fast_t		padding_mask;
 
 	uint_fast_t		mask[0]; /* row, colum all_mask and any_mask, my_row_mask, my_column_mask*/
-	#else
-	Request_Marker	row;
-	Request_Marker	column;
-	uint16_t		last_update_slot;
-	int16_t			help_index;
-	uint_fast_t		help_bitmask;
-
-	uint_fast_t		my_row_mask[sizeof_member(Matrix_Row, coding_vector) / sizeof(uint_fast_t)];
-	uint_fast_t		my_column_mask[sizeof_member(Matrix_Row, coding_vector) / sizeof(uint_fast_t)];
-	uint16_t		my_column_pending;
-
-	uint_fast_t		padding_mask;
-	#endif
 } Request_Data;
 
 //**************************************************************************************************
@@ -874,29 +672,19 @@ extern struct mx
 {
 	volatile unsigned int		events;				// type must be compatible to gpi_atomic_...()
 
-	#if MX_PSEUDO_CONFIG
 		Packet						*rx_queue[4];
 		#if INFO_VECTOR_QUEUE
 		Packet_info_vector				*code_queue[4];
 		/* backup info_vector of received packets */
 		Packet_info_vector				*info_queue[4];
 		#endif
-	#else
-		Packet						rx_queue[4];
-		#if INFO_VECTOR_QUEUE
-		Packet_info_vector				code_queue[4];
-		Packet_info_vector				info_queue[4];
-		#endif
-	#endif
+
 	volatile uint_fast_t		rx_queue_num_writing;
 	volatile uint_fast_t		rx_queue_num_written;
 	volatile uint_fast_t		rx_queue_num_read;
 
-	#if MX_PSEUDO_CONFIG
-		Packet						*tx_packet;
-	#else
-		Packet						tx_packet;
-	#endif
+	Packet						*tx_packet;
+
 	const uint8_t* volatile		tx_sideload;
 	const Matrix_Row*			tx_reserve;
 
@@ -905,41 +693,26 @@ extern struct mx
 	Gpi_Fast_Tick_Extended		round_deadline;
 	uint16_t					round_deadline_update_slot;
 
-	#if MX_PSEUDO_CONFIG
 	Matrix_Row					*matrix[MX_GENERATION_SIZE_MAX];
-	#else
-	Matrix_Row					matrix[MX_GENERATION_SIZE];
-	#endif
+
 	uint16_t					rank;
 	Matrix_Row*					empty_row;
 	Matrix_Row*					next_own_row;
 	uint16_t					recent_innovative_slot;
 
 #if MX_COORDINATED_TX
-	#if MX_PSEUDO_CONFIG
 	Node						*history[MX_NUM_NODES_MAX + 3];		// incl. 3 sentinel nodes
-	#else
-	Node						history[MX_NUM_NODES + 3];		// incl. 3 sentinel nodes
-	#endif
 #endif
 
 #if MX_SMART_SHUTDOWN
 	uint8_t						have_full_rank_neighbor;
 	#if MX_SMART_SHUTDOWN_MAP
-		#if MX_PSEUDO_CONFIG
 		Full_Rank_Map			*full_rank_map;
-		#else
-		Full_Rank_Map			full_rank_map;
-		#endif
 	#endif
 #endif
 
 #if MX_REQUEST
-	#if MX_PSEUDO_CONFIG
 	Request_Data				*request;
-	#else
-	Request_Data				request;
-	#endif
 #endif
 
 	Mixer_Stat_Counter			stat_counter;
@@ -949,22 +722,11 @@ extern struct mx
 #endif
 } mx;
 
-#if (!MX_PSEUDO_CONFIG)
-#if MX_COORDINATED_TX
-	static Node* const			mx_absent_head = &mx.history[NUM_ELEMENTS(mx.history) - 3];
-	static Node* const			mx_present_head = &mx.history[NUM_ELEMENTS(mx.history) - 2];
-	static Node* const			mx_finished_head = &mx.history[NUM_ELEMENTS(mx.history) - 1];
-#endif
-#else
 	Node *mx_absent_head, *mx_present_head, *mx_finished_head;
-#endif
 
 // the following is significant for efficient queue handling
 ASSERT_CT_STATIC(IS_POWER_OF_2(NUM_ELEMENTS(((struct mx*)0)->rx_queue)), rx_queue_size_must_be_power_of_2);
-#if (!MX_PSEUDO_CONFIG)
-ASSERT_CT_STATIC(!((uintptr_t)&mx.rx_queue & (sizeof(uint_fast_t) - 1)), rx_queue_is_not_aligned);
-ASSERT_CT_STATIC(!((uintptr_t)&mx.tx_packet & (sizeof(uint_fast_t) - 1)), rx_queue_is_not_aligned);
-#endif
+
 //**************************************************************************************************
 
 extern Pt_Context				pt_data[3];
@@ -1006,122 +768,30 @@ PT_THREAD(		mixer_maintenance());
 PT_THREAD(		mixer_process_rx_data());
 PT_THREAD(		mixer_decode(Pt_Context *pt));
 
-#if MX_PSEUDO_CONFIG
-
 void 			unwrap_chunk(uint8_t *p);
 void 			unwrap_row(unsigned int i);
 void 			wrap_chunk(uint8_t *p);
-
-#endif
 
 void 			clear_data();
 
 void 			uart_read_data(uint8_t uart_isr_flag, uint8_t buffer_len);
 void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
-#if MX_PSEUDO_CONFIG
+
+/* loradisc config */
 	void 		chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
 	void 		chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
 	void 		chirp_mx_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency);
 	void 		chirp_mx_payload_distribution(Mixer_Task mx_task);
 
-	#if CHIRP_OUTLINE
+	/* chirpbox */
 		void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);
 		uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
 		uint8_t		chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl);
-	#endif
-#endif
+
 #ifdef __cplusplus
 	}
 #endif
 
-//**************************************************************************************************
-//***** Implementations of Inline Functions ********************************************************
-
-#if (!MX_PSEUDO_CONFIG)
-
-static inline __attribute__((always_inline)) void unwrap_chunk(uint8_t *p)
-{
-	// double-check alignment of packet fields
-	ASSERT_CT(
-		!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)),
-		inconsistent_alignment);
-	ASSERT_CT(
-		offsetof(Packet, payload) ==
-			offsetof(Packet, coding_vector) +
-			sizeof_member(Packet, coding_vector),
-		inconsistent_alignment);
-
-	// double-check alignment of matrix row fields
-	ASSERT_CT(
-		!(offsetof(Matrix_Row, coding_vector) % sizeof(uint_fast_t)),
-		inconsistent_alignment);
-	ASSERT_CT(
-		!(offsetof(Matrix_Row, payload) % sizeof(uint_fast_t)),
-		inconsistent_alignment);
-	ASSERT_CT(
-		offsetof(Matrix_Row, coding_vector_8) == offsetof(Matrix_Row, coding_vector),
-		inconsisten_alignment);
-	ASSERT_CT(
-		offsetof(Matrix_Row, payload_8) ==
-			offsetof(Matrix_Row, coding_vector_8) + sizeof_member(Matrix_Row, coding_vector_8),
-		inconsisten_alignment);
-
-	// NOTE: condition gets resolved at compile time
-	if (offsetof(Matrix_Row, payload_8) != offsetof(Matrix_Row, payload))
-	{
-//		#pragma GCC diagnostic push
-//		#pragma GCC diagnostic ignored "-Warray-bounds"
-
-		uint8_t			*s = p + sizeof_member(Matrix_Row, coding_vector_8);
-		uint8_t			*d = s + sizeof_member(Matrix_Row, payload_8);
-		unsigned int	i;
-
-		for (i = offsetof(Matrix_Row, payload) - offsetof(Matrix_Row, payload_8); i-- > 0;)
-			*d++ = *s++;
-
-//		#pragma GCC diagnostic pop
-    }
-}
-
-//**************************************************************************************************
-
-static inline __attribute__((always_inline)) void unwrap_row(unsigned int i)
-{
-	unwrap_chunk(&(mx.matrix[i].coding_vector_8[0]));
-}
-
-//**************************************************************************************************
-
-static inline __attribute__((always_inline)) void wrap_chunk(uint8_t *p)
-{
-	// NOTE: condition gets resolved at compile time
-	if (offsetof(Matrix_Row, payload_8) != offsetof(Matrix_Row, payload))
-	{
-//		#pragma GCC diagnostic push
-//		#pragma GCC diagnostic ignored "-Warray-bounds"
-
-		uint8_t			*d = p + sizeof_member(Matrix_Row, coding_vector_8);
-		uint8_t			*s = d + sizeof_member(Matrix_Row, payload_8);
-		unsigned int	i;
-
-		for (i = offsetof(Matrix_Row, payload) - offsetof(Matrix_Row, payload_8); i-- > 0;)
-			*d++ = *s++;
-
-//		#pragma GCC diagnostic pop
-    }
-}
-
-#endif
-//**************************************************************************************************
-//#if MX_COORDINATED_TX
-//
-//static inline __attribute__((always_inline)) uint8_t mx_history_num(const Node *head)
-//{
-//	return head->mx_num_nodes;
-//}
-//
-//#endif	// MX_COORDINATED_TX
-//**************************************************************************************************
 //**************************************************************************************************
 
 #endif // __MIXER_INTERNAL_H__

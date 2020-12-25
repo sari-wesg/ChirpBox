@@ -93,29 +93,19 @@ int_fast16_t mx_get_leading_index(const uint8_t *pcv)
 	const uint32_t	*p = (const uint32_t*)pcv;
 	int_fast16_t	i;
 
-	#if MX_PSEUDO_CONFIG
 	for (i = 0; i < chirp_config.coding_vector.len * 32; i += 32, p++)
-	#else
-	for (i = 0; i < sizeof_member(Packet, coding_vector) * 32; i += 32, p++)
-	#endif
 	{
 		if (*p)
 		{
 			i += gpi_get_lsb(*p);
 
 			// ATTENTION: unused coding vector bits may be non-zero
-			#if MX_PSEUDO_CONFIG
 			return (i < chirp_config.mx_generation_size) ? i : -1;
-			#else
-			return (i < MX_GENERATION_SIZE) ? i : -1;
-			#endif
         }
 	}
 
 	return -1;
 }
-
-#if MX_PSEUDO_CONFIG
 
 void unwrap_chunk(uint8_t *p)
 {
@@ -192,9 +182,6 @@ void wrap_chunk(uint8_t *p)
 //		#pragma GCC diagnostic pop
     }
 }
-
-
-#endif
 
 //**************************************************************************************************
 //**************************************************************************************************

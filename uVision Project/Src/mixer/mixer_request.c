@@ -78,14 +78,11 @@ GPI_TRACE_CONFIG(mixer_request, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
-#if MX_PSEUDO_CONFIG
-
 typedef enum Request_Flag_Tag
 {
 	Request_row = 0,
 	Request_column,
 } Request_Flag;
-#endif
 
 
 
@@ -150,7 +147,6 @@ static inline __attribute__((always_inline)) uint16_t request_clear(uint_fast_t 
 }
 
 //**************************************************************************************************
-#if MX_PSEUDO_CONFIG
 static void update_request_marker(Request_Flag flag, const Packet *p)
 {
 	PROFILE("update_request_marker() begin");
@@ -190,32 +186,6 @@ static void update_request_marker(Request_Flag flag, const Packet *p)
 
 	PROFILE("update_request_marker() end");
 }
-#else
-static void update_request_marker(Request_Marker *m, const Packet *p)
-{
-	PROFILE("update_request_marker() begin");
-
-	if (!(m->any_pending))
-	{
-		gpi_memcpy_dma_inline(m->any_mask, p->info_vector, sizeof(m->any_mask));
-		gpi_memcpy_dma_inline(m->all_mask, p->info_vector, sizeof(m->all_mask));
-
-		m->any_pending = 1;	// temporary, will be updated together with following coding vector snoop
-	}
-	else
-	{
-		request_or (m->any_mask, p->info_vector, sizeof(m->any_mask));
-		request_and(m->all_mask, p->info_vector, sizeof(m->all_mask));
-	}
-
-	m->any_mask[NUM_ELEMENTS(m->any_mask) - 1] &= mx.request.padding_mask;
-	m->all_mask[NUM_ELEMENTS(m->all_mask) - 1] &= mx.request.padding_mask;
-
-	mx.request.last_update_slot = p->slot_number;
-
-	PROFILE("update_request_marker() end");
-}
-#endif
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
@@ -232,23 +202,12 @@ void mx_update_request(const Packet *p)
 	GPI_TRACE_FUNCTION();
 	PROFILE("mx_update_request() begin");
 
-	#if MX_PSEUDO_CONFIG
 	if (p != mx.tx_packet)
-	#else
-	if (p != &mx.tx_packet)
-	#endif
 	{
-		#if MX_PSEUDO_CONFIG
 		if (p->flags.request_column)
 			update_request_marker(Request_column, p);
 		else if (p->flags.request_row)
 			update_request_marker(Request_row, p);
-		#else
-		if (p->flags.request_column)
-			update_request_marker(&mx.request.column, p);
-		else if (p->flags.request_row)
-			update_request_marker(&mx.request.row, p);
-		#endif
 
 		#if MX_REQUEST_HEURISTIC > 1
 			if (!(p->flags.request_column || p->flags.is_full_rank))
@@ -260,73 +219,37 @@ void mx_update_request(const Packet *p)
 				// information. This could happen at the following memcpy() if we don't handle sender_id in
 				// a save way.
 				uint8_t sender_id = p->sender_id;
-				#if MX_PSEUDO_CONFIG
 				if (sender_id >= chirp_config.mx_num_nodes)
-				#else
-				if (sender_id >= MX_NUM_NODES)
-				#endif
 				{
 					return;
 				}
 
-				#if MX_PSEUDO_CONFIG
 				gpi_memcpy_dma_inline(&(mx.history[sender_id]->row_map_chunk[0]), &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-				#else
-				gpi_memcpy_dma_inline(mx.history[sender_id].row_map, p->info_vector, sizeof(mx.history[0].row_map));
-				#endif
 			}
 		#endif
 	}
 
 	// snoop coding vector and update any_pending data
 
-	#if MX_PSEUDO_CONFIG
 	if (mx.request->column_any_pending)
-	#else
-	if (mx.request.column.any_pending)
-	#endif
 	{
-		#if MX_PSEUDO_CONFIG
 		uint_fast16_t last = mx.request->column_any_pending;
-		#else
-		uint_fast16_t last = mx.request.column.any_pending;
-		#endif
 
-		#if MX_PSEUDO_CONFIG
 		mx.request->column_any_pending =
 			request_clear((uint_fast_t *)&(mx.request->mask[chirp_config.column_any_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 		request_clear(&(mx.request->mask[chirp_config.column_all_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-		#else
-		mx.request.column.any_pending =
-			request_clear(mx.request.column.any_mask, p->coding_vector, sizeof(mx.request.column.any_mask));
-		request_clear(mx.request.column.all_mask, p->coding_vector, sizeof(mx.request.column.all_mask));
-		#endif
 
-		#if MX_PSEUDO_CONFIG
 		if (mx.request->column_any_pending != last)
 			mx.request->last_update_slot = p->slot_number;
-		#else
-		if (mx.request.column.any_pending != last)
-			mx.request.last_update_slot = p->slot_number;
-		#endif
 	}
 
-	#if MX_PSEUDO_CONFIG
 	if (mx.request->row_any_pending)
-	#else
-	if (mx.request.row.any_pending)
-	#endif
 	{
-		#if MX_PSEUDO_CONFIG
 		int_fast16_t i = mx_get_leading_index(&(p->packet_chunk[chirp_config.coding_vector.pos]));
-		#else
-		int_fast16_t i = mx_get_leading_index(p->coding_vector);
-		#endif
 		if (i >= 0)
 		{
 			uint_fast_t m = gpi_slu(1, i);
 
-			#if MX_PSEUDO_CONFIG
 			if (mx.request->mask[chirp_config.row_any_mask.pos + i / (sizeof(m) * 8)] & m)
 			{
 				mx.request->mask[chirp_config.row_any_mask.pos + i / (sizeof(m) * 8)] &= ~m;
@@ -334,18 +257,8 @@ void mx_update_request(const Packet *p)
 
 				mx.request->last_update_slot = p->slot_number;
             }
-			#else
-			if (mx.request.row.any_mask[i / (sizeof(m) * 8)] & m)
-			{
-				mx.request.row.any_mask[i / (sizeof(m) * 8)] &= ~m;
-				mx.request.row.all_mask[i / (sizeof(m) * 8)] &= ~m;
-
-				mx.request.last_update_slot = p->slot_number;
-            }
-			#endif
         }
 
-		#if MX_PSEUDO_CONFIG
 		mx.request->row_any_pending = 0;
 		for (i = chirp_config.matrix_coding_vector.len; i-- > 0;)
 		{
@@ -355,27 +268,12 @@ void mx_update_request(const Packet *p)
 				break;
             }
         }
-		#else
-		mx.request.row.any_pending = 0;
-		for (i = NUM_ELEMENTS(mx.request.row.any_mask); i-- > 0;)
-		{
-			if (mx.request.row.any_mask[i])
-			{
-				mx.request.row.any_pending = 1;
-				break;
-            }
-        }
-		#endif
 	}
 
 	PROFILE("mx_update_request() end");
-	#if MX_PSEUDO_CONFIG
+
 	TRACE_DUMP(1, "any_row_mask:", &(mx.request->mask[chirp_config.row_any_mask.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 	TRACE_DUMP(1, "any_column_mask:", &(mx.request->mask[chirp_config.column_any_mask.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-	#else
-	TRACE_DUMP(1, "any_row_mask:", mx.request.row.any_mask, sizeof(mx.request.row.any_mask));
-	TRACE_DUMP(1, "any_column_mask:", mx.request.column.any_mask, sizeof(mx.request.column.any_mask));
-	#endif
 
 	GPI_TRACE_RETURN();
 }

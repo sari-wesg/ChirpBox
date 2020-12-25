@@ -144,11 +144,7 @@ static void trace_packet(const Packet *p)
 	ASSERT_CT(1 == sizeof(p->flags), check_PRI_formats);
 
 	#if !(GPI_ARCH_IS_BOARD(TMOTE_FLOCKLAB) || GPI_ARCH_IS_BOARD(TMOTE_INDRIYA))
-		#if MX_PSEUDO_CONFIG
 		ps += sprintf(ps, "# ID:%u ", (int)mx.tx_packet->sender_id + 1);
-		#else
-		ps += sprintf(ps, "# ID:%u ", (int)mx.tx_packet.sender_id + 1);
-		#endif
 	#endif
 
 	// node id MSB marks vector bit order (for log parser):
@@ -165,31 +161,17 @@ static void trace_packet(const Packet *p)
 		#endif
 		), p->flags.all);
 
-	#if MX_PSEUDO_CONFIG
 	for (i = 0; i < chirp_config.coding_vector.len; i++)
-	#else
-	for (i = 0; i < sizeof(p->coding_vector); i++)
-	#endif
 #if MX_REQUEST || MX_SMART_SHUTDOWN_MAP
-		#if MX_PSEUDO_CONFIG
 		ps += sprintf(ps, "%02" PRIx8, p->packet_chunk[chirp_config.info_vector.pos + i]);
-		#else
-		ps += sprintf(ps, "%02" PRIx8, p->info_vector[i]);
-//		ps += sprintf(ps, "%02" PRIx8, (uint8_t)~(p->info_vector[i]));
-		#endif
 #else
 		ps += sprintf(ps, "00");
 #endif
 
 	ps += sprintf(ps, " - ");
 
-	#if MX_PSEUDO_CONFIG
 	for (i = 0; i < chirp_config.coding_vector.len; i++)
 		ps += sprintf(ps, "%02" PRIx8, p->packet_chunk[chirp_config.coding_vector.pos + i]);
-	#else
-	for (i = 0; i < sizeof(p->coding_vector); i++)
-		ps += sprintf(ps, "%02" PRIx8, p->coding_vector[i]);
-	#endif
 
 	ps += sprintf(ps, " - ");
 
@@ -198,11 +180,7 @@ static void trace_packet(const Packet *p)
 
 	for (i = 0; i < 8; i++)
 	{
-		#if MX_PSEUDO_CONFIG
 		ps += sprintf(ps, "%02" PRIx8, p->packet_chunk[chirp_config.payload.pos + i]);
-		#else
-		ps += sprintf(ps, "%02" PRIx8, p->payload[i]);
-		#endif
 	}
 
 	PRINTF_CHIRP("%s\n", msg);
@@ -225,26 +203,14 @@ static void trace_matrix()
 	uint8_t		v;
 
 	GPI_TRACE_MSG(TRACE_VERBOSE_MATRIX, "matrix:");
-#if MX_PSEUDO_CONFIG
 	for (r = 0; r < chirp_config.mx_generation_size; r++)
-#else
-	for (r = 0; r < NUM_ELEMENTS(mx.matrix); r++)
-#endif
 	{
 		m = &(msg[0]);
 		m += sprintf(m, "%3" PRId16 ":", r);
 
-#if MX_PSEUDO_CONFIG
 		for (i = 0; i < chirp_config.matrix_coding_vector_8.len; i++)
-#else
-		for (i = 0; i < NUM_ELEMENTS(mx.matrix[0].coding_vector_8); i++)
-#endif
 		{
-#if MX_PSEUDO_CONFIG
 			v = mx.matrix[r]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + i];
-#else
-			v = mx.matrix[r].coding_vector_8[i];
-#endif
 			if (&msg[sizeof(msg)] - m <= 3)
 			{
 				GPI_TRACE_MSG(TRACE_VERBOSE_MATRIX, "%s ...", msg);
@@ -263,28 +229,16 @@ static void trace_matrix()
 		*m++ = ' ';
 		*m = '\0';
 
-#if MX_PSEUDO_CONFIG
 		for (i = 0; i < chirp_config.matrix_payload_8.len; i++)
-#else
-		for (i = 0; i < NUM_ELEMENTS(mx.matrix[0].payload_8); i++)
-#endif
 		{
 			#pragma GCC diagnostic push
 			#pragma GCC diagnostic ignored "-Warray-bounds"
 
-#if MX_PSEUDO_CONFIG
 			const uint8_t	offset = (chirp_config.matrix_payload.pos) * 4 - chirp_config.matrix_payload_8.pos;
 
 			if (i < offset)
 				v = mx.matrix[r]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + i + chirp_config.matrix_coding_vector_8.len];
 			else v = mx.matrix[r]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + i];
-#else
-			const uint8_t	offset = offsetof(Matrix_Row, payload) - offsetof(Matrix_Row, payload_8);
-
-			if (i < offset)
-				v = mx.matrix[r].payload_8[i + NUM_ELEMENTS(mx.matrix[0].payload_8)];
-			else v = mx.matrix[r].payload_8[i];
-#endif
 
 			#pragma GCC diagnostic pop
 
@@ -328,12 +282,7 @@ static void update_full_rank_map(const Packet *p)
 	// if we reached full rank
 	if (NULL == p)
 	{
-		#if MX_PSEUDO_CONFIG
 		mx.full_rank_map->map_hash[chirp_config.map.pos + mx.tx_packet->sender_id / 8] |= gpi_slu(1, mx.tx_packet->sender_id % 8);
-		// mx.full_rank_map.map[mx.tx_packet->sender_id / 8] |= gpi_slu(1, mx.tx_packet->sender_id % 8);
-		#else
-		mx.full_rank_map.map[mx.tx_packet.sender_id / 8] |= gpi_slu(1, mx.tx_packet.sender_id % 8);
-		#endif
 	}
 
 	// update map and history
@@ -341,36 +290,20 @@ static void update_full_rank_map(const Packet *p)
 	{
 		if (p->flags.is_full_rank)
 		{
-			#if MX_PSEUDO_CONFIG
 			mx.full_rank_map->map_hash[chirp_config.map.pos + p->sender_id / 8] |= gpi_slu(1, p->sender_id % 8);
-			#else
-			mx.full_rank_map.map[p->sender_id / 8] |= gpi_slu(1, p->sender_id % 8);
-			#endif
 		}
 
-		#if MX_PSEUDO_CONFIG
 		for (pd = (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.map.pos + 0]); pd < (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.map.pos + chirp_config.map.len]); )
 			for (ps = &(p->packet_chunk[chirp_config.info_vector.pos + 0]); ps < &(p->packet_chunk[chirp_config.info_vector.pos + chirp_config.info_vector.len]);)
-		#else
-		for (pd = &mx.full_rank_map.map[0]; pd < &mx.full_rank_map.map[NUM_ELEMENTS(mx.full_rank_map.map)]; )
-			for (ps = &(p->info_vector[0]); ps < &(p->info_vector[sizeof(p->info_vector)]);)
-		#endif
 			{
 				*pd++ |= *ps++;
 			}
 
 		Node *pn;
-		#if MX_PSEUDO_CONFIG
 		for (pn = mx.history[mx_present_head->next]; pn != mx_present_head;)
-		#else
-		for (pn = &mx.history[mx_present_head->next]; pn != mx_present_head;)
-		#endif
 		{
-			#if MX_PSEUDO_CONFIG
 			i = ARRAY_INDEX_SIZE_ADD(pn, &(mx.history[0]->prev), chirp_config.history_len_8);
-			#else
-			i = ARRAY_INDEX(pn, mx.history);
-			#endif
+
 			// ATTENTION: depending on sizeof(mx.history[0]), the compiler may generate an
 			// expensive division operation. This is not such critical at this place because
 			// every neighbor is moved to the finished list only once.
@@ -378,17 +311,10 @@ static void update_full_rank_map(const Packet *p)
 			// ATTENTION: update pn before changing the node, else pn->next may point to a finished
 			// node and the for loop becomes an endless loop (because pn != mx_present_head will
 			// never be true)
-			#if MX_PSEUDO_CONFIG
-			pn = mx.history[pn->next];
-			#else
-			pn = &mx.history[pn->next];
-			#endif
 
-			#if MX_PSEUDO_CONFIG
+			pn = mx.history[pn->next];
+
 			if (mx.full_rank_map->map_hash[chirp_config.map.pos + i / 8] & gpi_slu(1, i % 8))
-			#else
-			if (mx.full_rank_map.map[i / 8] & gpi_slu(1, i % 8))
-			#endif
 			{
 				Packet_Flags flags = {0};
 				flags.is_full_rank = 1;
@@ -406,20 +332,11 @@ static void update_full_rank_map(const Packet *p)
     }
 
 	// update hash
-	#if MX_PSEUDO_CONFIG
 	if (chirp_config.map.len <= chirp_config.hash.len)
 		gpi_memcpy_dma_inline(&(mx.full_rank_map->map_hash[chirp_config.hash.pos]), &(mx.full_rank_map->map_hash[chirp_config.map.pos]), chirp_config.map.len);
-	#else
-	if (sizeof(mx.full_rank_map.map) <= sizeof(mx.full_rank_map.hash))
-		gpi_memcpy_dma_inline(mx.full_rank_map.hash, mx.full_rank_map.map, sizeof(mx.full_rank_map.map));
-	#endif
 	else
 	{
-		#if MX_PSEUDO_CONFIG
 		for (i = 0; i < chirp_config.hash.len; ++i)
-		#else
-		for (i = 0; i < NUM_ELEMENTS(mx.full_rank_map.hash); ++i)
-		#endif
 		{
 			// ATTENTION: mx.full_rank_map.hash is also read on ISR level. Therefore it is important
 			// to work on a temporary variable such that mx.full_rank_map.hash never marks unfinished
@@ -427,36 +344,22 @@ static void update_full_rank_map(const Packet *p)
 
 			uint8_t	hash = -1;
 
-			#if MX_PSEUDO_CONFIG
 			for (ps = (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.map.pos + i]);
 				ps < (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.map.len]);
 				ps += chirp_config.hash.len)
-			#else
-			for (ps = &mx.full_rank_map.map[i];
-				ps < &mx.full_rank_map.map[NUM_ELEMENTS(mx.full_rank_map.map)];
-				ps += NUM_ELEMENTS(mx.full_rank_map.hash))
-			#endif
 			{
 				hash &= *ps;
             }
 
-			#if MX_PSEUDO_CONFIG
 			*((volatile uint8_t*)&(mx.full_rank_map->map_hash[chirp_config.hash.pos + i])) = hash;
-			#else
-			*((volatile uint8_t*)&(mx.full_rank_map.hash[i])) = hash;
-			#endif
         }
     }
 
 	PROFILE("update_full_rank_map() return");
 
-	#if MX_PSEUDO_CONFIG
 	TRACE_DUMP(1, "full-rank map: ", &(mx.full_rank_map->map_hash[chirp_config.map.pos]), chirp_config.map.len);
 	TRACE_DUMP(1, "full-rank hash:", &(mx.full_rank_map->map_hash[chirp_config.hash.pos]), chirp_config.hash.len);
-	#else
-	TRACE_DUMP(1, "full-rank map: ", mx.full_rank_map.map, sizeof(mx.full_rank_map.map));
-	TRACE_DUMP(1, "full-rank hash:", mx.full_rank_map.hash, sizeof(mx.full_rank_map.hash));
-	#endif
+
 	GPI_TRACE_RETURN();
 }
 
@@ -468,11 +371,9 @@ static void prepare_tx_packet()
 {
 	GPI_TRACE_FUNCTION();
 	PROFILE("prepare_tx_packet() entry");
-	#if MX_PSEUDO_CONFIG
+
 	const uint16_t	CHUNK_SIZE = chirp_config.coding_vector.len + chirp_config.payload.len;
-	#else
-	const uint16_t	CHUNK_SIZE = sizeof(mx.tx_packet.coding_vector) + sizeof(mx.tx_packet.payload);
-	#endif
+
 	Matrix_Row		*p;
 	void			*pp[MEMXOR_BLOCKSIZE];
 	int				pp_used = 0;
@@ -484,19 +385,11 @@ static void prepare_tx_packet()
 	assert_msg(NULL != mx.tx_reserve, "Tx without data -> must not happen");
 
 	// clear mx.tx_packet by adding itself to the xor list
-	#if MX_PSEUDO_CONFIG
 	pp[pp_used++] = &(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]);
-	#else
-	pp[pp_used++] = &mx.tx_packet.coding_vector;
-	#endif
 
 #if !MX_BENCHMARK_NO_SYSTEMATIC_STARTUP
 
-#if MX_PSEUDO_CONFIG
 	if (mx.next_own_row < (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]))
-#else
-	if (mx.next_own_row < &mx.matrix[NUM_ELEMENTS(mx.matrix)])
-#endif
 	{
 		p = mx.next_own_row;
 
@@ -504,32 +397,17 @@ static void prepare_tx_packet()
 		used++;
 
 		// restore packed version (in place)
-		#if MX_PSEUDO_CONFIG
 		wrap_chunk((uint8_t *)&(p->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos]));
-		#else
-		wrap_chunk(p->coding_vector_8);
-		#endif
 
 		// add it to xor list
-		#if MX_PSEUDO_CONFIG
 		pp[pp_used++] = &(p->matrix_chunk[chirp_config.matrix_coding_vector.pos]);
-		#else
-		pp[pp_used++] = &(p->coding_vector);
-		#endif
 
 		// look for next own row
-		#if MX_PSEUDO_CONFIG
 		mx.next_own_row += chirp_config.matrix_size_32;
 		while (mx.next_own_row < (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]))
-		#else
-		while (++mx.next_own_row < &mx.matrix[NUM_ELEMENTS(mx.matrix)])
-		#endif
 		{
 			if (0 == mx.next_own_row->birth_slot)
 				break;
-			#if MX_PSEUDO_CONFIG
-			mx.next_own_row += chirp_config.matrix_size_32;
-			#endif
 		}
 	}
 
@@ -538,27 +416,14 @@ static void prepare_tx_packet()
 	if (!used)
 	{
 		#if MX_REQUEST
-			#if MX_PSEUDO_CONFIG
 			if (mx.request->help_index < 0)
-			#else
-			if (mx.request.help_index < 0)
-			#endif
 			{
-				#if MX_PSEUDO_CONFIG
 				help_row = (Matrix_Row *)&(mx.matrix[-mx.request->help_index - 1]->birth_slot);
-				// help_row = (Matrix_Row *)&(mx.matrix[-mx.request.help_index - 1]->birth_slot);
-				#else
-				help_row = &mx.matrix[-mx.request.help_index - 1];
-				#endif
 			}
 		#endif
 
 		// traverse matrix
-		#if MX_PSEUDO_CONFIG
 		for (p = (Matrix_Row *)&(mx.matrix[0]->birth_slot); p < (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]); p += chirp_config.matrix_size_32)
-		#else
-		for (p = &mx.matrix[0]; p < &mx.matrix[NUM_ELEMENTS(mx.matrix)]; p++)
-		#endif
 		{
 			if (UINT16_MAX == p->birth_slot)
 				continue;
@@ -594,51 +459,28 @@ static void prepare_tx_packet()
 			used++;
 
 			// restore packed version (in place)
-			#if MX_PSEUDO_CONFIG
 			wrap_chunk((uint8_t *)&(p->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos]));
-			#else
-			wrap_chunk(p->coding_vector_8);
-			#endif
 
 			// add it to xor list, work through if needed
-			#if MX_PSEUDO_CONFIG
 			pp[pp_used++] = &(p->matrix_chunk[chirp_config.matrix_coding_vector.pos]);
-			#else
-			pp[pp_used++] = &(p->coding_vector);
-			#endif
+
 			if(NUM_ELEMENTS(pp) == pp_used)
 			{
 				PROFILE("prepare_tx_packet() memxor_block(full) begin");
 
 				// NOTE: calling with NUM_ELEMENTS(pp) instead of pp_used leads to a bit better
 				// code because NUM_ELEMENTS(pp) is a constant (msp430-gcc 4.6.3)
-				#if MX_PSEUDO_CONFIG
 				memxor_block(&(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]), pp, CHUNK_SIZE, NUM_ELEMENTS(pp));
-				#else
-				memxor_block(mx.tx_packet.coding_vector, pp, CHUNK_SIZE, NUM_ELEMENTS(pp));
-				#endif
+
 				pp_used = 0;
 
 				PROFILE("prepare_tx_packet() memxor_block(full) end");
 			}
 
-			#if MX_PSEUDO_CONFIG
 			assert_reset(!((offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos) % sizeof(uint_fast_t)));
-			#else
-			ASSERT_CT(!(offsetof(Packet, coding_vector) % sizeof(uint_fast_t)), alignment_issue);
-			#endif
-			#if MX_PSEUDO_CONFIG
+
 			assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
 			assert_reset(chirp_config.matrix_payload_8.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector_8.len);
-			#else
-			ASSERT_CT(offsetof(Packet, payload) ==
-					offsetof(Packet, coding_vector) +
-					sizeof_member(Packet, coding_vector),
-				inconsistent_program);
-			ASSERT_CT(offsetof(Matrix_Row, payload_8) ==
-				offsetof(Matrix_Row, coding_vector) + sizeof_member(Matrix_Row, coding_vector_8),
-				inconsistent_program);
-			#endif
 		}
 	}
 
@@ -663,38 +505,23 @@ static void prepare_tx_packet()
 		p = (Matrix_Row *)mx.tx_reserve;
 
 		// restore packed version (in place)
-		#if MX_PSEUDO_CONFIG
 		wrap_chunk((uint8_t *)&(p->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos]));
-		#else
-		wrap_chunk(p->coding_vector_8);
-		#endif
 
 		// add it to xor list
 		// NOTE: memcpy instead of memxor would also be possible here,
 		// but the situation is not very time critical (xored nothing up to here)
-		#if MX_PSEUDO_CONFIG
 		pp[pp_used++] = &(p->matrix_chunk[chirp_config.matrix_coding_vector.pos]);
-		#else
-		pp[pp_used++] = &(p->coding_vector);
-		#endif
 	}
 
 	// work through the xor list
 	if (pp_used)
 	{
-		#if MX_PSEUDO_CONFIG
 		memxor_block(&(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]), pp, CHUNK_SIZE, pp_used);
-		#else
-		memxor_block(mx.tx_packet.coding_vector, pp, CHUNK_SIZE, pp_used);
-		#endif
 	}
 
 	PROFILE("prepare_tx_packet() return");
-	#if MX_PSEUDO_CONFIG
+
 	TRACE_DUMP(1, "tx_packet:", &(mx.tx_packet->phy_payload_begin), chirp_config.phy_payload_size);
-	#else
-	TRACE_DUMP(1, "tx_packet:", &(mx.tx_packet.phy_payload_begin), PHY_PAYLOAD_SIZE);
-	#endif
 
 	GPI_TRACE_RETURN();
 }
@@ -735,11 +562,8 @@ PT_THREAD(mixer_update_slot())
 			if (mx.events & BV(TX_READY))
 			{
 				PRINTF_CHIRP("Tx: ");
-				#if MX_PSEUDO_CONFIG
+
 				TRACE_PACKET(&(mx.tx_packet->phy_payload_begin));
-				#else
-				TRACE_PACKET(&mx.tx_packet);
-				#endif
 			}
 		#endif
 
@@ -763,26 +587,15 @@ PT_THREAD(mixer_update_slot())
 		PROFILE("mixer_update_slot() begin");
 		// maintain request status
 		#if MX_REQUEST
-			#if MX_PSEUDO_CONFIG
 			if (slot_number - mx.request->last_update_slot > 3)
 			{
 				mx.request->row_any_pending = 0;
 				mx.request->column_any_pending = 0;
 			}
-			#else
-			if (slot_number - mx.request.last_update_slot > 3)
-			{
-				mx.request.row.any_pending = 0;
-				mx.request.column.any_pending = 0;
-			}
-			#endif
+
 			else if (mx.events & BV(TX_READY))
 			{
-				#if MX_PSEUDO_CONFIG
 				mx_update_request(mx.tx_packet);
-				#else
-				mx_update_request(&mx.tx_packet);
-				#endif
 			}
 
 			PROFILE("mixer_update_slot() update request status done");
@@ -794,22 +607,15 @@ PT_THREAD(mixer_update_slot())
 			{
 				PROFILE("mixer_update_slot() update history begin");
 
-				#if MX_PSEUDO_CONFIG
 				Packet *p = mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)];
-				#else
-				Packet *p = &mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)];
-				#endif
+
 				uint8_t  		sender_id   = p->sender_id;
 				#if MX_COORDINATED_TX
 					uint16_t	slot_number = p->slot_number;
 								flags		= p->flags;
 				#endif
 
-				#if MX_PSEUDO_CONFIG
 				if (sender_id >= chirp_config.mx_num_nodes)
-				#else
-				if (sender_id >= MX_NUM_NODES)
-				#endif
 				{
 					// don't do much here, it is handled in Rx processing
 					rx_queue_num_read_2++;
@@ -817,16 +623,9 @@ PT_THREAD(mixer_update_slot())
 				}
 
 				#if INFO_VECTOR_QUEUE
-					#if MX_PSEUDO_CONFIG
 					// TP TODO:
 					// gpi_memcpy_dma_inline((uint8_t *)&(mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)]->packet_chunk[chirp_config.coding_vector.pos]), (uint8_t *)&(mx.code_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.info_queue)]->vector[0]), chirp_config.coding_vector.len);
 					gpi_memcpy_dma_inline((uint8_t *)&(mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)]->packet_chunk[chirp_config.info_vector.pos]), (uint8_t *)&(mx.info_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.info_queue)]->vector[0]), chirp_config.info_vector.len);
-
-					#else
-					gpi_memcpy_dma_inline(mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)].coding_vector, mx.code_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.code_queue)].vector, sizeof_member(Packet, coding_vector));
-					gpi_memcpy_dma_inline(mx.rx_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.rx_queue)].info_vector, mx.info_queue[rx_queue_num_read_2 % NUM_ELEMENTS(mx.info_queue)].vector, sizeof_member(Packet, info_vector));
-
-					#endif
 				#endif
 
 				#if MX_REQUEST
@@ -867,11 +666,7 @@ PT_THREAD(mixer_update_slot())
 
 			// stop if done
 			#if MX_SMART_SHUTDOWN
-				#if MX_PSEUDO_CONFIG
 				if (mx.tx_packet->flags.radio_off)
-				#else
-				if (mx.tx_packet.flags.radio_off)
-				#endif
 				{
 					PRINTF("radio_off");
 					GPI_TRACE_MSG(TRACE_INFO, "smart shutdown initiated");
@@ -891,11 +686,7 @@ PT_THREAD(mixer_update_slot())
 			#endif
 			int_fast8_t		is_helper = 0;
 
-			#if MX_PSEUDO_CONFIG
 			assert_reset(chirp_config.mx_num_nodes < 256);
-			#else
-			ASSERT_CT(MX_NUM_NODES < 256, inconsistent_program);
-			#endif
 
 			// determine request help index
 			#if MX_REQUEST
@@ -905,11 +696,7 @@ PT_THREAD(mixer_update_slot())
 					// (in case of flags.hasNextPayload) if mx.tx_packet is ready. Therefore it is
 					// important that mx.tx_packet doesn't get invalidated on thread level during this
 					// phase. The condition avoids that this could happen in case of row requests.
-					#if MX_PSEUDO_CONFIG
 					if (mx.slot_number > chirp_config.mx_generation_size)
-					#else
-					if (mx.slot_number > MX_GENERATION_SIZE)
-					#endif
 				#endif
 			{
 				PROFILE("mixer_update_slot() tx decision request help 1");
@@ -917,35 +704,20 @@ PT_THREAD(mixer_update_slot())
 				uint_fast_t		help_bitmask = 0;
 				uint_fast_t		*pr;
 
-				#if MX_PSEUDO_CONFIG
 				mx.request->help_index = 0;
-				#else
-				mx.request.help_index = 0;
-				#endif
+
 				// scan column requests
 				// start with all_mask
-				#if MX_PSEUDO_CONFIG
 				pr = (uint_fast_t *)&(mx.request->mask[chirp_config.column_all_mask.pos + 0]);
 				while (mx.request->column_any_pending)
-				#else
-				pr = &mx.request.column.all_mask[0];
-				while (mx.request.column.any_pending)
-				#endif
 				{
 					is_helper = -1;
 
-					#if MX_PSEUDO_CONFIG
 					uint_fast_t		*po = (uint_fast_t *)&(mx.request->mask[chirp_config.my_row_mask.pos + 0]);
-					#else
-					uint_fast_t		*po = &mx.request.my_row_mask[0];
-					#endif
+
 					uint_fast_t		x;
 
-					#if MX_PSEUDO_CONFIG
 					for (x = *pr++; po < (uint_fast_t *)&(mx.request->mask[chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len]);)
-					#else
-					for (x = *pr++; po < &mx.request.my_row_mask[NUM_ELEMENTS(mx.request.my_row_mask)];)
-					#endif
 					{
 						if (!x)
 						{
@@ -976,61 +748,37 @@ PT_THREAD(mixer_update_slot())
                     }
 
 					// if we can help: continue below
-					#if MX_PSEUDO_CONFIG
 					if (po < (uint_fast_t *)&(mx.request->mask[chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len]))
-					#else
-					if (po < &mx.request.my_row_mask[NUM_ELEMENTS(mx.request.my_row_mask)])
-					#endif
 					{
 						// NOTE: help_bitmask has only one bit set,
 						// so it doesn't matter if we use get_msb() or get_lsb()
-						#if MX_PSEUDO_CONFIG
 						mx.request->help_index = 1 + ARRAY_INDEX_SIZE_ADD(po, &(mx.request->mask[chirp_config.my_row_mask.pos]), sizeof(uint_fast_t) * chirp_config.my_row_mask.len) * sizeof(uint_fast_t) * 8 + gpi_get_msb(help_bitmask);
 						mx.request->help_bitmask = help_bitmask;
-						#else
-						mx.request.help_index = 1 + ARRAY_INDEX(po, mx.request.my_row_mask) * sizeof(uint_fast_t) * 8 + gpi_get_msb(help_bitmask);
-						mx.request.help_bitmask = help_bitmask;
-						#endif
+
 						is_helper = 1;
 						break;
                     }
 
 					// break after scanning any_mask
 					// NOTE: -2 matches position of pr
-					#if MX_PSEUDO_CONFIG
 					if (ARRAY_INDEX_SIZE_ADD(pr, &(mx.request->mask[chirp_config.column_any_mask.pos]), sizeof(uint_fast_t) * chirp_config.column_any_mask.len) - 2 < chirp_config.column_all_mask.len)
 						break;
 
 					// scan any_mask (after scanning all_mask)
 					pr = (uint_fast_t *)&(mx.request->mask[chirp_config.column_any_mask.pos + 0]);
-					#else
-					if (ARRAY_INDEX(pr, mx.request.column.any_mask) - 2 < NUM_ELEMENTS(mx.request.column.any_mask))
-						break;
-
-					// scan any_mask (after scanning all_mask)
-					pr = &mx.request.column.any_mask[0];
-					#endif
                 }
 
 				// scan row requests
 				// start with all_mask
-				#if MX_PSEUDO_CONFIG
 				pr = (uint_fast_t *)&(mx.request->mask[chirp_config.row_all_mask.pos + 0]);
 				while ((is_helper <= 0) && (mx.request->row_any_pending))
-				#else
-				while ((is_helper <= 0) && mx.request.row.any_pending)
-				#endif
 				{
 					is_helper = -1;
 
 					uint_fast_t		x;
-					#if MX_PSEUDO_CONFIG
+
 					uint_fast_t		*po = (uint_fast_t *)&(mx.request->mask[chirp_config.my_row_mask.pos + 0]);
 					for (x = *pr++; po < (uint_fast_t *)&(mx.request->mask[chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len]);)
-					#else
-					uint_fast_t		*po = &mx.request.my_row_mask[0];
-					for (x = *pr++; po < &mx.request.my_row_mask[NUM_ELEMENTS(mx.request.my_row_mask)];)
-					#endif
 					{
 						if (!x)
 						{
@@ -1061,46 +809,26 @@ PT_THREAD(mixer_update_slot())
                     }
 
 					// if we can help: continue below
-					#if MX_PSEUDO_CONFIG
 					if (po < (uint_fast_t *)&(mx.request->mask[chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len]))
-					#else
-					if (po < &mx.request.my_row_mask[NUM_ELEMENTS(mx.request.my_row_mask)])
-					#endif
 					{
 						// NOTE: help_bitmask has only one bit set,
 						// so it doesn't matter if we use get_msb() or get_lsb()
-						#if MX_PSEUDO_CONFIG
+
 						int16_t help_index = ARRAY_INDEX_SIZE_ADD(po, &(mx.request->mask[chirp_config.my_row_mask.pos]), sizeof(uint_fast_t) * chirp_config.my_row_mask.len) * sizeof(uint_fast_t) * 8 + gpi_get_msb(help_bitmask);
 						mx.request->help_index = -(1 + help_index);
 						mx.request->help_bitmask = help_bitmask;
-						#else
-						int16_t help_index = ARRAY_INDEX(po, mx.request.my_row_mask) * sizeof(uint_fast_t) * 8 + gpi_get_msb(help_bitmask);
-						mx.request.help_index = -(1 + help_index);
-						mx.request.help_bitmask = help_bitmask;
-						#endif
+
 						is_helper = 1;
 
 						// invalidate tx packet if it is not able to help
 						// NOTE: it is rebuild in this case
 						// NOTE: a side effect of this is that the grid timer ISR doesn't
 						// need to check the packet before sideloading the helper row
-						#if MX_PSEUDO_CONFIG
 						if (((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))
-						#else
-						if (mx.tx_packet.is_ready)
-						#endif
 						{
-							#if MX_PSEUDO_CONFIG
 							if (mx_get_leading_index(&(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos])) <= help_index)
-							#else
-							if (mx_get_leading_index(mx.tx_packet.coding_vector) <= help_index)
-							#endif
 							{
-								#if MX_PSEUDO_CONFIG
 								mx.tx_packet->packet_chunk[chirp_config.rand.pos] &= PACKET_IS_READY_MASK;
-								#else
-								mx.tx_packet.is_ready = 0;
-								#endif
 							}
                         }
 
@@ -1109,40 +837,24 @@ PT_THREAD(mixer_update_slot())
 
 					// break after scanning any_mask
 					// NOTE: -2 matches position of pr
-					#if MX_PSEUDO_CONFIG
 					if (ARRAY_INDEX_SIZE_ADD(pr, &(mx.request->mask[chirp_config.row_any_mask.pos]), sizeof(uint_fast_t) * chirp_config.row_any_mask.len) - 2 < chirp_config.row_any_mask.len)
 						break;
 
 					// scan any_mask (after scanning all_mask)
 					pr = &(mx.request->mask[chirp_config.row_any_mask.pos]);
-					#else
-					if (ARRAY_INDEX(pr, mx.request.row.any_mask) - 2 < NUM_ELEMENTS(mx.request.row.any_mask))
-						break;
-
-					// scan any_mask (after scanning all_mask)
-					pr = &mx.request.row.any_mask[0];
-					#endif
                 }
 
 				PROFILE("mixer_update_slot() tx decision request help 2");
 
 				if (is_helper != 0)
 				{
-					#if MX_PSEUDO_CONFIG
 					assert_reset(chirp_config.mx_num_nodes < 256);
-					#else
-					ASSERT_CT(MX_NUM_NODES < 256, inconsistent_program);
-					#endif
 
 					PROFILE("mixer_update_slot() tx decision request help 3");
 
 					// relative rank = rank / MX_GENERATION_SIZE,
 					// stored in 0.16 signed fixed point format
-					#if MX_PSEUDO_CONFIG
 					relative_rank = gpi_mulu_16x16(mx.rank, 0xffff / chirp_config.mx_generation_size);
-					#else
-					relative_rank = gpi_mulu_16x16(mx.rank, 0xffff / MX_GENERATION_SIZE);
-					#endif
 
 					// n = number of potential helpers
 					uint_fast8_t n = 0;
@@ -1167,32 +879,17 @@ PT_THREAD(mixer_update_slot())
 							n += (UINT16_C(3) * mx_present_head->mx_num_nodes + 2) / 4;
 						#elif MX_REQUEST_HEURISTIC == 2
 
-							#if MX_PSEUDO_CONFIG
 							uint_fast16_t i = (ABS(mx.request->help_index) - 1) / (8 * sizeof(uint_fast_t));
-							#else
-							uint_fast16_t i = (ABS(mx.request.help_index) - 1) / (8 * sizeof_member(Node, row_map[0]));
-							#endif
+
 							GPI_TRACE_MSG(TRACE_VERBOSE, "i: %" PRIdFAST16", m: %" PRIxFAST, i, help_bitmask);
 
 							Node *p;
-							#if MX_PSEUDO_CONFIG
 							for (p = mx.history[mx_present_head->next]; p != mx_present_head; p = mx.history[p->next])
-							#else
-							for (p = &mx.history[mx_present_head->next]; p != mx_present_head; p = &mx.history[p->next])
-							#endif
 							{
-								#if MX_PSEUDO_CONFIG
 								if (!(p->row_map_chunk[i] & help_bitmask))
-								#else
-								if (!(p->row_map[i] & help_bitmask))
-								#endif
 								{
 									n++;
-									#if MX_PSEUDO_CONFIG
 									GPI_TRACE_MSG(TRACE_VERBOSE, "+node %u: %" PRIuFAST8, (int)ARRAY_INDEX_SIZE_ADD(p, &(mx.history[0]->prev), chirp_config.history_len_8), n);
-									#else
-									GPI_TRACE_MSG(TRACE_VERBOSE, "+node %u: %" PRIuFAST8, (int)ARRAY_INDEX(p, mx.history), n);
-									#endif
 								}
 							}
 
@@ -1247,15 +944,9 @@ PT_THREAD(mixer_update_slot())
 
 					PROFILE("mixer_update_slot() tx decision request help 4");
 
-					#if MX_PSEUDO_CONFIG
 					GPI_TRACE_MSG(TRACE_VERBOSE, "request: is_helper = %" PRIdFAST8", p = %" PRIu16
 						", rr = %" PRIu16 ", n = %" PRIuFAST8 ", index = %" PRId16,
 						is_helper, p, relative_rank, n, mx.request->help_index);
-					#else
-					GPI_TRACE_MSG(TRACE_VERBOSE, "request: is_helper = %" PRIdFAST8", p = %" PRIu16
-						", rr = %" PRIu16 ", n = %" PRIuFAST8 ", index = %" PRId16,
-						is_helper, p, relative_rank, n, mx.request.help_index);
-					#endif
 				}
 			}
 			#endif
@@ -1277,7 +968,6 @@ PT_THREAD(mixer_update_slot())
 				uint16_t diff = slot_number - last_owner_update;
 
 				// limit number of potential loop iterations
-				#if MX_PSEUDO_CONFIG
 				if (diff >= 8 * chirp_config.mx_num_nodes)
 					owner = (slot_number + 1 - 1) % chirp_config.mx_num_nodes;
 				else
@@ -1291,31 +981,13 @@ PT_THREAD(mixer_update_slot())
 					if (owner >= chirp_config.mx_num_nodes)
 						owner -= chirp_config.mx_num_nodes;
                 }
-				#else
-				if (diff >= 8 * MX_NUM_NODES)
-					owner = (slot_number + 1 - 1) % MX_NUM_NODES;
-				else
-				{
-					// skip full wrap-around cycles
-					while (diff >= MX_NUM_NODES)
-						diff -= MX_NUM_NODES;
 
-					// update owner
-					owner += diff;
-					if (owner >= MX_NUM_NODES)
-						owner -= MX_NUM_NODES;
-                }
-				#endif
 				last_owner_update = slot_number;
 
 				GPI_TRACE_MSG(TRACE_VERBOSE, "owner of slot %" PRIu16 ": %" PRIu16, slot_number + 1, owner);
 
 				// if my slot: TX
-				#if MX_PSEUDO_CONFIG
 				if (owner == mx.tx_packet->sender_id)
-				#else
-				if (owner == mx.tx_packet.sender_id)
-				#endif
 				{
 					GPI_TRACE_MSG(TRACE_VERBOSE, "tx decision: my slot");
 
@@ -1359,11 +1031,7 @@ PT_THREAD(mixer_update_slot())
 
 				// during start-up phase
 				#if !MX_BENCHMARK_NO_COORDINATED_STARTUP
-				#if MX_PSEUDO_CONFIG
 				if (slot_number < chirp_config.mx_generation_size)
-				#else
-				if (slot_number < MX_GENERATION_SIZE)
-				#endif
 				{
 					GPI_TRACE_MSG(TRACE_VERBOSE, "tx decision: start-up phase");
 
@@ -1387,11 +1055,7 @@ PT_THREAD(mixer_update_slot())
 					// if we are the owner of the next payload: TX
 					// NOTE: in start-up phase, the slots are assigned to owners by node IDs
 					// *and initial payloads* (i.e. slots can have two owners in this phase).
-					#if MX_PSEUDO_CONFIG
 					if ((slot_number + 1 < chirp_config.mx_generation_size) && (0 == mx.matrix[slot_number + 1]->birth_slot))
-					#else
-					if ((slot_number + 1 < MX_GENERATION_SIZE) && (0 == mx.matrix[slot_number + 1].birth_slot))
-					#endif
 					{
 						GPI_TRACE_MSG(TRACE_VERBOSE, "tx decision: being start-up owner");
 						p = UINT16_MAX;
@@ -1406,11 +1070,7 @@ PT_THREAD(mixer_update_slot())
 				#endif
 
 				// foreign slot
-				#if MX_PSEUDO_CONFIG
 				if (mx.history[owner]->list_id != ARRAY_INDEX_SIZE_ADD(mx_absent_head, &(mx.history[0]->prev), chirp_config.history_len_8) - chirp_config.mx_num_nodes)
-				#else
-				if (mx.history[owner].list_id != ARRAY_INDEX(mx_absent_head, mx.history) - MX_NUM_NODES)
-				#endif
 				{
 					GPI_TRACE_MSG(TRACE_VERBOSE, "foreign slot");
 
@@ -1480,21 +1140,13 @@ PT_THREAD(mixer_update_slot())
 		{
 			// if TX and packet preparation pending: select short-term transmit data
 			// in case there is not enough time to finish the full packet
-			#if MX_PSEUDO_CONFIG
 			if (!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))
-			#else
-			if (!mx.tx_packet.is_ready)
-			#endif
 			{
 				int ie = gpi_int_lock();
 
 				if (NULL == mx.tx_sideload)
 				{
-					#if MX_PSEUDO_CONFIG
 					mx.tx_sideload = (uint8_t *)&(mx.tx_reserve->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
-					#else
-					mx.tx_sideload = &(mx.tx_reserve->coding_vector_8[0]);
-					#endif
 				}
 
 				// NOTE: (next_task == TX) => (rank > 0) => (mx.tx_reserve != NULL) for sure
@@ -1514,30 +1166,20 @@ PT_THREAD(mixer_update_slot())
 		// TX_READY and !is_ready are quiet equivalent - except for the fact that mx.tx_packet.is_ready
 		// may also be reset during tx decision (to enforce assembly of a new packet in response to
 		// request processing). Hence, checking is_ready is the right way here.
-		#if MX_PSEUDO_CONFIG
 		if (!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS) && (mx.rank > 0))
-		#else
-		if (!mx.tx_packet.is_ready && (mx.rank > 0))
-		#endif
 		{
 			PROFILE("mixer_update_slot() prepare tx packet begin");
 
 			// is_valid is used to detect if the packet may have been hurt by the ISR while preparing it
-			#if MX_PSEUDO_CONFIG
 			mx.tx_packet->packet_chunk[chirp_config.rand.pos] = (mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_VALID_MASK) | (1 << PACKET_IS_VALID_POS);
-			#else
-			mx.tx_packet.is_valid = 1;
-			#endif
+
 			REORDER_BARRIER();
 
 			prepare_tx_packet();
 
 			REORDER_BARRIER();
-			#if MX_PSEUDO_CONFIG
+
 			if (!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_VALID) >> PACKET_IS_VALID_POS))
-			#else
-			if (!mx.tx_packet.is_valid)
-			#endif
 			{
 				// if mx.tx_packet gets hurt by ISR, then we can not use it. On the other hand we
 				// know that next_task TX has been done already, using the sideload (while we
@@ -1549,11 +1191,8 @@ PT_THREAD(mixer_update_slot())
 			else
 			{
 				// prepare a random number for ISR
-				#if MX_PSEUDO_CONFIG
 				mx.tx_packet->packet_chunk[chirp_config.rand.pos] = (mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_RAND_MASK) | (mixer_rand() & PACKET_RAND_MASK);
-				#else
-				mx.tx_packet.rand = mixer_rand();
-				#endif
+
 				REORDER_BARRIER();
 				int ie = gpi_int_lock();
 
@@ -1563,17 +1202,9 @@ PT_THREAD(mixer_update_slot())
 				// declare it as ready anyway. The reason why we don't do that is that we don't
 				// want to send the same packet twice.
 
-				#if MX_PSEUDO_CONFIG
 				if ((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_VALID) >> PACKET_IS_VALID_POS)
-				#else
-				if (mx.tx_packet.is_valid)
-				#endif
 				{
-					#if MX_PSEUDO_CONFIG
 					mx.tx_packet->packet_chunk[chirp_config.rand.pos] |= PACKET_IS_READY;
-					#else
-					mx.tx_packet.is_ready = 1;
-					#endif
 
 					// reset mx.tx_sideload if it points into the matrix
 					// NOTE: prepare_tx_packet() already considered all matrix rows. So if we wouldn't
@@ -1585,16 +1216,9 @@ PT_THREAD(mixer_update_slot())
 					// NOTE: don't touch mx.tx_sideload if it points to mx.empty_row. It plays a special
 					// role and is temporarily used by rx processing. mx.tx_sideload pointing to
 					// mx.empty_row is the same as pointing to rx queue.
-					#if MX_PSEUDO_CONFIG
-					// printf("uintptr_t:%02x, %02x, %02x, %02x, %02x\n", mx.tx_sideload, (uintptr_t)&(mx.matrix[0]->birth_slot), chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)), mx.tx_sideload - 1 * sizeof(uint_fast_t), mx.empty_row);
-					// if (((uintptr_t)mx.tx_sideload - (uintptr_t)&(mx.matrix[0]->birth_slot) < chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t))) && ((Matrix_Row *)(mx.tx_sideload - 1 * sizeof(uint_fast_t)) != mx.empty_row))
 					if (((uintptr_t)mx.tx_sideload - (uintptr_t)&(mx.matrix[0]->birth_slot) < chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t))) && ((Matrix_Row *)(mx.tx_sideload - chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t)) != mx.empty_row))
-					#else
-					if (((uintptr_t)mx.tx_sideload - (uintptr_t)&mx.matrix < sizeof(mx.matrix)) &&(Matrix_Row *)(mx.tx_sideload - offsetof(Matrix_Row, coding_vector)) != mx.empty_row)
-					#endif
 						{
 							// TP TODO:
-							PRINTF("NULL 2\n");
 							mx.tx_sideload = NULL;
 						}
 					REORDER_BARRIER();
@@ -1616,30 +1240,17 @@ PT_THREAD(mixer_update_slot())
 			#if (GPI_TRACE_MODE & GPI_TRACE_MODE_TRACE)
 			{
 				int i;
-				#if MX_PSEUDO_CONFIG
-				for (i = 0; i < chirp_config.mx_num_nodes; ++i)
-				#else
-				for (i = 0; i < MX_NUM_NODES; ++i)
-				#endif
-//					GPI_TRACE_MSG(TRACE_VERBOSE, "history %2u: %u %u", i,
-//						(int)(mx.history[i].list_id), (int)(mx.history[i].last_slot_number));
 
-				#if MX_PSEUDO_CONFIG
 				for (i = 0; i < chirp_config.mx_num_nodes; ++i)
-				#else
-				for (i = 0; i < MX_NUM_NODES; ++i)
-				#endif
 				{
 					char msg[16];
 					sprintf(msg, "row map %2u:", i);
-//					TRACE_DUMP(1, msg, mx.history[i].row_map, sizeof(mx.history[0].row_map));
 				}
 			}
 			#endif
 		#endif
 
 		PROFILE("mixer_update_slot() end");
-		// while(1);
     }
 	else
 	{
@@ -1664,24 +1275,14 @@ PT_THREAD(mixer_process_rx_data())
 {
 	Pt_Context* const	pt = pt_process_rx_data;
 
-	#if MX_PSEUDO_CONFIG
 	const unsigned int PAYLOAD_SHIFT =
 		chirp_config.matrix_payload.pos * sizeof(uint_fast_t) - chirp_config.matrix_payload_8.pos;
-	#else
-	static const unsigned int PAYLOAD_SHIFT =
-		offsetof(Matrix_Row, payload) - offsetof(Matrix_Row, payload_8);
-	#endif
 
 	// ATTENTION: ensure that PAYLOAD_SIZE is aligned because memxor_block() may rely on that
 	// ATTENTION: don't use sizeof(mx.matrix[0].payload) because it might be too small due to
 	// MX_BENCHMARK_PSEUDO_PAYLOAD
-	#if MX_PSEUDO_CONFIG
 	const unsigned int PAYLOAD_SIZE =
 		chirp_config.payload.len * sizeof(uint8_t) + PADDING_SIZE(chirp_config.payload.len * sizeof(uint8_t));
-	#else
-	static const unsigned int PAYLOAD_SIZE =
-		FIELD_SIZEOF(Packet, payload) + PADDING_SIZE(FIELD_SIZEOF(Packet, payload));
-	#endif
 
 	PT_BEGIN(pt);
 
@@ -1702,27 +1303,16 @@ PT_THREAD(mixer_process_rx_data())
 			unsigned int	pp_used;
 			int_fast16_t	i;
 
-			#if MX_PSEUDO_CONFIG
 			p = mx.rx_queue[mx.rx_queue_num_read % NUM_ELEMENTS(mx.rx_queue)];
-			#else
-			p = &mx.rx_queue[mx.rx_queue_num_read % NUM_ELEMENTS(mx.rx_queue)];
-			#endif
 
-			#if MX_PSEUDO_CONFIG
 			if (p->sender_id >= chirp_config.mx_num_nodes)
-			#else
-			if (p->sender_id >= MX_NUM_NODES)
-			#endif
 			{
 				GPI_TRACE_MSG(TRACE_INFO, "Rx: invalid sender_id %u -> drop packet", p->sender_id);
 				goto continue_;
 			}
 
-			#if MX_PSEUDO_CONFIG
 			TRACE_DUMP(1, "Rx packet:", &(p->phy_payload_begin), chirp_config.phy_payload_size);
-			#else
-			TRACE_DUMP(1, "Rx packet:", &(p->phy_payload_begin), PHY_PAYLOAD_SIZE);
-			#endif
+
 			PRINTF_CHIRP("Rx: ");
 
 			TRACE_PACKET(p);
@@ -1730,15 +1320,9 @@ PT_THREAD(mixer_process_rx_data())
 			/* when receive a packet at first time */
 			if ((!mx.rank) && (chirp_config.disem_copy))
 			{
-				#if MX_PSEUDO_CONFIG
 				mixer_write(node_id_allocate, &(p->packet_chunk[chirp_config.payload.pos]), chirp_config.mx_payload_size);
 				if (node_id_allocate == chirp_config.mx_generation_size - 1)
 					mx.empty_row -= chirp_config.matrix_size_32;
-				#else
-				mixer_write(node_id_allocate, p->coding_vector, chirp_config.mx_payload_size);
-				if (node_id_allocate == MX_GENERATION_SIZE - 1)
-					mx.empty_row --;
-				#endif
 			}
 
 			// update full-rank map
@@ -1749,11 +1333,7 @@ PT_THREAD(mixer_process_rx_data())
 
 					// if we are not finished: yield
 					// because update_full_rank_map() might have taken a bit of time
-					#if MX_PSEUDO_CONFIG
 					if (mx.rank < chirp_config.mx_generation_size)
-					#else
-					if (mx.rank < MX_GENERATION_SIZE)
-					#endif
 					{
 						PT_YIELD(pt);
 					}
@@ -1761,11 +1341,7 @@ PT_THREAD(mixer_process_rx_data())
 			#endif
 
 			// if we already have full rank: done
-			#if MX_PSEUDO_CONFIG
 			if (mx.rank >= chirp_config.mx_generation_size)
-			#else
-			if (mx.rank >= MX_GENERATION_SIZE)
-			#endif
 			{
 				goto continue_;
 			}
@@ -1784,11 +1360,7 @@ PT_THREAD(mixer_process_rx_data())
 			// mx.tx_sideload back to an older queue entry than it is (if it points into the queue).
 			// If we don't do that, then the ISR ensures that mx.tx_sideload never points to the
 			// vacant slot.
-			#if MX_PSEUDO_CONFIG
 			if (mx.tx_sideload == &(p->packet_chunk[chirp_config.coding_vector.pos]))
-			#else
-			if (mx.tx_sideload == &(p->coding_vector[0]))
-			#endif
 			{
 
 				uint8_t	*pr;
@@ -1803,21 +1375,10 @@ PT_THREAD(mixer_process_rx_data())
 					pr = NULL;
 				else
 				{
-					#if MX_PSEUDO_CONFIG
 					pr = (uint8_t *)&(mx.empty_row->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
-					#else
-					pr = &(mx.empty_row->coding_vector_8[0]);
-					#endif
 
-					#if MX_PSEUDO_CONFIG
 					gpi_memcpy_dma_aligned(pr, &(p->packet_chunk[chirp_config.coding_vector.pos]),
 						(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-					// gpi_memcpy_dma_aligned(pr, p->coding_vector,
-					// 	(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-					#else
-					gpi_memcpy_dma_aligned(pr, p->coding_vector,
-						sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
-					#endif
 
 					#if MX_BENCHMARK_PSEUDO_PAYLOAD
 						#if GPI_ARCH_IS_CORE(MSP430)
@@ -1834,11 +1395,7 @@ PT_THREAD(mixer_process_rx_data())
 
 				int ie = gpi_int_lock();
 
-				#if MX_PSEUDO_CONFIG
 				if (mx.tx_sideload == &(p->packet_chunk[chirp_config.coding_vector.pos]))
-				#else
-				if (mx.tx_sideload == &(p->coding_vector[0]))
-				#endif
 				{
 					mx.tx_sideload = pr;
 				}
@@ -1847,11 +1404,7 @@ PT_THREAD(mixer_process_rx_data())
             }
 
 			// align packet elements
-			#if MX_PSEUDO_CONFIG
 			unwrap_chunk(&(p->packet_chunk[chirp_config.coding_vector.pos]));
-			#else
-			unwrap_chunk(&(p->coding_vector[0]));
-			#endif
 
 			PROFILE("mixer_process_rx_data() checkpoint 2");
 
@@ -1862,11 +1415,7 @@ PT_THREAD(mixer_process_rx_data())
 				PROFILE("mixer_process_rx_data() matrix iteration begin");
 
 				// get leading coefficient
-				#if MX_PSEUDO_CONFIG
 				i = mx_get_leading_index(&(p->packet_chunk[chirp_config.coding_vector.pos]));
-				#else
-				i = mx_get_leading_index(p->coding_vector);
-				#endif
 
 				if (i < 0)
 				{
@@ -1886,40 +1435,20 @@ PT_THREAD(mixer_process_rx_data())
                 }
 
 				// if corresponding row is empty (i.e. packet is innovative): fill it, rank increase
-				#if MX_PSEUDO_CONFIG
 				if (UINT16_MAX == mx.matrix[i]->birth_slot)
-				#else
-				if (UINT16_MAX == mx.matrix[i].birth_slot)
-				#endif
 				{
 					PROFILE("mixer_process_rx_data() new row begin");
-					#if MX_PSEUDO_CONFIG
+
 					mx.matrix[i]->birth_slot = p->slot_number;
-					#else
-					mx.matrix[i].birth_slot = p->slot_number;
-					#endif
+
 					mx.recent_innovative_slot = p->slot_number;
 
-					#if MX_PSEUDO_CONFIG
 					assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
 					assert_reset(chirp_config.matrix_payload.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len);
-					#else
-					ASSERT_CT(offsetof(Packet, payload) ==
-							offsetof(Packet, coding_vector) +
-							sizeof_member(Packet, coding_vector),
-						inconsistent_program);
-					ASSERT_CT(offsetof(Matrix_Row, payload) ==
-						offsetof(Matrix_Row, coding_vector) + sizeof_member(Matrix_Row, coding_vector),
-						inconsistent_program);
-					#endif
 
 					if (pp_used)
 					{
-						#if MX_PSEUDO_CONFIG
 						memxor_block(&(p->packet_chunk[chirp_config.payload.pos + PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, pp_used);
-						#else
-						memxor_block(&(p->payload[PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, pp_used);
-						#endif
 					}
 
 					// if mx.tx_sideload doesn't point into rx queue: set mx.tx_sideload to current
@@ -1935,16 +1464,9 @@ PT_THREAD(mixer_process_rx_data())
 					{
 						int ie = gpi_int_lock();
 
-					#if MX_PSEUDO_CONFIG
 					// TP TODO:
-					// printf("tx_sideload:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", mx.tx_sideload, mx.rx_queue[0], sizeof(mx.rx_queue), sizeof(Packet), chirp_config.coding_vector.pos, chirp_config.phy_payload_size, chirp_config.packet_len, (uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0]);
-						// if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= sizeof(mx.rx_queue))
 						if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= 4 * chirp_config.packet_len)
 							mx.tx_sideload = &(p->packet_chunk[chirp_config.coding_vector.pos]);
-					#else
-						if ((uintptr_t)mx.tx_sideload - (uintptr_t)&mx.rx_queue >= sizeof(mx.rx_queue))
-							mx.tx_sideload = &(p->coding_vector[0]);
-					#endif
 
 						gpi_int_unlock(ie);
 					}
@@ -1960,40 +1482,22 @@ PT_THREAD(mixer_process_rx_data())
 					{
 						int ie = gpi_int_lock();
 
-						#if MX_PSEUDO_CONFIG
 						if (ABS(mx.request->help_index) - 1 == i)
-						#else
-						if (ABS(mx.request.help_index) - 1 == i)
-						#endif
 						{
 							{
-								#if MX_PSEUDO_CONFIG
 								assert_reset(ABS(mx.request->help_index) - 1 != i);
-								#else
-								assert_reset(ABS(mx.request.help_index) - 1 != i);
-								#endif
+
 								GPI_TRACE_MSG_FAST(TRACE_ERROR, "!!! request help index points to empty row -> check program, must not happen !!!");
 							}
-							#if MX_PSEUDO_CONFIG
 							mx.request->help_index = 0;
-							#else
-							mx.request.help_index = 0;
-							#endif
                         }
 
 						gpi_int_unlock(ie);
 					}
 					#endif
 
-					#if MX_PSEUDO_CONFIG
 					gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]),
 						(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-					// gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), p->coding_vector,
-					// 								(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t));
-					#else
-					gpi_memcpy_dma_aligned(mx.matrix[i].coding_vector, p->coding_vector,
-						sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload));
-					#endif
 
 					#if MX_BENCHMARK_PSEUDO_PAYLOAD
 						#if GPI_ARCH_IS_CORE(MSP430)
@@ -2012,77 +1516,46 @@ PT_THREAD(mixer_process_rx_data())
 					#if 0	// activate only for special purposes like evaluating most stupid behavior
 					if (NULL == mx.tx_reserve)
 					#endif
-					#if MX_PSEUDO_CONFIG
+
 					mx.tx_reserve = (Matrix_Row *)&(mx.matrix[i]->birth_slot);
-					#else
-					mx.tx_reserve = &mx.matrix[i];
-					#endif
 
 					// update mx.empty_row if needed
 					// NOTE: mx.empty_row is kept static to avoid expensive search runs everytime
 					// an empty row is needed. starting from its last position is much cheaper.
-					#if MX_PSEUDO_CONFIG
 					if (mx.empty_row == (Matrix_Row *)&(mx.matrix[i]->birth_slot))
-					#else
-					if (mx.empty_row == &mx.matrix[i])
-					#endif
 					{
-						#if MX_PSEUDO_CONFIG
 						if (chirp_config.mx_generation_size == mx.rank)
-						#else
-						if (MX_GENERATION_SIZE == mx.rank)
-						#endif
 						{
 							mx.empty_row = NULL;
 						}
 						else
 						{
-							#if MX_PSEUDO_CONFIG
 							while (mx.empty_row > (Matrix_Row *)&(mx.matrix[0]->birth_slot))
-							#else
-							while (mx.empty_row-- > &mx.matrix[0])
-							#endif
 							{
-								#if MX_PSEUDO_CONFIG
 								mx.empty_row -= chirp_config.matrix_size_32;
-								#endif
+
 								if (UINT16_MAX == mx.empty_row->birth_slot)
 									break;
 							}
 
-							#if MX_PSEUDO_CONFIG
 							if (mx.empty_row < (Matrix_Row *)&(mx.matrix[0]->birth_slot))
-							#else
-							if (mx.empty_row < &mx.matrix[0])
-							#endif
 							{
-								#if MX_PSEUDO_CONFIG
 								mx.empty_row = (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]);
 								while (mx.empty_row > (Matrix_Row *)&(mx.matrix[0]->birth_slot))
-								#else
-								mx.empty_row = &mx.matrix[NUM_ELEMENTS(mx.matrix)];
-								while (mx.empty_row-- > &mx.matrix[0])
-								#endif
 								{
-									#if MX_PSEUDO_CONFIG
 									mx.empty_row -= chirp_config.matrix_size_32;
-									#endif
+
 									if (UINT16_MAX == mx.empty_row->birth_slot)
 										break;
                                 }
                             }
 
-							#if MX_PSEUDO_CONFIG
 							assert_reset(mx.empty_row >= (Matrix_Row *)&(mx.matrix[0]->birth_slot));
-							#else
-							assert_reset(mx.empty_row >= &mx.matrix[0]);
-							#endif
                         }
                     }
 
 					// update request mask
 					#if MX_REQUEST
-						#if MX_PSEUDO_CONFIG
 						mx.request->mask[chirp_config.my_row_mask.pos + i / (sizeof(uint_fast_t) * 8)] &=
 							~gpi_slu(1, (i % (sizeof(uint_fast_t) * 8)));
 						mx.request->my_column_pending =
@@ -2092,12 +1565,6 @@ PT_THREAD(mixer_process_rx_data())
 							chirp_config.full_column = 0;
 							PRINTF_CHIRP("-----column_pending = 0-----\n");
 						}
-						#else
-						mx.request.my_row_mask[i / (sizeof(uint_fast_t) * 8)] &=
-							~gpi_slu(1, (i % (sizeof(uint_fast_t) * 8)));
-						mx.request.my_column_pending =
-							mx_request_clear(mx.request.my_column_mask, mx.matrix[i].coding_vector, sizeof(mx.request.my_column_mask));
-						#endif
 
 					#endif
 
@@ -2105,21 +1572,14 @@ PT_THREAD(mixer_process_rx_data())
 
 					GPI_TRACE_MSG(TRACE_VERBOSE, "new row %u, rank: %u", i, mx.rank);
 					TRACE_MATRIX();
-					#if MX_PSEUDO_CONFIG
+
 					GPI_TRACE_MSG(TRACE_VERBOSE, "empty row: %d", (NULL == mx.empty_row) ? -1 :  ARRAY_INDEX_SIZE_ADD(mx.empty_row, &(mx.matrix[0]->birth_slot), (1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)));
-					#else
-					GPI_TRACE_MSG(TRACE_VERBOSE, "empty row: %d", (NULL == mx.empty_row) ? -1 :  ARRAY_INDEX(mx.empty_row, mx.matrix));
-					#endif
 
 					// if we reached full rank with current packet: solve (decode)
 					// NOTE: this may take some time. Although it would not be very critical if we
 					// lose some packets meanwhile, we still yield to transmit something from time
 					// to time.
-					#if MX_PSEUDO_CONFIG
 					if (chirp_config.mx_generation_size == mx.rank)
-					#else
-					if (MX_GENERATION_SIZE == mx.rank)
-					#endif
 					{
 						PRINTF_CHIRP("------------full_rank------------:%d\n", mx.slot_number);
 
@@ -2138,11 +1598,7 @@ PT_THREAD(mixer_process_rx_data())
 						REORDER_BARRIER();		// make sure that mx.rank is written back
 						int ie = gpi_int_lock();
 						{
-							#if MX_PSEUDO_CONFIG
 							if ((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY)>> PACKET_IS_READY_POS)
-							#else
-							if (mx.tx_packet.is_ready)
-							#endif
 							{
 								mx.tx_sideload = NULL;
 							}
@@ -2176,27 +1632,15 @@ PT_THREAD(mixer_process_rx_data())
 				PROFILE("mixer_process_rx_data() matrix iteration checkpoint A");
 
 				// else substitute
-				#if MX_PSEUDO_CONFIG
 				memxor(&(p->packet_chunk[chirp_config.coding_vector.pos]), &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-				// memxor(p->coding_vector, &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-				#else
-				memxor(p->coding_vector, mx.matrix[i].coding_vector, sizeof(mx.matrix[0].coding_vector));
-				#endif
 
-				#if MX_PSEUDO_CONFIG
 				pp[pp_used++] = &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_payload.pos]);
-				#else
-				pp[pp_used++] = &(mx.matrix[i].payload);
-				#endif
+
 				if (NUM_ELEMENTS(pp) == pp_used)
 				{
 					// NOTE: calling with NUM_ELEMENTS(pp) instead of pp_used leads to a bit
 					// better code because NUM_ELEMENTS(pp) is a constant (msp430-gcc 4.6.3)
-					#if MX_PSEUDO_CONFIG
 					memxor_block(&(p->packet_chunk[chirp_config.payload.pos + PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, NUM_ELEMENTS(pp));
-					#else
-					memxor_block(&(p->payload[PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, NUM_ELEMENTS(pp));
-					#endif
 
 					// yield after each block to keep thread-level response time small (enough)
 					PT_YIELD(pt);
@@ -2240,11 +1684,7 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 	GPI_TRACE_MSG_FAST(TRACE_INFO, "start decoding...");
 	PROFILE("mixer_decode() entry");
 
-	#if MX_PSEUDO_CONFIG
 	for (i = chirp_config.mx_generation_size; i-- > 0;)
-	#else
-	for (i = NUM_ELEMENTS(mx.matrix); i-- > 0;)
-	#endif
 	{
 		const unsigned int	SZB = sizeof(uint_fast_t) * 8;
 		void				*pp[MEMXOR_BLOCKSIZE];
@@ -2254,11 +1694,7 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 		// check if row is empty
 		// ATTENTION: this is needed if decode() called before reaching full rank
 		// (e.g. at end of round)
-		#if MX_PSEUDO_CONFIG
 		if (UINT16_MAX == mx.matrix[i]->birth_slot)
-		#else
-		if (UINT16_MAX == mx.matrix[i].birth_slot)
-		#endif
 		{
 			continue;
 		}
@@ -2271,11 +1707,7 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 		// NOTE: there is no problem if s_tx_reserve points into the matrix
 		// because it is not used on ISR level
 		{
-			#if MX_PSEUDO_CONFIG
 			uint8_t	*p = &(mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos]);
-			#else
-			uint8_t	*p = &(mx.matrix[i].coding_vector_8[0]);
-			#endif
 
 			COMPUTE_BARRIER(p);
 
@@ -2292,13 +1724,8 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 			#if MX_REQUEST
 				ie = gpi_int_lock();
 
-				#if MX_PSEUDO_CONFIG
 				if (ABS(mx.request->help_index) - 1 == i)
 					mx.request->help_index = 0;
-				#else
-				if (ABS(mx.request.help_index) - 1 == i)
-					mx.request.help_index = 0;
-				#endif
 
 				gpi_int_unlock(ie);
 			#endif
@@ -2307,19 +1734,13 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 		pp_used = 0;
 
 		k = i + 1;
-		#if MX_PSEUDO_CONFIG
+
 		pcv = &(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos + k / SZB]);
-		#else
-		pcv = &(mx.matrix[i].coding_vector[k / SZB]);
-		#endif
+
 		m = *pcv++ & ((-1 << (SZB - 1)) >> ((SZB - 1) - (k % SZB)));
 		k &= ~(SZB - 1);
 
-		#if MX_PSEUDO_CONFIG
 		while (k < chirp_config.mx_generation_size)
-		#else
-		while (k < NUM_ELEMENTS(mx.matrix))
-		#endif
 		{
 			if (!m)
 			{
@@ -2335,11 +1756,7 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 
 			k += gpi_get_lsb(m);
 
-			#if MX_PSEUDO_CONFIG
 			if (k >= chirp_config.mx_generation_size)
-			#else
-			if (k >= NUM_ELEMENTS(mx.matrix))
-			#endif
 			{
 				break;
 			}
@@ -2347,39 +1764,20 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 			// check if row to substitute is empty
 			// ATTENTION: this is needed if decode() called before reaching full rank
 			// (e.g. at end of round)
-			#if MX_PSEUDO_CONFIG
 			if (UINT16_MAX != mx.matrix[k]->birth_slot)
-			#else
-			if (UINT16_MAX != mx.matrix[k].birth_slot)
-			#endif
 			{
-				#if MX_PSEUDO_CONFIG
 				pp[pp_used++] = &(mx.matrix[k]->matrix_chunk[chirp_config.matrix_coding_vector.pos + 0]);
-				#else
-				pp[pp_used++] = &(mx.matrix[k].coding_vector[0]);
-				#endif
+
 				if (NUM_ELEMENTS(pp) == pp_used)
 				{
-					#if MX_PSEUDO_CONFIG
 					assert_reset(chirp_config.matrix_payload.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len);
-					#else
-					ASSERT_CT(offsetof(Matrix_Row, payload) ==
-						offsetof(Matrix_Row, coding_vector) + sizeof_member(Matrix_Row, coding_vector),
-						inconsistent_code);
-					#endif
 
 					PROFILE("mixer_decode() row memxor_block(full) begin");
 
 					// NOTE: calling with NUM_ELEMENTS(pp) instead of pp_used leads to a bit better
 					// code because NUM_ELEMENTS(pp) is a constant (msp430-gcc 4.6.3)
-					#if MX_PSEUDO_CONFIG
 					memxor_block(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos + 0]), pp,
 						(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t), NUM_ELEMENTS(pp));
-					#else
-					memxor_block(&(mx.matrix[i].coding_vector[0]), pp,
-						sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload), NUM_ELEMENTS(pp));
-					#endif
-
 
 					#if MX_BENCHMARK_PSEUDO_PAYLOAD
 						#if GPI_ARCH_IS_CORE(MSP430)
@@ -2401,21 +1799,10 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 
 		if (pp_used)
 		{
-			#if MX_PSEUDO_CONFIG
 			assert_reset(chirp_config.matrix_payload.pos = chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len);
-			#else
-			ASSERT_CT(offsetof(Matrix_Row, payload) ==
-				offsetof(Matrix_Row, coding_vector) + sizeof_member(Matrix_Row, coding_vector),
-				inconsistent_code);
-			#endif
 
-			#if MX_PSEUDO_CONFIG
 			memxor_block(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos + 0]), pp,
 				(chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len) * sizeof(uint_fast_t), pp_used);
-			#else
-			memxor_block(&(mx.matrix[i].coding_vector[0]), pp,
-				sizeof(mx.matrix[0].coding_vector) + sizeof(mx.matrix[0].payload), pp_used);
-			#endif
 
 			#if MX_BENCHMARK_PSEUDO_PAYLOAD
 				#if GPI_ARCH_IS_CORE(MSP430)
@@ -2479,26 +1866,14 @@ PT_THREAD(mixer_maintenance())
 		// NOTE: we test once per slot, and STOP executes gracefully at the next slot boundary
 		// (or both a bit relaxed during RESYNC). Hence, the timing (e.g. when in the slot is
 		// "now"?) is not very critical here.
-		#if MX_PSEUDO_CONFIG
 		if (((mx.slot_number >= chirp_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0)) || ((chirp_config.task == MX_ARRANGE) && (!mx.rank) && (chirp_config.update_slot >= 6)))
-		#else
-		if ((mx.slot_number >= MX_ROUND_LENGTH) || (gpi_tick_compare_fast_native(now, mx.round_deadline) >= 0))
-		#endif
 		{
-			#if MX_PSEUDO_CONFIG
 			mx.slot_number = chirp_config.mx_round_length;
-			#else
-			mx.slot_number = MX_ROUND_LENGTH;
-			#endif
+
 			mx.round_deadline_update_slot = mx.slot_number;
 
-			#if MX_PSEUDO_CONFIG
 			mx.round_deadline = now +
 				gpi_mulu_32x16to64((Gpi_Fast_Tick_Native)chirp_config.mx_slot_length, (typeof(mx.slot_number))chirp_config.mx_round_length - mx.slot_number);
-			#else
-			mx.round_deadline = now +
-				gpi_mulu((Gpi_Fast_Tick_Native)MX_SLOT_LENGTH, (typeof(mx.slot_number))MX_ROUND_LENGTH - mx.slot_number);
-			#endif
 
 			GPI_TRACE_MSG(TRACE_INFO, "max. round length reached -> STOP initiated");
 
@@ -2511,20 +1886,12 @@ PT_THREAD(mixer_maintenance())
 		{
 			// ATTENTION: updating round deadline only on slot_number updates is important
 			// for right behaviour during RESYNC phases
-			#if MX_PSEUDO_CONFIG
 			assert_reset((GPI_TICK_FAST_MAX / 2) / chirp_config.mx_slot_length >= chirp_config.mx_round_length);
-			#else
-			ASSERT_CT((GPI_TICK_HYBRID_MAX / 2) / MX_SLOT_LENGTH >= MX_ROUND_LENGTH, round_period_overflow);
-			#endif
 
 			mx.round_deadline_update_slot = mx.slot_number;
-			#if MX_PSEUDO_CONFIG
+
 			mx.round_deadline = now +
 				gpi_mulu_32x16to64((Gpi_Fast_Tick_Native)chirp_config.mx_slot_length, (typeof(mx.slot_number))chirp_config.mx_round_length - mx.slot_number);
-			#else
-			mx.round_deadline = now +
-				gpi_mulu((Gpi_Fast_Tick_Native)MX_SLOT_LENGTH, (typeof(mx.slot_number))MX_ROUND_LENGTH - mx.slot_number);
-			#endif
 
 			GPI_TRACE_MSG(TRACE_INFO, "round deadline: %lu (%luus from now)",
 				(unsigned long)mx.round_deadline, (unsigned long)gpi_tick_fast_to_us(mx.round_deadline - now));
@@ -2548,11 +1915,8 @@ PT_THREAD(mixer_maintenance())
 			while (gpi_profile_read(&ticket, &module_name, &line, &timestamp))
 			{
 				#if !(GPI_ARCH_IS_BOARD(TMOTE_FLOCKLAB) || GPI_ARCH_IS_BOARD(TMOTE_INDRIYA))
-					#if MX_PSEUDO_CONFIG
+
 					PRINTF_CHIRP("# ID:%u ", mx.tx_packet->sender_id + 1);
-					#else
-					PRINTF_CHIRP("# ID:%u ", mx.tx_packet.sender_id + 1);
-					#endif
 				#endif
 
 				PRINTF_CHIRP("profile %u %s %4" PRIu16 ": %" PRIu32 "\n", s_snapshot_index, module_name, line, timestamp);

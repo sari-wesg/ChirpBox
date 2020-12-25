@@ -105,12 +105,10 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 uint8_t test_round;
 
-#if MX_PSEUDO_CONFIG
 /* TODO: */
-static const uint32_t nodes[256] = {0x350045, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
-// static const uint32_t nodes[256] = {0x350045, 0x1D004E};
+// static const uint32_t nodes[256] = {0x350045, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
+static const uint32_t nodes[256] = {0x350045, 0x1D004E};
 
-#endif
 const uint8_t VERSION_MAJOR = 0xbf, VERSION_NODE = 0x36;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -178,16 +176,12 @@ static uint8_t hardware_init()
 #endif
 
 	// init RF transceiver
-	#if (!MX_PSEUDO_CONFIG)
-	gpi_radio_init();
-	#endif
 	gpi_radio_init();
 	node_id_restore();
 
 	PRINTF("\tStarting node 0x%X \n", TOS_NODE_ID);
 
 	// translate TOS_NODE_ID to logical node id used with mixer
-	#if MX_PSEUDO_CONFIG
 	for (node_id = 0; node_id < NUM_ELEMENTS(nodes); ++node_id)
 	{
 		PRINTF("node:%lu, 0x%x\n", node_id, nodes[node_id]);
@@ -198,18 +192,12 @@ static uint8_t hardware_init()
 	PRINTF("MX_NUM_NODES_CONF:%lu\n", MX_NUM_NODES_CONF);
 
 	for (node_id = 0; node_id < MX_NUM_NODES_CONF; ++node_id)
-	#else
-	for (node_id = 0; node_id < NUM_ELEMENTS(nodes); ++node_id)
-	#endif
 	{
 		if (nodes[node_id] == TOS_NODE_ID)
 			break;
 	}
-	#if MX_PSEUDO_CONFIG
+
 	if (node_id >= MX_NUM_NODES_CONF)
-	#else
-	if (node_id >= NUM_ELEMENTS(nodes))
-	#endif
 	{
 		PRINTF("!!! PANIC: node mapping not found for node %x !!!\n", TOS_NODE_ID);
 		while (1)
@@ -269,9 +257,7 @@ int main(void)
 	node_id_allocate = node_id;
 
 	/************************************ Chirpbox ************************************/
-	#if ((MX_PSEUDO_CONFIG) && (CHIRP_OUTLINE))
-		chirp_start(node_id, MX_NUM_NODES_CONF);
-	#endif
+	chirp_start(node_id, MX_NUM_NODES_CONF);
 
 	return 0;
 }

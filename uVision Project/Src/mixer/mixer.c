@@ -151,19 +151,11 @@ void mixer_init(uint8_t node_id)
 	// set the state to mixer for config the isr functions
 	chirp_isr.state = ISR_MIXER;
 
-	#if MX_PSEUDO_CONFIG
 	assert_reset(node_id < chirp_config.mx_num_nodes);
 
 	// in case NDEBUG is set
 	if (node_id >= chirp_config.mx_num_nodes)
 		GPI_TRACE_RETURN();
-	#else
-	assert_reset(node_id < MX_NUM_NODES);
-
-	// in case NDEBUG is set
-	if (node_id >= MX_NUM_NODES)
-		GPI_TRACE_RETURN();
-	#endif
 
 	unsigned int i;
 
@@ -173,19 +165,11 @@ void mixer_init(uint8_t node_id)
 
 	PRINT(sizeof(Packet));
 
-	#if MX_PSEUDO_CONFIG
 	PRINT(chirp_config.mx_num_nodes);
 	PRINT(chirp_config.mx_generation_size);
 	PRINT(chirp_config.mx_payload_size);
 	PRINT(chirp_config.mx_slot_length);
 	PRINT(chirp_config.mx_round_length);
-	#else
-	PRINT(MX_NUM_NODES);
-	PRINT(MX_GENERATION_SIZE);
-	PRINT(MX_PAYLOAD_SIZE);
-	PRINT(MX_SLOT_LENGTH);
-	PRINT(MX_ROUND_LENGTH);
-	#endif
 
 	PRINT(MX_AGE_TO_INCLUDE_PROBABILITY);
 	PRINT(MX_AGE_TO_TX_PROBABILITY);
@@ -217,7 +201,6 @@ void mixer_init(uint8_t node_id)
 
 #endif
 
-	#if MX_PSEUDO_CONFIG
     chirp_config.update_slot = 0;
 
 	mx.rx_queue[0] = (Packet *)malloc((sizeof(mx.rx_queue) / sizeof(mx.rx_queue[0])) * (chirp_config.packet_len));
@@ -264,7 +247,6 @@ void mixer_init(uint8_t node_id)
 	#endif
 
 	mx.request = (Request_Data *)malloc(offsetof(Request_Data, mask) + 6 * chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-	#endif
 
 	mixer_transport_init();
 
@@ -272,29 +254,18 @@ void mixer_init(uint8_t node_id)
 	mx.rx_queue_num_written = 0;
 	mx.rx_queue_num_read = 0;
 
-	#if MX_PSEUDO_CONFIG
 	mx.tx_packet->sender_id = node_id;
 	mx.tx_packet->flags.all = 0;
-	#else
-	mx.tx_packet.sender_id = node_id;
-	mx.tx_packet.flags.all = 0;
-	#endif
+
 	mx.tx_reserve = NULL;
 
-	#if MX_PSEUDO_CONFIG
 	for (i = 0; i < chirp_config.mx_generation_size; i++)
 		mx.matrix[i]->birth_slot = UINT16_MAX;
-	#else
-	for (i = 0; i < MX_GENERATION_SIZE; i++)
-		mx.matrix[i].birth_slot = UINT16_MAX;
-	#endif
 
 	mx.rank = 0;
-	#if MX_PSEUDO_CONFIG
+
 	mx.next_own_row = (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]);
-	#else
-	mx.next_own_row = &mx.matrix[NUM_ELEMENTS(mx.matrix)];
-	#endif
+
 	mx.recent_innovative_slot = 0;
 
 	mx.events = 0;
@@ -305,7 +276,6 @@ void mixer_init(uint8_t node_id)
 		PT_INIT(&pt_data[i]);
 
 	#if MX_REQUEST
-		#if MX_PSEUDO_CONFIG
 		memset(mx.request, 0, offsetof(Request_Data, mask) + 6 * chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 		memset(&(mx.request->mask[chirp_config.my_row_mask.pos]), -1, chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 		memset(&(mx.request->mask[chirp_config.my_column_mask.pos]), -1, chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
@@ -321,24 +291,6 @@ void mixer_init(uint8_t node_id)
 		i = chirp_config.matrix_coding_vector.len - 1;
 		mx.request->mask[chirp_config.my_row_mask.pos + i] &= mx.request->padding_mask;
 		mx.request->mask[chirp_config.my_column_mask.pos + i] &= mx.request->padding_mask;
-		#else
-		memset(&mx.request, 0, sizeof(mx.request));
-		memset(&mx.request.my_row_mask, -1, sizeof(mx.request.my_row_mask));
-		memset(&mx.request.my_column_mask, -1, sizeof(mx.request.my_column_mask));
-
-		// ATTENTION: signed is important
-		int_fast_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
-		for (i = sizeof(mx.request.my_row_mask) * 8; i-- > MX_GENERATION_SIZE;)
-			mask >>= 1;
-		mx.request.padding_mask = ~(mask << 1);
-
-		GPI_TRACE_MSG(TRACE_VERBOSE, "request padding mask: %0*x",
-			sizeof(mx.request.padding_mask) * 2, mx.request.padding_mask);
-
-		i = NUM_ELEMENTS(mx.request.my_row_mask) - 1;
-		mx.request.my_row_mask[i] &= mx.request.padding_mask;
-		mx.request.my_column_mask[i] &= mx.request.padding_mask;
-		#endif
 	#endif
 
 	#if MX_COORDINATED_TX
@@ -349,21 +301,14 @@ void mixer_init(uint8_t node_id)
 
 	mx.slot_number = 0;
 
-	#if MX_PSEUDO_CONFIG
 	mx.tx_packet->packet_chunk[chirp_config.rand.pos] &= PACKET_IS_READY_MASK;
-	#else
-	mx.tx_packet.is_ready = 0;
-	#endif
+
 	mx.tx_sideload = NULL;
 
 	#if MX_SMART_SHUTDOWN
 		mx.have_full_rank_neighbor = 0;
 		#if MX_SMART_SHUTDOWN_MAP
-			#if MX_PSEUDO_CONFIG
 			memset(mx.full_rank_map, 0, chirp_config.map.len + chirp_config.hash.len);
-			#else
-			memset(&mx.full_rank_map, 0, sizeof(mx.full_rank_map));
-			#endif
 		#endif
 	#endif
 
@@ -381,79 +326,40 @@ size_t mixer_write(unsigned int i, const void *msg, size_t size)
 {
 	GPI_TRACE_FUNCTION();
 
-	#if MX_PSEUDO_CONFIG
 	assert_reset(i < chirp_config.mx_generation_size);
 
 	// in case NDEBUG is set
 	if (i >= chirp_config.mx_generation_size)
 		GPI_TRACE_RETURN(0);
-	#else
-	assert_reset(i < MX_GENERATION_SIZE);
 
-	// in case NDEBUG is set
-	if (i >= MX_GENERATION_SIZE)
-		GPI_TRACE_RETURN(0);
-	#endif
-
-	#if MX_PSEUDO_CONFIG
 	size = MIN(size, chirp_config.matrix_payload_8.len);
-	#else
-	size = MIN(size, sizeof(mx.matrix[0].payload_8));
-	#endif
 
-	#if MX_PSEUDO_CONFIG
 	gpi_memcpy_dma(&(mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos]), msg, size);
-	#else
-	gpi_memcpy_dma(mx.matrix[i].payload_8, msg, size);
-	#endif
 
-	#if MX_PSEUDO_CONFIG
 	uint32_t payload_hash = Chirp_RSHash((uint8_t *)&(mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos]), chirp_config.matrix_payload_8.len - 2);
 	mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos + chirp_config.mx_payload_size - 2] = payload_hash >> 8;
 	mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos + chirp_config.mx_payload_size - 1] = payload_hash;
-	#endif
 
 	unwrap_row(i);
 
-	#if MX_PSEUDO_CONFIG
 	memset(&(mx.matrix[i]->matrix_chunk[chirp_config.matrix_coding_vector.pos]), 0, sizeof(uint_fast_t) * chirp_config.matrix_coding_vector.len);
 	mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + i / 8] |= 1 << (i % 8);
 	mx.matrix[i]->birth_slot = 0;
-	#else
-	memset(mx.matrix[i].coding_vector, 0, sizeof(mx.matrix[0].coding_vector));
-	mx.matrix[i].coding_vector_8[i / 8] |= 1 << (i % 8);
-	mx.matrix[i].birth_slot = 0;
-	#endif
 
 	mx.rank++;
 
 	if (NULL == mx.tx_reserve)
 	{
-		#if MX_PSEUDO_CONFIG
 		mx.tx_reserve = &(mx.matrix[i]->birth_slot);
-		#else
-		mx.tx_reserve = &mx.matrix[i];
-		#endif
 	}
 
-	#if MX_PSEUDO_CONFIG
 	if (mx.next_own_row > &(mx.matrix[i]->birth_slot))
 		mx.next_own_row = &(mx.matrix[i]->birth_slot);
-	#else
-	if (mx.next_own_row > &mx.matrix[i])
-		mx.next_own_row = &mx.matrix[i];
-	#endif
 
 	#if MX_REQUEST
-		#if MX_PSEUDO_CONFIG
 		const unsigned int BITS_PER_WORD = sizeof(uint_fast_t) * 8;
 		mx.request->mask[chirp_config.my_row_mask.pos + i / BITS_PER_WORD] &= ~(1 << (i % BITS_PER_WORD));
 		mx.request->mask[chirp_config.my_column_mask.pos + i / BITS_PER_WORD] &= ~(1 << (i % BITS_PER_WORD));
-		#else
-		const unsigned int BITS_PER_WORD = sizeof(mx.request.my_row_mask[0]) * 8;
-		mx.request.my_row_mask[i / BITS_PER_WORD] &= ~(1 << (i % BITS_PER_WORD));
-		mx.request.my_column_mask[i / BITS_PER_WORD] &= ~(1 << (i % BITS_PER_WORD));
-		#endif
 	#endif
 
 	GPI_TRACE_RETURN(size);
@@ -468,23 +374,12 @@ void mixer_arm(Mixer_Start_Mode mode)
 	{
 	// mark an empty row (used by rx processing)
 	mx.empty_row = NULL;
-	#if MX_PSEUDO_CONFIG
 	if (mx.rank < chirp_config.mx_generation_size)
-	#else
-	if (mx.rank < MX_GENERATION_SIZE)
-	#endif
 	{
-		#if MX_PSEUDO_CONFIG
 		Matrix_Row *p = (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]);
 		while (p > 0)
-		#else
-		Matrix_Row *p = &(mx.matrix[NUM_ELEMENTS(mx.matrix)]);
-		while (p-- > 0)
-		#endif
 		{
-			#if MX_PSEUDO_CONFIG
 			p -= chirp_config.matrix_size_32;
-			#endif
 			if (UINT16_MAX == p->birth_slot)
 			{
 				mx.empty_row = p;
@@ -498,24 +393,15 @@ void mixer_arm(Mixer_Start_Mode mode)
 	{
 		assert_reset(NULL != mx.tx_reserve);
 
-		#if MX_PSEUDO_CONFIG
 		mx.tx_sideload = &(mx.next_own_row->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
-		#else
-		mx.tx_sideload = &(mx.next_own_row->coding_vector_8[0]);
-		#endif
 
-		#if MX_PSEUDO_CONFIG
 		mx.next_own_row += chirp_config.matrix_size_32;
 		while (mx.next_own_row < (Matrix_Row *)&(mx.matrix[chirp_config.mx_generation_size - 1]->matrix_chunk[chirp_config.matrix_chunk_32_len]))
-		#else
-		while (++mx.next_own_row < &(mx.matrix[NUM_ELEMENTS(mx.matrix)]))
-		#endif
 		{
 			if (0 == mx.next_own_row->birth_slot)
 				break;
-			#if MX_PSEUDO_CONFIG
+
 			mx.next_own_row += chirp_config.matrix_size_32;
-			#endif
 		}
 
 		mixer_transport_arm_initiator();
@@ -587,11 +473,7 @@ Gpi_Fast_Tick_Extended mixer_start()
 						// in RESYNC when stopping.
 						if (mx.events & BV(DEADLINE_REACHED))
 						{
-							#if MX_PSEUDO_CONFIG
 							mx.slot_number = chirp_config.mx_round_length;
-							#else
-							mx.slot_number = MX_ROUND_LENGTH;
-							#endif
 						}
 
 						// exit loop
@@ -611,15 +493,9 @@ Gpi_Fast_Tick_Extended mixer_start()
 							#if (GPI_TRACE_MODE & GPI_TRACE_MODE_TRACE)
 								const int USE_NATIVE = 0;
 							#else
-								#if MX_PSEUDO_CONFIG
 								const int USE_NATIVE =
 									((((chirp_config.mx_slot_length * 5) / 2) * FAST_HYBRID_RATIO + 0x1000) <
 									(Gpi_Fast_Tick_Native)GPI_TICK_FAST_MAX);
-								#else
-								const int USE_NATIVE =
-									((MX_SLOT_LENGTH_RESYNC * FAST_HYBRID_RATIO + 0x1000) <
-									(Gpi_Fast_Tick_Native)GPI_TICK_FAST_MAX);
-								#endif
 							#endif
 
 							Gpi_Hybrid_Tick	time;
@@ -673,11 +549,7 @@ Gpi_Fast_Tick_Extended mixer_start()
 	}
 
 	// try to solve (if not done already)
-	#if MX_PSEUDO_CONFIG
 	if (mx.rank < chirp_config.mx_generation_size)
-	#else
-	if (mx.rank < MX_GENERATION_SIZE)
-	#endif
 	{
 		Pt_Context *pt = &pt_data[0];
 		PT_INIT(pt);
@@ -690,89 +562,74 @@ Gpi_Fast_Tick_Extended mixer_start()
 
 	// 	mx.stat_counter.radio_on_time /= FAST_HYBRID_RATIO;
 
-	// 	// #ifdef PRINT
-	// 	// 	#error change macro name
-	// 	// #endif
-
-	// 	// printf("statistics:\n");
-
-	// 	// #define PRINT(n)	\
-	// 	// 	ASSERT_CT(sizeof(mx.stat_counter.n) == sizeof(uint16_t), n);	\
-	// 	// 	printf(#n ": %" PRIu16 "\n", mx.stat_counter.n)
-
-	// 	// PRINT(num_sent);
-	// 	// PRINT(num_received);
-	// 	// PRINT(num_resync);
-	// 	// PRINT(num_grid_drift_overflow);
-	// 	// PRINT(num_rx_window_overflow);
-	// 	// PRINT(num_rx_success);
-	// 	// PRINT(num_rx_broken);
-	// 	// PRINT(num_rx_timeout);
-	// 	// PRINT(num_rx_dma_timeout);
-	// 	// PRINT(num_rx_dma_late);
-	// 	// PRINT(num_rx_late);
-	// 	// PRINT(num_tx_late);
-	// 	// PRINT(num_tx_zero_packet);
-	// 	// PRINT(num_tx_fifo_late);
-	// 	// PRINT(num_grid_late);
-	// 	// PRINT(num_rx_slot_mismatch);
-	// 	// PRINT(num_rx_queue_overflow);
-	// 	// PRINT(num_rx_queue_overflow_full_rank);
-	// 	// PRINT(num_rx_queue_processed);
-	// 	// PRINT(slot_full_rank);
-	// 	// PRINT(slot_decoded);
-	// 	// PRINT(slot_off);
-
-	// 	// #undef PRINT
-	// 	// #define PRINT(n)	\
-	// 	// 	ASSERT_CT(sizeof(Gpi_Hybrid_Tick) <= sizeof(long), n);		\
-	// 	// 	printf(#n ": %lu us\n", (unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.n))
-
-	// 	// PRINT(radio_on_time);
-	// 	// PRINT(low_power_time);
-
-	// 	// #undef PRINT
-	// #if MX_PSEUDO_CONFIG
-	// unsigned long avg_energy = ((unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.radio_on_time) * 1e3) / (unsigned long)(((chirp_config.mx_period_time_s * 1000) / 1));
-	// #else
-	// unsigned long avg_energy = ((unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.radio_on_time) * 1e3) / (unsigned long)(MIXER_PERIOD);
-	// printf("E 1:%lu.%03lu \n", avg_energy / 1000, avg_energy % 1000);
+	// #ifdef PRINT
+	// 	#error change macro name
 	// #endif
+
+	// printf("statistics:\n");
+
+	// #define PRINT(n)	\
+	// 	ASSERT_CT(sizeof(mx.stat_counter.n) == sizeof(uint16_t), n);	\
+	// 	printf(#n ": %" PRIu16 "\n", mx.stat_counter.n)
+
+	// PRINT(num_sent);
+	// PRINT(num_received);
+	// PRINT(num_resync);
+	// PRINT(num_grid_drift_overflow);
+	// PRINT(num_rx_window_overflow);
+	// PRINT(num_rx_success);
+	// PRINT(num_rx_broken);
+	// PRINT(num_rx_timeout);
+	// PRINT(num_rx_dma_timeout);
+	// PRINT(num_rx_dma_late);
+	// PRINT(num_rx_late);
+	// PRINT(num_tx_late);
+	// PRINT(num_tx_zero_packet);
+	// PRINT(num_tx_fifo_late);
+	// PRINT(num_grid_late);
+	// PRINT(num_rx_slot_mismatch);
+	// PRINT(num_rx_queue_overflow);
+	// PRINT(num_rx_queue_overflow_full_rank);
+	// PRINT(num_rx_queue_processed);
+	// PRINT(slot_full_rank);
+	// PRINT(slot_decoded);
+	// PRINT(slot_off);
+
+	// #undef PRINT
+	// #define PRINT(n)	\
+	// 	ASSERT_CT(sizeof(Gpi_Hybrid_Tick) <= sizeof(long), n);		\
+	// 	printf(#n ": %lu us\n", (unsigned long)gpi_tick_hybrid_to_us(mx.stat_counter.n))
+
+	// PRINT(radio_on_time);
+	// PRINT(low_power_time);
+
+	// #undef PRINT
 
 	// #endif
 
 	#if ENERGEST_CONF_ON
 
-	#if MX_PSEUDO_CONFIG
 	unsigned long avg_energy1 = ((((unsigned long)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN) + energest_type_time(ENERGEST_TYPE_TRANSMIT)))) / (unsigned long)(chirp_config.mx_period_time_s));
-	#else
-	unsigned long avg_energy1 = ((((unsigned long)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN) + energest_type_time(ENERGEST_TYPE_TRANSMIT))) * 1e3) / (unsigned long)(MIXER_PERIOD));
-	#endif
 
 	printf("E 1:%lu.%03lu \n", avg_energy1 / 1000, avg_energy1 % 1000);
 
 	#endif
 
-	#if MX_PSEUDO_CONFIG
-		free(mx.rx_queue[0]);
-		if (chirp_config.primitive != FLOODING)
-		{
+	free(mx.rx_queue[0]);
+	if (chirp_config.primitive != FLOODING)
+	{
 		#if INFO_VECTOR_QUEUE
 		free(mx.code_queue[0]);
 		free(mx.info_queue[0]);
 		#endif
-		}
-		free(mx.tx_packet);
-		free(mx.history[0]);
-		#if MX_SMART_SHUTDOWN
+	}
+	free(mx.tx_packet);
+	free(mx.history[0]);
+	#if MX_SMART_SHUTDOWN
 		free(mx.full_rank_map);
-		#endif
-		if (chirp_config.primitive == FLOODING)
-		{
-		free(mx.request);
-		}
-		// free(mx.request);
 	#endif
+	if (chirp_config.primitive == FLOODING)
+		free(mx.request);
 
 	GPI_TRACE_RETURN(mx.round_deadline);
 }
@@ -783,56 +640,33 @@ void* mixer_read(unsigned int i)
 {
 	GPI_TRACE_FUNCTION();
 
-	#if MX_PSEUDO_CONFIG
 	assert_reset(i < chirp_config.mx_generation_size);
 
 	// in case NDEBUG is set
 	if (i >= chirp_config.mx_generation_size)
 		GPI_TRACE_RETURN((void*)NULL);
-	#else
-	assert_reset(i < MX_GENERATION_SIZE);
 
-	// in case NDEBUG is set
-	if (i >= MX_GENERATION_SIZE)
-	#endif
-
-	#if MX_PSEUDO_CONFIG
 	if (UINT16_MAX == mx.matrix[i]->birth_slot)
-	#else
-	if (UINT16_MAX == mx.matrix[i].birth_slot)
-	#endif
-	{
 		GPI_TRACE_RETURN((void*)NULL);
-	}
 
 	uint8_t m = 1 << (i % 8);
-	#if MX_PSEUDO_CONFIG
+
 	mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + i / 8] ^= m;
 	int_fast16_t k = mx_get_leading_index(&(mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos]));
 	mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + i / 8] ^= m;
-	#else
-	mx.matrix[i].coding_vector_8[i / 8] ^= m;
-	int_fast16_t k = mx_get_leading_index(mx.matrix[i].coding_vector_8);
-	mx.matrix[i].coding_vector_8[i / 8] ^= m;
-	#endif
 
 	if (k >= 0)
 		GPI_TRACE_RETURN((void*)NULL);
 
 	unwrap_row(i);
 
-	#if MX_PSEUDO_CONFIG
 	GPI_TRACE_RETURN(&(mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_payload_8.pos]));
-	#else
-	GPI_TRACE_RETURN(&mx.matrix[i].payload_8);
-	#endif
 }
 
 //**************************************************************************************************
 
 int16_t mixer_stat_slot(unsigned int i)
 {
-	#if MX_PSEUDO_CONFIG
 	assert_reset(i < chirp_config.mx_generation_size);
 
 	// in case NDEBUG is set
@@ -840,15 +674,6 @@ int16_t mixer_stat_slot(unsigned int i)
 		return -1;
 
 	return mx.matrix[i]->birth_slot;
-	#else
-	assert_reset(i < MX_GENERATION_SIZE);
-
-	// in case NDEBUG is set
-	if (i >= MX_GENERATION_SIZE)
-		return -1;
-
-	return mx.matrix[i].birth_slot;
-	#endif
 }
 
 //**************************************************************************************************
