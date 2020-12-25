@@ -740,6 +740,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				if (chirp_config.primitive == FLOODING)
 				{
 					chirp_config.glossy_task = packet->flags.all;
+					gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), chirp_config.phy_payload_size - LORADISC_HEADER_LEN);
 				}
 				#else
 				gpi_memcpy_dma_aligned(&mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)].phy_payload_begin, RxPacketBuffer, PHY_PAYLOAD_SIZE);

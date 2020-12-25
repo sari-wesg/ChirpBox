@@ -128,91 +128,89 @@ void uart_read_command(uint8_t *p, uint8_t rxbuffer_len)
 void chirp_mx_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive)
 {
     memset(&chirp_config, 0, offsetof(Chirp_Config, mx_slot_length_in_us));
+    chirp_config.primitive = primitive;
     // chirp_config
-	chirp_config.mx_num_nodes = mx_num_nodes;
-	chirp_config.mx_generation_size = mx_generation_size;
-	chirp_config.mx_payload_size = mx_payload_size;
+    chirp_config.mx_num_nodes = mx_num_nodes;
+    chirp_config.mx_generation_size = mx_generation_size;
+    chirp_config.mx_payload_size = mx_payload_size;
 
-	chirp_config.coding_vector.pos = 0;
-	chirp_config.coding_vector.len = (chirp_config.mx_generation_size + 7) / 8;
-	chirp_config.payload.pos = chirp_config.coding_vector.pos + chirp_config.coding_vector.len;
-	chirp_config.payload.len = chirp_config.mx_payload_size;
-	chirp_config.info_vector.pos = chirp_config.payload.pos + chirp_config.payload.len;
-	chirp_config.info_vector.len = (chirp_config.mx_generation_size + 7) / 8;
-	chirp_config._padding_2.pos = chirp_config.info_vector.pos + chirp_config.info_vector.len;
-	chirp_config._padding_2.len = PADDING_MAX(0,
-							PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-							+ PADDING_SIZE(chirp_config.mx_payload_size)
-			#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-							- ((chirp_config.mx_generation_size + 7) / 8)
-			#endif
-							);
-	chirp_config.rand.pos = chirp_config._padding_2.pos + chirp_config._padding_2.len;
-	chirp_config.rand.len = 1;
-	chirp_config._padding_3.pos = chirp_config.rand.pos + chirp_config.rand.len;
-	chirp_config._padding_3.len = PADDING_SIZE(
-								((chirp_config.mx_generation_size + 7) / 8) +	// coding_vector
-								chirp_config.mx_payload_size +					// payload
+    chirp_config.coding_vector.pos = 0;
+    chirp_config.coding_vector.len = (chirp_config.mx_generation_size + 7) / 8;
+    chirp_config.payload.pos = chirp_config.coding_vector.pos + chirp_config.coding_vector.len;
+    chirp_config.payload.len = chirp_config.mx_payload_size;
+    chirp_config.info_vector.pos = chirp_config.payload.pos + chirp_config.payload.len;
+    chirp_config.info_vector.len = (chirp_config.mx_generation_size + 7) / 8;
+    chirp_config._padding_2.pos = chirp_config.info_vector.pos + chirp_config.info_vector.len;
+    chirp_config._padding_2.len = PADDING_MAX(0,
+                            PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
+                            + PADDING_SIZE(chirp_config.mx_payload_size)
+            #if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
+                            - ((chirp_config.mx_generation_size + 7) / 8)
+            #endif
+                            );
+    chirp_config.rand.pos = chirp_config._padding_2.pos + chirp_config._padding_2.len;
+    chirp_config.rand.len = 1;
+    chirp_config._padding_3.pos = chirp_config.rand.pos + chirp_config.rand.len;
+    chirp_config._padding_3.len = PADDING_SIZE(
+                                ((chirp_config.mx_generation_size + 7) / 8) +	// coding_vector
+                                chirp_config.mx_payload_size +					// payload
 #if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-								((chirp_config.mx_generation_size + 7) / 8) +	// info_vector
-	#if !GPI_ARCH_IS_BOARD(TMOTE)
-								PADDING_MAX(0,						// _padding_2
-									PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-									+ PADDING_SIZE(chirp_config.mx_payload_size)
-									- ((chirp_config.mx_generation_size + 7) / 8)
-									) +
-	#endif
+                                ((chirp_config.mx_generation_size + 7) / 8) +	// info_vector
+    #if !GPI_ARCH_IS_BOARD(TMOTE)
+                                PADDING_MAX(0,						// _padding_2
+                                    PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
+                                    + PADDING_SIZE(chirp_config.mx_payload_size)
+                                    - ((chirp_config.mx_generation_size + 7) / 8)
+                                    ) +
+    #endif
 #else
-	#if !GPI_ARCH_IS_BOARD(TMOTE)
-								PADDING_MAX(0,						// _padding_2
-									PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-									+ PADDING_SIZE(chirp_config.mx_payload_size)) +
-	#endif
+    #if !GPI_ARCH_IS_BOARD(TMOTE)
+                                PADDING_MAX(0,						// _padding_2
+                                    PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
+                                    + PADDING_SIZE(chirp_config.mx_payload_size)) +
+    #endif
 #endif
-								1);
-	chirp_config.packet_chunk_len = chirp_config.coding_vector.len + chirp_config.payload.len + chirp_config.info_vector.len + chirp_config._padding_2.len + chirp_config.rand.len + chirp_config._padding_3.len;
-	chirp_config.phy_payload_size = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.coding_vector.len + chirp_config.payload.len + chirp_config.info_vector.len;
-	chirp_config.packet_len = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.packet_chunk_len;
-	assert_reset(!(chirp_config.packet_len % sizeof(uint_fast_t)));
+                                1);
+    chirp_config.packet_chunk_len = chirp_config.coding_vector.len + chirp_config.payload.len + chirp_config.info_vector.len + chirp_config._padding_2.len + chirp_config.rand.len + chirp_config._padding_3.len;
+    chirp_config.phy_payload_size = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.coding_vector.len + chirp_config.payload.len + chirp_config.info_vector.len;
+    chirp_config.packet_len = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.packet_chunk_len;
+    assert_reset(!(chirp_config.packet_len % sizeof(uint_fast_t)));
 
-	chirp_config.matrix_coding_vector_8.pos = 0;
-	chirp_config.matrix_coding_vector_8.len = chirp_config.coding_vector.len;
-	chirp_config.matrix_payload_8.pos = chirp_config.matrix_coding_vector_8.pos + chirp_config.matrix_coding_vector_8.len;
-	chirp_config.matrix_payload_8.len = chirp_config.payload.len;
+    chirp_config.matrix_coding_vector_8.pos = 0;
+    chirp_config.matrix_coding_vector_8.len = chirp_config.coding_vector.len;
+    chirp_config.matrix_payload_8.pos = chirp_config.matrix_coding_vector_8.pos + chirp_config.matrix_coding_vector_8.len;
+    chirp_config.matrix_payload_8.len = chirp_config.payload.len;
 
-	chirp_config.matrix_coding_vector.pos = 0;
-	chirp_config.matrix_coding_vector.len = (chirp_config.mx_generation_size + (sizeof(uint_fast_t) * 8) - 1) / (sizeof(uint_fast_t) * 8);
-	chirp_config.matrix_payload.pos = chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len;
-	chirp_config.matrix_payload.len = (chirp_config.mx_payload_size + sizeof(uint_fast_t) - 1) / sizeof(uint_fast_t);
+    chirp_config.matrix_coding_vector.pos = 0;
+    chirp_config.matrix_coding_vector.len = (chirp_config.mx_generation_size + (sizeof(uint_fast_t) * 8) - 1) / (sizeof(uint_fast_t) * 8);
+    chirp_config.matrix_payload.pos = chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len;
+    chirp_config.matrix_payload.len = (chirp_config.mx_payload_size + sizeof(uint_fast_t) - 1) / sizeof(uint_fast_t);
 
-	chirp_config.matrix_chunk_8_len = chirp_config.matrix_coding_vector_8.len + chirp_config.matrix_payload_8.len;
-	chirp_config.matrix_chunk_32_len = chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len;
-	chirp_config.matrix_size_32 = chirp_config.matrix_chunk_32_len + 1;
+    chirp_config.matrix_chunk_8_len = chirp_config.matrix_coding_vector_8.len + chirp_config.matrix_payload_8.len;
+    chirp_config.matrix_chunk_32_len = chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len;
+    chirp_config.matrix_size_32 = chirp_config.matrix_chunk_32_len + 1;
 
-	chirp_config.history_len_8 = offsetof(Node, row_map_chunk) + chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t);
+    chirp_config.history_len_8 = offsetof(Node, row_map_chunk) + chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t);
 
-	uint8_t hash_factor = (((chirp_config.mx_num_nodes + 7) / 8 + chirp_config.info_vector.len - 1) / chirp_config.info_vector.len);
-	chirp_config.map.pos = 0;
-	chirp_config.map.len = hash_factor * chirp_config.info_vector.len;
-	chirp_config.hash.pos = chirp_config.map.pos + chirp_config.map.len;
-	chirp_config.hash.len = chirp_config.info_vector.len;
+    uint8_t hash_factor = (((chirp_config.mx_num_nodes + 7) / 8 + chirp_config.info_vector.len - 1) / chirp_config.info_vector.len);
+    chirp_config.map.pos = 0;
+    chirp_config.map.len = hash_factor * chirp_config.info_vector.len;
+    chirp_config.hash.pos = chirp_config.map.pos + chirp_config.map.len;
+    chirp_config.hash.len = chirp_config.info_vector.len;
 
-	chirp_config.row_all_mask.pos = 0;
-	chirp_config.row_all_mask.len = chirp_config.matrix_coding_vector.len;
-	chirp_config.row_any_mask.pos = chirp_config.row_all_mask.pos + chirp_config.row_all_mask.len;
-	chirp_config.row_any_mask.len = chirp_config.matrix_coding_vector.len;
-	chirp_config.column_all_mask.pos = chirp_config.row_any_mask.pos + chirp_config.row_any_mask.len;
-	chirp_config.column_all_mask.len = chirp_config.matrix_coding_vector.len;
-	chirp_config.column_any_mask.pos = chirp_config.column_all_mask.pos + chirp_config.column_all_mask.len;
-	chirp_config.column_any_mask.len = chirp_config.matrix_coding_vector.len;
-	chirp_config.my_row_mask.pos = chirp_config.column_any_mask.pos + chirp_config.column_any_mask.len;
-	chirp_config.my_row_mask.len = chirp_config.matrix_coding_vector.len;
-	chirp_config.my_column_mask.pos = chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len;
-	chirp_config.my_column_mask.len = chirp_config.matrix_coding_vector.len;
-
-	chirp_config.primitive = primitive;
+    chirp_config.row_all_mask.pos = 0;
+    chirp_config.row_all_mask.len = chirp_config.matrix_coding_vector.len;
+    chirp_config.row_any_mask.pos = chirp_config.row_all_mask.pos + chirp_config.row_all_mask.len;
+    chirp_config.row_any_mask.len = chirp_config.matrix_coding_vector.len;
+    chirp_config.column_all_mask.pos = chirp_config.row_any_mask.pos + chirp_config.row_any_mask.len;
+    chirp_config.column_all_mask.len = chirp_config.matrix_coding_vector.len;
+    chirp_config.column_any_mask.pos = chirp_config.column_all_mask.pos + chirp_config.column_all_mask.len;
+    chirp_config.column_any_mask.len = chirp_config.matrix_coding_vector.len;
+    chirp_config.my_row_mask.pos = chirp_config.column_any_mask.pos + chirp_config.column_any_mask.len;
+    chirp_config.my_row_mask.len = chirp_config.matrix_coding_vector.len;
+    chirp_config.my_column_mask.pos = chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len;
+    chirp_config.my_column_mask.len = chirp_config.matrix_coding_vector.len;
 }
-
 /* slot length is mx_slot_length_in_us microseconds,
 needed slot number is mx_round_length,
 round is last for mx_period_time_us seconds */
