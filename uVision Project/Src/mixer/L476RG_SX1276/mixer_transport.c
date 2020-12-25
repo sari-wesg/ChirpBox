@@ -1275,7 +1275,6 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 		SX1276Write( REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ));
 		SX1276ReadFifo( APP_HEADER_FIFO, HASH_HEADER );
 		uint32_t app_header = APP_HEADER_FIFO[3] << 24 | APP_HEADER_FIFO[2] << 16 | APP_HEADER_FIFO[1] << 8 | APP_HEADER_FIFO[0];
-		// printf("app_header:%x, %x\n", app_header, chirp_config.packet_hash);
 		if (app_header == chirp_config.packet_hash)
 		{
 			Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
@@ -1297,7 +1296,6 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 		}
 		else
 		{
-			// printf("header:%x, %x\n", app_header, chirp_config.packet_hash);
 			// turn radio off
 			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 			gpi_led_off(LED_RX);

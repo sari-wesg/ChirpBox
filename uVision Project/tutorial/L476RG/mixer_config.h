@@ -138,8 +138,8 @@
 #define HASH_TAIL            	        2
 #define HASH_TAIL_CODE            	    2
 
-#define CHIRP_HEADER            	    0x1234
-#define GLOSSY_HEADER            	    0x5678
+#define DISC_HEADER            	        0x1234
+#define FLOODING_HEADER            	    0x5678
 /*********************************************************/
 #define MX_GENERATION_SIZE_MAX  0xFF /* 255 packets */
 #define MX_NUM_NODES_MAX        0xFF /* 255 nodes */
