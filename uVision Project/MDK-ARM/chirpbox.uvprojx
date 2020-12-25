@@ -241,7 +241,7 @@
               <MiscControls>-mcpu=cortex-m4 -mthumb -fdata-sections -ffunction-sections </MiscControls>
               <Define>USE_HAL_DRIVER,STM32L476xx,ARM_MATH_CM4,CONFIG_GPIO_AS_PINRESET,GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG,ASSERT_WARN_CT=0,MX_CONFIG_FILE=mixer_config.h</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;../Drivers/STM32L4xx_HAL_Driver/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L4xx/Include;../Drivers/CMSIS/Include;..\Src;..\tutorial\L476RG;..\Src\tools\Inc;..\Src\mixer;..\Src\chirpbox</IncludePath>
+              <IncludePath>../Inc;../Drivers/STM32L4xx_HAL_Driver/Inc;../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32L4xx/Include;../Drivers/CMSIS/Include;..\Src;..\tutorial\L476RG;..\Src\tools\Inc;..\Src\mixer;..\Src\chirpbox;..\Src\loradisc</IncludePath>
             </VariousControls>
           </Carm>
           <Aarm>
@@ -496,24 +496,9 @@
               <FilePath>..\src\mixer\mixer_request.c</FilePath>
             </File>
             <File>
-              <FileName>mixer_bitmap.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\mixer\mixer_bitmap.c</FilePath>
-            </File>
-            <File>
               <FileName>mixer_data.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\mixer\mixer_data.c</FilePath>
-            </File>
-            <File>
-              <FileName>evaluation.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\mixer\evaluation.c</FilePath>
-            </File>
-            <File>
-              <FileName>mixer_lbt_afa.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\mixer\mixer_lbt_afa.c</FilePath>
             </File>
             <File>
               <FileName>gpi.c</FileName>
@@ -579,11 +564,6 @@
               <FileName>chirp_irqhandler.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\chirpbox\chirp_irqhandler.c</FilePath>
-            </File>
-            <File>
-              <FileName>chirp_sniff.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\chirpbox\chirp_sniff.c</FilePath>
             </File>
             <File>
               <FileName>chirp_topo.c</FileName>
