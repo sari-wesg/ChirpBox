@@ -21,8 +21,6 @@ uint8_t USR_FLASH_PageErase(void);
 uint8_t USR_FLASH_Program8(uint32_t faddr,uint8_t* pData, uint16_t DataLen);
 uint8_t USR_FLASH_Read8(uint32_t faddr);
 
-uint32_t Bank1_WRP(uint32_t strtA_offset, uint32_t endA_offset);
-uint32_t Bank1_nWRP(void);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

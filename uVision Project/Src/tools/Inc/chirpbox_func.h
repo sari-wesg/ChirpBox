@@ -36,6 +36,8 @@ typedef struct Flash_FILE_tag
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
+uint32_t Bank1_WRP(uint32_t strtA_offset, uint32_t endA_offset);
+uint32_t Bank1_nWRP(void);
 size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file);
 size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE *file);
 int the_fseek(Flash_FILE *file, long int offset, int origin);

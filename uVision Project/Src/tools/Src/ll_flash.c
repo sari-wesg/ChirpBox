@@ -133,6 +133,7 @@ uint8_t STMFLASH_BankSwitch(void)
 				  while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
 					{
 					}
+					/* When no firmware at bank2, board is working at bank1 with BFB2 flag set. So BFB2 flag should be clear by checking bank (when FUT is at bank 1)instead of BFB2. */
 					if (BankActive != 0)
 					{
 						CLEAR_BIT(FLASH->OPTR, FLASH_OPTR_BFB2);

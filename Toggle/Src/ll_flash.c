@@ -112,7 +112,7 @@ uint32_t STMFLASH_Read32( uint32_t faddr )
 uint8_t STMFLASH_BankSwitch(void)
 {
 	uint8_t result;
-	uint32_t usr_conf;
+	uint32_t BankActive = 0;
 
 	LL_FLASH_Lock(FLASH);
 	/* Clear OPTVERR bit set on virgin samples */
@@ -122,7 +122,7 @@ uint8_t STMFLASH_BankSwitch(void)
   if((FLASH_SR_OPTVERR) & ~(FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))
   { WRITE_REG(FLASH->SR, ((FLASH_SR_OPTVERR) & ~(FLASH_ECCR_ECCC | FLASH_ECCR_ECCD))); }
 
-	usr_conf = READ_REG(FLASH->OPTR);
+	BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
   result = LL_Flash_Unlock();
 
 	if( result == LL_OK)
@@ -133,7 +133,8 @@ uint8_t STMFLASH_BankSwitch(void)
 				  while (LL_FLASH_IsActiveFlag_BSY(FLASH))    //wait for flash operation complete
 					{
 					}
-					if(usr_conf & FLASH_OPTR_BFB2)
+					/* When no firmware at bank2, board is working at bank1 with BFB2 flag set. So BFB2 flag should be clear by checking bank (when FUT is at bank 1)instead of BFB2. */
+					if (BankActive != 0)
 					{
 						CLEAR_BIT(FLASH->OPTR, FLASH_OPTR_BFB2);
 					}
