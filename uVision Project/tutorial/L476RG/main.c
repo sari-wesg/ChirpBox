@@ -90,7 +90,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 #include "chirp_internal.h"
 #if GPS_DATA
-#include "ds3231.h"
+#include "chirpbox_ds3231.h"
 #endif
 #include "chirpbox_func.h"
 

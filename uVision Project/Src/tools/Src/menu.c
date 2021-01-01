@@ -52,7 +52,7 @@
 #include "menu.h"
 #include "string.h"
 #include "mixer/mixer_internal.h"
-#include "ds3231.h"
+#include "chirpbox_ds3231.h"
 // #include "gpi/interrupts.h"
 #include "md5.h"
 #if ENERGEST_CONF_ON

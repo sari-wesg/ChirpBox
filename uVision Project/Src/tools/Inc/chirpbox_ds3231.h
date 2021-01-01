@@ -1,11 +1,3 @@
-/*
- * @Author: your name
- * @Date: 2020-04-28 23:50:54
- *    @date                  2020-07-08 20:53:48
- * LastEditors               Please set LastEditors
- * @Description: In User Settings Edit
- * FilePath                  \uVision Project\Src\tools\Inc\ds3231.h
- */
 #ifndef __RTC_H__
 #define __RTC_H__
 

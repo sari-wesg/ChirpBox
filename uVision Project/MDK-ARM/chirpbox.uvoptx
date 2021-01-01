@@ -876,18 +876,6 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\Src\tools\Src\ds3231.c</PathWithFileName>
-      <FilenameWithoutPath>ds3231.c</FilenameWithoutPath>
-      <RteFlg>0</RteFlg>
-      <bShared>0</bShared>
-    </File>
-    <File>
-      <GroupNumber>6</GroupNumber>
-      <FileNumber>47</FileNumber>
-      <FileType>1</FileType>
-      <tvExp>0</tvExp>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
       <PathWithFileName>..\Src\tools\Src\toggle.c</PathWithFileName>
       <FilenameWithoutPath>toggle.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
@@ -895,19 +883,7 @@
     </File>
     <File>
       <GroupNumber>6</GroupNumber>
-      <FileNumber>48</FileNumber>
-      <FileType>1</FileType>
-      <tvExp>0</tvExp>
-      <tvExpOptDlg>0</tvExpOptDlg>
-      <bDave2>0</bDave2>
-      <PathWithFileName>..\Src\tools\Src\md5.c</PathWithFileName>
-      <FilenameWithoutPath>md5.c</FilenameWithoutPath>
-      <RteFlg>0</RteFlg>
-      <bShared>0</bShared>
-    </File>
-    <File>
-      <GroupNumber>6</GroupNumber>
-      <FileNumber>49</FileNumber>
+      <FileNumber>47</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
@@ -919,13 +895,37 @@
     </File>
     <File>
       <GroupNumber>6</GroupNumber>
+      <FileNumber>48</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Src\tools\Src\chirpbox_flash.c</PathWithFileName>
+      <FilenameWithoutPath>chirpbox_flash.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
+      <FileNumber>49</FileNumber>
+      <FileType>1</FileType>
+      <tvExp>0</tvExp>
+      <tvExpOptDlg>0</tvExpOptDlg>
+      <bDave2>0</bDave2>
+      <PathWithFileName>..\Src\tools\Src\chirpbox_ds3231.c</PathWithFileName>
+      <FilenameWithoutPath>chirpbox_ds3231.c</FilenameWithoutPath>
+      <RteFlg>0</RteFlg>
+      <bShared>0</bShared>
+    </File>
+    <File>
+      <GroupNumber>6</GroupNumber>
       <FileNumber>50</FileNumber>
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\Src\tools\Src\patch.c</PathWithFileName>
-      <FilenameWithoutPath>patch.c</FilenameWithoutPath>
+      <PathWithFileName>..\Src\tools\Src\chirpbox_lzss.c</PathWithFileName>
+      <FilenameWithoutPath>chirpbox_lzss.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -936,8 +936,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\Src\tools\Src\lzss.c</PathWithFileName>
-      <FilenameWithoutPath>lzss.c</FilenameWithoutPath>
+      <PathWithFileName>..\Src\tools\Src\chirpbox_md5.c</PathWithFileName>
+      <FilenameWithoutPath>chirpbox_md5.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

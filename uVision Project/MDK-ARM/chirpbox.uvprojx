@@ -526,19 +526,9 @@
               <FilePath>..\Src\tools\Src\menu.c</FilePath>
             </File>
             <File>
-              <FileName>ds3231.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\tools\Src\ds3231.c</FilePath>
-            </File>
-            <File>
               <FileName>toggle.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\tools\Src\toggle.c</FilePath>
-            </File>
-            <File>
-              <FileName>md5.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\tools\Src\md5.c</FilePath>
             </File>
             <File>
               <FileName>trace_flash.c</FileName>
@@ -546,14 +536,24 @@
               <FilePath>..\Src\tools\Src\trace_flash.c</FilePath>
             </File>
             <File>
-              <FileName>patch.c</FileName>
+              <FileName>chirpbox_flash.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Src\tools\Src\patch.c</FilePath>
+              <FilePath>..\Src\tools\Src\chirpbox_flash.c</FilePath>
             </File>
             <File>
-              <FileName>lzss.c</FileName>
+              <FileName>chirpbox_ds3231.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Src\tools\Src\lzss.c</FilePath>
+              <FilePath>..\Src\tools\Src\chirpbox_ds3231.c</FilePath>
+            </File>
+            <File>
+              <FileName>chirpbox_lzss.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\tools\Src\chirpbox_lzss.c</FilePath>
+            </File>
+            <File>
+              <FileName>chirpbox_md5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\tools\Src\chirpbox_md5.c</FilePath>
             </File>
           </Files>
         </Group>
