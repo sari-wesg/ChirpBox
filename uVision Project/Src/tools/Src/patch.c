@@ -19,7 +19,7 @@
 
 
 /**
-  * @brief  Set the FLASH_WRP2xR status of user flash area.
+  * @brief  Set the FLASH_WRP1xR status of daemon flash area.
   * @param  none
   * @retval HAL_StatusTypeDef HAL_OK if change is applied.
   */
@@ -49,7 +49,7 @@ uint32_t Bank1_WRP(uint32_t strtA_offset, uint32_t endA_offset)
 }
 
 /**
-  * @brief  Reset the FLASH_WRP2xR status of user flash area.
+  * @brief  Reset the FLASH_WRP1xR status of daemon flash area.
   * @param  none
   * @retval HAL_StatusTypeDef HAL_OK if change is applied.
   */
@@ -75,6 +75,31 @@ uint32_t Bank1_nWRP( void )
 	retr |= HAL_FLASHEx_OBProgram(&OptionsBytesStruct1);
 
 	return (retr == HAL_OK ? FLASHIF_OK : FLASHIF_PROTECTION_ERRROR);
+}
+
+/**
+ * @description: Read the flag in flash to check if the bank is under write protected, if under WRT, clear the corresponding option bytes and reset the bank to make it effective.
+ * @param None
+ * @return: None
+ */
+void Bank_WRT_Check( void )
+{
+	FLASH_OBProgramInitTypeDef OptionsBytesStruct1;
+
+	/* Unlock the Flash to enable the flash control register access *************/
+	HAL_FLASH_Unlock();
+
+	/* Unlock the Options Bytes *************************************************/
+	HAL_FLASH_OB_Unlock();
+
+	OptionsBytesStruct1.WRPArea = OB_WRPAREA_BANK1_AREAA;
+	HAL_FLASHEx_OBGetConfig(&OptionsBytesStruct1);
+	if((OptionsBytesStruct1.WRPStartOffset == 0) && (OptionsBytesStruct1.WRPEndOffset == 0xff))
+	{
+        /* Boot come back from FUT in Bank 2, need to unlock the write protection of flash */
+		if (Bank1_nWRP() == HAL_OK)
+			HAL_FLASH_OB_Launch();
+	}
 }
 
 int the_fseek(Flash_FILE *file, long int offset, int origin)

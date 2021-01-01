@@ -400,12 +400,6 @@ void Flash_Bank_Copy_Bank(uint32_t FLASH_SRC, uint32_t FLASH_DEST, uint32_t firm
   */
 void menu_bank(void)
 {
-	/* Get the current configuration */
-  // HAL_FLASHEx_OBGetConfig( &OBConfig );
-  // #if BANK_1_RUN
-  // FLASH_If_WriteProtectionClear();
-  // #endif
-
   /* Test from which bank the program runs */
   BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
 

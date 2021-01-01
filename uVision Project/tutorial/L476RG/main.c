@@ -92,6 +92,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #if GPS_DATA
 #include "ds3231.h"
 #endif
+#include "chirpbox_func.h"
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -109,7 +110,7 @@ uint8_t test_round;
 static const uint32_t nodes[256] = {0x350045, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
 // static const uint32_t nodes[256] = {0x350045, 0x1D004E};
 
-const uint8_t VERSION_MAJOR = 0xbf, VERSION_NODE = 0x36;
+const uint8_t VERSION_MAJOR = 0x70, VERSION_NODE = 0x27;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -164,16 +165,19 @@ static uint8_t hardware_init()
 	HAL_Init();
 	gpi_platform_init();
 
+	#if BANK_1_RUN
+	/* Only when the board is stable (eg, after a long time of getting GPS signal), the flash option bytes can be changed. Otherwise, readout protection will be triggered, when the voltage of the external power supply falls below the power down threshold.
+	*/
+	HAL_Delay(10000);
+	Bank_WRT_Check();
+	#endif
+
+	/* Disable SysTick Interrupt */
+	HAL_SuspendTick();
+
 	menu_bank();
 
 	gpi_int_enable();
-
-// enable SysTick timer if needed
-#if MX_VERBOSE_PROFILE
-	SysTick->LOAD = -1u;
-	SysTick->VAL = 0;
-	SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
-#endif
 
 	// init RF transceiver
 	gpi_radio_init();
@@ -234,9 +238,6 @@ static uint8_t hardware_init()
 		Chirp_Time RTC_Time = DS3231_ShowTime();
 		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
 	}
-	#endif
-	#if BANK_1_RUN
-	FLASH_If_WriteProtectionClear();
 	#endif
     uint32_t reset_time_flash[sizeof(Chirp_Time) / sizeof(uint32_t)];
 	memcpy(reset_time_flash, (uint32_t *)&gps_time, sizeof(reset_time_flash));
