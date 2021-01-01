@@ -82,16 +82,12 @@ void DS3231_ModifyTime(uint8_t year, uint8_t month, uint8_t date,
   */
 void DS3231_GetTime(void)
 {
-  #if BANK_1_RUN
   DS3231.flag = 0;
   HAL_I2C_Mem_Read_IT(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_REG_LENGTH);
-  // HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, 0, I2C_MEMADD_SIZE_8BIT, DS3231_Buff, DS3231_REG_LENGTH, 0xFFFF);
-  #endif
 }
 
 Chirp_Time DS3231_ShowTime()
 {
-  #if BANK_1_RUN
   char buffer[50], buff[20];
   Chirp_Time RTC_Time;
   memset(&RTC_Time, 0, sizeof(RTC_Time));
@@ -138,7 +134,6 @@ Chirp_Time DS3231_ShowTime()
   RTC_Time.chirp_min = DS3231.Minute;
   RTC_Time.chirp_sec = DS3231.Second;
   return RTC_Time;
-  #endif
 }
 
 void DS3231_ClearAlarm1_Time()

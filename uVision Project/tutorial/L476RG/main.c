@@ -212,9 +212,7 @@ static uint8_t hardware_init()
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
 
 #if GPS_DATA
-	#if BANK_1_RUN
 	DS3231_ClearAlarm1_Time();
-	#endif
 	GPS_Init();
 	GPS_On();
 	GPS_Waiting_PPS(10);
