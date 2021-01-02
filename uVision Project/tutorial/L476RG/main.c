@@ -107,7 +107,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 /* TODO: */
 static const uint32_t nodes[256] = {0x350045, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
-// static const uint32_t nodes[256] = {0x350045, 0x1D004E};
+static const uint32_t nodes[256] = {0x350045, 0x3a0026};
 
 const uint8_t VERSION_MAJOR = 0x70, VERSION_NODE = 0x27;
 //**************************************************************************************************
@@ -210,10 +210,10 @@ static uint8_t hardware_init()
 	/* init RNG with randomized seed */
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
 
-#if GPS_DATA
 	DS3231_ClearAlarm1_Time();
 	GPS_Init();
 	GPS_On();
+#if GPS_DATA
 	GPS_Waiting_PPS(10);
 	Chirp_Time gps_time;
     memset(&gps_time, 0, sizeof(gps_time));

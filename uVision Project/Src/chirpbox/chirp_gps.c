@@ -2,8 +2,6 @@
 //**** Includes ************************************************************************************
 #include "mixer_internal.h"
 
-#if GPS_DATA
-
 //**************************************************************************************************
 
 #include "chirp_internal.h"
@@ -372,8 +370,6 @@ void GPS_Sleep(uint32_t interval_sec)
 {
     GPS_Wakeup(interval_sec);
 }
-
-#endif // GPS_DATA
 
 void gps_main_timer_isr(void)
 {

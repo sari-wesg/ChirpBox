@@ -740,20 +740,17 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
     while(status != HAL_OK)
     {
       gpi_watchdog_periodic();
-      #if GPS_DATA
       /* initiator sleep for 60 s after 1 seconds not receiving any task */
       task_wait++;
       if (task_wait > 1)
       {
         __HAL_UART_DISABLE(&huart2);
         SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
-        // GPS_Sleep(60);
         task_wait = 0;
         SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
         __HAL_UART_ENABLE(&huart2);
         return 0;
       }
-      #endif
       PRINTF("Input initiator task:\n");
       // 0,07,100
       status = HAL_UART_Receive(&UART_Handle, &task, sizeof(task), DOWNLOAD_TIMEOUT);
@@ -1218,29 +1215,29 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_config.lbt_channel_mask = ~(mask << 1);
   #endif
 
-  #if GPS_DATA
-  GPS_Sleep(60);
   Chirp_Time ds3231_time;
   time_t diff;
   time_t sleep_sec;
 
   Chirp_Time gps_time;
+  chirp_config.lbt_channel_primary = 0;
+  uint8_t sync_channel_id = 0;
+  sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
+  chirp_outl.glossy_gps_on = 1;
+
+  #if GPS_DATA
+  GPS_Sleep(60);
   gps_time = GPS_Get_Time();
   // uint8_t gps_time_str[2];
   // memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
   // uint32_t channel_seed;
   // uint8_t sync_channel[LBT_CHANNEL_NUM];
 
-  uint8_t sync_channel_id = 0;
   // channel_seed = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
   // srand(channel_seed);
   // randomPermutation1(sync_channel, LBT_CHANNEL_NUM);
 
-  chirp_config.lbt_channel_primary = 0;
   // gps_time = GPS_Get_Time();
-
-  sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
-  GPS_Off();
 
   #endif
 
@@ -1270,7 +1267,11 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       }
       else
       {
-        GPS_Sleep(60);
+          #if GPS_DATA
+          GPS_Sleep(60);
+          #else
+          RTC_Waiting_Count(60);
+          #endif
       }
     #if ENERGEST_CONF_ON
       ENERGEST_ON(ENERGEST_TYPE_CPU);
@@ -1331,6 +1332,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         {
           #if GPS_DATA
           GPS_Sleep(60);
+          #else
+          RTC_Waiting_Count(60);
           #endif
         }
         else
@@ -1395,7 +1398,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     {
       PRINTF("glossy_task == 2\n");
       chirp_outl.glossy_resync = 0;
-      if (chirp_outl.glossy_gps_on)
+      if ((chirp_outl.glossy_gps_on) && (node_id))
       {
         chirp_outl.glossy_gps_on = 0;
         GPS_Off();
