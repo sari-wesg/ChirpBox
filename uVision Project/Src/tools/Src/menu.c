@@ -1267,11 +1267,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       }
       else
       {
-          #if GPS_DATA
           GPS_Sleep(60);
-          #else
-          RTC_Waiting_Count(60);
-          #endif
       }
     #if ENERGEST_CONF_ON
       ENERGEST_ON(ENERGEST_TYPE_CPU);
@@ -1330,11 +1326,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         PRINTF("chirp_mx_round:%lu\n", chirp_config.glossy_task);
         if (!node_id)
         {
-          #if GPS_DATA
           GPS_Sleep(60);
-          #else
-          RTC_Waiting_Count(60);
-          #endif
         }
         else
         {
@@ -1346,7 +1338,9 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
             if (chirp_outl.glossy_gps_on)
             {
               chirp_outl.glossy_gps_on = 0;
-              GPS_Off();
+              #if GPS_DATA
+                GPS_Off();
+              #endif
             }
           }
           // long time no glossy, open the gps
@@ -1401,7 +1395,9 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       if ((chirp_outl.glossy_gps_on) && (node_id))
       {
         chirp_outl.glossy_gps_on = 0;
-        GPS_Off();
+        #if GPS_DATA
+          GPS_Off();
+        #endif
       }
       #if ENERGEST_CONF_ON
         ENERGEST_OFF(ENERGEST_TYPE_CPU);
