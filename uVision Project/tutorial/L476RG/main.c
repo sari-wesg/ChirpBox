@@ -104,7 +104,6 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #define PRINTF(...)
 #endif
 
-uint8_t test_round;
 
 /* TODO: */
 static const uint32_t nodes[256] = {0x350045, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
@@ -179,13 +178,13 @@ static uint8_t hardware_init()
 
 	gpi_int_enable();
 
-	// init RF transceiver
+	/* init RF transceiver */
 	gpi_radio_init();
 	node_id_restore();
 
 	PRINTF("\tStarting node 0x%X \n", TOS_NODE_ID);
 
-	// translate TOS_NODE_ID to logical node id used with mixer
+	/* translate TOS_NODE_ID to logical node id used with mixer */
 	for (node_id = 0; node_id < NUM_ELEMENTS(nodes); ++node_id)
 	{
 		PRINTF("node:%lu, 0x%x\n", node_id, nodes[node_id]);
@@ -208,7 +207,7 @@ static uint8_t hardware_init()
 			;
 	}
 
-	// init RNG with randomized seed
+	/* init RNG with randomized seed */
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
 
 #if GPS_DATA
