@@ -1,0 +1,62 @@
+
+INPUT-UNITS     INCHES
+
+WHEEL     1
+
+CIRCLE       177.165            D10
+CIRCLE       137.795            D11
+CIRCLE        236.22            D12
+CIRCLE       240.157            D13
+CIRCLE            25            D14
+FLASH     FLASH25              0.00000  D15
+CIRCLE            16            D16
+CIRCLE        82.677            D17
+CIRCLE        86.614            D18
+CIRCLE       106.299            D19
+CIRCLE       110.236            D20
+CIRCLE        94.488            D21
+CIRCLE        98.425            D22
+RECTANGLE     94.882    85.039   0.00000  D23
+RECTANGLE     85.039    94.882   0.00000  D24
+RECTANGLE     98.819    88.976   0.00000  D25
+RECTANGLE     88.976    98.819   0.00000  D26
+CIRCLE        62.992            D27
+CIRCLE        66.929            D28
+SQUARE        62.992   0.00000            D29
+SQUARE        66.929   0.00000            D30
+RECTANGLE     37.012     53.15   0.00000  D31
+RECTANGLE      53.15    37.012   0.00000  D32
+RECTANGLE     40.941    57.091   0.00000  D33
+RECTANGLE     57.091    40.941   0.00000  D34
+SQUARE        68.902   0.00000            D35
+SQUARE        76.772   0.00000            D36
+CIRCLE        68.902            D37
+CIRCLE        76.772            D38
+RECTANGLE     82.677    82.677   0.00000  D39
+RECTANGLE     70.866    70.866   0.00000  D40
+RECTANGLE      78.74     78.74   0.00000  D41
+CIRCLE        70.866            D42
+CIRCLE         78.74            D43
+RECTANGLE         50    40.161   0.00000  D44
+RECTANGLE     40.161        50   0.00000  D45
+RECTANGLE     51.969     42.13   0.00000  D46
+RECTANGLE      42.13    51.969   0.00000  D47
+LINE              10            D48
+LINE               8            D49
+LINE              15            D50
+LINE           1.969            D51
+LINE           5.902            D52
+LINE           0.394            D53
+LINE            3.15            D54
+LINE           5.118            D55
+LINE           5.906            D56
+LINE           7.874            D57
+LINE               4            D58
+LINE               6            D59
+LINE              25            D60
+LINE            7.87            D61
+LINE            31.5            D62
+LINE           9.839            D63
+LINE              20            D64
+LINE              30            D65
+
