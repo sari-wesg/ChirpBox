@@ -99,6 +99,7 @@ GPI_TRACE_CONFIG(mixer_transport, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER)
 #else
 #define PRINTF(...)
 #endif
+extern uint8_t node_id_allocate;
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************

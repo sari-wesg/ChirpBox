@@ -126,6 +126,7 @@ static Pt_Context* const		pt_maintenance 		= &pt_data[2];
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 extern Chirp_Config chirp_config;
+extern uint8_t node_id_allocate;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -408,6 +409,7 @@ static void prepare_tx_packet()
 		{
 			if (0 == mx.next_own_row->birth_slot)
 				break;
+			mx.next_own_row += chirp_config.matrix_size_32;
 		}
 	}
 

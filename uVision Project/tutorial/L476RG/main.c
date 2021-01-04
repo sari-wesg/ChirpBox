@@ -109,7 +109,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 static const uint32_t nodes[256] = {0x350045, 0x420029, 0x38001E, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
 // static const uint32_t nodes[256] = {0x350045, 0x3a0026};
 
-const uint8_t VERSION_MAJOR = 0xe0, VERSION_NODE = 0xbc;
+const uint8_t VERSION_MAJOR = 0xcf, VERSION_NODE = 0x9a;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
@@ -167,7 +167,8 @@ static uint8_t hardware_init()
 	#if BANK_1_RUN
 	/* Only when the board is stable (eg, after a long time of getting GPS signal), the flash option bytes can be changed. Otherwise, readout protection will be triggered, when the voltage of the external power supply falls below the power down threshold.
 	*/
-	HAL_Delay(10000);
+	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+	HAL_Delay(5000);
 	Bank_WRT_Check();
 	#endif
 

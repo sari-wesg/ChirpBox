@@ -170,6 +170,8 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  /* Disable SysTick Interrupt */
+  SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
 }
 
 static void MX_TIM2_Init(void)
