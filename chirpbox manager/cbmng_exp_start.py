@@ -471,7 +471,7 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num, use
 
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
-		filename = "topo//" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
+		filename = "chirpbox_topo//" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 	print("Collecting ...")
 
 	# config and open the serial port
@@ -501,19 +501,20 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num, use
 							f_1.write(line + "\r")
 							line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 							f_1.write(line_write + "\r")
-							break
+							# break
 
 						if (line == "output from initiator (topology):"):
 							start_read = 1
-						# if (line == "---------MX_GLOSSY---------"):
-						# 	timeout_cnt = 0
-						# 	break
+						if ((line == "---------MX_GLOSSY---------") and (start_read == 1)):
+							timeout_cnt = 0
+							break
 						if(start_read == 1):
 							f.write(line + "\r")
 					if(timeout_cnt > 60000 * 20):
 						break
 				except:
 					pass
+			f.close()
 	if(waiting_for_the_execution_timeout(ser, 60000 * 20) == False): # timeout: 800 seconds
 		return False
 
