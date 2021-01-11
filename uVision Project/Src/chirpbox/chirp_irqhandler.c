@@ -60,18 +60,27 @@ void __attribute__((naked)) SX1276OnDio0Irq()
 	);
 }
 
+// //SX1276DIO3 IRQ dispatcher
+// void __attribute__((naked)) SX1276OnDio3Irq()
+// {
+// 	__asm__ volatile
+// 	(
+// 		"ldr	r0, 1f						\n"		// r0 = chirp_isr.state
+// 		"ldrb	r0, [r0]					\n"
+// 		"add	pc, r0						\n"		// jump into vector table (see ARM DUI 0553A for details)
+// 		".align 2							\n"		// ensure alignment and correct offset
+// 		"b.w	mixer_dio3_isr		 		\n"		// 0: mixer_dio3_isr (don't return to here)
+// 		"1:									\n"
+// 		".word	%c0							\n"
+// 		: : "i"(&chirp_isr.state)
+// 	);
+// }
+
 //SX1276DIO3 IRQ dispatcher
 void __attribute__((naked)) SX1276OnDio3Irq()
 {
 	__asm__ volatile
 	(
-		"ldr	r0, 1f						\n"		// r0 = chirp_isr.state
-		"ldrb	r0, [r0]					\n"
-		"add	pc, r0						\n"		// jump into vector table (see ARM DUI 0553A for details)
-		".align 2							\n"		// ensure alignment and correct offset
 		"b.w	mixer_dio3_isr		 		\n"		// 0: mixer_dio3_isr (don't return to here)
-		"1:									\n"
-		".word	%c0							\n"
-		: : "i"(&chirp_isr.state)
 	);
 }
