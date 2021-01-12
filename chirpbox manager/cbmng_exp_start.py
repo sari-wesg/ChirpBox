@@ -19,6 +19,13 @@ import compression.lzss
 
 import cbmng_exp_globaldef
 
+""" weather """
+import chirpbox_weather
+
+OWM_API_KEY = '4dbbaf4cb8263e15f604420c8d66bb3b'
+chirpbox_lat = 31.180809739077795
+chirpbox_lon = 121.58960816990215
+
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
 firmware_burned = "tmp_exp_firm_burned.bin"
@@ -506,6 +513,8 @@ def collect_topology(com_port, using_pos, command_sf, command_len, slot_num, use
 						if (line == "output from initiator (topology):"):
 							start_read = 1
 						if ((line == "---------MX_GLOSSY---------") and (start_read == 1)):
+							weather = chirpbox_weather.testbed_weather(OWM_API_KEY, chirpbox_lat, chirpbox_lon)
+							f.write("current_temperature: " + str(weather.weather_temp_current()) + " celsius\r")
 							timeout_cnt = 0
 							break
 						if(start_read == 1):
