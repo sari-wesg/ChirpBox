@@ -22,7 +22,7 @@ import cbmng_exp_globaldef
 """ weather """
 import chirpbox_weather
 
-OWM_API_KEY = '4dbbaf4cb8263e15f604420c8d66bb3b'
+OWM_API_KEY = OpenWeatherMap-Token # obtain api key from https://openweathermap.org/
 chirpbox_lat = 31.180809739077795
 chirpbox_lon = 121.58960816990215
 
