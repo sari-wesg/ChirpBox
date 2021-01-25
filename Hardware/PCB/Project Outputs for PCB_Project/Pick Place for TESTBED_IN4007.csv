@@ -1,0 +1,41 @@
+Altium Designer Pick and Place Locations
+E:\Project\TestBed--LORA\MIXER\Release\Chirpbox-Back\PCB\TESTBED_IN4007-AltuimV1.3\PCB_Project\Project Outputs for PCB_Project\Pick Place for TESTBED_IN4007.csv
+
+========================================================================================================================
+File Design Information:
+
+Date:       22/01/21
+Time:       17:24
+Revision:   Not in VersionControl
+Variant:    No variations
+Units used: mil
+
+"Designator","Comment","Layer","Footprint","Center-X(mil)","Center-Y(mil)","Rotation","Description"
+"J2","NAVSPARK CONN_12PX2_2D54_15D24_","TopLayer","12PX2_2D54_15D24","5144.784","6303.799","0",""
+"C5","0.1U_C0805_0.1U","BottomLayer","C0805","4099.383","3523.231","180",""
+"C6","0.1U_C0805_0.1U","BottomLayer","C0805","4098.423","3602.304","180",""
+"C4","0.1U_C0805_0.1U","BottomLayer","C0805","4099.385","3443.215","180",""
+"C3","0.1U_C0805_0.1U","BottomLayer","C0805","6648.551","3483.193","90",""
+"C8","1U_C0805_1U","TopLayer","C0805","3895.125","3862.288","360",""
+"C7","0.1U_C0805_0.1U","BottomLayer","C0805","4098.419","3681.223","180",""
+"C1","0.1U_C0805_DNP","BottomLayer","C0805","5971.311","3594.732","180",""
+"C9","10U_C1206_10U","TopLayer","C1206","3889.171","3963.585","180",""
+"CAP1","220U 50V_CP2V_D10R0_5R0_DNP","TopLayer","CP2V_D10R0_5R0","6265.095","6333.196","270",""
+"R1","100K_R0805_100K","BottomLayer","R0805","5971.311","3673.988","180",""
+"R10","100K_R0805_100K","BottomLayer","R0805","6567.000","3483.000","90",""
+"R6","100K_R0805_100K","BottomLayer","R0805","6475.000","3484.000","90",""
+"R2","DNP_R0805_DNP","BottomLayer","R0805","4403.804","6603.799","360",""
+"R3","33_R0805_33","BottomLayer","R0805","4694.784","6148.192","90",""
+"R4","33_R0805_33","BottomLayer","R0805","4794.886","5845.265","270",""
+"R5","33_R0805_33","BottomLayer","R0805","5494.784","6432.921","90",""
+"R7","33_R0805_33","BottomLayer","R0805","6412.407","6365.545","90",""
+"R8","33_R0805_33","BottomLayer","R0805","6414.112","6195.467","270",""
+"R9","33_R0805_33","BottomLayer","R0805","6738.000","3484.000","90",""
+"R11","DNP_R0805_DNP","TopLayer","R0805","6195.861","5165.204","0",""
+"C2","47U 25V_0_C7374_100U 25V X7R","BottomLayer","C7374","5488.969","5175.515","180",""
+"P1","BAT_MY_2PIN_BAT","TopLayer","MY_2PIN","3888.445","6319.897","270",""
+"J1","NUCLEO_PLUG_38PX2_(S1+S2)_NUCLE","TopLayer","38PX2","6236.252","4420.590","0",""
+"JP1","DC2.0_3D81X2_HOLES","TopLayer","3D81X2","3853.693","3445.842","270",""
+"D1","1N4007_2D7X2_1N4007","TopLayer","2D7X2","3891.764","5542.141","90",""
+"J3","RTC_PLUG_2D54_6P_FEMALE_SMT_RTC","TopLayer","2D54_6P_FEMALE_SMT","6555.505","6305.346","0",""
+"P2","HOLE3D5_I3D5_O6MM_HOLE3D5","TopLayer","I3D5_O6MM","6448.844","5174.096","0",""
