@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -94,6 +95,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  printf("jnjsh\n");
   while (1)
   {
     /* USER CODE END WHILE */
@@ -243,6 +245,27 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
+
+int _read (int fd, char *pBuffer, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+      while((USART2->ISR&0X40)==0);
+      pBuffer[i] = USART2->RDR;
+    }
+    return size;
+}
+
+int _write (int fd, char *pBuffer, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+      while((USART2->ISR&0X40)==0);
+      USART2->TDR = (uint8_t) pBuffer[i];
+    }
+    return size;
+}
+
 
 #ifdef  USE_FULL_ASSERT
 /**

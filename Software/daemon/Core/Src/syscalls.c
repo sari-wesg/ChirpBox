@@ -66,28 +66,28 @@ void _exit (int status)
 	while (1) {}		/* Make sure we hang here */
 }
 
-__attribute__((weak)) int _read(int file, char *ptr, int len)
-{
-	int DataIdx;
-
-	for (DataIdx = 0; DataIdx < len; DataIdx++)
-	{
-		*ptr++ = __io_getchar();
-	}
-
-return len;
-}
-
-__attribute__((weak)) int _write(int file, char *ptr, int len)
-{
-	int DataIdx;
-
-	for (DataIdx = 0; DataIdx < len; DataIdx++)
-	{
-		__io_putchar(*ptr++);
-	}
-	return len;
-}
+//__attribute__((weak)) int _read(int file, char *ptr, int len)
+//{
+//	int DataIdx;
+//
+//	for (DataIdx = 0; DataIdx < len; DataIdx++)
+//	{
+//		*ptr++ = __io_getchar();
+//	}
+//
+//return len;
+//}
+//
+//__attribute__((weak)) int _write(int file, char *ptr, int len)
+//{
+//	int DataIdx;
+//
+//	for (DataIdx = 0; DataIdx < len; DataIdx++)
+//	{
+//		__io_putchar(*ptr++);
+//	}
+//	return len;
+//}
 
 int _close(int file)
 {
