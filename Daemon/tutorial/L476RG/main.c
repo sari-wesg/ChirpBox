@@ -106,8 +106,9 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 
 /* TODO: */
-static const uint32_t nodes[256] = {0x350045, 0x420029, 0x360048, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
-// static const uint32_t nodes[256] = {0x350045, 0x3a0026};
+static const uint32_t nodes[256] __attribute__((section(".ARM.__at_0x08020610"))) = {0x350045, 0x420029, 0x360048, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
+
+// static const uint32_t nodes[256] __attribute__((section(".ARM.__at_0x08020610"))) = {0x350045, 0x3a0026};
 
 const uint8_t VERSION_MAJOR = 0x2f, VERSION_NODE = 0x04;
 //**************************************************************************************************
