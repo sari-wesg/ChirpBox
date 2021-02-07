@@ -204,10 +204,11 @@ static uint8_t hardware_init()
 
 	if (node_id >= MX_NUM_NODES_CONF)
 	{
-		PRINTF("!!! PANIC: node mapping not found for node %x !!!\n", TOS_NODE_ID);
+		PRINTF("Warning: node mapping not found for node 0x%x !!!\n", TOS_NODE_ID);
 		while (1)
 			;
 	}
+	PRINTF("Running with node ID: %lu\n", node_id);
 
 	/* init RNG with randomized seed */
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
