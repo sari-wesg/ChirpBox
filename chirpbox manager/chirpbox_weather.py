@@ -8,9 +8,6 @@ class testbed_weather():
         2. obtain latitude and longitude of your testbed position
         details refer https://github.com/csparpa/pyowm
         """
-        # self.API = '4dbbaf4cb8263e15f604420c8d66bb3b'
-        # self.lat = 31.180809739077795
-        # self.lon = 121.58960816990215
 
         self.API = API
         self.lat = lat
