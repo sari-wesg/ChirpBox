@@ -2,7 +2,7 @@
 	"experiment_name": "test",
 	"experiment_description": "Just for description",
 	"payload_length": 6,
-	"experiment_duration": 20,
+	"experiment_duration": 25,
 	"num_generated_packets": "True",
 	"num_received_packets": "True",
 	"e2e_latency": "True",
