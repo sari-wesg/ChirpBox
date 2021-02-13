@@ -1290,7 +1290,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.file_chunk_len = 0;
 
 		chirp_mx_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
-		chirp_mx_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
+		chirp_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
     chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, 8);
     chirp_mx_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
 
@@ -1431,7 +1431,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.file_chunk_len = 0;
 
 		chirp_mx_radio_config(11, 7, 1, 8, 14, chirp_outl.default_freq);
-		chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
+		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
     chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
     chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 3, 1500000);
 		chirp_mx_payload_distribution(chirp_outl.task);
@@ -1503,7 +1503,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				{
 					menu_controller_read_command(&chirp_outl);
 				}
-				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
+				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
@@ -1612,7 +1612,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					TRACE_MSG("file size:%lu, %lu, %lu, %lu\n", flash_length, chirp_outl.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
 				}
         chirp_outl.disem_flag = 1;
-				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
+				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
 				chirp_mx_payload_distribution(chirp_outl.task);
@@ -1677,7 +1677,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					chirp_outl.round_max = chirp_outl.round_setup + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
 					PRINTF("set:%lu\n", chirp_outl.round_max);
 				}
-				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
+				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
@@ -1722,7 +1722,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.round_max = chirp_outl.round_setup;
 				if (!node_id)
 					menu_controller_read_command(&chirp_outl);
-				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
+				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
@@ -1793,7 +1793,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				uint16_t file_size = (((chirp_outl.num_nodes + 1) / 2) * 2) * sizeof(uint32_t);
 				chirp_outl.round_max = chirp_outl.round_setup + (file_size + chirp_outl.file_chunk_len - 1)/ chirp_outl.file_chunk_len;
 
-				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
+				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
@@ -1839,7 +1839,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				uint16_t file_size = (((chirp_outl.num_nodes + 1) / 2) * 2) * sizeof(uint32_t);
 				chirp_outl.round_max = chirp_outl.round_setup;
 
-				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
+				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_mx_payload_distribution(chirp_outl.task);
