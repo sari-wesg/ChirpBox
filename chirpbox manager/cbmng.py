@@ -89,9 +89,9 @@ def main(argv):
 		if((True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_data(argv[4], int(argv[2]), int(argv[3]), int(argv[5]), int(argv[6]), argv[7], argv[8], argv[9])
 		# exit(0)
-	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 8)):
+	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 7)):
 		if((True) and (cbmng_exp_start.is_running() == False)):
-			cbmng_exp_start.collect_topology(argv[5], int(argv[2]), int(argv[3]), int(argv[4]), int(argv[6]), int(argv[7]))
+			cbmng_exp_start.collect_topology(argv[4], int(argv[2]), int(argv[3]), int(argv[5]), int(argv[6]))
 		# exit(0)
 	elif(((argv[1] == "collect_version") or (argv[1] == "-colver")) and (len(argv) == 6)):
 		if((True) and (cbmng_exp_start.is_running() == False)):

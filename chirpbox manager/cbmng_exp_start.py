@@ -470,7 +470,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 	return True
 
 
-def collect_topology(com_port, using_pos, command_sf, command_len, slot_num, used_tp):
+def collect_topology(com_port, command_sf, command_len, slot_num, used_tp):
 	bitmap = "0"
 	task_bitmap = "0"
 	dissem_back_sf = 0
