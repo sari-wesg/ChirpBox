@@ -780,7 +780,7 @@ void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 	void 		chirp_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
 	void 		chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
 	void 		chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency);
-	void 		chirp_mx_payload_distribution(Mixer_Task mx_task);
+	void 		chirp_payload_distribution(Mixer_Task mx_task);
 
 	/* chirpbox */
 		void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);

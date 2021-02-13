@@ -246,7 +246,7 @@ void chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, u
  * @param mx_task: MX_DISSEMINATE / MX_COLLECT
  * @return: None
  */
-void chirp_mx_payload_distribution(Mixer_Task mx_task)
+void chirp_payload_distribution(Mixer_Task mx_task)
 {
     uint8_t i;
     chirp_config.disem_copy = 0;
@@ -1124,7 +1124,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     chirp_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
                     chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
-                    chirp_mx_payload_distribution(chirp_outl->task);
+                    chirp_payload_distribution(chirp_outl->task);
                     chirp_outl->disem_flag = 1;
                 }
                 /* confirm session: collect all nodes condition (if full rank in last mixer round) */
@@ -1150,7 +1150,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     if (chirp_outl->dissem_back_slot_num == 0)
                         chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
                     chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
-                    chirp_mx_payload_distribution(MX_COLLECT);
+                    chirp_payload_distribution(MX_COLLECT);
                     chirp_outl->disem_flag = 0;
                     /* in confirm, all nodes sends packets */
                     PRINTF("rece_dissem_index:%x\n", rece_dissem_index);
