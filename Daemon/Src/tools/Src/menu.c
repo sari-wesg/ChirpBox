@@ -840,11 +840,11 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
 }
 
 /**
-  * @brief  Initiator wait for task parameters
+  * @brief  Controller node waits for task parameters
   * @param  chirp_outl: config outline, related to each task
   * @retval none
   */
-void menu_initiator_read_command(Chirp_Outl *chirp_outl)
+void menu_controller_read_command(Chirp_Outl *chirp_outl)
 {
   uint8_t rxbuffer_len;
   uint8_t k = 0;
@@ -1501,7 +1501,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.version_hash = 0;
 				if (!node_id)
 				{
-					menu_initiator_read_command(&chirp_outl);
+					menu_controller_read_command(&chirp_outl);
 				}
 				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
@@ -1592,7 +1592,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.disem_file_memory = (uint32_t *)malloc(chirp_outl.file_chunk_len);
         if (!node_id)
 				{
-					menu_initiator_read_command(&chirp_outl);
+					menu_controller_read_command(&chirp_outl);
 					uint32_t flash_length;
 					if (!chirp_outl.patch_update)
 						flash_length = menu_initiator_read_file();
@@ -1672,7 +1672,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
 				if (!node_id)
 				{
-					menu_initiator_read_command(&chirp_outl);
+					menu_controller_read_command(&chirp_outl);
 					chirp_outl.collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
 					chirp_outl.round_max = chirp_outl.round_setup + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
 					PRINTF("set:%lu\n", chirp_outl.round_max);
@@ -1721,7 +1721,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.round_setup = 1;
 				chirp_outl.round_max = chirp_outl.round_setup;
 				if (!node_id)
-					menu_initiator_read_command(&chirp_outl);
+					menu_controller_read_command(&chirp_outl);
 				chirp_mx_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_mx_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
