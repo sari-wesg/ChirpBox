@@ -1289,7 +1289,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.round_max = 0;
 		chirp_outl.file_chunk_len = 0;
 
-		chirp_mx_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
+		chirp_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
     chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, 8);
     chirp_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
@@ -1430,7 +1430,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.round_max = 1;
 		chirp_outl.file_chunk_len = 0;
 
-		chirp_mx_radio_config(11, 7, 1, 8, 14, chirp_outl.default_freq);
+		chirp_radio_config(11, 7, 1, 8, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
     chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
     chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 3, 1500000);
@@ -1490,7 +1490,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		{
 			case CHIRP_START:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_START---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
@@ -1573,7 +1573,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
         chirp_outl.disem_file_index = 0;
         chirp_outl.disem_file_max = UINT16_MAX / 2;
         chirp_outl.disem_file_index_stay = 0;
@@ -1658,7 +1658,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------MX_COLLECT---------\n");
 				// TODO: tune those parameters
@@ -1712,7 +1712,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_CONNECTIVITY:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
@@ -1748,7 +1748,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           ENERGEST_ON(ENERGEST_TYPE_CPU);
         #endif
 
-        chirp_mx_radio_config(chirp_outl.sf, 7, 1, 8, chirp_outl.tx_power, chirp_outl.freq);
+        chirp_radio_config(chirp_outl.sf, 7, 1, 8, chirp_outl.tx_power, chirp_outl.freq);
         topo_init(network_num_nodes, node_id, chirp_outl.sf, chirp_outl.topo_payload_len);
         uint8_t i;
         for (i = 0; i < network_num_nodes; i++)
@@ -1778,7 +1778,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_TOPO:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_TOPO---------\n");
 				// TODO: tune those parameters
@@ -1827,7 +1827,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_VERSION:
 			{
-				chirp_mx_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				TRACE_MSG("---------CHIRP_VERSION---------\n");
 				// TODO: tune those parameters

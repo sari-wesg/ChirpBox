@@ -225,7 +225,7 @@ void chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, 
     chirp_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
 }
 
-void chirp_mx_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency)
+void chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency)
 {
     memset(&chirp_config + offsetof(Chirp_Config, lora_sf), 0, sizeof(chirp_config) - offsetof(Chirp_Config, lora_sf));
     chirp_config.lora_sf = lora_spreading_factor;
@@ -1112,7 +1112,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
                     Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
                     free(payload_distribution);
-                    chirp_mx_radio_config(chirp_outl->default_sf, 7, 1, 8, chirp_outl->default_tp, chirp_outl->default_freq);
+                    chirp_radio_config(chirp_outl->default_sf, 7, 1, 8, chirp_outl->default_tp, chirp_outl->default_freq);
                     /* If now is confirm, the initiator collect all nodes information about whether they are full rank last round, if so, then send the next file chunk, file index++, else do not increase file index */
                     if ((!node_id) && (chirp_config.full_column == 0))
                     {
@@ -1142,7 +1142,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
                     free(payload_distribution);
                     if (chirp_outl->dissem_back_sf)
-                        chirp_mx_radio_config(chirp_outl->dissem_back_sf, 7, 1, 8, 14, chirp_outl->default_freq);
+                        chirp_radio_config(chirp_outl->dissem_back_sf, 7, 1, 8, 14, chirp_outl->default_freq);
                     PRINTF("next: collect disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                     chirp_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL, COLLECTION);
