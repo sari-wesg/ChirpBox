@@ -211,7 +211,7 @@ void chirp_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8
 /* slot length is mx_slot_length_in_us microseconds,
 needed slot number is mx_round_length,
 round is last for mx_period_time_us seconds */
-void chirp_mx_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus)
+void chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus)
 {
     uint32_t mx_period_time_us;
     memset(&chirp_config + offsetof(Chirp_Config, mx_slot_length_in_us), 0, offsetof(Chirp_Config, lora_sf) - offsetof(Chirp_Config, mx_slot_length_in_us));
@@ -1123,7 +1123,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     PRINTF("next: disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     chirp_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
+                    chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
                     chirp_mx_payload_distribution(chirp_outl->task);
                     chirp_outl->disem_flag = 1;
                 }
@@ -1149,7 +1149,7 @@ uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
                     if (chirp_outl->dissem_back_slot_num == 0)
                         chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
-                    chirp_mx_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
+                    chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
                     chirp_mx_payload_distribution(MX_COLLECT);
                     chirp_outl->disem_flag = 0;
                     /* in confirm, all nodes sends packets */
