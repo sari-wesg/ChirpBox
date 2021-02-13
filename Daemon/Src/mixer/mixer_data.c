@@ -932,7 +932,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     }
 }
 
-uint8_t chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl)
+uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 {
     gpi_watchdog_periodic();
 	// Gpi_Fast_Tick_Native deadline;

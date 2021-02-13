@@ -1312,7 +1312,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_config.lbt_channel_primary = sync_channel_id;
     SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
     // no task
-		if (chirp_mx_round(node_id, &chirp_outl) != 2)
+		if (chirp_round(node_id, &chirp_outl) != 2)
 		{
         sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
         #if ENERGEST_CONF_ON
@@ -1323,7 +1323,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
           Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
         #endif
-        PRINTF("chirp_mx_round:%lu\n", chirp_config.glossy_task);
+        PRINTF("chirp_round:%lu\n", chirp_config.glossy_task);
         if (!node_id)
         {
           GPS_Sleep(60);
@@ -1442,7 +1442,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       memcpy((uint32_t *)(&chirp_outl.chirp_energy[0]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
       memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
     #endif
-		if (!chirp_mx_round(node_id, &chirp_outl))
+		if (!chirp_round(node_id, &chirp_outl))
     {
       chirp_outl.task = MX_ARRANGE;
       chirp_outl.arrange_task = MX_ARRANGE;
@@ -1508,7 +1508,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_mx_round(node_id, &chirp_outl);
+				// chirp_round(node_id, &chirp_outl);
 
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1516,7 +1516,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
-        if (!chirp_mx_round(node_id, &chirp_outl))
+        if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
           break;
@@ -1617,14 +1617,14 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_mx_round(node_id, &chirp_outl);
+				// chirp_round(node_id, &chirp_outl);
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
-        if (!chirp_mx_round(task_node_id, &chirp_outl))
+        if (!chirp_round(task_node_id, &chirp_outl))
         {
           free(payload_distribution);
           FLASH_If_Erase(0);
@@ -1690,8 +1690,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
-				// chirp_mx_round(node_id, &chirp_outl);
-        if (!chirp_mx_round(task_node_id, &chirp_outl))
+				// chirp_round(node_id, &chirp_outl);
+        if (!chirp_round(task_node_id, &chirp_outl))
         {
           free(payload_distribution);
           break;
@@ -1735,8 +1735,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
 
-				// chirp_mx_round(node_id, &chirp_outl);
-        if (!chirp_mx_round(node_id, &chirp_outl))
+				// chirp_round(node_id, &chirp_outl);
+        if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
           break;
@@ -1806,8 +1806,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
 
-				// chirp_mx_round(node_id, &chirp_outl);
-        if (!chirp_mx_round(node_id, &chirp_outl))
+				// chirp_round(node_id, &chirp_outl);
+        if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
           break;
@@ -1844,8 +1844,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_mx_round(node_id, &chirp_outl);
-        if (!chirp_mx_round(node_id, &chirp_outl))
+				// chirp_round(node_id, &chirp_outl);
+        if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
           break;

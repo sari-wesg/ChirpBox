@@ -785,7 +785,7 @@ void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 	/* chirpbox */
 		void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);
 		uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
-		uint8_t		chirp_mx_round(uint8_t node_id, Chirp_Outl *chirp_outl);
+		uint8_t		chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl);
 
 #ifdef __cplusplus
 	}
