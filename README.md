@@ -13,7 +13,7 @@ The ChirpBox directory is simplified to the following:
 │      └──────📂PCB
 │      └──────📂SCH
 │
-└──────📂Chirpbox manager
+└──────📂chirpbox manager
 │      │      📜cbmng.py
 │      │      📜cbmng_common.py
 │      │      ...
