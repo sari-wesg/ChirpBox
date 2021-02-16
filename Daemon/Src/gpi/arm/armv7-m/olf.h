@@ -205,7 +205,7 @@ static ALWAYS_INLINE int_fast8_t gpi_get_lsb_32_core(uint32_t x, const int test_
 			"rbitne	%0, %1		\n"
 			"clzne	%0, %0		\n"
 			: "=r"(y)
-			: "r"(x), "i"((uint8_t)-return_if_zero)
+			: "r"(x), "i"((int_fast8_t)-return_if_zero)
 			: "cc"
 		);
     }
