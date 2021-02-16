@@ -209,8 +209,6 @@ void MD5Transform(unsigned int state[4], unsigned char block[64])
  */
 int MD5_File_Compute(Flash_FILE *file, uint8_t *md5_value)
 {
-	int i;
-	int fd;
 	size_t ret;
 	uint8_t *data;
     data = (uint8_t *)malloc(FLASH_PAGE);

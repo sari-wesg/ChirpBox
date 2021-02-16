@@ -85,7 +85,7 @@
 //**************************************************************************************************
 #define assert_Instrumentation(arg)                     \
 ({                                                      \
-    if (arg == 0) {                         			\
+    if ((arg == 0)) {                         			\
         __disable_fault_irq();                          \
 		NVIC_SystemReset();								\
     }													\
@@ -93,7 +93,7 @@
 
 #define assert_reset(arg) 								\
 	do{													\
-		if (!(arg)) {printf(arg);		  				\
+		if (!(arg)) { 				     				\
 		assert_Instrumentation(arg);					\
 		} 												\
 	} while(0)

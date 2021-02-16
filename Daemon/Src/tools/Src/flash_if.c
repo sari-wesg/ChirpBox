@@ -235,7 +235,9 @@ uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t lengt
   HAL_FLASH_Lock();
   #if ENERGEST_CONF_ON
     if (destination >= FLASH_START_BANK2)
+    {
       ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE_BANK2);
+    }
     else
       ENERGEST_OFF(ENERGEST_TYPE_FLASH_WRITE_BANK1);
     ENERGEST_ON(ENERGEST_TYPE_CPU);

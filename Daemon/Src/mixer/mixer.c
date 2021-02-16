@@ -70,6 +70,7 @@ GPI_TRACE_CONFIG(mixer, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
 #include "gpi/tools.h"
 #include "L476RG_SX1276/memxor.h"
@@ -151,7 +152,7 @@ void mixer_init(uint8_t node_id)
 	// set the state to mixer for config the isr functions
 	chirp_isr.state = ISR_MIXER;
 
-	assert_reset(node_id < chirp_config.mx_num_nodes);
+	assert_reset((node_id < chirp_config.mx_num_nodes));
 
 	// in case NDEBUG is set
 	if (node_id >= chirp_config.mx_num_nodes)
@@ -326,7 +327,7 @@ size_t mixer_write(unsigned int i, const void *msg, size_t size)
 {
 	GPI_TRACE_FUNCTION();
 
-	assert_reset(i < chirp_config.mx_generation_size);
+	assert_reset((i < chirp_config.mx_generation_size));
 
 	// in case NDEBUG is set
 	if (i >= chirp_config.mx_generation_size)
@@ -391,7 +392,7 @@ void mixer_arm(Mixer_Start_Mode mode)
 	// if initiator: arm TX (instead of RESYNC)
 	if (mode & MX_ARM_INITIATOR)
 	{
-		assert_reset(NULL != mx.tx_reserve);
+		assert_reset((NULL != mx.tx_reserve));
 
 		mx.tx_sideload = &(mx.next_own_row->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
 
@@ -640,7 +641,7 @@ void* mixer_read(unsigned int i)
 {
 	GPI_TRACE_FUNCTION();
 
-	assert_reset(i < chirp_config.mx_generation_size);
+	assert_reset((i < chirp_config.mx_generation_size));
 
 	// in case NDEBUG is set
 	if (i >= chirp_config.mx_generation_size)
@@ -667,7 +668,7 @@ void* mixer_read(unsigned int i)
 
 int16_t mixer_stat_slot(unsigned int i)
 {
-	assert_reset(i < chirp_config.mx_generation_size);
+	assert_reset((i < chirp_config.mx_generation_size));
 
 	// in case NDEBUG is set
 	if (i >= chirp_config.mx_generation_size)

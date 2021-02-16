@@ -134,7 +134,7 @@ static inline __attribute__((always_inline)) void memxor_block(void *dest, /*con
 		uint32_t	*w;
     }				ins;
 
-	assert_reset(num_src <= MEMXOR_BLOCKSIZE);
+	assert_reset((num_src <= MEMXOR_BLOCKSIZE));
 
 	if ((0 == num_src) || (0 == size))
 		return;

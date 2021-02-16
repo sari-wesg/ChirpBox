@@ -35,7 +35,6 @@
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-static uint16_t random_number = 0U;
 
 
 //**************************************************************************************************
@@ -51,7 +50,7 @@ static uint16_t random_number = 0U;
 uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available)
 {
     /* make sure the total number of channel is less than 32 */
-    assert_reset(channel_total <= sizeof(uint32_t) * 8);
+    assert_reset((channel_total <= sizeof(uint32_t) * 8));
 
     /* init seed */
     srand(pesudo_value);
@@ -105,7 +104,7 @@ void lbt_check_time()
     if (ABS(diff) >= 3600)
     {
         memcpy(&chirp_config.lbt_init_time, &gps_time, sizeof(Chirp_Time));
-        memset((uint32_t)&chirp_config.lbt_channel_time_us[0], 0, sizeof(chirp_config.lbt_channel_time_us));
+        memset(&chirp_config.lbt_channel_time_us[0], 0, sizeof(chirp_config.lbt_channel_time_us));
         int32_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
         uint32_t i;
         for (i = sizeof(uint32_t) * 8; i-- > chirp_config.lbt_channel_total;)

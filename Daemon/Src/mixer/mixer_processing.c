@@ -61,13 +61,6 @@
 #endif
 GPI_TRACE_CONFIG(mixer_processing, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 //**************************************************************************************************
 //**** Includes ************************************************************************************
@@ -670,7 +663,6 @@ PT_THREAD(mixer_update_slot())
 			#if MX_SMART_SHUTDOWN
 				if (mx.tx_packet->flags.radio_off)
 				{
-					PRINTF("radio_off");
 					GPI_TRACE_MSG(TRACE_INFO, "smart shutdown initiated");
 					while (!mixer_transport_set_next_slot_task(STOP));
 					PT_EXIT(pt);
@@ -679,7 +671,6 @@ PT_THREAD(mixer_update_slot())
 
 			#if MX_COORDINATED_TX
 				uint16_t	density = 1 + mx_present_head->mx_num_nodes + mx_finished_head->mx_num_nodes;
-				// printf("d:%d\n", density);
 				assert_reset(density < 256);
 			#endif
 
@@ -1717,7 +1708,6 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 
 			if (mx.tx_sideload == p)
 			{
-		PRINTF("NULL 1\n");
 				mx.tx_sideload = NULL;
 			}
 
@@ -1840,7 +1830,6 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 PT_THREAD(mixer_maintenance())
 {
 	Pt_Context* const	pt = pt_maintenance;
-	// PRINTF("TRIGGER_TICK\n");
 
 	PT_BEGIN(pt);
 

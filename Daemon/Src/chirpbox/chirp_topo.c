@@ -228,7 +228,7 @@ void topo_result(uint8_t nodes_num)
         uint32_t reliability = (uint32_t)((node_topology[i].rx_num * 1e4) / (uint32_t)(tx_num_max));
         node_topology[i].reliability = reliability;
         topo_result[i] = (uint8_t)i | (uint32_t)node_topology[i].reliability << 16;
-        PRINTF("r:%d, %lu, %x\n", i, node_topology[i].reliability, topo_result[i]);
+        PRINTF("r:%d, %d, %x\n", i, node_topology[i].reliability, topo_result[i]);
     }
 
     uint8_t temp_raw = SX1276GetRawTemp();

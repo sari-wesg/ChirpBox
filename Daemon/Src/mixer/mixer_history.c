@@ -98,11 +98,11 @@ GPI_TRACE_CONFIG(mixer_history, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 // remove node from list
 static void unlink_node(uint16_t node_id)
 {
-	assert_reset(node_id < chirp_config.mx_num_nodes);
+	assert_reset((node_id < chirp_config.mx_num_nodes));
 
 	Node *list_head = (Node *)mx.history[mx.history[node_id]->list_id + chirp_config.mx_num_nodes];
 
-	assert_reset(list_head->mx_num_nodes > 0);
+	assert_reset((list_head->mx_num_nodes > 0));
 
 	mx.history[mx.history[node_id]->prev]->next = mx.history[node_id]->next;
 	mx.history[mx.history[node_id]->next]->prev = mx.history[node_id]->prev;
@@ -117,8 +117,6 @@ static void append_node(uint16_t node_id, Node *list_head)
 {
 	uint8_t	head_index;
 
-	int i;
-
 	// ATTENTION: list_head is variable; so depending on sizeof(mx.history[0]), ARRAY_INDEX() may
 	// generate an expensive division operation. To avoid that, we manually decide what to do.
 	// NOTE: the condition checks get resolved at compile time
@@ -127,7 +125,7 @@ static void append_node(uint16_t node_id, Node *list_head)
 	else if (chirp_config.history_len_8 < 0x100)
 		head_index = gpi_divu_16x8((uintptr_t)list_head - (uintptr_t)&(mx.history[0]->prev), chirp_config.history_len_8, 1);
 //	else assert_reset(0, "inefficient program, see source code comments");
-	assert_reset(IS_POWER_OF_2(chirp_config.history_len_8) || chirp_config.history_len_8 < 0x100);
+	assert_reset(IS_POWER_OF_2((chirp_config.history_len_8) || chirp_config.history_len_8 < 0x100));
 
 	// link node
 	mx.history[node_id]->prev = list_head->prev;

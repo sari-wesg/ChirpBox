@@ -117,10 +117,10 @@ void unwrap_chunk(uint8_t *p)
 // 			offsetof(Packet, coding_vector) +
 // 			sizeof_member(Packet, coding_vector),
 // 		inconsistent_alignment);
-	assert_reset(
+	assert_reset((
 		chirp_config.payload.pos ==
 		chirp_config.coding_vector.pos +
-		chirp_config.coding_vector.len);
+		chirp_config.coding_vector.len));
 
 	/* double-check alignment of matrix row fields */
 	// ASSERT_CT(!(offsetof(Matrix_Row, coding_vector) % sizeof(uint_fast_t)),inconsistent_alignment);
@@ -136,7 +136,7 @@ void unwrap_chunk(uint8_t *p)
 	// 	offsetof(Matrix_Row, payload_8) ==
 	// 		offsetof(Matrix_Row, coding_vector_8) + sizeof_member(Matrix_Row, coding_vector_8),
 	// 	inconsisten_alignment);
-	assert_reset(chirp_config.matrix_payload_8.pos == chirp_config.matrix_coding_vector_8.pos + chirp_config.matrix_coding_vector_8.len);
+	assert_reset((chirp_config.matrix_payload_8.pos == chirp_config.matrix_coding_vector_8.pos + chirp_config.matrix_coding_vector_8.len));
 
 	/* NOTE: condition gets resolved at compile time */
 	if (offsetof(Matrix_Row, matrix_chunk_8) + chirp_config.matrix_payload_8.pos != offsetof(Matrix_Row, matrix_chunk) + (chirp_config.matrix_payload.pos) * sizeof(uint_fast_t))

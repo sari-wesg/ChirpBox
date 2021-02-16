@@ -18,15 +18,6 @@
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#define PRINTDEBUG(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#define PRINTDEBUG(...)
-#endif
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 /*sx1276mb1mas declaration---------------------------------------------------------------*/
@@ -1681,7 +1672,6 @@ uint32_t SX1276GetPacketTime(uint8_t sf, uint8_t bandwidth, uint8_t cr, uint8_t 
     uint32_t nPayload = 8 + ( ( tmp > 0 ) ? tmp : 0 );
     uint32_t tPayload = nPayload * ts;
     uint32_t tOnAir = tPreamble + tPayload;
-    // printf("nPayload time:%lu, %lu, %lu, %lu, %lu\n", nPayload, ts, tPreamble, tOnAir, preamble_len);
 
     return tOnAir;
 }
@@ -1760,14 +1750,9 @@ uint8_t SX1276GetRawTemp()
 //***** Local (Static) Variables *******************************************************************
 
 /*sx1276-arch---------------------------------------------------------------------------*/
-static uint16_t RX_BufferSize = rx_BUFFER_SIZE;
-static uint8_t RX_Buffer[rx_BUFFER_SIZE];
-
-
 int8_t RssiValue = 0;
 int8_t SnrValue = 0;
 
-static RadioEvents_t RadioEvents_arch;
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
@@ -1803,8 +1788,8 @@ void gpi_radio_init()
 void gpi_radio_set_spreading_factor(uint32_t datarate)
 {
 #if defined( USE_MODEM_LORA )
-    assert_reset(datarate >= 6);  /* SF6 */
-    assert_reset(datarate <= 12); /* SF12 */
+    assert_reset((datarate >= 6));  /* SF6 */
+    assert_reset((datarate <= 12)); /* SF12 */
     SX1276.Settings.LoRa.Datarate = datarate;
     uint32_t bandwidth = SX1276.Settings.LoRa.Bandwidth;
     if( ( ( bandwidth == 7 ) && ( ( datarate == 11 ) || ( datarate == 12 ) ) ) ||
@@ -1848,8 +1833,8 @@ void gpi_radio_set_spreading_factor(uint32_t datarate)
 void gpi_radio_set_bandwidth (uint32_t bandwidth)
 {
 #if defined( USE_MODEM_LORA )
-    assert_reset(bandwidth >= 0); /* 7.8 kHz */
-    assert_reset(bandwidth <= 9); /* 500 kHz */
+    assert_reset((bandwidth >= 0)); /* 7.8 kHz */
+    assert_reset((bandwidth <= 9)); /* 500 kHz */
     SX1276.Settings.LoRa.Bandwidth = bandwidth;
     uint32_t datarate = SX1276.Settings.LoRa.Datarate;
 
@@ -1875,8 +1860,8 @@ void gpi_radio_set_bandwidth (uint32_t bandwidth)
 
 void gpi_radio_set_channel(uint8_t channel)
 {
-    assert_reset(channel >= CHANNEL_MIN);
-    assert_reset(channel <= CHANNEL_MAX);
+    assert_reset((channel >= CHANNEL_MIN));
+    assert_reset((channel <= CHANNEL_MAX));
     SX1276SetSleep();
     uint32_t freq = RF_FREQUENCY + CHANNEL_STEP * channel;
     SX1276SetChannel( freq );
@@ -1885,8 +1870,8 @@ void gpi_radio_set_channel(uint8_t channel)
 void gpi_radio_set_coding_rate(uint8_t coderate)
 {
 #if defined( USE_MODEM_LORA )
-    assert_reset(coderate >= 1); /* 4/5 */
-    assert_reset(coderate <= 4); /* 4/8 */
+    assert_reset((coderate >= 1)); /* 4/5 */
+    assert_reset((coderate <= 4)); /* 4/8 */
     SX1276.Settings.LoRa.Coderate = coderate;
     SX1276Write(REG_LR_MODEMCONFIG1, ( SX1276Read( REG_LR_MODEMCONFIG1) & RFLR_MODEMCONFIG1_CODINGRATE_MASK) | (coderate << 1));
 #elif defined( USE_MODEM_FSK )

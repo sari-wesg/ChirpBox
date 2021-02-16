@@ -191,7 +191,7 @@ Flash_FILE Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t origi
     free(ctx.patch_buffer.buffer);
     free(ctx.target_buffer.buffer);
 
-    printf("size:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", newFile.file_size, originalBank, originalPage, originalSize, patchBank, patchSize, newBank, newPage);
+    printf("size:%lu, %u, %lu, %lu, %u, %lu, %u, %lu\n", newFile.file_size, originalBank, originalPage, originalSize, patchBank, patchSize, newBank, newPage);
 
     /* Patch failed, set file size as 0 */
     if (jpr)
@@ -201,7 +201,7 @@ Flash_FILE Filepatch(uint8_t originalBank, uint32_t originalPage, uint32_t origi
 
 bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t originalPage, uint32_t originalSize, uint8_t patchBank, uint32_t patchPage, uint32_t patchSize, uint8_t *md5_code, uint8_t file_compression)
 {
-    printf("FirmwareUpgrade:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %lu\n", patch_update, originalBank, originalPage, originalSize, patchBank, patchPage, patchSize, file_compression);
+    printf("FirmwareUpgrade:%u, %u, %lu, %lu, %u, %lu, %lu, %u\n", patch_update, originalBank, originalPage, originalSize, patchBank, patchPage, patchSize, file_compression);
     uint8_t i;
     if(file_compression)
     {

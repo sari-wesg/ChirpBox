@@ -20,7 +20,7 @@
 #endif
 
 #include "loradisc.h"
-
+#include <stdlib.h>
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX
@@ -42,7 +42,6 @@ extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 //***** Local (Static) Variables *******************************************************************
 // static uint32_t			round;
 static uint8_t	        data[DATA_HEADER_LENGTH];
-static uint8_t	        data_result[44];
 
 static uint16_t    deadline_dog, count_dog;
 
@@ -260,7 +259,7 @@ void chirp_payload_distribution(Mixer_Task mx_task)
     else
     {
         /* Each node has a packet */
-        assert_reset(chirp_config.mx_num_nodes == chirp_config.mx_generation_size);
+        assert_reset((chirp_config.mx_num_nodes == chirp_config.mx_generation_size));
         payload_distribution = (uint8_t *)malloc(chirp_config.mx_num_nodes);
 
         for (i = 0; i < chirp_config.mx_num_nodes; i++)
@@ -273,7 +272,7 @@ void chirp_payload_distribution(Mixer_Task mx_task)
 
 void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
 {
-    PRINTF("chirp_write:%lu, %lu\n", node_id, chirp_outl->round_max);
+    PRINTF("chirp_write:%d, %d\n", node_id, chirp_outl->round_max);
 
 	uint8_t i;
     uint16_t k = 0;
@@ -415,7 +414,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             {
                 data[k++] = chirp_outl->round_max >> 8;
                 data[k++] = chirp_outl->round_max;
-                PRINTF("set99:%lu\n", chirp_outl->round_max);
+                PRINTF("set99:%d\n", chirp_outl->round_max);
 
                 memcpy(file_data, data, DATA_HEADER_LENGTH);
                 if (!node_id)
@@ -488,7 +487,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             break;
     }
 
-    assert_reset(k <= DATA_HEADER_LENGTH);
+    assert_reset((k <= DATA_HEADER_LENGTH));
 
     for (i = 0; i < chirp_config.mx_generation_size; i++)
     {
@@ -563,7 +562,6 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 	unsigned int		i;
     uint8_t round_inc = 0;
     uint8_t round_hash = 0;
-    Mixer_Task arrange_task;
     uint8_t k = 0;
     uint8_t packet_correct = 0;
     uint32_t mask_negative[chirp_config.my_column_mask.len];
@@ -572,16 +570,15 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO))
     {
         assert_reset(!((chirp_outl->payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
-        assert_reset(chirp_outl->payload_len > DATA_HEADER_LENGTH + 28);
+        assert_reset((chirp_outl->payload_len > DATA_HEADER_LENGTH + 28));
     }
     uint32_t file_data[(chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t)];
-    uint16_t file_round;
     uint8_t task_data[chirp_outl->payload_len - DATA_HEADER_LENGTH];
     uint8_t receive_payload[chirp_outl->payload_len];
 
     if (!node_id)
     {
-        PRINTF("-----column_pending = %lu-----\n", mx.request->my_column_pending);
+        PRINTF("-----column_pending = %d-----\n", mx.request->my_column_pending);
         if ((chirp_outl->task == MX_COLLECT) && (chirp_outl->round > chirp_outl->round_setup))
             PRINTF("output from initiator (collect):\n");
         else if (chirp_outl->task == CHIRP_TOPO)
@@ -610,13 +607,13 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 memcpy(receive_payload, p, chirp_config.matrix_payload_8.len);
                 calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, chirp_config.matrix_payload_8.len - 2);
                 rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
-                PRINTF("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
+                PRINTF("rece_hash:%d, %x, %x, %d\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
                 if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                 {
                     rece_dissem_index = (receive_payload[ROUND_HEADER_LENGTH] << 8 | receive_payload[ROUND_HEADER_LENGTH + 1]);
                     if (rece_dissem_index >= chirp_outl->disem_file_max + 1)
                         chirp_outl->disem_file_index++;
-                    PRINTF("dissem_index:%lu, %lu\n", rece_dissem_index, chirp_outl->disem_file_index);
+                    PRINTF("dissem_index:%d, %d\n", rece_dissem_index, chirp_outl->disem_file_index);
                     round_hash++;
                     PRINT_PACKET(p, DATA_HEADER_LENGTH, 1);
                 }
@@ -648,7 +645,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                     memcpy(receive_payload, p, chirp_config.matrix_payload_8.len);
                     calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, chirp_config.matrix_payload_8.len - 2);
                     rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
-                    PRINTF("rece_hash:%lu, %x, %x, %lu\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
+                    PRINTF("rece_hash:%d, %x, %x, %d\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
                 }
                 // PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
                 packet_correct = 0;
@@ -701,7 +698,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 chirp_outl->end_sec = task_data[13];
                                 chirp_outl->flash_protection = task_data[14];
                                 chirp_outl->version_hash = (task_data[15] << 8) | (task_data[16]);
-                                PRINTF("\t receive, START at %lu-%lu-%lu, %lu:%lu:%lu\n\tEnd at %lu-%lu-%lu, %lu:%lu:%lu\n, flash_protection:%lu, v:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
+                                PRINTF("\t receive, START at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, flash_protection:%d, v:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
                             }
                             break;
                         }
@@ -727,7 +724,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                             chirp_outl->version_hash = (data[6] << 8) | (data[7]);
                                             chirp_outl->file_compression = data[8];
                                             PRINTF("version_hash:%x, %x, %x\n", chirp_outl->version_hash, data[6], data[7]);
-                                            PRINTF("MX_DISSEMINATE: %lu, %lu, %lu, %lu, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len, chirp_outl->file_compression);
+                                            PRINTF("MX_DISSEMINATE: %lu, %d, %d, %d, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, chirp_outl->disem_file_max, chirp_outl->file_chunk_len, chirp_outl->file_compression);
 
                                             memcpy(&(chirp_outl->firmware_md5[0]), (uint8_t *)(p + 17), 16);
                                             /* update whole firmware */
@@ -747,7 +744,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                                 chirp_outl->old_firmware_size = (data[k++] << 24) | (data[k++] << 16) | (data[k++] << 8) | (data[k++]);
                                                 k = 0;
                                                 chirp_outl->patch_page = menu_pre_patch(chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size);
-                                                PRINTF("patch:%lu, %lu\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
+                                                PRINTF("patch:%d, %d\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
                                             }
                                         }
                                         if (i == chirp_outl->generation_size - 1)
@@ -806,7 +803,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                     PRINTF("MX_COLLECT\n");
                                     chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
                                     memcpy(data, p + DATA_HEADER_LENGTH, DATA_HEADER_LENGTH);
-                                    PRINTF("col_max:%lu\n", chirp_outl->round_max);
+                                    PRINTF("col_max:%d\n", chirp_outl->round_max);
 
                                     chirp_outl->collect_addr_start = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
                                     chirp_outl->collect_addr_end = (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | (data[7]);
@@ -877,7 +874,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             break;
                     }
                     round_inc++;
-                    PRINTF("roundinc %lu\n", round_inc);
+                    PRINTF("roundinc %d\n", round_inc);
                 }
             }
         }
@@ -939,7 +936,6 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
     Gpi_Fast_Tick_Extended deadline;
     Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((chirp_config.mx_period_time_s * 1000) / 1) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));
 
-	unsigned int i;
     uint8_t failed_round = 0;
 
     chirp_outl->round = 1;
@@ -962,7 +958,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
 	while (1)
 	{
-        PRINTF("round:%lu, %lu\n", chirp_outl->round, chirp_outl->round_max);
+        PRINTF("round:%d, %d\n", chirp_outl->round, chirp_outl->round_max);
 
         gpi_radio_init();
 
@@ -1003,7 +999,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 		// while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
         deadline_dog = (chirp_config.mx_period_time_s + 60 - 1) / DOG_PERIOD + 60 / DOG_PERIOD;
         count_dog = 0;
-        PRINTF("dg:%lu\n", deadline_dog);
+        PRINTF("dg:%d\n", deadline_dog);
         #if MX_LBT_ACCESS
             lbt_check_time();
             chirp_isr.state = ISR_MIXER;
@@ -1016,7 +1012,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             }
             }
             SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
-            PRINTF("-------lbt_channel_primary:%lu\n", chirp_config.lbt_channel_primary);
+            PRINTF("-------lbt_channel_primary:%d\n", chirp_config.lbt_channel_primary);
         #endif
 		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
         #if ENERGEST_CONF_ON
@@ -1056,7 +1052,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             else
             {
                 failed_round++;
-                PRINTF("failed:%lu\n", failed_round);
+                PRINTF("failed:%d\n", failed_round);
                 if (chirp_outl->task == MX_DISSEMINATE)
                 {
                     if (failed_round >= 2)
@@ -1091,7 +1087,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         if (chirp_outl->task == MX_DISSEMINATE)
         {
                 chirp_outl->disem_file_index_stay++;
-                PRINTF("disem_file_index_stay:%lu\n", chirp_outl->disem_file_index_stay);
+                PRINTF("disem_file_index_stay:%d\n", chirp_outl->disem_file_index_stay);
                 // if (chirp_outl->disem_file_index_stay > 5 * 2)
                 // {
                 //     if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
@@ -1120,7 +1116,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         chirp_outl->disem_file_index_stay = 0;
                         PRINTF("full receive\n");
                     }
-                    PRINTF("next: disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
+                    PRINTF("next: disem_flag: %d, %d\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     chirp_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
                     chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
@@ -1143,7 +1139,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     free(payload_distribution);
                     if (chirp_outl->dissem_back_sf)
                         chirp_radio_config(chirp_outl->dissem_back_sf, 7, 1, 8, 14, chirp_outl->default_freq);
-                    PRINTF("next: collect disem_flag: %lu, %lu\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
+                    PRINTF("next: collect disem_flag: %d, %d\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                     chirp_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL, COLLECTION);
                     chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
@@ -1196,7 +1192,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
 void DOG_TIMER_ISR_NAME(void)
 {
-    PRINTF("d:%lu, %lu\n", count_dog, deadline_dog);
+    PRINTF("d:%d, %d\n", count_dog, deadline_dog);
     count_dog++;
 	__HAL_TIM_CLEAR_IT(&htim5, TIM_IT_UPDATE);
 	__HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);

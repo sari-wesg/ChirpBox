@@ -60,7 +60,7 @@
 #endif
 #include "chirpbox_func.h"
 #include "loradisc.h"
-
+#include <math.h>
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
 volatile uint8_t uart_read_done;
@@ -729,7 +729,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t task_wait = 0;
 
   uint8_t task[28 + DISSEM_BITMAP_32 * 8 + DISSEM_BITMAP_32 * 8 + 1];
-  PRINTF("\nTask list:\n%lu: CHIRP_START\n%lu: MX_DISSEMINATE\n%lu: MX_COLLECT\n%lu: CHIRP_CONNECTIVITY\n%lu: CHIRP_TOPO\n%lu: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_VERSION);
+  PRINTF("\nTask list:\n%d: CHIRP_START\n%d: MX_DISSEMINATE\n%d: MX_COLLECT\n%d: CHIRP_CONNECTIVITY\n%d: CHIRP_TOPO\n%d: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
 
@@ -799,7 +799,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   chirp_outl->default_slot_num = default_slot_num;
   chirp_outl->dissem_back_sf = dissem_back_sf;
   chirp_outl->dissem_back_slot_num = dissem_back_slot_num;
-  PRINTF("default sf:%lu, %lu, %lu, %lu, %lu, %lu, %lu, %02x, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0], chirp_outl->task_bitmap[0]);
+  PRINTF("default sf:%lu, %d, %d, %d, %d, %d, %d, %02x, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0], chirp_outl->task_bitmap[0]);
   switch (mx_task)
   {
     case CHIRP_START:
@@ -987,7 +987,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
           }
         }
 
-        PRINTF("\tSTART at %lu-%lu-%lu, %lu:%lu:%lu\n\tEnd at %lu-%lu-%lu, %lu:%lu:%lu\n, start user:%lu, ver:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
+        PRINTF("\tSTART at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, start user:%d, ver:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
         break;
       }
       case MX_DISSEMINATE:
@@ -1056,7 +1056,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
             }
           }
         }
-        PRINTF("MX_DISSEMINATE:%lu, %lu, %lu, %lu, %lu, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash, chirp_outl->file_compression);
+        PRINTF("MX_DISSEMINATE:%d, %d, %lu, %lu, %d, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash, chirp_outl->file_compression);
         for (i = 0; i < 16; i++)
         {
           PRINTF("%02X", chirp_outl->firmware_md5[i]);
@@ -1145,7 +1145,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
         if (!tx_sign)
           chirp_outl->tx_power = 0 - chirp_outl->tx_power;
 
-        PRINTF("Spreading factor: %lu, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
+        PRINTF("Spreading factor: %d, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
         break;
       }
       default:
@@ -1303,7 +1303,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_config.glossy_task = 2;
     }
 
-    PRINTF("chirp_config.glossy_task:%lu\n", chirp_config.glossy_task);
+    PRINTF("chirp_config.glossy_task:%d\n", chirp_config.glossy_task);
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1323,7 +1323,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
           Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
         #endif
-        PRINTF("chirp_round:%lu\n", chirp_config.glossy_task);
+        PRINTF("chirp_round:%d\n", chirp_config.glossy_task);
         if (!node_id)
         {
           GPS_Sleep(60);
@@ -1540,7 +1540,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           DS3231_GetTime();
           ds3231_time = DS3231_ShowTime();
           diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-          assert_reset(diff > 5);
+          assert_reset((diff > 5));
           if (((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE)))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))))
           {
             /* erase the user flash page */
@@ -1548,7 +1548,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
             DS3231_GetTime();
             /* Set alarm */
-            TRACE_MSG("date:%lu, %lu, %lu, %lu\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
+            TRACE_MSG("date:%d, %d, %d, %d\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
             ds3231_time = DS3231_ShowTime();
             DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
             /* Waiting for bank switch */
@@ -1584,7 +1584,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.num_nodes = task_node_num;
 				chirp_outl.generation_size = chirp_outl.default_generate_size;
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
-        assert_reset(chirp_outl.payload_len > DATA_HEADER_LENGTH + 28);
+				assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 28));
 				assert_reset(!((chirp_outl.payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
 				chirp_outl.round_setup = 1;
 				chirp_outl.round_max = UINT16_MAX;
@@ -1609,7 +1609,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
 
           chirp_outl.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
-					TRACE_MSG("file size:%lu, %lu, %lu, %lu\n", flash_length, chirp_outl.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
+					TRACE_MSG("file size:%lu, %d, %d, %lu\n", flash_length, chirp_outl.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
 				}
         chirp_outl.disem_flag = 1;
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
@@ -1632,7 +1632,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         }
 				free(payload_distribution);
         free(chirp_outl.disem_file_memory);
-        if(!FirmwareUpgrade(chirp_outl.patch_update, chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5, chirp_outl.file_compression));
+        if(!FirmwareUpgrade(chirp_outl.patch_update, chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5, chirp_outl.file_compression))
           break;
         Stats_to_Flash(chirp_outl.task);
 
@@ -1668,21 +1668,20 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.round_max = UINT16_MAX;
 				chirp_outl.round_setup = 1;
 				chirp_outl.file_chunk_len = chirp_outl.payload_len - DATA_HEADER_LENGTH;
-        assert_reset(chirp_outl.payload_len > DATA_HEADER_LENGTH + 8);
+        assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 8));
 				assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
 				if (!node_id)
 				{
 					chirp_controller_read_command(&chirp_outl);
 					chirp_outl.collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
 					chirp_outl.round_max = chirp_outl.round_setup + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
-					PRINTF("set:%lu\n", chirp_outl.round_max);
+					PRINTF("set:%d\n", chirp_outl.round_max);
 				}
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
         chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-        PRINTF("set88:%lu\n", chirp_outl.round_max);
 
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1787,7 +1786,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
 				chirp_outl.round_setup = 0;
 				chirp_outl.file_chunk_len = chirp_outl.payload_len - DATA_HEADER_LENGTH;
-        assert_reset(chirp_outl.payload_len > DATA_HEADER_LENGTH);
+        assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH));
 				assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
 
 				uint16_t file_size = (((chirp_outl.num_nodes + 1) / 2) * 2) * sizeof(uint32_t);
@@ -1835,8 +1834,6 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.generation_size = chirp_outl.num_nodes;
 				chirp_outl.payload_len = DATA_HEADER_LENGTH + 3;
 				chirp_outl.round_setup = 1;
-
-				uint16_t file_size = (((chirp_outl.num_nodes + 1) / 2) * 2) * sizeof(uint32_t);
 				chirp_outl.round_max = chirp_outl.round_setup;
 
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);

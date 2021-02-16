@@ -286,7 +286,7 @@ time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, 
     now = GPS_Conv(gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec);
     start = GPS_Conv(start_year, start_month, start_date, start_hour, start_min, start_sec);
     diff = start - now;
-    PRINTF("seconds difference = %ld\n", diff);
+    PRINTF("seconds difference = %lld\n", diff);
     return diff;
 }
 
@@ -337,7 +337,7 @@ void GPS_Wakeup(uint32_t interval_sec)
     GPS_Get_Time();
     time_t diff = GPS_Diff(&chirp_time, 1970, 1, 1, 0, 0, 0);
     time_t sleep_sec = interval_sec - (time_t)(0 - diff) % interval_sec;
-    PRINTF("sleep_sec:%lu, version: %x-%x\n", sleep_sec, VERSION_MAJOR, VERSION_NODE);
+    PRINTF("sleep_sec:%lld, version: %x-%x\n", sleep_sec, VERSION_MAJOR, VERSION_NODE);
     gps_state = GPS_WAKEUP;
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 

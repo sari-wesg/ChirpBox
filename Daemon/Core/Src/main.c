@@ -189,12 +189,12 @@ static uint8_t hardware_init()
 	/* translate TOS_NODE_ID to logical node id used with mixer */
 	for (node_id = 0; node_id < NUM_ELEMENTS(nodes); ++node_id)
 	{
-		PRINTF("node:%lu, 0x%x\n", node_id, nodes[node_id]);
+		PRINTF("node:%d, 0x%x\n", node_id, nodes[node_id]);
 		if (nodes[node_id] == 0)
 			break;
 	}
 	MX_NUM_NODES_CONF = node_id;
-	PRINTF("MX_NUM_NODES_CONF:%lu\n", MX_NUM_NODES_CONF);
+	PRINTF("MX_NUM_NODES_CONFi:%d\n", MX_NUM_NODES_CONF);
 
 	for (node_id = 0; node_id < MX_NUM_NODES_CONF; ++node_id)
 	{
@@ -208,7 +208,7 @@ static uint8_t hardware_init()
 		while (1)
 			;
 	}
-	PRINTF("Running with node ID: %lu\n", node_id);
+	PRINTF("Running with node ID: %d\n", node_id);
 
 	/* init RNG with randomized seed */
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
@@ -232,7 +232,7 @@ static uint8_t hardware_init()
 	while((rtc_diff < 0) || (rtc_diff >= 0x05))
 	{
 		count++;
-		assert_reset(count < 10);
+		assert_reset((count < 10));
 		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
 		DS3231_GetTime();
 		Chirp_Time RTC_Time = DS3231_ShowTime();

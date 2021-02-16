@@ -96,7 +96,7 @@ Chirp_Time DS3231_ShowTime()
   while (DS3231.flag == 0)
   {
     count++;
-    assert_reset(count < 0xFFFF);
+    assert_reset((count < 0xFFFF));
   }
   DS3231.flag = 0;
   switch (DS3231.Day)
@@ -144,7 +144,7 @@ void DS3231_ClearAlarm1_Time()
   while (!alarm_flag)
   {
     count++;
-    assert_reset(count < 10);
+    assert_reset((count < 10));
     printf("clear alarm\n");
     /* read control and status */
     while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
@@ -179,7 +179,7 @@ void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t s
   while (!alarm_flag)
   {
     count++;
-    assert_reset(count < 10);
+    assert_reset((count < 10));
     printf("set alarm\n");
     /* write alarm time */
     DS3231_Buff[DS3231_memaddr.alarm1_dydt] = DEC2BCD(date);

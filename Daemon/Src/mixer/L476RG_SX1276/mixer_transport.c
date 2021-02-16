@@ -110,83 +110,6 @@ extern uint8_t node_id_allocate;
 
 #define PROFILE_ISR(...)	PROFILE_P(0, ## __VA_ARGS__)
 
-// //SX1276*******************************************************************************************
-// #define SYMBOL_BANDWIDTH 		( LORA_BANDWIDTH > 8) ? 500000 : ( ( LORA_BANDWIDTH - 6) * 125000 )
-// #define SYMBOL_RATE				( ( SYMBOL_BANDWIDTH ) / ( 1 << LORA_SPREADING_FACTOR ) )
-// #define SYMBOL_TIME				(uint32_t)1e6 / ( SYMBOL_RATE )					//us
-// #define PREAMBLE_TIME			(( LORA_PREAMBLE_LENGTH + 4 ) * ( SYMBOL_TIME ) + ( SYMBOL_TIME ) / 4)
-
-// // payload with explict header
-// #define PAYLOAD_TMP			    (uint32_t)(ceil( (int32_t)( 8 * PHY_PAYLOAD_SIZE - 4 * LORA_SPREADING_FACTOR + 28 + 16 ) / \
-//                                 (double)( 4 * LORA_SPREADING_FACTOR ) ) * ( LORA_CODINGRATE + 4 ))
-// #define PAYLOAD_NUM         	( 8 + ( ( (PAYLOAD_TMP) > 0 ) ? (PAYLOAD_TMP) : 0 ) )
-// #define PAYLOAD_TIME        	(PAYLOAD_NUM) * (SYMBOL_TIME)
-// #define PAYLOAD_AIR_TIME 		( ( PREAMBLE_TIME ) + ( PAYLOAD_TIME ) )
-
-// // explict header mode
-// #define HEADER_LEN          	2												//explict header length
-// #define HEADER_TMP			    (uint32_t)(ceil( (int32_t)( 8 * HEADER_LEN - 4 * LORA_SPREADING_FACTOR + 28 - 20) / \
-//                                 (double)( 4 * LORA_SPREADING_FACTOR ) ) * ( 4 + 4 ))
-// #define HEADER_NUM          	8 + ( ( (HEADER_TMP) > 0 ) ? (HEADER_TMP) : 0 )
-// #define HEADER_TIME         	( ( HEADER_NUM ) * ( SYMBOL_TIME ) + PREAMBLE_TIME )
-// #define HEADER_TIME_SHORT       ( ( HEADER_NUM ) * ( SYMBOL_TIME ) )
-
-// #define AFTER_HEADER_TIME   	( ( PAYLOAD_TIME ) - ( HEADER_TIME_SHORT ) )			//expected rxdone time after a valid header detection
-
-// //**************************************************************************************************
-// ASSERT_CT_STATIC(IS_POWER_OF_2(FAST_HYBRID_RATIO), unefficient_FAST_HYBRID_RATIO);
-
-// // timing parameters
-
-// // NOTE: a drift tolerance of 300 ppm (150 ppm on each side) should be a comfortable choice
-// // (typical clock crystals have < 20...50 ppm at 25�C and temperature coefficient < 0.04 ppm/K)
-// // note: MIN(2500, ...) is effective in case of very long slots (up to seconds). It reduces the
-// // tolerance to avoid that RX_WINDOW overflows too fast (or even immediately).
-// #define DRIFT_TOLERANCE			MIN(2500, MAX((MX_SLOT_LENGTH + 999) / 1000, 1))	// +/- 1000 ppm
-
-// #define MAX_PROPAGATION_DELAY	GPI_TICK_US_TO_HYBRID(2)
-
-// #define PACKET_AIR_TIME			GPI_TICK_US_TO_HYBRID2(PAYLOAD_AIR_TIME + 712)
-// #define GRID_TO_EVENT_OFFSET	    GPI_TICK_US_TO_HYBRID2(HEADER_TIME)	// preamble + explict header + event signaling latency
-// #define RX_TO_GRID_OFFSET		(0 + GPI_TICK_US_TO_HYBRID(37))		// software latency + RX ramp up time
-// #define TX_TO_GRID_OFFSET		(0 + GPI_TICK_US_TO_HYBRID(130))		// software latency + TX ramp up time
-
-// #define RX_WINDOW_INCREMENT		(2 * DRIFT_TOLERANCE)			// times 2 is important to widen the window in next slot (times 1 would follow only)
-// #define RX_WINDOW_MAX			MIN(0x7FFFFFFF, MIN(15 * RX_WINDOW_INCREMENT, (MX_SLOT_LENGTH - PACKET_AIR_TIME - RX_TO_GRID_OFFSET) / 2))
-// #define RX_WINDOW_MIN			MIN(RX_WINDOW_MAX / 2, MAX(2 * RX_WINDOW_INCREMENT, GPI_TICK_US_TO_HYBRID(1)))		// minimum must cover variations in execution time from timer polling to RX on
-
-// #define GRID_DRIFT_FILTER_DIV	4
-// #define GRID_TICK_UPDATE_DIV	2
-// #define GRID_DRIFT_MAX			MIN(3 * DRIFT_TOLERANCE * GRID_TICK_UPDATE_DIV * GRID_DRIFT_FILTER_DIV, 0x7FFFFF)
-
-// #define TX_OFFSET_FILTER_DIV	2
-// #define TX_OFFSET_MAX			(2 * MAX_PROPAGATION_DELAY + GPI_TICK_US_TO_HYBRID(2))
-
-// #define ISR_LATENCY_BUFFER		122		// in microseconds
-// #define ISR_LATENCY_SLOW		4 * HYBRID_SLOW_RATIO		// in fast tick
-
-// #define GRID_DRIFT_OFFSET		GPI_TICK_US_TO_HYBRID2(20 * SYMBOL_TIME)
-
-// #define SLOT_INTERVAL			((((PACKET_AIR_TIME + GPI_TICK_US_TO_HYBRID2(4 * SYMBOL_TIME)) * MX_DUTY_CYCLE_PERCENT) / MX_SLOT_LENGTH) + 1)
-//stm32l476RG**************************************************************************************
-
-// // TIMER2
-// #define MAIN_TIMER					htim2.Instance
-// #define MAIN_TIMER_IRQ				TIM2_IRQn
-// #define MAIN_TIMER_ISR_NAME			TIM2_IRQHandler
-
-// #define MAIN_TIMER_CC_REG			(MAIN_TIMER->CCR1)				// compare interrupt count
-// #define MAIN_TIMER_CNT_REG			(MAIN_TIMER->CNT)				// timer2 now count
-
-// // LPTIM1
-// #define LP_TIMER					hlptim1.Instance
-// #define LP_TIMER_IRQ				LPTIM1_IRQn
-// #define LP_TIMER_ISR_NAME			LPTIM1_IRQHandler
-
-// #define LP_TIMER_CMP_REG			(LP_TIMER->CMP)					// compare interrupt count
-// #define LP_TIMER_CNT_REG			(LP_TIMER->CNT)					// timer2 now count
-
-#define MAX_NON_RECEIVE				3
 //**************************************************************************************************
 
 #if MX_VERBOSE_STATISTICS
@@ -504,13 +427,12 @@ static uint8_t write_tx_fifo(uint8_t *buffer, uint8_t *p2, uint8_t size)
 static void start_grid_timer()
 {
 	Gpi_Hybrid_Reference	r;
-	Gpi_Hybrid_Tick			d, t;
+	Gpi_Hybrid_Tick			d;
 	r = gpi_tick_hybrid_reference();
 
 	d = s.next_trigger_tick - r.hybrid_tick;
 	s.hybrid_trigger = s.next_trigger_tick;
 
-	t = s.next_trigger_tick - GPI_TICK_US_TO_HYBRID(radio.isr_latency_buffer);
 	s.slow_trigger = s.next_trigger_tick;
 
 	mask_main_timer();
@@ -989,8 +911,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		GPI_TRACE_MSG_FAST(TRACE_INFO, "Tx done");
 	}
 
-	_return_:
-
 	PROFILE_ISR("radio ISR return");
 
 #if	ENERGEST_CONF_ON
@@ -1252,7 +1172,7 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 	// NOTE: being here implies that Rx is active (state = RESYNC or RX_RUNNING)
 	// mask interrupts (radio)
 	// NOTE: stopping timeout timer is not needed since this is done implicitely below
-	SX1276Write( REG_LR_IRQFLAGSMASK, 0xFFFF );
+	SX1276Write( REG_LR_IRQFLAGSMASK, 0xFF );
 
 	// turn radio off
 	SX1276SetOpMode( RFLR_OPMODE_SLEEP );
@@ -1793,7 +1713,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		if (chirp_config.primitive != FLOODING)
 		// write coding vector and payload
 		{
-			assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
+			assert_reset((chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len));
 
 			const unsigned int	CHUNK_SIZE = chirp_config.coding_vector.len + chirp_config.payload.len;
 
@@ -1850,7 +1770,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 			if (!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))
 			{
-				assert_reset(NULL != ps);
+				assert_reset((NULL != ps));
 
 				write_tx_fifo(ps, NULL, CHUNK_SIZE);
 
@@ -1889,7 +1809,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			{
 				#if MX_REQUEST || MX_SMART_SHUTDOWN_MAP
 
-					assert_reset(chirp_config.info_vector.pos == chirp_config.payload.pos + chirp_config.payload.len);
+					assert_reset((chirp_config.info_vector.pos == chirp_config.payload.pos + chirp_config.payload.len));
 
 					void *ps;
 
@@ -1997,7 +1917,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		PROFILE_ISR("grid timer ISR start Tx end");
 	}
 
-	slot_state_:
 	if (RESYNC != s.slot_state)
 	{
 		mx.slot_number++;
@@ -2009,7 +1928,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		s.next_trigger_tick = s.next_grid_tick -
 			((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
-		Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
 
 		if (TX_RUNNING == s.slot_state)
 		{
