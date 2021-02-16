@@ -8,6 +8,7 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Src/subdir.mk
 -include Drivers/STM32L4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
@@ -54,8 +55,8 @@ all: main-build
 main-build: L476RG-demo.elf secondary-outputs
 
 # Tool invocations
-L476RG-demo.elf: $(OBJS) $(USER_OBJS) D:\TP\Study\STM32CubeIDE\workspace_1.5.1\L476RG-demo\STM32L476RGTX_FLASH.ld
-	arm-none-eabi-gcc -o "L476RG-demo.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\TP\Study\STM32CubeIDE\workspace_1.5.1\L476RG-demo\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="L476RG-demo.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+L476RG-demo.elf: $(OBJS) $(USER_OBJS) D:\TP\Study\wesg\Chirpbox\Miscellaneous\Example\L476RG-demo\STM32L476RGTX_FLASH.ld
+	arm-none-eabi-gcc -o "L476RG-demo.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\TP\Study\wesg\Chirpbox\Miscellaneous\Example\L476RG-demo\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="L476RG-demo.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

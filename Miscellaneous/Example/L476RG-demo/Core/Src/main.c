@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -94,6 +95,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  printf("hhh\n");
   while (1)
   {
     /* USER CODE END WHILE */
@@ -226,7 +228,25 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+int _read (int fd, char *pBuffer, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+      while((USART2->ISR&0X40)==0);
+      pBuffer[i] = USART2->RDR;
+    }
+    return size;
+}
 
+int _write (int fd, char *pBuffer, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+      while((USART2->ISR&0X40)==0);
+      USART2->TDR = (uint8_t) pBuffer[i];
+    }
+    return size;
+}
 /* USER CODE END 4 */
 
 /**
