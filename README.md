@@ -34,6 +34,6 @@ The ChirpBox directory is simplified to the following:
 │
 ```
 - `/Hardware`: schematics of the ChirpBox node
-- `/Chirpbox manager`: script manager to execute tasks such as monitor nodes' status, file dissemination and collection
+- `/chirpbox manager`: script manager to execute tasks such as monitor nodes' status, file dissemination and collection
 - `/Daemon`: source codes of daemon firmware
 - `/Miscellaneous`: available tools and codes for users, for example codes for bank switch
