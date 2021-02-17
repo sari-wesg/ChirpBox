@@ -80,6 +80,7 @@ dkms.conf
 !*.axf
 !jdiff.exe
 !jptch.exe
+!L476RG-demo.bin
 
 # python
 *.pyc

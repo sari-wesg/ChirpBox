@@ -88,7 +88,6 @@ void Stats_value(uint8_t stats_type, uint32_t value)
 void Stats_value_debug(uint8_t energy_type, uint32_t value)
 {
     // printf("value:%lu, %lu\n", energy_type, (uint32_t)gpi_tick_fast_to_us(value));
-    uint8_t i = energy_type - ENERGEST_TYPE_CPU;
     uint32_t value_s = (uint32_t)gpi_tick_fast_to_us(value);
     switch (energy_type)
     {
@@ -135,7 +134,7 @@ void Stats_to_Flash(Mixer_Task task)
         uint16_t stats_lbt_len = (LBT_CHANNEL_NUM + 1) / 2;
     #endif
 
-    assert_reset(sizeof(stats_array) >= sizeof(chirp_stats_all));
+    assert_reset((sizeof(stats_array) >= sizeof(chirp_stats_all)));
     memset((uint32_t *)stats_array, 0, sizeof(stats_array));
     memcpy((uint32_t *)stats_array, (uint32_t *)&chirp_stats_all.slot.stats_sum, sizeof(chirp_stats_all));
 

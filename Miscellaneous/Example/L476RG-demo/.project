@@ -36,5 +36,10 @@
 			<type>2</type>
 			<location>D:/TP/Study/wesg/Chirpbox/Miscellaneous/Toggle/Src</location>
 		</link>
+		<link>
+			<name>tools</name>
+			<type>2</type>
+			<location>D:/TP/Study/wesg/Chirpbox/Daemon/Src/tools</location>
+		</link>
 	</linkedResources>
 </projectDescription>

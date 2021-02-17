@@ -11,7 +11,7 @@
 //***** Includes ***********************************************************************************
 
 /* Filename without full path */
-#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define __TRACE_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 /* write trace data to flash */
 #define TRACE_MODE_NO_FLASH                 0
@@ -49,7 +49,7 @@ implicitly determines number/size of possible var_args */
 #define TRACE_MSG_FAST(fmt, args...)												\
 		do {																		\
 				printf(fmt, ##args);												\
-                trace_store_msg(__FILENAME__, __LINE__, fmt, ##args);				\
+                trace_store_msg(__TRACE_FILENAME__, __LINE__, fmt, ##args);				\
             } while (0)
 
 #define TRACE_FLUSH()																\
@@ -60,7 +60,7 @@ implicitly determines number/size of possible var_args */
 #define TRACE_MSG(fmt, args...)														\
 		do {																		\
 				printf(fmt, ##args);												\
-                trace_store_msg(__FILENAME__, __LINE__, fmt, ##args);				\
+                trace_store_msg(__TRACE_FILENAME__, __LINE__, fmt, ##args);				\
                 trace_to_flash();													\
             } while (0)
 
@@ -83,6 +83,10 @@ typedef struct Trace_Msg_tag
 	int32_t			var_args[(TRACE_BUFFER_ENTRY_SIZE - (TRACE_LENGTH_FILENAME + sizeof(uint16_t) + TRACE_LENGTH_ARGUMENT)) / sizeof(int32_t)];
 	/* 128 bytes */
 } Trace_Msg;
+
+
+void trace_store_msg(const char* file_name, const int file_line, const char* fmt, ...);
+void trace_to_flash();
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************

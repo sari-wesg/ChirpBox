@@ -744,7 +744,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                                 chirp_outl->old_firmware_size = (data[k++] << 24) | (data[k++] << 16) | (data[k++] << 8) | (data[k++]);
                                                 k = 0;
                                                 chirp_outl->patch_page = menu_pre_patch(chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size);
-                                                PRINTF("patch:%d, %d\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
+                                                PRINTF("patch:%lu, %d\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
                                             }
                                         }
                                         if (i == chirp_outl->generation_size - 1)
@@ -1020,7 +1020,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         #endif
         /* used in mixer_write, and revalue before mixer round */
         chirp_config.full_rank = 0;
-        chirp_config.full_column = UINT16_MAX;
+        chirp_config.full_column = UINT8_MAX;
         rece_dissem_index = UINT16_MAX;
 
         __HAL_TIM_ENABLE_IT(&htim5, TIM_IT_UPDATE);

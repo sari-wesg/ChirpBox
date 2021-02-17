@@ -90,9 +90,9 @@ void packet_prepare(uint8_t node_id)
 uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len)
 {
     tx_num_max = 20;
-    assert_reset(payload_len >= 2);
+    assert_reset((payload_len >= 2));
     tx_payload_len = payload_len + 2;
-    assert_reset(tx_payload_len <= BUFFER_SIZE);
+    assert_reset((tx_payload_len <= BUFFER_SIZE));
     packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, tx_payload_len) + 50000;
     node_topology = (Topology_result *)malloc(nodes_num * sizeof(Topology_result));
     memset(node_topology, 0, nodes_num * sizeof(Topology_result));
@@ -267,7 +267,7 @@ void topo_dio0_isr()
             SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
             SX1276ReadFifo(Rx_Buffer, packet_len );
             uint16_t topo_hash_rx = Chirp_RSHash((uint8_t *)&(Rx_Buffer[0]), 2);
-            if (topo_hash_rx == Rx_Buffer[2] >> 8 | Rx_Buffer[3])
+            if ((topo_hash_rx == Rx_Buffer[2] >> 8) | (Rx_Buffer[3]))
             {
                 // count++;
                 rx_receive_num++;

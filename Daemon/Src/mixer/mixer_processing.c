@@ -474,8 +474,8 @@ static void prepare_tx_packet()
 
 			assert_reset(!((offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos) % sizeof(uint_fast_t)));
 
-			assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
-			assert_reset(chirp_config.matrix_payload_8.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector_8.len);
+			assert_reset((chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len));
+			assert_reset((chirp_config.matrix_payload_8.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector_8.len));
 		}
 	}
 
@@ -671,7 +671,7 @@ PT_THREAD(mixer_update_slot())
 
 			#if MX_COORDINATED_TX
 				uint16_t	density = 1 + mx_present_head->mx_num_nodes + mx_finished_head->mx_num_nodes;
-				assert_reset(density < 256);
+				assert_reset((density < 256));
 			#endif
 
 			#if MX_REQUEST
@@ -679,7 +679,7 @@ PT_THREAD(mixer_update_slot())
 			#endif
 			int_fast8_t		is_helper = 0;
 
-			assert_reset(chirp_config.mx_num_nodes < 256);
+			assert_reset((chirp_config.mx_num_nodes < 256));
 
 			// determine request help index
 			#if MX_REQUEST
@@ -841,7 +841,7 @@ PT_THREAD(mixer_update_slot())
 
 				if (is_helper != 0)
 				{
-					assert_reset(chirp_config.mx_num_nodes < 256);
+					assert_reset((chirp_config.mx_num_nodes < 256));
 
 					PROFILE("mixer_update_slot() tx decision request help 3");
 
@@ -1436,8 +1436,8 @@ PT_THREAD(mixer_process_rx_data())
 
 					mx.recent_innovative_slot = p->slot_number;
 
-					assert_reset(chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len);
-					assert_reset(chirp_config.matrix_payload.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len);
+					assert_reset((chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len));
+					assert_reset((chirp_config.matrix_payload.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len));
 
 					if (pp_used)
 					{
@@ -1478,7 +1478,7 @@ PT_THREAD(mixer_process_rx_data())
 						if (ABS(mx.request->help_index) - 1 == i)
 						{
 							{
-								assert_reset(ABS(mx.request->help_index) - 1 != i);
+								assert_reset((ABS(mx.request->help_index) - 1 != i));
 
 								GPI_TRACE_MSG_FAST(TRACE_ERROR, "!!! request help index points to empty row -> check program, must not happen !!!");
 							}
@@ -1543,7 +1543,7 @@ PT_THREAD(mixer_process_rx_data())
                                 }
                             }
 
-							assert_reset(mx.empty_row >= (Matrix_Row *)&(mx.matrix[0]->birth_slot));
+							assert_reset((mx.empty_row >= (Matrix_Row *)&(mx.matrix[0]->birth_slot)));
                         }
                     }
 
@@ -1669,7 +1669,6 @@ PT_THREAD(mixer_process_rx_data())
 
 PT_THREAD(mixer_decode(Pt_Context *pt))
 {
-	int ii = 0;
 	PT_BEGIN(pt);
 
 	static int_fast16_t		i;
@@ -1762,7 +1761,7 @@ PT_THREAD(mixer_decode(Pt_Context *pt))
 
 				if (NUM_ELEMENTS(pp) == pp_used)
 				{
-					assert_reset(chirp_config.matrix_payload.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len);
+					assert_reset((chirp_config.matrix_payload.pos == chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len));
 
 					PROFILE("mixer_decode() row memxor_block(full) begin");
 
@@ -1877,7 +1876,7 @@ PT_THREAD(mixer_maintenance())
 		{
 			// ATTENTION: updating round deadline only on slot_number updates is important
 			// for right behaviour during RESYNC phases
-			assert_reset((GPI_TICK_FAST_MAX / 2) / chirp_config.mx_slot_length >= chirp_config.mx_round_length);
+			assert_reset(((GPI_TICK_FAST_MAX / 2) / chirp_config.mx_slot_length >= chirp_config.mx_round_length));
 
 			mx.round_deadline_update_slot = mx.slot_number;
 
