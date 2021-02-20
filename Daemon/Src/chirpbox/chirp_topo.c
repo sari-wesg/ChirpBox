@@ -237,7 +237,7 @@ void topo_result(uint8_t nodes_num)
 
     #if MX_FLASH_FILE
         // menu_preSend(0);
-        FLASH_If_Erase_Pages(1, 255);
+        FLASH_If_Erase_Pages(1, TOPO_PAGE);
         FLASH_If_Write(TOPO_FLASH_ADDRESS, (uint32_t *)(topo_result), sizeof(topo_result) / sizeof(uint32_t));
         FLASH_If_Write(TOPO_FLASH_ADDRESS + sizeof(topo_result) + 8, (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
         memcpy(topo_result, (uint32_t *)(node_topology_link), nodes_num * sizeof(Topology_result_link));

@@ -95,7 +95,7 @@ enum {
 
 #define FLASH_PAGE                    ((uint32_t)0x800)
 
-
+#define TOPO_PAGE                     (255)
 #define FIRMWARE_PAGE                 (253)
 #define DAEMON_PAGE                   (252)
 #define RESET_PAGE                    (251)

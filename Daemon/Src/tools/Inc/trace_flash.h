@@ -52,16 +52,16 @@ implicitly determines number/size of possible var_args */
                 trace_store_msg(__TRACE_FILENAME__, __LINE__, fmt, ##args);				\
             } while (0)
 
-#define TRACE_FLUSH()																\
+#define TRACE_FLUSH(trace_page)																\
 		do {																		\
-                trace_to_flash();													\
+                trace_to_flash(trace_page);													\
             } while (0)
 
-#define TRACE_MSG(fmt, args...)														\
+#define TRACE_MSG(trace_page, fmt, args...)														\
 		do {																		\
 				printf(fmt, ##args);												\
                 trace_store_msg(__TRACE_FILENAME__, __LINE__, fmt, ##args);				\
-                trace_to_flash();													\
+                trace_to_flash(trace_page);													\
             } while (0)
 
 //**************************************************************************************************
@@ -86,7 +86,7 @@ typedef struct Trace_Msg_tag
 
 
 void trace_store_msg(const char* file_name, const int file_line, const char* fmt, ...);
-void trace_to_flash();
+void trace_to_flash(uint16_t trace_page);
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************

@@ -96,28 +96,32 @@ void trace_store_msg(const char* file_name, const int file_line, const char* fmt
 	trace_int_unlock(ie);		// implies REORDER_BARRIER() ...
 }
 
-void trace_to_flash()
+void trace_to_flash(uint16_t trace_page)
 {
 	uint8_t	num_read_start;
     int8_t i, k = 0;
+	uint32_t trace_flash_address = FLASH_START_BANK1 + trace_page * FLASH_PAGE;
 	int	ie;
 	ie = trace_int_lock();	// implies REORDER_BARRIER() ...
+    /* scope of flash address that can be written */
+	if ((trace_page <= TOPO_PAGE) && (trace_page >= 240))
+	{
+		// erase flash
+		LL_FLASH_PageErase(trace_page);
 
-    // erase flash
-    LL_FLASH_PageErase(TRACE_PAGE);
-
-    /* loop the queue */
-    num_read_start = (uint8_t)(s_msg_queue_num_written % TRACE_BUFFER_ELEMENTS) - 1;
-    if (num_read_start == 0xFF)
-        num_read_start = TRACE_BUFFER_ELEMENTS - 1;
-    for (i = num_read_start; i >= 0; i--, k++)
-    {
-        LL_FLASH_Program64s(TRACE_FLASH_ADDRESS + k * sizeof(Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(Trace_Msg) / sizeof(uint32_t));
-    }
-    for (i = TRACE_BUFFER_ELEMENTS - 1; i > num_read_start; i--, k++)
-    {
-        LL_FLASH_Program64s(TRACE_FLASH_ADDRESS + k * sizeof(Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(Trace_Msg) / sizeof(uint32_t));
-    }
+		/* loop the queue */
+		num_read_start = (uint8_t)(s_msg_queue_num_written % TRACE_BUFFER_ELEMENTS) - 1;
+		if (num_read_start == 0xFF)
+			num_read_start = TRACE_BUFFER_ELEMENTS - 1;
+		for (i = num_read_start; i >= 0; i--, k++)
+		{
+			LL_FLASH_Program64s(trace_flash_address + k * sizeof(Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(Trace_Msg) / sizeof(uint32_t));
+		}
+		for (i = TRACE_BUFFER_ELEMENTS - 1; i > num_read_start; i--, k++)
+		{
+			LL_FLASH_Program64s(trace_flash_address + k * sizeof(Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(Trace_Msg) / sizeof(uint32_t));
+		}
+	}
 
 	trace_int_unlock(ie);		// implies REORDER_BARRIER() ...
 }

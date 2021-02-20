@@ -94,7 +94,7 @@ int main(void)
 
   /* USER CODE END 2 */
 
-  TRACE_MSG("Hello world\n");
+  TRACE_MSG(255, "Hello world\n");
 }
 
 /**
