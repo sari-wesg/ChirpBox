@@ -37,3 +37,9 @@ The ChirpBox directory is simplified to the following:
 - `/chirpbox manager`: script manager to execute tasks such as monitor nodes' status, file dissemination and collection
 - `/Daemon`: source codes of daemon firmware
 - `/Miscellaneous`: available tools and codes for users, for example codes for bank switch
+
+# License
+
+Unless otherwise noted (e.g. [STM32 standard peripheral libraries](https://www.st.com/en/embedded-software/stm32-standard-peripheral-libraries.html)), codes and schematics are licensed under **Creative Commons Attribution Share Alike 4.0 International (CC BY-SA 4.0)**.
+
+[![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-sa/4.0/)
