@@ -3,7 +3,7 @@ import sys
 import os
 # relative to the current working directory
 sys.path.append(os.path.join(sys.path[0],'./transfer_to_initiator'))
-
+sys.path.append(os.path.join(sys.path[0],'.././transfer_to_initiator'))
 from modem import YMODEM
 
 # Serial config
