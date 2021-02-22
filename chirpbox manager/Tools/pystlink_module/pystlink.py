@@ -499,5 +499,4 @@ class PyStlink():
 
 if __name__ == "__main__":
     pystlink = PyStlink()
-    print(sys.argv)
     pystlink.start()

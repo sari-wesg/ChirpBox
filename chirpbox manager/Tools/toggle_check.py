@@ -7,7 +7,10 @@ from threading import Timer
 
 # insert at 1, 0 is the script path (or '' in REPL)
 sys.path.insert(1, os.path.abspath(os.getcwd() + '/../chirpbox manager/'))
+sys.path.insert(1, os.path.abspath(os.getcwd() + '/Tools/pystlink_module/'))
 import transfer_to_initiator.myserial.serial_send
+
+from pystlink_module import pystlink
 
 toggle_check_serial = True
 
@@ -18,16 +21,20 @@ def timeout():
     toggle_check_serial = False
 
 """ check if the firmware under test can be toggled back """
-def check_toggle():
-    # 1. erase flash
+def check_toggle(FUT):
+    # initialize pystlink as pystlink_cmd
+    pystlink_cmd = pystlink.PyStlink()
+    # reserve sys.argv
+    sys_argv_initial = sys.argv
 
-    # 2. flash firmware under test
+    # 1. flash erase, flash daemon in bank1 and flash firmware under test in bank2
+    sys.argv = sys_argv_initial
+    sys.argv += ["flash:erase", "flash:verify:0x08000000:"+"Toggle_check.bin", "flash:verify:0x08080000:"+FUT]
+    pystlink_cmd.start()
 
-    # 3. flash test daemon, and it will switch to bank2
-
-    # 4. reset the device, and it should come back to daemon
-
-    # 5. check daemon with serial and flash verify
+    # 2. The daemon will switch to bank2 and come back in 60 seconds (depending on the alarm settings). Check daemon with serial and flash verify
+    time.sleep(60)
+    check_daemon("com9", 10)
 
     return True
 """ check daemon """
@@ -59,8 +66,8 @@ def check_daemon(com_port, alarm_time):
 
 
 def main(argv):
-    print(argv)
-    check_daemon('com9', 20)
+    # check_daemon('com9', 20)
+    check_toggle("FUT.bin")
 
 
 if __name__ == "__main__":
