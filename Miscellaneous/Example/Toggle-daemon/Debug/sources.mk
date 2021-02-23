@@ -22,9 +22,6 @@ SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/STM32L4xx_HAL_Driver/Src \
-Src/chirpbox \
 Src/gpi \
-Src/mixer/L476RG_SX1276 \
-Src/mixer \
 Src/tools/Src \
 

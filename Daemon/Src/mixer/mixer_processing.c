@@ -1850,7 +1850,7 @@ PT_THREAD(mixer_maintenance())
 		Gpi_Fast_Tick_Extended now = gpi_tick_fast_extended();
 
 		chirp_config.update_slot++;
-        PRINTF_CHIRP("l:%llu\n", (mx.round_deadline - now) / 16000000);
+        PRINTF_CHIRP("l:%lu\n", (uint32_t)(mx.round_deadline - now) / 16000000);
 
 		// monitor round length
 		// NOTE: we test once per slot, and STOP executes gracefully at the next slot boundary

@@ -9,10 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include Src/tools/Src/subdir.mk
--include Src/mixer/L476RG_SX1276/subdir.mk
--include Src/mixer/subdir.mk
 -include Src/gpi/subdir.mk
--include Src/chirpbox/subdir.mk
 -include Drivers/STM32L4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk

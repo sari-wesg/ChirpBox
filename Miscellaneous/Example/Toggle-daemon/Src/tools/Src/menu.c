@@ -1226,8 +1226,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
   chirp_outl.glossy_gps_on = 1;
 
   #if GPS_DATA
-  GPS_Sleep(60);
-  gps_time = GPS_Get_Time();
+  // GPS_Sleep(60);
+  // gps_time = GPS_Get_Time();
   // uint8_t gps_time_str[2];
   // memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
   // uint32_t channel_seed;

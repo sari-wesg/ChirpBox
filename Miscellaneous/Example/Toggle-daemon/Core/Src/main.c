@@ -104,12 +104,6 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #define PRINTF(...)
 #endif
 
-
-/* TODO: */
-static const uint32_t nodes[256] __attribute__((section(".ARM.__at_0x08020610"))) = {0x350045, 0x420029, 0X3C0044, 0x1E0030, 0x26003E, 0x350017, 0x4A002D, 0x420020, 0x530045, 0X1D002B, 0x4B0027, 0x440038, 0x520049, 0x4B0023, 0X20003D, 0x360017, 0X30003C, 0x210027, 0X1C0040, 0x250031, 0x39005F};
-
-// static const uint32_t nodes[256] __attribute__((section(".ARM.__at_0x08020610"))) = {0x350045, 0x3a0026};
-
 const uint8_t VERSION_MAJOR = 0x2f, VERSION_NODE = 0x04;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -158,94 +152,79 @@ static void node_id_restore(void)
  * @param None
  * @return: node_id
  */
-static uint8_t hardware_init()
+void hardware_init()
 {
-	uint8_t node_id;
+	uint8_t task[1];
+	HAL_StatusTypeDef status;
 
 	HAL_Init();
 	gpi_platform_init();
 
-	#if BANK_1_RUN
+#if BANK_1_RUN
 	/* Only when the board is stable (eg, after a long time of getting GPS signal), the flash option bytes can be changed. Otherwise, readout protection will be triggered, when the voltage of the external power supply falls below the power down threshold.
 	*/
 	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
 	HAL_Delay(5000);
 	Bank_WRT_Check();
-	#endif
+#endif
 
 	/* Disable SysTick Interrupt */
 	HAL_SuspendTick();
 
-	menu_bank();
+	// menu_bank();
+	PRINTF("\nDaemon for testing switch bank\n");
 
 	gpi_int_enable();
 
 	/* init RF transceiver */
-	gpi_radio_init();
 	node_id_restore();
 
 	PRINTF("\tStarting node 0x%X \n", TOS_NODE_ID);
 
-	/* translate TOS_NODE_ID to logical node id used with mixer */
-	for (node_id = 0; node_id < NUM_ELEMENTS(nodes); ++node_id)
-	{
-		PRINTF("node:%d, 0x%x\n", node_id, nodes[node_id]);
-		if (nodes[node_id] == 0)
-			break;
-	}
-	MX_NUM_NODES_CONF = node_id;
-	PRINTF("MX_NUM_NODES_CONFi:%d\n", MX_NUM_NODES_CONF);
+	DS3231_ClearAlarm1_Time();
 
-	for (node_id = 0; node_id < MX_NUM_NODES_CONF; ++node_id)
-	{
-		if (nodes[node_id] == TOS_NODE_ID)
-			break;
-	}
+	Chirp_Time gps_time;
+	memset(&gps_time, 0, sizeof(gps_time));
 
-	if (node_id >= MX_NUM_NODES_CONF)
+	gps_time.chirp_year = 2021;
+	gps_time.chirp_month = 1;
+	gps_time.chirp_date = 1;
+	gps_time.chirp_day = 5;
+	gps_time.chirp_hour = 12;
+	gps_time.chirp_min = 0;
+	gps_time.chirp_sec = 0;
+
+
+	status = HAL_TIMEOUT;
+	while (status != HAL_OK)
 	{
-		PRINTF("Warning: node mapping not found for node 0x%x !!!\n", TOS_NODE_ID);
-		while (1)
+		PRINTF("Input initiator task: \n1: w WRT\t2: wo WRT\n");
+		status = HAL_UART_Receive(&UART_Handle, &task, sizeof(task), DOWNLOAD_TIMEOUT);
+		while (UART_Handle.RxState == HAL_UART_STATE_BUSY_RX)
 			;
 	}
-	PRINTF("Running with node ID: %d\n", node_id);
-
-	/* init RNG with randomized seed */
-	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
-
-	DS3231_ClearAlarm1_Time();
-	GPS_Init();
-	GPS_On();
-#if GPS_DATA
-	GPS_Waiting_PPS(10);
-	Chirp_Time gps_time;
-    memset(&gps_time, 0, sizeof(gps_time));
-	while(!gps_time.chirp_year)
+	if ((task[0] - '0') == 1)
 	{
-		gps_time = GPS_Get_Time();
-	}
-	RTC_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
-	#if BANK_1_RUN
-	time_t rtc_diff = 0x05;
-	uint8_t count = 0;
-	/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
-	while((rtc_diff < 0) || (rtc_diff >= 0x05))
-	{
-		count++;
-		assert_reset((count < 10));
+		printf("Switch bank with WRT!\n");
 		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
-		DS3231_GetTime();
-		Chirp_Time RTC_Time = DS3231_ShowTime();
-		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
-	}
-	#endif
-    uint32_t reset_time_flash[sizeof(Chirp_Time) / sizeof(uint32_t)];
-	memcpy(reset_time_flash, (uint32_t *)&gps_time, sizeof(reset_time_flash));
-	FLASH_If_Erase_Pages(1, RESET_PAGE);
-	FLASH_If_Write(RESET_FLASH_ADDRESS, (uint32_t *)reset_time_flash, sizeof(reset_time_flash) / sizeof(uint32_t));
-#endif
+		// set alarm after 5 seconds
+		DS3231_SetAlarm1_Time(gps_time.chirp_date, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec + 5);
+		Bank1_WRP(0, 255);
 
-	return node_id;
+		/* switch to bank2 */
+		STMFLASH_BankSwitch();
+	}
+	if ((task[0] - '0') == 2)
+	{
+		printf("Switch bank without WRT!\n");
+		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
+		// set alarm after 5 seconds
+		DS3231_SetAlarm1_Time(gps_time.chirp_date, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec + 5);
+		Bank1_nWRP();
+
+		/* switch to bank2 */
+		STMFLASH_BankSwitch();
+	}
 }
 
 //**************************************************************************************************
@@ -254,11 +233,7 @@ static uint8_t hardware_init()
 int main(void)
 {
 	/****************************** HARDWARE INITIALIZATION ***************************/
-	uint8_t node_id = hardware_init();
-	node_id_allocate = node_id;
-
-	/************************************ Chirpbox ************************************/
-	chirp_start(node_id, MX_NUM_NODES_CONF);
+	hardware_init();
 
 	return 0;
 }

@@ -81,6 +81,7 @@ dkms.conf
 !jdiff.exe
 !jptch.exe
 !L476RG-demo.bin
+!Toggle-daemon.bin
 
 # python
 *.pyc

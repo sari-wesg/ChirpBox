@@ -580,7 +580,7 @@ void gpi_platform_init(void)
 
 		MX_LPTIM1_Init();
 		HAL_LPTIM_Start(&hlptim1);
-    MX_IWDG_Init();
+    // MX_IWDG_Init();
 }
 
 void gpi_sleep()

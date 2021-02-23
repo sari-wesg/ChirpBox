@@ -97,8 +97,8 @@ void Bank_WRT_Check( void )
 	if((OptionsBytesStruct1.WRPStartOffset == 0) && (OptionsBytesStruct1.WRPEndOffset == 0xff))
 	{
         /* Boot come back from FUT in Bank 2, need to unlock the write protection of flash */
-		if (Bank1_nWRP() == HAL_OK)
-			HAL_FLASH_OB_Launch();
+        Bank1_nWRP();
+        HAL_FLASH_OB_Launch();
 	}
 }
 
