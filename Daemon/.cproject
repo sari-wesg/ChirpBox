@@ -38,6 +38,7 @@
 									<listOptionValue builtIn="false" value="../Src/mixer"/>
 									<listOptionValue builtIn="false" value="../Src/loradisc"/>
 									<listOptionValue builtIn="false" value="../Src/chirpbox"/>
+									<listOptionValue builtIn="false" value="&quot;D:\TP\Study\wesg\Chirpbox\Miscellaneous\Parameters-patch\Inc&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.definedsymbols.1276559641" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.definedsymbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG"/>
@@ -72,6 +73,7 @@
 									<listOptionValue builtIn="false" value="../Src/mixer"/>
 									<listOptionValue builtIn="false" value="../Src/tools/Inc"/>
 									<listOptionValue builtIn="false" value="../Src/loradisc"/>
+									<listOptionValue builtIn="false" value="&quot;../..\Miscellaneous\Parameters-patch\Inc&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.400420444" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -81,7 +83,10 @@
 							</tool>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.1457588169" name="MCU GCC Linker" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker">
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script.1561589229" name="Linker Script (-T)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.script" value="${workspace_loc:/${ProjName}/STM32L476RGTX_FLASH.ld}" valueType="string"/>
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags.1847400871" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags" useByScannerDiscovery="false" valueType="stringList"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags.1847400871" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags" useByScannerDiscovery="false" valueType="stringList">
+									<listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.testbedConfigSection=0x08000200"/>
+									<listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.text=0x08000300"/>
+								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.input.1273528635" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -142,6 +147,7 @@
 									<listOptionValue builtIn="false" value="../Daemon/Src/loradisc"/>
 									<listOptionValue builtIn="false" value="../Daemon/Src/mixer"/>
 									<listOptionValue builtIn="false" value="../Daemon/Src/tools"/>
+									<listOptionValue builtIn="false" value="&quot;D:\TP\Study\wesg\Chirpbox\Miscellaneous\Parameters-patch\Inc&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.definedsymbols.1693747984" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.option.definedsymbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG"/>
@@ -175,6 +181,7 @@
 									<listOptionValue builtIn="false" value="../Daemon/Src/loradisc"/>
 									<listOptionValue builtIn="false" value="../Daemon/Src/mixer"/>
 									<listOptionValue builtIn="false" value="../Daemon/Src/tools"/>
+									<listOptionValue builtIn="false" value="&quot;D:\TP\Study\wesg\Chirpbox\Miscellaneous\Parameters-patch\Inc&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.2101773432" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
