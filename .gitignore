@@ -81,11 +81,9 @@ dkms.conf
 !jdiff.exe
 !jptch.exe
 
-# do not ignore bin file
-*
-!*/
-!Debug/**
-!Debug/*.bin
+# do not ignore bin file in Debug/
+**/Debug/*
+!**/Debug/*.bin
 
 # python
 *.pyc
