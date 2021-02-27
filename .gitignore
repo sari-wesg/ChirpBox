@@ -93,3 +93,6 @@ dkms.conf
 # output
 *.pdf
 *.txt
+
+# json
+!testbed-param-settings.json
