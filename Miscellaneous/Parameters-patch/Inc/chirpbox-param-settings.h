@@ -1,5 +1,5 @@
-#ifndef __CHIRPBOX_SETTING_H__
-#define __CHIRPBOX_SETTING_H__
+#ifndef __CHIRPBOX_PARAM_SETTING_H__
+#define __CHIRPBOX_PARAM_SETTING_H__
 
 #define NODE_LENGTH 0xFF
 
@@ -21,17 +21,17 @@ typedef struct
 } chirpbox_daemon_config;
 
 
-// Helper functions to print the input parameters injected by the competition's testbed
+// Helper functions to print the input parameters injected by the testbed
 void
 print_chirpbox_daemon_config(chirpbox_daemon_config* p)
 {
 	uint8_t i;
     while(p->UID_list[i])
     {
-        PRINTF("Node %d with UID 0x%08x.\n", i, p->UID_list[i]);
+        PRINTF("Node %d with UID 0x%08x\n", i, p->UID_list[i]);
         i++;
     }
-	PRINTF("UID_version:0x%04x, Frequency:%lu kHz.\n", p->UID_version, p->Frequency);
+	PRINTF("UID_version: 0x%04x\nFrequency:%lu kHz\n", p->UID_version, p->Frequency);
 }
 
-#endif // __CHIRPBOX_SETTING_H__
+#endif // __CHIRPBOX_PARAM_SETTING_H__

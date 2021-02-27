@@ -22,8 +22,15 @@
 #include "stdio.h"
 #include "trace_flash.h"
 
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+#define PRINTF(...) printf(__VA_ARGS__)
+
+/* USER CODE END PD */
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "fut-param-settings.h"
 
 /* USER CODE END Includes */
 
@@ -31,10 +38,6 @@
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-/* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
@@ -45,6 +48,7 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0};
 
 /* USER CODE END PV */
 
@@ -95,6 +99,7 @@ int main(void)
   /* USER CODE END 2 */
 
   TRACE_MSG(255, "Hello world\n");
+  print_chirpbox_fut_config((chirpbox_fut_config*)&fut_config);
 }
 
 /**

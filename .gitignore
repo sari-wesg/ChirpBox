@@ -95,4 +95,5 @@ dkms.conf
 *.txt
 
 # json
-!testbed-param-settings.json
+!chirpbox-param-settings.json
+!fut-param-settings.json
