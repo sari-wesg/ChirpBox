@@ -1,7 +1,3 @@
-#include <string.h>
-#include <stdio.h>
-
-#include "flash_if.h"
 #include "chirpbox_func.h"
 
 #define BYTE unsigned char
