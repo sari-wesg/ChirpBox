@@ -1,5 +1,5 @@
 # ChirpBox
-This repository contains all the designing materials on ChirpBox including designs of hardware, daemon software, patch files required to be compiled with user's codes together, other software tools, and BOMs used for replication.
+This repository contains all the designing materials on ChirpBox including designs of hardware, daemon software, patch files required to be compiled with user's codes together, other software tools, and BOMs used for replication. For more details on how to use ChirpBox, please check out our step-by-step [tutorials](https://chirpbox.github.io/) on getting started.
 
 # Code layout
 The ChirpBox directory is simplified to the following:
