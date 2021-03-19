@@ -144,7 +144,7 @@ static void trace_packet(const Packet *p)
 	// node id MSB marks vector bit order (for log parser):
 	// 0: LSB first, big-endian
 	// 1: LSB first, little-endian
-	ps += sprintf(ps, "%04" PRIx16 " - %04" PRIx16 " - %02" PRIx8 " - ",
+	ps += sprintf(ps, "%04" PRIx16 " - %04" PRIx16 " - %02" PRIx16 " - ",
 		p->slot_number, (uint16_t)(p->sender_id |
 		#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 			0x8000
@@ -157,7 +157,7 @@ static void trace_packet(const Packet *p)
 
 	for (i = 0; i < chirp_config.coding_vector.len; i++)
 #if MX_REQUEST || MX_SMART_SHUTDOWN_MAP
-		ps += sprintf(ps, "%02" PRIx8, p->packet_chunk[chirp_config.info_vector.pos + i]);
+		ps += sprintf(ps, "%02" PRIx16, p->packet_chunk[chirp_config.info_vector.pos + i]);
 #else
 		ps += sprintf(ps, "00");
 #endif
@@ -165,16 +165,16 @@ static void trace_packet(const Packet *p)
 	ps += sprintf(ps, " - ");
 
 	for (i = 0; i < chirp_config.coding_vector.len; i++)
-		ps += sprintf(ps, "%02" PRIx8, p->packet_chunk[chirp_config.coding_vector.pos + i]);
+		ps += sprintf(ps, "%02" PRIx16, p->packet_chunk[chirp_config.coding_vector.pos + i]);
 
 	ps += sprintf(ps, " - ");
 
 	// for (i = 0; i < sizeof(p->payload); i++)
-	// 	ps += sprintf(ps, "%02" PRIx8, p->payload[i]);
+	// 	ps += sprintf(ps, "%02" PRIx16, p->payload[i]);
 
 	for (i = 0; i < 8; i++)
 	{
-		ps += sprintf(ps, "%02" PRIx8, p->packet_chunk[chirp_config.payload.pos + i]);
+		ps += sprintf(ps, "%02" PRIx16, p->packet_chunk[chirp_config.payload.pos + i]);
 	}
 
 	PRINTF_CHIRP("%s\n", msg);
@@ -211,7 +211,7 @@ static void trace_matrix()
 				m = &(msg[0]);
 			}
 
-			m += sprintf(m, " %02" PRIx8, v);
+			m += sprintf(m, " %02" PRIx16, v);
         }
 
 		if (&msg[sizeof(msg)] - m <= 3)
@@ -242,7 +242,7 @@ static void trace_matrix()
 				m = &(msg[0]);
 			}
 
-			m += sprintf(m, " %02" PRIx8, v);
+			m += sprintf(m, " %02" PRIx16, v);
         }
 
 		GPI_TRACE_MSG(TRACE_VERBOSE_MATRIX, "%s", msg);

@@ -9,6 +9,17 @@
 #include <stddef.h>
 #include "flash_if.h"
 
+#define DEBUG 1
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
+
+#include "chirpbox-param-settings.h"
+#include "fut-param-settings.h"
+
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
 #ifndef JANPATCH_STREAM
@@ -28,9 +39,9 @@ typedef struct Flash_FILE_tag
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 
-/* defined according to local region */
-#define LORABAND 460000U
+extern volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config;
 
+extern volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 

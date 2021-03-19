@@ -21,7 +21,7 @@ typedef struct
 
 // Helper functions to print the input parameters injected by the testbed
 void
-print_chirpbox_fut_config(chirpbox_fut_config* p)
+static print_chirpbox_fut_config(chirpbox_fut_config* p)
 {
 	PRINTF("Frequency: %lu kHz\nSF: %d\nTP: %d\nCR: %d\n", p->Frequency, p->SF, p->TP, p->CR);
 }

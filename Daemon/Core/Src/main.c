@@ -103,16 +103,14 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #else
 #define PRINTF(...)
 #endif
-#include "chirpbox-param-settings.h"
-#include "fut-param-settings.h"
 
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={0};
-// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00350045, 0x00420029, 0x003C0044, 0x001E0030, 0x0026003E, 0x00350017, 0x004A002D, 0x00420020, 0x00530045, 0x001D002B, 0x004B0027, 0x00440038, 0x00520049, 0x004B0023, 0x0020003D, 0x00360017, 0x0030003C, 0x00210027, 0x001C0040, 0x00250031, 0x001D004E}, 0x2B06, 460000};
+// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={0};
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001e0037, 0x003A0026, 0x00350045, 0x00420029, 0x003C0044, 0x001E0030, 0x0026003E, 0x00350017, 0x004A002D, 0x00420020, 0x00530045, 0x001D002B, 0x004B0027, 0x00440038, 0x00520049, 0x004B0023, 0x0020003D, 0x00360017, 0x0030003C, 0x00210027, 0x001C0040}, 0x2B06, 470000};
 
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0};
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={470000, 7, 14, 1};
 
-const uint8_t VERSION_MAJOR = 0x2f, VERSION_NODE = 0x04;
+const uint8_t VERSION_MAJOR = 0x2f, VERSION_NODE = 0x05;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 

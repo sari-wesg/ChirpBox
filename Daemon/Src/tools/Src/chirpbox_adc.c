@@ -1,6 +1,7 @@
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
 #include "chirpbox_func.h"
+#include "chirp_internal.h"
 
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
@@ -8,7 +9,7 @@
 //**************************************************************************************************
 //***** Local (Private) Defines and Consts *********************************************************
 #define VOLTAGE_MINIMAL     2000    // voltage must above 2.0 V, if not, the adc channel is not connected to the battery output
-#define VOLTAGE_LOWER_BOUND 2700    // voltage should above 2.7 V
+#define VOLTAGE_LOWER_BOUND 2900    // voltage should above 2.7 V
 #define VOLTAGE_INTERVAL    60     // check the voltage per 60 seconds
 
 //**************************************************************************************************
@@ -45,7 +46,7 @@ uint32_t ADC_GetVoltage(void)
     vbat = vdda * 3 * adc_vbat / 4095;
     vch6 = vdda * 2 * adc_vch6 / 4095;
 
-    printf("vref:%lu.%lu, vbat:%lu.%lu, vch6:%lu.%lu\n", vref / 1000, vref % 1000, vbat / 1000, vbat % 1000, vch6 / 1000, vch6 % 1000);
+    printf("vref:%u.%u, vbat:%lu.%lu, vch6:%lu.%lu\n", vref / 1000, vref % 1000, vbat / 1000, vbat % 1000, vch6 / 1000, vch6 % 1000);
     return vch6;
 }
 

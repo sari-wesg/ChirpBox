@@ -134,7 +134,7 @@ void mx_trace_dump(const char *header, const void *p, uint_fast16_t size)
 			m = &(msg[0]);
         }
 
-		m += sprintf(m, " %02" PRIx8, *pc++);
+		m += sprintf(m, " %02" PRIx16, *pc++);
 	}
 
 	GPI_TRACE_MSG(GPI_TRACE_MSG_TYPE_VERBOSE, "%s%s", header, msg);

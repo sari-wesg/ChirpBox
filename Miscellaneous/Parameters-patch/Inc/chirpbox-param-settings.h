@@ -22,7 +22,7 @@ typedef struct
 
 
 // Helper functions to print the input parameters injected by the testbed
-void
+static void
 print_chirpbox_daemon_config(chirpbox_daemon_config* p)
 {
 	uint8_t i;

@@ -16,8 +16,8 @@ def generate_start_node_id():
     exit(0)
 
 def generate_start_round():
-    bitmap_str = '1'
-    for i in range(100):
+    bitmap_str = '1fffff'
+    for i in range(1):
         task_start = "cbmng.py " + "-start " + '0' + " " + "2f04 " + '7' + " " + "com8 " + bitmap_str + " " + '80' + " " + "14 "
         print(task_start.split())
         cbmng.main(task_start.split())

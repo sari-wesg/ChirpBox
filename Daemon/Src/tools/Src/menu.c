@@ -1203,7 +1203,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
   gpi_watchdog_periodic();
 	Chirp_Outl chirp_outl;
   memset(&chirp_outl, 0, sizeof(Chirp_Outl));
-  chirp_outl.default_freq = LORABAND;
+  assert_reset((daemon_config.Frequency));
+  chirp_outl.default_freq = daemon_config.Frequency;
 
   #if MX_LBT_ACCESS
     memset(&chirp_config.lbt_init_time, 0, sizeof(chirp_config.lbt_init_time));

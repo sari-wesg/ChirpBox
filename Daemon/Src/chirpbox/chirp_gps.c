@@ -49,7 +49,7 @@ typedef enum GPS_State_tag  /* State of radio */
 const unsigned char g_day_per_mon[MONTH_PER_YEAR] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 /* to receive data from uart */
-uint8_t aRxBuffer[UNIX_TIME_LENGTH];
+char aRxBuffer[UNIX_TIME_LENGTH];
 
 volatile uint32_t pps_count = 0;
 volatile uint8_t gps_done = 0;
@@ -256,7 +256,7 @@ Chirp_Time GPS_Get_Time()
         ;
     if (gps_done == 2)
     {
-        PRINTF("chirp_time:%s\n", aRxBuffer);
+        PRINTF("GPS timestamp:%s\n", aRxBuffer);
         change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     }
     return chirp_time;
@@ -286,7 +286,6 @@ time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, 
     now = GPS_Conv(gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec);
     start = GPS_Conv(start_year, start_month, start_date, start_hour, start_min, start_sec);
     diff = start - now;
-    PRINTF("seconds difference = %lld\n", diff);
     return diff;
 }
 
@@ -337,7 +336,7 @@ void GPS_Wakeup(uint32_t interval_sec)
     GPS_Get_Time();
     time_t diff = GPS_Diff(&chirp_time, 1970, 1, 1, 0, 0, 0);
     time_t sleep_sec = interval_sec - (time_t)(0 - diff) % interval_sec;
-    PRINTF("sleep_sec:%lld, version: %x-%x\n", sleep_sec, VERSION_MAJOR, VERSION_NODE);
+    PRINTF("sleep_sec:%ld, version: %x-%x\n", (int32_t)sleep_sec, VERSION_MAJOR, VERSION_NODE);
     gps_state = GPS_WAKEUP;
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
