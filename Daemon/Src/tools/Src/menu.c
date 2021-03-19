@@ -64,7 +64,6 @@
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
 volatile uint8_t uart_read_done;
-extern uint8_t VERSION_MAJOR, VERSION_NODE;
 uint8_t gps_time_str[4];
 
 //**************************************************************************************************
@@ -404,7 +403,7 @@ void menu_bank(void)
   BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
 
   Serial_PutString((uint8_t *)"\r\n========__DATE__ __TIME__ = " __DATE__ " " __TIME__ " ============\r\n\n");
-  printf("\r\n========version: %x-%x ========\r\n\n", VERSION_MAJOR, VERSION_NODE);
+  printf("\r\n========version: 0x%04x ========\r\n\n", daemon_config.DAEMON_version);
 	if (BankActive == 0)
   {
     Serial_PutString((uint8_t *)"\tSystem running from STM32L476 *Bank 1*  \r\n\n");
@@ -1542,7 +1541,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           ds3231_time = DS3231_ShowTime();
           diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
           assert_reset((diff > 5));
-          if (((chirp_outl.version_hash == ((VERSION_MAJOR << 8) | (VERSION_NODE)))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))))
+          if (((chirp_outl.version_hash == (daemon_config.DAEMON_version))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))))
           {
             /* erase the user flash page */
             FLASH_If_Erase_Pages(0, 255);

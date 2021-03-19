@@ -15,7 +15,7 @@ typedef struct
 {
 // Device:
     uint32_t UID_list[NODE_LENGTH];
-    uint16_t UID_version;
+    uint16_t DAEMON_version;
 // Radio:
     uint32_t Frequency;
 } chirpbox_daemon_config;
@@ -31,7 +31,7 @@ print_chirpbox_daemon_config(chirpbox_daemon_config* p)
         PRINTF("Node %d with UID 0x%08x\n", i, p->UID_list[i]);
         i++;
     }
-	PRINTF("UID_version: 0x%04x\nFrequency:%lu kHz\n", p->UID_version, p->Frequency);
+	PRINTF("DAEMON_version: 0x%04x\nFrequency:%lu kHz\n", p->DAEMON_version, p->Frequency);
 }
 
 #endif // __CHIRPBOX_PARAM_SETTING_H__

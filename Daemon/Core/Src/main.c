@@ -110,7 +110,6 @@ volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection")
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0};
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={470000, 7, 14, 1};
 
-const uint8_t VERSION_MAJOR = 0x2f, VERSION_NODE = 0x05;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 

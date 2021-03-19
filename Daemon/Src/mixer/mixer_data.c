@@ -21,6 +21,7 @@
 
 #include "loradisc.h"
 #include <stdlib.h>
+#include "chirpbox_func.h"
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX
@@ -30,7 +31,6 @@
 #define PRINTF(...)
 #endif
 
-extern uint8_t VERSION_MAJOR, VERSION_NODE;
 extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -448,8 +448,8 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         case CHIRP_VERSION:
         {
-            data[k++] = VERSION_MAJOR;
-            data[k++] = VERSION_NODE;
+            data[k++] = daemon_config.DAEMON_version << 8;
+            data[k++] = (uint8_t)(daemon_config.DAEMON_version);
             memcpy(file_data, data, DATA_HEADER_LENGTH);
             file_data[DATA_HEADER_LENGTH] = TOS_NODE_ID >> 16;
             file_data[DATA_HEADER_LENGTH + 1] = TOS_NODE_ID >> 8;

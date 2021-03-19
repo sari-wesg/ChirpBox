@@ -59,7 +59,6 @@ GPS_State gps_state;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 extern UART_HandleTypeDef huart3;
-extern uint8_t VERSION_MAJOR, VERSION_NODE;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -336,7 +335,7 @@ void GPS_Wakeup(uint32_t interval_sec)
     GPS_Get_Time();
     time_t diff = GPS_Diff(&chirp_time, 1970, 1, 1, 0, 0, 0);
     time_t sleep_sec = interval_sec - (time_t)(0 - diff) % interval_sec;
-    PRINTF("sleep_sec:%ld, version: %x-%x\n", (int32_t)sleep_sec, VERSION_MAJOR, VERSION_NODE);
+    PRINTF("sleep_sec:%ld\n", (int32_t)sleep_sec);
     gps_state = GPS_WAKEUP;
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
