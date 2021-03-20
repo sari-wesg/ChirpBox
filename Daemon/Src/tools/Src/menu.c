@@ -1252,6 +1252,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
     // just finish a task
     if (chirp_config.glossy_task == 2)
     {
+      #if GPS_DATA
       DS3231_GetTime();
       /* Set alarm */
       ds3231_time = DS3231_ShowTime();
@@ -1269,6 +1270,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       {
           GPS_Sleep(60);
       }
+    #endif
     #if ENERGEST_CONF_ON
       ENERGEST_ON(ENERGEST_TYPE_CPU);
       energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(sleep_sec));
@@ -1834,7 +1836,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = chirp_outl.num_nodes;
-				chirp_outl.payload_len = DATA_HEADER_LENGTH + 3;
+				chirp_outl.payload_len = DATA_HEADER_LENGTH + 3 + sizeof(uint16_t);
 				chirp_outl.round_setup = 1;
 				chirp_outl.round_max = chirp_outl.round_setup;
 

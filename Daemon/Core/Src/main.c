@@ -168,14 +168,13 @@ static uint8_t hardware_init()
 	*/
 	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
 	HAL_Delay(5000);
+	/* Disable SysTick Interrupt */
+	HAL_SuspendTick();
 	/* check voltage */
 	ADC_CheckVoltage();
 	/* un-write protection */
 	Bank_WRT_Check();
 	#endif
-
-	/* Disable SysTick Interrupt */
-	HAL_SuspendTick();
 
 	menu_bank();
 

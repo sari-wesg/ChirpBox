@@ -26,7 +26,7 @@
   * @param  None
   * @retval voltage
   */
-uint32_t ADC_GetVoltage(void)
+uint16_t ADC_GetVoltage(void)
 {
     uint16_t vref = *(__IO uint16_t *)0x1FFF75AA;
     uint32_t adc_vref, adc_vbat, adc_vch6, vbat, vdda, vch6;
@@ -46,7 +46,7 @@ uint32_t ADC_GetVoltage(void)
     vbat = vdda * 3 * adc_vbat / 4095;
     vch6 = vdda * 2 * adc_vch6 / 4095;
 
-    printf("vref:%u.%u, vbat:%lu.%lu, vch6:%lu.%lu\n", vref / 1000, vref % 1000, vbat / 1000, vbat % 1000, vch6 / 1000, vch6 % 1000);
+    PRINTF("vref:%u.%u, vbat:%lu.%lu, vch6:%lu.%lu\n", vref / 1000, vref % 1000, vbat / 1000, vbat % 1000, vch6 / 1000, vch6 % 1000);
     return vch6;
 }
 
@@ -57,7 +57,7 @@ uint32_t ADC_GetVoltage(void)
   */
 void ADC_CheckVoltage(void)
 {
-    uint32_t voltage = VOLTAGE_LOWER_BOUND;
+    uint16_t voltage = VOLTAGE_LOWER_BOUND;
     while (1)
     {
         voltage = ADC_GetVoltage();

@@ -63,7 +63,7 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
 uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName);  //文件压缩
 uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName);  //文件解压
 /* adc read voltage */
-uint32_t ADC_GetVoltage(void);
+uint16_t ADC_GetVoltage(void);
 void ADC_CheckVoltage(void);
 
 #endif  /* __CHIRPBOX_FUNC_H__ */

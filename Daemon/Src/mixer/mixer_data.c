@@ -448,12 +448,16 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         case CHIRP_VERSION:
         {
-            data[k++] = daemon_config.DAEMON_version << 8;
+            data[k++] = daemon_config.DAEMON_version >> 8;
             data[k++] = (uint8_t)(daemon_config.DAEMON_version);
             memcpy(file_data, data, DATA_HEADER_LENGTH);
             file_data[DATA_HEADER_LENGTH] = TOS_NODE_ID >> 16;
             file_data[DATA_HEADER_LENGTH + 1] = TOS_NODE_ID >> 8;
             file_data[DATA_HEADER_LENGTH + 2] = TOS_NODE_ID;
+            k = ADC_GetVoltage();
+            file_data[DATA_HEADER_LENGTH + 3] = k >> 8;
+            file_data[DATA_HEADER_LENGTH + 4] = (uint8_t)k;
+            k = 0;
             break;
         }
         case MX_ARRANGE:
