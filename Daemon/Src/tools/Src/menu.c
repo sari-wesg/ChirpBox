@@ -1326,7 +1326,9 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         PRINTF("chirp_round:%d\n", chirp_config.glossy_task);
         if (!node_id)
         {
+          #if GPS_DATA
           GPS_Sleep(60);
+          #endif
         }
         else
         {

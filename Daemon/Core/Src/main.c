@@ -105,7 +105,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #endif
 
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={0};
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001e0037, 0x003A0026, 0x00350045, 0x00420029, 0x003C0044, 0x001E0030, 0x0026003E, 0x00350017, 0x004A002D, 0x00420020, 0x00530045, 0x001D002B, 0x004B0027, 0x00440038, 0x00520049, 0x004B0023, 0x0020003D, 0x00360017, 0x0030003C, 0x00210027, 0x001C0040}, 0x2B06, 470000};
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001d004e, 0x001e0037, 0x003A0026, 0x00350045}, 0x2B06, 470000};
 
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0};
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={470000, 7, 14, 1};
@@ -215,10 +215,10 @@ static uint8_t hardware_init()
 	/* init RNG with randomized seed */
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
 
+#if GPS_DATA
 	DS3231_ClearAlarm1_Time();
 	GPS_Init();
 	GPS_On();
-#if GPS_DATA
 	GPS_Waiting_PPS(10);
 	Chirp_Time gps_time;
     memset(&gps_time, 0, sizeof(gps_time));
