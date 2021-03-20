@@ -142,8 +142,6 @@ Gpi_Slow_Tick_Extended		gpi_tick_slow_extended();
 
 Gpi_Fast_Tick_Native 		gpi_tick_fast_native();
 Gpi_Fast_Tick_Extended		gpi_tick_fast_extended();
-Gpi_Fast_Tick_Native 		gpi_tick_dog_native();
-Gpi_Fast_Tick_Extended 		gpi_tick_dog_extended();
 
 // provide these functions if they would be helpful (and if they are available), decide later
 //uint16_t					gpi_tick_fast_16();

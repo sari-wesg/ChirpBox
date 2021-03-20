@@ -209,48 +209,6 @@ Gpi_Fast_Tick_Extended gpi_tick_fast_extended()
 	return o.u64;
 }
 
-//*************************************************************************************************
-
-
-Gpi_Fast_Tick_Extended gpi_tick_dog_extended()
-{
-	ASSERT_CT(sizeof(Gpi_Fast_Tick_Native) == sizeof(uint32_t));
-	ASSERT_CT(sizeof(Gpi_Fast_Tick_Extended) == sizeof(uint64_t));
-
-	static struct
-	{
-		uint32_t		high;
-		uint32_t		last;
-	} s	=
-	{0, 0};
-
-	register Generic64	o;
-
-	// TODO: check how the function is used and decide if we can remove the int-lock or
-	// provide and unlocked version (using the same static variables)
-	// ATTENTION: int-lock makes the function reentrant; it is not without the int-lock.
-	// Maybe it is possible to use a marker to avoid nested updates, e.g. the LSB of s.last.
-
-	int ie = gpi_int_lock();
-
-	o.u32_l = gpi_tick_dog_native();
-
-	// extend format
-	// ATTENTION: function has to be called periodically at least once per 0xF...F ticks,
-	// otherwise it will loose ticks in high part
-	// To catch such situations, we could additionally compare the slow ticks. This would
-	// decrease the probability of missed overruns (significantly).
-	if (o.u32_l < s.last)
-		s.high++;
-	s.last = o.u32_l;
-
-	o.u32_h = s.high;
-
-	gpi_int_unlock(ie);
-
-	return o.u64;
-}
-
 //**************************************************************************************************
 
 Gpi_Hybrid_Tick gpi_tick_hybrid()

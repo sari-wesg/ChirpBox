@@ -1027,11 +1027,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         chirp_config.full_column = UINT8_MAX;
         rece_dissem_index = UINT16_MAX;
 
-        __HAL_TIM_ENABLE_IT(&htim5, TIM_IT_UPDATE);
-
 		deadline = mixer_start();
-
-        __HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);
 
         if (chirp_config.primitive != FLOODING)
         {
@@ -1192,20 +1188,6 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             return chirp_config.glossy_task;
         }
 	}
-}
-
-void DOG_TIMER_ISR_NAME(void)
-{
-    PRINTF("d:%d, %d\n", count_dog, deadline_dog);
-    count_dog++;
-	__HAL_TIM_CLEAR_IT(&htim5, TIM_IT_UPDATE);
-	__HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);
-    if (count_dog > deadline_dog)
-    {
-        __disable_fault_irq();
-        NVIC_SystemReset();
-    }
-    __HAL_TIM_ENABLE_IT(&htim5, TIM_IT_UPDATE);
 }
 
 //**************************************************************************************************

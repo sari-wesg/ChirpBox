@@ -44,14 +44,6 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 #define LP_TIMER_CMP_REG (LP_TIMER->CMP)  /* compare interrupt count */
 #define LP_TIMER_CNT_REG (LP_TIMER->CNT)  /* lptim1 now count */
 
- /* TIMER3 */
-#define DOG_TIMER htim5.Instance
-#define DOG_TIMER_IRQ TIM5_IRQn
-#define DOG_TIMER_ISR_NAME TIM5_IRQHandler
-
-#define DOG_TIMER_CC_REG (DOG_TIMER->CCR1)  /* compare interrupt count */
-#define DOG_TIMER_CNT_REG (DOG_TIMER->CNT)  /* timer3 now count */
-
  /* RTC */
 #define RTC_TIMER hrtc.Instance
 #define RTC_TIMER_ISR_NAME RTC_WKUP_IRQHandler

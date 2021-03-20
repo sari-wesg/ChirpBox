@@ -91,7 +91,6 @@ GPI_TRACE_CONFIG(<TODO: module name>, TRACE_BASE_SELECTION |  GPI_TRACE_LOG_USER
 uint_fast8_t		gpi_wakeup_event = 0;
 
 TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim5;
 LPTIM_HandleTypeDef hlptim1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
@@ -227,41 +226,6 @@ static void MX_TIM2_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-}
-
-static void MX_TIM5_Init(void)
-{
-  TIM_ClockConfigTypeDef sClockSourceConfig;
-  TIM_MasterConfigTypeDef sMasterConfig;
-
-  htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 4;
-  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = GPI_FAST_CLOCK_RATE * DOG_PERIOD;
-  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-  if (HAL_TIM_OC_Init(&htim5) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
 }
 
 void MX_LPTIM1_Init(void)
@@ -572,11 +536,6 @@ void gpi_platform_init(void)
     MX_TIM2_Init();
     HAL_TIM_OC_Start_IT(&htim2, TIM_CHANNEL_1);
     __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
-
-    MX_TIM5_Init();
-    // HAL_TIM_Base_Start(&htim5);
-    HAL_TIM_Base_Start(&htim5);
-    __HAL_TIM_DISABLE_IT(&htim5, TIM_IT_UPDATE);
 
 		MX_LPTIM1_Init();
 		HAL_LPTIM_Start(&hlptim1);

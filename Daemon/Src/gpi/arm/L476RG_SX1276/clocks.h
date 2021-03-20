@@ -65,7 +65,6 @@
 //***** Global Variables ***************************************************************************
 
 extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim5;
 extern LPTIM_HandleTypeDef hlptim1;
 extern RTC_HandleTypeDef hrtc;
 
@@ -147,11 +146,6 @@ static ALWAYS_INLINE Gpi_Fast_Tick_Native gpi_tick_fast_native()
 	return htim2.Instance->CNT;
 }
 
-//**************************************************************************************************
-static ALWAYS_INLINE Gpi_Fast_Tick_Native gpi_tick_dog_native()
-{
-	return htim5.Instance->CNT;
-}
 //**************************************************************************************************
 
 // static ALWAYS_INLINE Gpi_Fast_Tick_Extended gpi_tick_fast_extended()
