@@ -15,13 +15,22 @@ def generate_start_node_id():
 
     exit(0)
 
+# def generate_start_round():
+#     bitmap_str = '1fffff'
+#     for i in range(1):
+#         task_start = "cbmng.py " + "-start " + '0' + " " + "2f04 " + '7' + " " + "com8 " + bitmap_str + " " + '80' + " " + "14 "
+#         print(task_start.split())
+#         cbmng.main(task_start.split())
+#         time.sleep(1800)
+#     exit(0)
+
 def generate_start_round():
     bitmap_str = '1fffff'
-    for i in range(1):
-        task_start = "cbmng.py " + "-start " + '0' + " " + "2f04 " + '7' + " " + "com8 " + bitmap_str + " " + '80' + " " + "14 "
+    for i in range(100):
+        task_start = "cbmng.py " + "-colver " + '9' + " " + "com3 " + '20' + " " + "14 "
         print(task_start.split())
         cbmng.main(task_start.split())
-        time.sleep(1800)
+        time.sleep(600)
     exit(0)
 
 generate_start_round()

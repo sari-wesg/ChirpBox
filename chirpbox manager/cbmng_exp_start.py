@@ -568,7 +568,7 @@ def collect_topology(com_port, command_sf, command_len, slot_num, used_tp):
 def collect_version(com_port, command_sf, slot_num, used_tp):
 	bitmap = "0"
 	task_bitmap = "0"
-	filename = "version.txt"
+	filename = "version" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".txt"
 	dissem_back_sf = 0
 	dissem_back_slot = 0
 
@@ -629,7 +629,7 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 	return True
 
 
-def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp, task_bitmap, file_name):
+def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp, task_bitmap):
 	BANK2_SIZE = 512 * 1024
 
 	try:
@@ -656,6 +656,7 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 
+	FileSize = cbmng_common.get_FileSize(firmware)
 	exp_name = "disseminate_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "_generate_size" + str(command_size) + "_slot_num" + str(slot_num) + "_bitmap" + str(task_bitmap) + "_FileSize" + str(FileSize) + "_dissem_back_sf" + str(dissem_back_sf) + "_dissem_back_slot" + str(dissem_back_slot)
 	print(exp_name)
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
