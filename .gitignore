@@ -97,3 +97,6 @@ dkms.conf
 # json
 !chirpbox-param-settings.json
 !fut-param-settings.json
+
+
+**/.settings
