@@ -91,3 +91,5 @@ chirpbox_param_patch('chirpbox-param-settings.json', 'Daemon.bin')
 fut_param_patch('fut-param-settings.json', 'tmp_exp_firm.bin')
 
 """
+
+chirpbox_param_patch('chirpbox-param-settings.json', 'Daemon.bin')

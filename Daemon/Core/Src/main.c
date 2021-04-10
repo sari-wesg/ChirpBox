@@ -105,7 +105,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #endif
 
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={0};
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001d004e, 0x001e0037, 0x003A0026, 0x00350045}, 0x2B06, 470000};
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001e0037, 0x001d004e, 0x00350045}, 0x2B10, 470000};
 
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0};
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={470000, 7, 14, 1};
@@ -170,13 +170,14 @@ static uint8_t hardware_init()
 	HAL_Delay(5000);
 	/* Disable SysTick Interrupt */
 	HAL_SuspendTick();
-	/* check voltage */
-	ADC_CheckVoltage();
 	/* un-write protection */
 	Bank_WRT_Check();
 	#endif
 
 	menu_bank();
+
+	/* check voltage */
+	ADC_CheckVoltage();
 
 	gpi_int_enable();
 
