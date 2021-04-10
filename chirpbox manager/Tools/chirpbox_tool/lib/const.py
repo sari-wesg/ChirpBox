@@ -1,0 +1,9 @@
+LORADISC_HEADER_LEN         = 8
+LORADISC_NODE_ID_LEN        = 2
+
+LORADISC_HEADER_C           = 'r '
+LORADISC_PAYLOAD_C          = 'f '
+
+
+CHIRPBOX_VOLTAGE_START      = 3
+CHIRPBOX_VOLTAGE_LEN        = 2
