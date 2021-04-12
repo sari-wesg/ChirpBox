@@ -5,8 +5,7 @@ import csv
 from datetime import datetime, timezone
 import struct
 
-logging.basicConfig(format='[%(filename)s:%(lineno)d] %(message)s',
-                    level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class chirpbox_txt():
     def __init__(self):
@@ -28,14 +27,13 @@ class chirpbox_txt():
                 node_id_value_list[0].append(node_id)
                 node_id_value_list[1].append(value)
 
-        # logging.debug(node_id_value_list)
+        # logger.debug(node_id_value_list)
         return node_id_value_list
 
     def chirpbox_txt_to_csv(self, directory_path):
         # 1. read txt file list
         txt_files = glob.glob(directory_path + "\*" + self._txt_suffix)
-        logging.debug("txt_files: %s", txt_files)
-
+        logger.debug("txt_files: %s\n", txt_files)
         # 2. loop txt file list, and save node id and payload bytes to csv
         for filename in txt_files:
             node_txt_list = []
@@ -64,12 +62,12 @@ class chirpbox_txt():
                 writer = csv.writer(f)
                 writer.writerows(node_txt_list)
 
-            # logging.debug(node_txt_list)
+            # logger.debug(node_txt_list)
 
     def chirpbox_csv_with_utc(self, directory_path, utc_start_name, utc_time_zone, value_format):
         # 1. read csv file list
         csv_files = glob.glob(directory_path + "\*" + self._csv_suffix)
-        logging.debug("csv_files: %s", csv_files)
+        logger.debug("csv_files: %s\n", csv_files)
 
         # 2. loop csv files, and read node id and payload bytes from csv
         utc_list = []
@@ -88,7 +86,7 @@ class chirpbox_txt():
 
                 node_id_with_value.append(self.read_nodes_value_from_csv(filename, value_format))
 
-        # logging.debug(node_id_with_value)
-        # logging.debug(utc_list)
+        # logger.debug(node_id_with_value)
+        # logger.debug(utc_list)
 
         return (utc_list, node_id_with_value)

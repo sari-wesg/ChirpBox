@@ -5,8 +5,28 @@ import lib.chirpbox_tool_link_quality
 import lib.chirpbox_tool_voltage
 import logging
 
-logging.basicConfig(format='[%(filename)s:%(lineno)d] %(message)s',
-                    level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+logger.propagate = False
+logger.setLevel(logging.INFO) # <<< Added Line
+logging.getLogger('matplotlib.font_manager').disabled = True
+
+# Log config:
+# Create handlers
+c_handler = logging.StreamHandler()
+c_handler.setLevel(logging.DEBUG)
+
+# Create formatters and add it to handlers
+c_format = logging.Formatter('[%(filename)s:%(lineno)d] %(asctime)s - %(name)s - %(levelname)s - %(message)s')
+c_handler.setFormatter(c_format)
+
+# Add handlers to the logger
+logger.addHandler(c_handler)
+
+# Examples:
+# logger.warning()
+# logger.error()
+# logger.info()
+# logger.debug()
 
 VERSION_STR = "chirpbox_tool v0.0.0"
 
@@ -50,10 +70,10 @@ class ChirpBoxTool():
     # TODO:
     def check_argument_format(self, cmd):
         if(cmd == 'link_quality'):
-            logging.info("check sf and txpower, and node id")
+            logger.info("check sf and txpower, and node id")
         elif(cmd == 'voltage'):
             if self._id is None:
-                logging.info("Error: please input node_id")
+                logger.info("Error: please input node_id")
                 return False
 
     def cmd_link_quality(self, params):
@@ -74,14 +94,14 @@ class ChirpBoxTool():
         cmd = param[0]
         params = param[1:]
         if self.check_argument_format(cmd) == False:
-            logging.info("Error: argument wrong for cmd: %s", cmd)
+            logger.error("argument wrong for cmd: %s", cmd)
             return 1
         if cmd == 'link_quality' and params:
             self.cmd_link_quality(params)
         elif cmd == 'voltage' and params:
             self.cmd_voltage(params)
         else:
-            logging.info("Error: action wrong with cmd: %s", cmd)
+            logger.error("action wrong with cmd: %s", cmd)
             return 1
 
     def start(self):
@@ -98,12 +118,12 @@ class ChirpBoxTool():
         self._tp = self.convert_int_string_to_list(args.tx_power)
         self._id = self.convert_int_string_to_list(args.node_id)
         self._dir = args.directory_path
-        logging.info(args)
-        logging.info("self._sf: %s, self._tp: %s, self._id: %s, self._dir: %s", self._sf, self._tp, self._id, self._dir)
+        logger.info(args)
+        logger.debug("self._sf: %s, self._tp: %s, self._id: %s, self._dir: %s", self._sf, self._tp, self._id, self._dir)
         runtime_status = 0
         try:
             if len(args.action) == 0:
-                logging.info("Error: no action")
+                logger.error("no action")
                 runtime_status = 1
             for action in args.action:
                 try:
@@ -111,13 +131,13 @@ class ChirpBoxTool():
                     if (runtime_status == 1):
                         break
                 except:
-                    logging.info("Error: action format or argument wrong %s", action)
+                    logger.error("action format or argument wrong %s", action)
                     runtime_status = 1
         except:
             runtime_status = 1
 
         if runtime_status:
-            logging.info("Info: sys.exit")
+            logger.info("sys.exit")
             sys.exit(runtime_status)
 
 
