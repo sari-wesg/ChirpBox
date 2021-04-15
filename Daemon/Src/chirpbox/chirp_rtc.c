@@ -145,6 +145,7 @@ void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, u
     __HAL_RTC_WAKEUPTIMER_DISABLE_IT(&hrtc, RTC_IT_WUT);
 }
 
+// Stop mode:
 void RTC_Waiting_Count(uint32_t Count_wait)
 {
     PRINTF("RTC_Waiting_Count:%lu\n", Count_wait);
@@ -176,7 +177,7 @@ void RTC_Waiting_Count(uint32_t Count_wait)
     }
 }
 
-
+// Sleep mode:
 void RTC_Waiting_Count_Sleep(uint32_t Count_wait)
 {
     PRINTF("RTC_Waiting_Count:%lu\n", Count_wait);

@@ -4,6 +4,7 @@ import glob
 import csv
 from datetime import datetime, timezone
 import struct
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,10 @@ class chirpbox_txt():
 
         # logger.debug(node_id_value_list)
         return node_id_value_list
+
+    def chirpbox_delete_in_dir(self, directory_path, file_suffix):
+        for _files in glob.glob(directory_path + "\*" + file_suffix):
+            os.remove(_files)
 
     def chirpbox_txt_to_csv(self, directory_path):
         # 1. read txt file list

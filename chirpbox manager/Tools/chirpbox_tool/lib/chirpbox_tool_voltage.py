@@ -18,7 +18,7 @@ class voltage():
             for i in range(len(self._utc_list)):
                 try:
                     node_id_index = self._node_values[i][0].index('{:02x}'.format(int(nodes)))
-                    node_value_in_row.append(self._node_values[i][1][node_id_index])
+                    node_value_in_row.append(self._node_values[i][1][node_id_index]/1000)
                 except:
                     node_value_in_row.append(CHIRPBOX_ERROR_VALUE)
                     logger.warning("cannot find node %s in list %s at datetime: %s\n", nodes, self._node_values[i][0], datetime.datetime.fromtimestamp(int(self._utc_list[i])))
@@ -46,3 +46,6 @@ class voltage():
         logger.debug("utc_list: %s, node_values: %s\n", self._utc_list, self._node_values)
 
         self.utc_node_value_plot(node_id, self._utc_list, self._node_values)
+
+        # convert all files in directory
+        self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')
