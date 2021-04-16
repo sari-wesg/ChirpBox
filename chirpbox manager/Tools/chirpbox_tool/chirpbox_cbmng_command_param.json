@@ -3,6 +3,8 @@
     "all_command_tp": 14,
     "all_command_comport": "com4",
     "all_command_slot_number": 80,
+    "all_command_coldata_payload_len": 232,
+    "all_command_bitmap": "1FFFFF",
 
     "OWM_API_KEY": "OpenWeatherMap-Token-from-https://openweathermap.org/",
     "chirpbox_lat": 31.180809739077795,
