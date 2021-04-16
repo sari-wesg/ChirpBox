@@ -221,9 +221,6 @@ void topo_result(uint8_t nodes_num, uint8_t topo_test_id)
     gpi_watchdog_periodic();
     uint8_t i;
 
-    // uint32_t topo_result[((nodes_num + 1) / 2) * 2];
-    // memset(topo_result, 0, sizeof(topo_result));
-
     for ( i = 0; i < nodes_num; i++)
     {
         node_topology_link[i].reliability = (uint16_t)(((uint32_t)node_topology[i].rx_num * 1e4) / (uint32_t)(tx_num_max));
@@ -307,7 +304,6 @@ void topo_dio0_isr()
                     node_topology_link[Rx_Buffer[0]-1].rssi_link_max = (node_topology_link[Rx_Buffer[0]-1].rssi_link_max < RssiValue_link)?RssiValue_link:node_topology_link[Rx_Buffer[0]-1].rssi_link_max;
                 }
 
-                // printf("rx-----------:%d, %d, %d, %d\n", node_topology_link[Rx_Buffer[0]-1].snr_link_min, node_topology_link[Rx_Buffer[0]-1].snr_link_max, node_topology_link[Rx_Buffer[0]-1].rssi_link_min, node_topology_link[Rx_Buffer[0]-1].rssi_link_max);
 
                 PRINTF("RX: %d\n", rx_receive_num);
             }
@@ -363,7 +359,7 @@ void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t
         sf_lsb = gpi_get_lsb(sf_bitmap);
         sf_bitmap &= sf_bitmap - 1;
         sf = TOPO_DEFAULT_SF + sf_lsb;
-        printf("Test SF:%u\n", sf);
+        PRINTF("Test SF:%u\n", sf);
 
         gpi_radio_set_spreading_factor(sf);
         topo_init(nodes_num, node_id, sf, payload_len);

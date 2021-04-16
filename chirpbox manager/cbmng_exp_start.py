@@ -22,11 +22,6 @@ import cbmng_exp_globaldef
 """ weather """
 import chirpbox_weather
 
-# OWM_API_KEY = OpenWeatherMap-Token # obtain api key from https://openweathermap.org/
-OWM_API_KEY = "4dbbaf4cb8263e15f604420c8d66bb3b" # obtain api key from https://openweathermap.org/
-chirpbox_lat = 31.180809739077795
-chirpbox_lon = 121.58960816990215
-
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
 firmware_burned = "tmp_exp_firm_burned.bin"
@@ -357,6 +352,12 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 	# if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
 	# 	return False
 
+	# save weather data
+	weather = chirpbox_weather.testbed_weather()
+	weather_json_object = json.dumps(weather.weather_current())
+	with open(filename[:-4]+".json", "w") as outfile:
+		outfile.write(weather_json_object)
+
 	return True
 
 def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitmap, start_address_col, end_address_col):
@@ -514,8 +515,6 @@ def collect_topology(com_port, command_sf, command_len, slot_num, used_tp):
 						if (line == "output from initiator (topology):"):
 							start_read = 1
 						if ((line == "---------MX_GLOSSY---------") and (start_read == 1)):
-							weather = chirpbox_weather.testbed_weather(OWM_API_KEY, chirpbox_lat, chirpbox_lon)
-							f.write("current_temperature: " + str(weather.weather_temp_current()) + " celsius\r")
 							timeout_cnt = 0
 							break
 						if(start_read == 1):
