@@ -626,7 +626,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint32_t			collect_length;
 
 	/* CHIRP_CONNECTIVITY */
-	uint8_t				sf;
+	uint8_t				sf_bitmap;
 	uint32_t			freq;
 	int8_t				tx_power;
 	uint8_t				topo_payload_len;

@@ -437,7 +437,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             data[k++] = chirp_outl->round_max >> 8;
             data[k++] = chirp_outl->round_max;
             memcpy(file_data, data, DATA_HEADER_LENGTH);
-            file_data[DATA_HEADER_LENGTH] = chirp_outl->sf;
+            file_data[DATA_HEADER_LENGTH] = chirp_outl->sf_bitmap;
             file_data[DATA_HEADER_LENGTH + 1] = chirp_outl->freq >> 24;
             file_data[DATA_HEADER_LENGTH + 2] = chirp_outl->freq >> 16;
             file_data[DATA_HEADER_LENGTH + 3] = chirp_outl->freq >> 8;
@@ -833,7 +833,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 PRINTF("CHIRP_CONNECTIVITY\n");
 
                                 memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
-                                chirp_outl->sf = task_data[0];
+                                chirp_outl->sf_bitmap = task_data[0];
                                 chirp_outl->freq = (task_data[1] << 24) | (task_data[2] << 16) | (task_data[3] << 8) | (task_data[4]);
                                 chirp_outl->tx_power = task_data[5];
                                 chirp_outl->topo_payload_len = task_data[6];

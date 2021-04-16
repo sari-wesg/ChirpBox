@@ -1070,7 +1070,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
       case MX_COLLECT:
       {
         // "0807F800,08080000"
-        memset(&(chirp_outl->collect_addr_start), 0, offsetof(Chirp_Outl, sf) - offsetof(Chirp_Outl, collect_addr_start));
+        memset(&(chirp_outl->collect_addr_start), 0, offsetof(Chirp_Outl, sf_bitmap) - offsetof(Chirp_Outl, collect_addr_start));
         for (i = 0; i < rxbuffer_len; i++)
         {
           data = (uint8_t)command_buffer[k++];
@@ -1102,18 +1102,18 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
       }
       case CHIRP_CONNECTIVITY:
       {
-        // "09,478600,-01"
+        // "63,478600,-01"
         uint8_t tx_sign = 0;
-        memset(&(chirp_outl->sf), 0, offsetof(Chirp_Outl, chirp_energy) - offsetof(Chirp_Outl, sf));
+        memset(&(chirp_outl->sf_bitmap), 0, offsetof(Chirp_Outl, chirp_energy) - offsetof(Chirp_Outl, sf_bitmap));
         for (i = 0; i < rxbuffer_len; i++)
         {
           data = (uint8_t)command_buffer[k++] - '0';
           if (((data >= 0) && (data <= 9)) || (data == (uint8_t)('-' - '0')) || (data == (uint8_t)('+' - '0')))
           {
-            if (i < 2) /* SF */
+            if (i < 2) /* SF bitmap */
             {
               pow_num = 1;
-              chirp_outl->sf += data * pow(10,(pow_num-i));
+              chirp_outl->sf_bitmap += data * pow(10,(pow_num-i));
             }
             else if (i < 9) /* Frequency */
             {
@@ -1144,7 +1144,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
         if (!tx_sign)
           chirp_outl->tx_power = 0 - chirp_outl->tx_power;
 
-        PRINTF("Spreading factor: %d, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
+        PRINTF("Spreading factor bitmap: %d, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf_bitmap, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
         break;
       }
       default:
@@ -1330,6 +1330,13 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         {
           #if GPS_DATA
           GPS_Sleep(60);
+          #else
+          DS3231_GetTime();
+          /* Set alarm */
+          ds3231_time = DS3231_ShowTime();
+          diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
+          sleep_sec = 60 - (time_t)(0 - diff) % 60;
+          RTC_Waiting_Count(sleep_sec);
           #endif
         }
         else
@@ -1751,18 +1758,10 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           ENERGEST_ON(ENERGEST_TYPE_CPU);
         #endif
 
-        chirp_radio_config(chirp_outl.sf, 7, 1, 8, chirp_outl.tx_power, chirp_outl.freq);
-        topo_init(network_num_nodes, node_id, chirp_outl.sf, chirp_outl.topo_payload_len);
-        uint8_t i;
-        for (i = 0; i < network_num_nodes; i++)
-        {
-          // #if GPS_DATA
-          // GPS_Sleep(10);
-          // #endif
-          RTC_Waiting_Count_Sleep(5);
-          topo_round_robin(node_id, chirp_outl.num_nodes, i, deadline);
-        }
-				topo_result(chirp_outl.num_nodes);
+        // initiate LoRa radio with sf 7 and testing TP and frequency.
+        chirp_radio_config(7, 7, 1, 8, chirp_outl.tx_power, chirp_outl.freq);
+        topo_manager(chirp_outl.num_nodes, node_id, chirp_outl.sf_bitmap, chirp_outl.topo_payload_len);
+
 				free(payload_distribution);
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);

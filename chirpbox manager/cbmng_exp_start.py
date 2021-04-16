@@ -22,7 +22,8 @@ import cbmng_exp_globaldef
 """ weather """
 import chirpbox_weather
 
-OWM_API_KEY = OpenWeatherMap-Token # obtain api key from https://openweathermap.org/
+# OWM_API_KEY = OpenWeatherMap-Token # obtain api key from https://openweathermap.org/
+OWM_API_KEY = "4dbbaf4cb8263e15f604420c8d66bb3b" # obtain api key from https://openweathermap.org/
 chirpbox_lat = 31.180809739077795
 chirpbox_lon = 121.58960816990215
 
@@ -273,7 +274,7 @@ def is_running():
 		else:
 			return False
 
-def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_num, topo_payload_len, used_tp):
+def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, slot_num, topo_payload_len, used_tp):
 	bitmap = "0"
 	task_bitmap = "0"
 	dissem_back_sf = 0
@@ -285,8 +286,8 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 	end_time_t = start_time_t + datetime.timedelta(minutes = 10)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
-	exp_name = "Chirpbox_connectivity_sf" + str(sf) + "ch" + str(channel) + "tp" + str(tx_power) + "topo_payload_len" + str(topo_payload_len)
-	print("Connectivity evaluation (SF " + str(sf) + ", Channel " + str(channel) + " MHz, " + str(tx_power) + " dBm, "  + "topo_len at " + str(topo_payload_len) + ") is going to start at " + start_time + ", and stop at " + end_time)
+	exp_name = "Chirpbox_connectivity_sf_bitmap" + str(sf_bitmap) + "ch" + str(channel) + "tp" + str(tx_power) + "topo_payload_len" + str(topo_payload_len)
+	print("Connectivity evaluation (SF bitmap " + str(sf_bitmap) + ", Channel " + str(channel) + " MHz, " + str(tx_power) + " dBm, "  + "topo_len at " + str(topo_payload_len) + ") is going to start at " + start_time + ", and stop at " + end_time)
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
@@ -319,9 +320,9 @@ def connectivity_evaluation(sf, channel, tx_power, command_sf, com_port, slot_nu
 						f.write(line_write + "\r")
 					if (line == "Waiting for parameter(s)..."):
 						if(tx_power >= 0):
-							para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power)) + ',{0:03}'.format(int(topo_payload_len - 2))
+							para = '{0:02}'.format(int(sf_bitmap)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power)) + ',{0:03}'.format(int(topo_payload_len))
 						if(tx_power < 0):
-							para = '{0:02}'.format(int(sf)) + ',{0:06}'.format(int(channel)) + ',-{0:02}'.format(int(tx_power) * (-1)) + ',{0:03}'.format(int(topo_payload_len - 2))
+							para = '{0:02}'.format(int(sf_bitmap)) + ',{0:06}'.format(int(channel)) + ',-{0:02}'.format(int(tx_power) * (-1)) + ',{0:03}'.format(int(topo_payload_len))
 						print(para)
 						ser.write(str(para).encode()) # send commands
 						timeout_cnt = 0

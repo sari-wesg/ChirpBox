@@ -26,6 +26,9 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 	ISR_GPS   = 8,
 } Chirp_ISR;
 
+#ifndef TOPO_DEFAULT_SF
+	#define TOPO_DEFAULT_SF			7	// The LoRa default under test spreading factor is 7
+#endif
 //**************************************************************************************************
 
  /* TIMER2 */
@@ -98,13 +101,15 @@ typedef struct Chirp_Time_tag
 typedef struct Topology_result_tag
 {
 	uint8_t			rx_num;
-	uint16_t		reliability;
 } Topology_result;
 
 typedef struct Topology_result_link_tag
 {
-	int16_t			snr_link;
-	int16_t			rssi_link;
+	uint16_t		reliability;
+	int8_t			snr_link_min;
+	int8_t			snr_link_max;
+	int16_t			rssi_link_min;
+	int16_t			rssi_link_max;
 } Topology_result_link;
 
 //Stats ********************************************************************************************
@@ -185,10 +190,11 @@ void gps_main_timer_isr(void);
 
 /* Topology */
 uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len);
-Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i, Gpi_Fast_Tick_Extended deadline);
-void topo_result(uint8_t nodes_num);
+void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i);
+void topo_result(uint8_t nodes_num, uint8_t topo_test_id);
 void topo_dio0_isr();
 void topo_main_timer_isr();
+void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t payload_len);
 
 /* Stats */
 void Stats_value(uint8_t stats_type, uint32_t value);

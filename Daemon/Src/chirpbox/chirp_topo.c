@@ -6,6 +6,7 @@
 #include "mixer_internal.h"
 
 #include "gpi/tools.h" /* STRINGIFY(), LSB(), ASSERT_CT() */
+#include "gpi/olf.h"
 #ifdef MX_CONFIG_FILE
 #include STRINGIFY(MX_CONFIG_FILE)
 #endif
@@ -35,7 +36,7 @@
 #define PRINTF(...)
 #endif
 
-#define BUFFER_SIZE                 200
+#define BUFFER_SIZE                 255
 
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -80,9 +81,6 @@ void packet_prepare(uint8_t node_id)
 {
     Tx_Buffer[0] = node_id + 1;
     Tx_Buffer[1] = node_id + 2;
-    uint16_t topo_hash_tx = Chirp_RSHash((uint8_t *)&(Tx_Buffer[0]), 2);
-    Tx_Buffer[2] = topo_hash_tx >> 8;
-    Tx_Buffer[3] = topo_hash_tx;
 }
 
 //**************************************************************************************************
@@ -90,15 +88,16 @@ void packet_prepare(uint8_t node_id)
 uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len)
 {
     tx_num_max = 20;
-    assert_reset((payload_len >= 2));
-    tx_payload_len = payload_len + 2;
-    assert_reset((tx_payload_len <= BUFFER_SIZE));
-    packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, tx_payload_len) + 50000;
+    tx_payload_len = payload_len;
+    assert_reset((payload_len > 0) && (payload_len <= BUFFER_SIZE));
+    packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, payload_len) + 50000;
+    if (packet_time_us > 1000000)
+        packet_time_us += 500000;
     node_topology = (Topology_result *)malloc(nodes_num * sizeof(Topology_result));
     memset(node_topology, 0, nodes_num * sizeof(Topology_result));
 
     node_topology_link = (Topology_result_link *)malloc(nodes_num * sizeof(Topology_result_link));
-    memset(node_topology_link, 0, nodes_num * sizeof(Topology_result_link));
+    memset(node_topology_link, -1, nodes_num * sizeof(Topology_result_link));
 
     round_length_us = packet_time_us * (tx_num_max + 3) + 2000000;
 
@@ -107,11 +106,13 @@ uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t paylo
     return packet_time_us;
 }
 
-Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i, Gpi_Fast_Tick_Extended deadline)
+void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
 {
     #if ENERGEST_CONF_ON
         ENERGEST_ON(ENERGEST_TYPE_CPU);
     #endif
+
+    Gpi_Fast_Tick_Extended deadline;
 
     SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 	chirp_isr.state = ISR_TOPO;
@@ -150,7 +151,7 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
 
         __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
         __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
-        MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(16000000);
+        MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(1000000);
         __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC1);
 
         while(1)
@@ -215,33 +216,36 @@ Gpi_Fast_Tick_Extended topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint
     return deadline;
 }
 
-void topo_result(uint8_t nodes_num)
+void topo_result(uint8_t nodes_num, uint8_t topo_test_id)
 {
     gpi_watchdog_periodic();
     uint8_t i;
-    /* 64 bit length */
-    uint32_t topo_result[((nodes_num + 1) / 2) * 2];
-    memset(topo_result, 0, sizeof(topo_result));
+
+    // uint32_t topo_result[((nodes_num + 1) / 2) * 2];
+    // memset(topo_result, 0, sizeof(topo_result));
 
     for ( i = 0; i < nodes_num; i++)
     {
-        uint32_t reliability = (uint32_t)((node_topology[i].rx_num * 1e4) / (uint32_t)(tx_num_max));
-        node_topology[i].reliability = reliability;
-        topo_result[i] = (uint8_t)i | (uint32_t)node_topology[i].reliability << 16;
-        PRINTF("r:%d, %d, %x\n", i, node_topology[i].reliability, topo_result[i]);
+        node_topology_link[i].reliability = (uint16_t)(((uint32_t)node_topology[i].rx_num * 1e4) / (uint32_t)(tx_num_max));
+        PRINTF("r:%d, %d\n", i, node_topology_link[i].reliability);
     }
 
     uint8_t temp_raw = SX1276GetRawTemp();
     uint32_t temp_flash[2];
     temp_flash[0] = (uint32_t)(temp_raw);
+    temp_flash[1] = topo_test_id;
 
     #if MX_FLASH_FILE
         // menu_preSend(0);
-        FLASH_If_Erase_Pages(1, TOPO_PAGE);
-        FLASH_If_Write(TOPO_FLASH_ADDRESS, (uint32_t *)(topo_result), sizeof(topo_result) / sizeof(uint32_t));
-        FLASH_If_Write(TOPO_FLASH_ADDRESS + sizeof(topo_result) + 8, (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
-        memcpy(topo_result, (uint32_t *)(node_topology_link), nodes_num * sizeof(Topology_result_link));
-        FLASH_If_Write(TOPO_FLASH_ADDRESS + sizeof(topo_result) + 8 + sizeof(temp_flash), (uint32_t *)(topo_result), sizeof(topo_result) / sizeof(uint32_t));
+        uint32_t topo_flash_address_temp = TOPO_FLASH_ADDRESS + topo_test_id * (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8 + sizeof(temp_flash));
+        if (!topo_test_id)
+        {
+            FLASH_If_Erase_Pages(1, TOPO_PAGE);
+        }
+        // write reliability, snr and rssi
+        FLASH_If_Write(topo_flash_address_temp, (uint32_t *)(node_topology_link), (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8) / sizeof(uint32_t));
+        // write temperature
+        FLASH_If_Write(topo_flash_address_temp + (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8), (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
     #endif
 
     free(node_topology);
@@ -266,10 +270,8 @@ void topo_dio0_isr()
             // read rx packet from start address (in data buffer) of last packet received
             SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
             SX1276ReadFifo(Rx_Buffer, packet_len );
-            uint16_t topo_hash_rx = Chirp_RSHash((uint8_t *)&(Rx_Buffer[0]), 2);
-            if ((topo_hash_rx == Rx_Buffer[2] >> 8) | (Rx_Buffer[3]))
+            if ((Rx_Buffer[0]))
             {
-                // count++;
                 rx_receive_num++;
 
                 // Returns SNR value [dB] rounded to the nearest integer value
@@ -290,15 +292,24 @@ void topo_dio0_isr()
                     else
                         RssiValue_link = RSSI_OFFSET_LF + rssi_link + (rssi_link >> 4);
                 }
-                node_topology_link[Rx_Buffer[0]-1].snr_link = SnrValue;
-                node_topology_link[Rx_Buffer[0]-1].rssi_link = RssiValue_link;
-                // printf("rx-----------:%d, %d, %lu\n", SnrValue, RssiValue_link, Rx_Buffer[0]-1);
+                if(node_topology_link[Rx_Buffer[0]-1].snr_link_min == -1)
+                {
+                    node_topology_link[Rx_Buffer[0]-1].snr_link_min = SnrValue;
+                    node_topology_link[Rx_Buffer[0]-1].snr_link_max = SnrValue;
+                    node_topology_link[Rx_Buffer[0]-1].rssi_link_min = RssiValue_link;
+                    node_topology_link[Rx_Buffer[0]-1].rssi_link_max = RssiValue_link;
+                }
+                else
+                {
+                    node_topology_link[Rx_Buffer[0]-1].snr_link_min = (node_topology_link[Rx_Buffer[0]-1].snr_link_min > SnrValue)?SnrValue:node_topology_link[Rx_Buffer[0]-1].snr_link_min;
+                    node_topology_link[Rx_Buffer[0]-1].snr_link_max = (node_topology_link[Rx_Buffer[0]-1].snr_link_max < SnrValue)?SnrValue:node_topology_link[Rx_Buffer[0]-1].snr_link_max;
+                    node_topology_link[Rx_Buffer[0]-1].rssi_link_min = (node_topology_link[Rx_Buffer[0]-1].rssi_link_min > RssiValue_link)?RssiValue_link:node_topology_link[Rx_Buffer[0]-1].rssi_link_min;
+                    node_topology_link[Rx_Buffer[0]-1].rssi_link_max = (node_topology_link[Rx_Buffer[0]-1].rssi_link_max < RssiValue_link)?RssiValue_link:node_topology_link[Rx_Buffer[0]-1].rssi_link_max;
+                }
+
+                // printf("rx-----------:%d, %d, %d, %d\n", node_topology_link[Rx_Buffer[0]-1].snr_link_min, node_topology_link[Rx_Buffer[0]-1].snr_link_max, node_topology_link[Rx_Buffer[0]-1].rssi_link_min, node_topology_link[Rx_Buffer[0]-1].rssi_link_max);
 
                 PRINTF("RX: %d\n", rx_receive_num);
-            }
-            else
-            {
-                PRINTF("crc: %d\n", rx_receive_num);
             }
         }
         else
@@ -337,6 +348,30 @@ void topo_main_timer_isr()
     gpi_watchdog_periodic();
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
     __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
-    MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(16000000);
+    MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(1000000);
     __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC1);
 }
+
+
+void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t payload_len)
+{
+    uint8_t i, sf, sf_lsb = 0, k = 0;
+
+    // Test SF in [7, 12], then the sf_bitmap is in (0b0, 0b1000000)
+    while ((sf_bitmap > 0b0) && (sf_bitmap < 0b1000000))
+    {
+        sf_lsb = gpi_get_lsb(sf_bitmap);
+        sf_bitmap &= sf_bitmap - 1;
+        sf = TOPO_DEFAULT_SF + sf_lsb;
+        printf("Test SF:%u\n", sf);
+
+        gpi_radio_set_spreading_factor(sf);
+        topo_init(nodes_num, node_id, sf, payload_len);
+
+        for (i = 0; i < nodes_num; i++)
+            topo_round_robin(node_id, nodes_num, i);
+        topo_result(nodes_num, k);
+        k++;
+    }
+}
+
