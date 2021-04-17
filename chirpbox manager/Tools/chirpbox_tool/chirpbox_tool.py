@@ -145,7 +145,7 @@ class ChirpBoxTool():
             logger.error("Action wrong with cmd: %s", cmd)
             return 1
 
-    def start(self):
+    def start(self, argv):
         parser = argparse.ArgumentParser(
             prog='chirpbox_tool', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
         parser.add_argument('-sf', '--spreading_factor', dest='spreading_factor', help='Input the spreading factor')
@@ -156,11 +156,10 @@ class ChirpBoxTool():
         parser.add_argument('-dir', '--directory_path', dest='directory_path', help='Input the directory path for processing')
         group_actions = parser.add_argument_group(title='actions')
         group_actions.add_argument('action', nargs='*', help='actions will be processed sequentially')
-        args = parser.parse_args()
+        args = parser.parse_args(argv)
         self._sf = self.convert_int_string_to_list(args.spreading_factor)
         self._tp = self.convert_int_string_to_list(args.tx_power)
-        f_temp = self.convert_int_string_to_list(args.freq)
-        self._f = list(range(min(f_temp), max(f_temp)+1, CHIRPBOX_LINK_FREQ_INTERVAL))
+        self._f = self.convert_int_string_to_list(args.freq)
         self._pl = self.convert_int_string_to_list(args.payload_len)
         self._id = self.convert_int_string_to_list(args.node_id)
         self._dir = args.directory_path
@@ -186,7 +185,9 @@ class ChirpBoxTool():
             logger.info("sys.exit")
             sys.exit(runtime_status)
 
+def main(argv):
+    chirpboxtool = ChirpBoxTool()
+    chirpboxtool.start(argv[1:])
 
 if __name__ == "__main__":
-    chirpboxtool = ChirpBoxTool()
-    chirpboxtool.start()
+    main(sys.argv)
