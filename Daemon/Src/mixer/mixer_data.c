@@ -43,8 +43,6 @@ extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 // static uint32_t			round;
 static uint8_t	        data[DATA_HEADER_LENGTH];
 
-static uint16_t    deadline_dog, count_dog;
-
 static uint16_t    rece_dissem_index;
 uint16_t    calu_payload_hash, rece_hash;
 //**************************************************************************************************
@@ -1001,9 +999,6 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 		/* start when deadline reached
 		ATTENTION: don't delay after the polling loop (-> print before) */
 		// while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-        deadline_dog = (chirp_config.mx_period_time_s + 60 - 1) / DOG_PERIOD + 60 / DOG_PERIOD;
-        count_dog = 0;
-        PRINTF("dg:%d\n", deadline_dog);
         #if MX_LBT_ACCESS
             lbt_check_time();
             chirp_isr.state = ISR_MIXER;

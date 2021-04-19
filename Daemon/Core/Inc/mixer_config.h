@@ -17,7 +17,7 @@
 /*radio---------------------------------------------------------------------------*/
 #define REGION_CN470				// Frequency by country
 #define USE_MODEM_LORA				// Radio modem
-#define CHANNEL_MAX                                7
+#define CHANNEL_MAX                                9
 #define CHANNEL_MIN                                0
 #define CHANNEL_STEP                               200000
 
@@ -66,8 +66,6 @@ uint8_t *payload_distribution;
 /*********************************************************/
 #define MX_GENERATION_SIZE_MAX  0xFF /* 255 packets */
 #define MX_NUM_NODES_MAX        0xFF /* 255 nodes */
-
-#define DOG_PERIOD            	20
 
 #define LBT_CHANNEL_NUM         10
 
