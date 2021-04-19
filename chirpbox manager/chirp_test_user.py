@@ -32,15 +32,21 @@ def generate_start_node_id():
 #     exit(0)
 
 def generate_start_round():
-    chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000 -pl 8 link_quality:measurement"
+    chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 460000,470000,480000 -pl 8 link_quality:measurement"
 
     bitmap_str = '1fffff'
     task_start = "cbmng.py " + "-colver " + '7' + " " + "com4 " + '80' + " " + "14 "
 
-    for i in range(5):
+    # for pl in [232]:
+    #     for slot_num in [80]:
+    #         python_cmd = "cbmng.py -coldata " + str(pl) + " 7 com4 " + str(slot_num) + " 14 1fffff 0807F800 0807FB00"
+    #         print(python_cmd.split())
+    #         cbmng.main(python_cmd.split())
+
+    for i in range(10):
         print(chirpbox_tool_command.split())
         chirpbox_tool.main(chirpbox_tool_command.split())
-
+        time.sleep(60)
         print(task_start.split())
         cbmng.main(task_start.split())
 
