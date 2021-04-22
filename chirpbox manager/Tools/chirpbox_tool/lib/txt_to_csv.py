@@ -35,7 +35,7 @@ class chirpbox_txt():
         for _files in glob.glob(directory_path + "\*" + file_suffix):
             os.remove(_files)
 
-    def chirpbox_txt_to_csv(self, directory_path):
+    def chirpbox_txt_to_csv(self, directory_path, file_start_name):
         # 1. read txt file list
         txt_files = glob.glob(directory_path + "\*" + self._txt_suffix)
         logger.debug("txt_files: %s\n", txt_files)
@@ -43,19 +43,20 @@ class chirpbox_txt():
         for filename in txt_files:
             node_txt_list = []
 
-            with open(filename, 'rt') as fd:
-                for line in fd:
-                    if line.startswith(LORADISC_HEADER_C) and " " in line:
-                        # read node id and the next line
-                        node_id = line[len(LORADISC_HEADER_C):len(LORADISC_HEADER_C)+LORADISC_NODE_ID_LEN]
-                        next_line = next(fd)
+            if filename.startswith(directory_path+"\\"+file_start_name):
+                with open(filename, 'rt') as fd:
+                    for line in fd:
+                        if line.startswith(LORADISC_HEADER_C) and " " in line:
+                            # read node id and the next line
+                            node_id = line[len(LORADISC_HEADER_C):len(LORADISC_HEADER_C)+LORADISC_NODE_ID_LEN]
+                            next_line = next(fd)
 
-                        # insert new node id
-                        node_txt_list.insert(len(node_txt_list),[node_id]) if node_id not in [x[0] for x in node_txt_list] else False
+                            # insert new node id
+                            node_txt_list.insert(len(node_txt_list),[node_id]) if node_id not in [x[0] for x in node_txt_list] else False
 
-                        # insert lines behind node id without LORADISC_PAYLOAD_C and "\n"
-                        node_id_position = [x[0] for x in node_txt_list].index(node_id)
-                        node_txt_list[node_id_position].append(next_line[len(LORADISC_PAYLOAD_C):-1])
+                            # insert lines behind node id without LORADISC_PAYLOAD_C and "\n"
+                            node_id_position = [x[0] for x in node_txt_list].index(node_id)
+                            node_txt_list[node_id_position].append(next_line[len(LORADISC_PAYLOAD_C):-1])
 
             # combine list elements with " " and split the string with " "
             for x in node_txt_list:
@@ -69,7 +70,7 @@ class chirpbox_txt():
 
             # logger.debug(node_txt_list)
 
-    def chirpbox_csv_with_utc(self, directory_path, utc_start_name, utc_time_zone, value_format):
+    def chirpbox_csv_with_utc(self, directory_path, file_start_name, utc_time_zone, value_format):
         # 1. read csv file list
         csv_files = glob.glob(directory_path + "\*" + self._csv_suffix)
         logger.debug("csv_files: %s\n", csv_files)
@@ -80,7 +81,7 @@ class chirpbox_txt():
         for filename in csv_files:
 
             # convert to utc timestamp
-            if filename.startswith(directory_path+"\\"+utc_start_name):
+            if filename.startswith(directory_path+"\\"+file_start_name):
                 utc_string = filename[-len("2000-01-31-12-00-00.csv"):-len(".csv")]
                 dt = datetime(int(utc_string[0:4]), int(utc_string[5:7]), int(utc_string[8:10]), int(utc_string[11:13]), int(utc_string[14:16]), int(utc_string[17:19]), 0)
 

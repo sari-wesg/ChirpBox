@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class voltage():
     def __init__(self):
-        self._file_utc_start_name = "version"
+        self._file_start_name = "version"
         self._time_zone = False
         self._voltage_value_format = ["little endian", CHIRPBOX_VOLTAGE_START, CHIRPBOX_VOLTAGE_LEN]
 
@@ -38,10 +38,10 @@ class voltage():
         self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
 
         # convert txt in directory to csv
-        self._chirpbox_txt.chirpbox_txt_to_csv(directory_path)
+        self._chirpbox_txt.chirpbox_txt_to_csv(directory_path, self._file_start_name)
 
         # convert csv files to utc list and node id with values
-        (self._utc_list, self._node_values) = self._chirpbox_txt.chirpbox_csv_with_utc(directory_path, self._file_utc_start_name, self._time_zone, self._voltage_value_format)
+        (self._utc_list, self._node_values) = self._chirpbox_txt.chirpbox_csv_with_utc(directory_path, self._file_start_name, self._time_zone, self._voltage_value_format)
 
         logger.debug("utc_list: %s, node_values: %s\n", self._utc_list, self._node_values)
 
