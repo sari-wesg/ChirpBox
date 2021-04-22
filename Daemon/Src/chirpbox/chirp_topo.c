@@ -71,6 +71,7 @@ Topology_result_link *node_topology_link;
 
 int8_t SnrValue;
 int16_t rssi_link, RssiValue_link;
+static uint8_t round_id;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
@@ -120,6 +121,7 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
     topology_state = IDLE;
     tx_send_num = 0;
     rx_receive_num = 0;
+    round_id = i;
     if (i != node_id)
     {
         PRINTF("Topology---Rx:%d\n", i);
@@ -267,7 +269,7 @@ void topo_dio0_isr()
             // read rx packet from start address (in data buffer) of last packet received
             SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
             SX1276ReadFifo(Rx_Buffer, packet_len );
-            if ((Rx_Buffer[0]))
+            if ((Rx_Buffer[0]-1) == round_id)
             {
                 rx_receive_num++;
 

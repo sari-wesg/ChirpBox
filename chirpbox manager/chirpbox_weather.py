@@ -40,3 +40,7 @@ class testbed_weather():
                 pass
         return None
 
+if __name__ == "__main__":
+    weather = testbed_weather()
+    weather_json_object = json.dumps(weather.weather_current())
+    print(weather_json_object)

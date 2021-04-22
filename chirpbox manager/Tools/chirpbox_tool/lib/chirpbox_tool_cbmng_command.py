@@ -29,7 +29,7 @@ class cbmng_command():
 
                 # time.sleep(60)
 
-                chirpbox_command = "cbmng.py " + CHIRPBOX_COLLECT_COMMAND + str(data['all_command_coldata_payload_len']) + " " + str(data['all_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + str(data['all_command_tp']) + " " + data['all_command_bitmap'] + " " + CHIRPBOX_TOPODATA_FLASH_START + CHIRPBOX_TOPODATA_FLASH_END
+                chirpbox_command = "cbmng.py " + CHIRPBOX_COLLECT_COMMAND + str(data['coldata_payload_len']) + " " + str(data['coldata_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + str(data['all_command_tp']) + " " + data['all_command_bitmap'] + " " + CHIRPBOX_TOPODATA_FLASH_START + CHIRPBOX_TOPODATA_FLASH_END
                 logger.info(chirpbox_command.split())
                 cbmng.main(chirpbox_command.split())
 
