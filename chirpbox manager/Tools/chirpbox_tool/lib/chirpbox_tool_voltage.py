@@ -47,5 +47,5 @@ class voltage():
 
         self.utc_node_value_plot(node_id, self._utc_list, self._node_values)
 
-        # convert all files in directory
+        # remove all processed files in directory
         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')

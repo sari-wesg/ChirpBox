@@ -3,7 +3,9 @@ import logging
 logger = logging.getLogger(__name__)
 logger.propagate = False
 logger.setLevel(logging.INFO) # <<< Added Line
+logging.getLogger('matplotlib').setLevel(logging.ERROR)
 logging.getLogger('matplotlib.font_manager').disabled = True
+logging.getLogger('matplotlib.colorbar').disabled = True
 
 # Log config:
 # Create handlers

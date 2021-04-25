@@ -50,7 +50,7 @@ list of available actions:
 
 list of combinations:
     chirpbox_tool.py -sf -tp -f -pl link_quality:measurement
-    chirpbox_tool.py (-sf -tp -f -pl -id) -dir link_quality:processing
+    chirpbox_tool.py (-sf -tp -f -pl) -id -dir link_quality:processing
     chirpbox_tool.py (-id) voltage:measurement
     chirpbox_tool.py (-id) -dir voltage:processing
 
@@ -122,7 +122,7 @@ class ChirpBoxTool():
         if params == 'measurement':
             self._action.measurement(self._sf, self._tp, self._f, self._pl)
         elif params == 'processing':
-            self._action.processing()
+            self._action.processing(self._sf, self._tp, self._f, self._pl, self._id, self._dir)
 
     def cmd_voltage(self, params):
         self._action = lib.chirpbox_tool_voltage.voltage()
