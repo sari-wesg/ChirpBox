@@ -12,6 +12,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
 from matplotlib.colors import LinearSegmentedColormap
 import datetime
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -139,11 +140,12 @@ class link_quality():
                                 cbarlabel="Packet Reception Rate (%)")
 
         filename = "Linkquality_UTC" + datetime.datetime.fromtimestamp(link_infomation[0]).strftime("%Y%m%d%H%M%S") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4]))
-        logger.debug("save file as :%s", filename + ".png")
+        logger.debug("save file named:%s", filename + ".png")
 
         ax.set_title(filename, fontsize=30)
         fig.tight_layout()
-        plt.savefig(directory_path + "\\" + filename + ".png", bbox_inches='tight')
+        Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
+        plt.savefig(directory_path + "\\link_quality\\" + filename + ".png", bbox_inches='tight')
 
     def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, node_temp, id_list, directory_path):
         """
@@ -193,7 +195,8 @@ class link_quality():
         link_infomation.insert(len(link_infomation), node_temp)
         link_infomation.insert(len(link_infomation), link_matrix_list)
 
-        with open(directory_path + '\\link_quality\\link_quality.csv', 'a', newline='') as csvfile:
+        Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
+        with open(directory_path + '\\link_quality\\' + 'link_quality.csv', 'a', newline='') as csvfile:
             writer= csv.writer(csvfile, delimiter=',')
             writer.writerow(link_infomation)
 

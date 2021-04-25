@@ -21,6 +21,7 @@ import cbmng_exp_globaldef
 
 """ weather """
 import chirpbox_weather
+from pathlib import Path
 
 exp_conf = "tmp_exp_conf.json"
 firmware = "tmp_exp_firm.bin"
@@ -355,6 +356,7 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 	# save weather data
 	weather = chirpbox_weather.testbed_weather()
 	weather_json_object = json.dumps(weather.weather_current())
+	Path("tmp\\").mkdir(parents=True, exist_ok=True)
 	with open("tmp\\"+exp_name+"("+str(exp_no)+").json", "w") as outfile:
 		outfile.write(weather_json_object)
 
@@ -380,6 +382,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 
 	with open(running_status,'r') as load_f:
 		load_dict = json.load(load_f)
+		Path("tmp\\").mkdir(parents=True, exist_ok=True)
 		filename = "tmp\\" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 
 	time_now = datetime.datetime.now()
@@ -568,6 +571,7 @@ def collect_topology(com_port, command_sf, command_len, slot_num, used_tp):
 def collect_version(com_port, command_sf, slot_num, used_tp):
 	bitmap = "0"
 	task_bitmap = "0"
+	Path("tmp\\").mkdir(parents=True, exist_ok=True)
 	filename = "tmp\\"+"version" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".txt"
 	dissem_back_sf = 0
 	dissem_back_slot = 0
