@@ -281,7 +281,7 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 	end_time_t = start_time_t + datetime.timedelta(minutes = 10)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
-	exp_name = "Chirpbox_connectivity_sf_bitmap" + str(sf_bitmap) + "ch" + str(channel) + "tp" + str(tx_power) + "topo_payload_len" + str(topo_payload_len)
+	exp_name = "Chirpbox_connectivity_sf_bitmap" + str('{0:02}'.format(int(sf_bitmap))) + "ch" + str(channel) + "tp" + str('{0:02}'.format(int(tx_power))) + "topo_payload_len" + str('{0:03}'.format(int(topo_payload_len)))
 	print("Connectivity evaluation (SF bitmap " + str(sf_bitmap) + ", Channel " + str(channel) + " MHz, " + str(tx_power) + " dBm, "  + "topo_len at " + str(topo_payload_len) + ") is going to start at " + start_time + ", and stop at " + end_time)
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
 	with open(running_status, "w") as f:
