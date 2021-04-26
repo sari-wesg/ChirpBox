@@ -13,6 +13,10 @@ import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
 from matplotlib.colors import LinearSegmentedColormap
 import datetime
 from pathlib import Path
+import shutil
+import collections
+import pandas as pd
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +29,7 @@ class link_quality():
         self._file_start_name = "Chirpbox_connectivity"
         self._time_zone = False
 
+    """ link measurement """
     def measurement(self, sf_list, tp_list, freq_list, payload_len_list):
         sf_list = [i - CHIRPBOX_LINK_MIN_SF for i in sf_list]
         sf_bitmap = 0
@@ -38,6 +43,10 @@ class link_quality():
                 for tp in tp_list:
                     self._cbmng_command.run_command_with_json(CHIRPBOX_LINK_COMMAND, [sf_bitmap, freq, tp, pl])
 
+    """
+    link processing
+    plots: heatmap
+    """
     def heatmap(self,
                 data,
                 row_labels,
@@ -119,6 +128,10 @@ class link_quality():
 
         return im, cbar
 
+    """
+    link processing
+    plots: matrix to plots with heatmap
+    """
     def matrix_to_plot(self, link_infomation, link_matrix, node_list, directory_path):
         plt.rcParams["figure.figsize"] = (20, 20)
         fig, ax = plt.subplots()
@@ -147,6 +160,10 @@ class link_quality():
         Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
         plt.savefig(directory_path + "\\link_quality\\" + filename + ".png", bbox_inches='tight')
 
+    """
+    link processing
+    csv data: processing the link quality in csv to plots
+    """
     def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, node_temp, id_list, directory_path):
         """
         convert csv files to csv with columns
@@ -168,10 +185,11 @@ class link_quality():
                 try:
                     hop = nx.shortest_path_length(G_DIR, source = cnt_degrees_tx, target = cnt_degrees_rx)
                 except nx.NetworkXNoPath:
-                    logger.debug("No path from %s to %s", cnt_degrees_tx, cnt_degrees_rx)
+                    # logger.debug("No path from %s to %s", cnt_degrees_tx, cnt_degrees_rx)
+                    pass
                 if (max_hop < hop):
                     max_hop = hop
-                    logger.debug("So far, the maximal hop is from %s to %s with hop %s", cnt_degrees_tx, cnt_degrees_rx, max_hop)
+                    # logger.debug("So far, the maximal hop is from %s to %s with hop %s", cnt_degrees_tx, cnt_degrees_rx, max_hop)
 
         # Get the node degree
         node_degree = np.zeros(node_num)
@@ -187,7 +205,7 @@ class link_quality():
         min_degree = np.amin(node_degree)
         max_degree = np.amax(node_degree)
 
-        self.matrix_to_plot(link_infomation, link_matrix, id_list, directory_path)
+        # self.matrix_to_plot(link_infomation, link_matrix, id_list, directory_path)
 
         link_matrix_list = link_matrix.tolist()
         link_infomation.extend((min(snr_list), max(snr_list), min(rssi_list), max(rssi_list), max_hop, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
@@ -200,11 +218,59 @@ class link_quality():
             writer= csv.writer(csvfile, delimiter=',')
             writer.writerow(link_infomation)
 
-        # with open(directory_path + '\\link_quality.csv', newline='') as f:
-        #     reader = csv.reader(f)
-        #     data = list(reader)
-        # print(data)
+    """
+    link processing
+    unique csv data: processing the link_quality.csv
+    """
+    def chirpbox_link_csv_processing(self, directory_path):
+        with open(directory_path + '\\link_quality\\link_quality.csv', newline='') as f:
+            reader = csv.reader(f)
+            list_reader = list(reader)
+        unique_utc = [i[0] for i in list_reader]
 
+        # find the utc with all sf data
+        unique_utc = [item for item, count in collections.Counter(unique_utc).items() if count > (12 - 7)]
+
+        # remove rows not in that utc
+        try:
+            os.remove(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv')
+        except:
+            logger.info("link_quality_all_sf.csv does not exist")
+            pass
+
+        with open(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv', 'a', newline='') as csvfile:
+            writer= csv.writer(csvfile, delimiter=',')
+            for row in list_reader:
+                if (row[0] in unique_utc):
+                    writer.writerow([datetime.datetime.fromtimestamp(int(row[0])).strftime("%Y-%m-%d %H:%M")] + row[1:])
+
+        # draw plots with new csv
+        df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality_all_sf.csv',
+                            sep=',',
+                            names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link"])
+
+        # plots:
+        ax = plt.gca()
+        for sf in range(7, 13):
+            df_link_sf = df_link.loc[df_link['sf'] == sf]
+            plt.plot(df_link_sf['utc'], df_link_sf['min_snr'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_snr')
+            plt.plot(df_link_sf['utc'], df_link_sf['max_snr'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_snr')
+            plt.plot(df_link_sf['utc'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_rssi')
+            plt.plot(df_link_sf['utc'], df_link_sf['max_rssi'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_rssi')
+            plt.plot(df_link_sf['utc'], df_link_sf['max_hop'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_hop')
+            plt.plot(df_link_sf['utc'], df_link_sf['min_degree'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_degree')
+            plt.plot(df_link_sf['utc'], df_link_sf['max_degree'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_degree')
+            plt.plot(df_link_sf['utc'], df_link_sf['average_degree'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'average_degree')
+
+        plt.plot(df_link['utc'], df_link['average_temperature'], linestyle='None', marker='o', markersize = 10, label = 'average_temperature')
+
+        legend = plt.legend(loc='upper right', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
+        plt.show()
+
+    """
+    link processing
+    .txt in folder: process txts in the folder to csv data and plots
+    """
     def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path):
         self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
 
@@ -212,7 +278,15 @@ class link_quality():
         self._chirpbox_txt.chirpbox_txt_to_csv(directory_path, self._file_start_name)
 
         # convert csv files to csv with columns
-        self._chirpbox_txt.chirpbox_link_csv(directory_path, self._file_start_name, self._time_zone, id_list)
+        if CHIRPBOX_LINK_DATA is not True:
+            try:
+                shutil.rmtree(directory_path + "\\link_quality\\")
+            except:
+                logger.info("link_quality folder does not exist")
+                pass
+            self._chirpbox_txt.chirpbox_link_to_csv(directory_path, self._file_start_name, self._time_zone, id_list)
+
+        self.chirpbox_link_csv_processing(directory_path)
 
         # remove all processed files in directory
         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')

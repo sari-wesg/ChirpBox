@@ -121,7 +121,7 @@ class chirpbox_txt():
             pass
         return check
 
-    def chirpbox_link_csv(self, directory_path, file_start_name, utc_time_zone, id_list):
+    def chirpbox_link_to_csv(self, directory_path, file_start_name, utc_time_zone, id_list):
         self._link_processing = lib.chirpbox_tool_link_quality.link_quality()
 
         # 1. read csv file list
