@@ -17,6 +17,8 @@ import shutil
 import collections
 import pandas as pd
 import os
+import glob
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +166,7 @@ class link_quality():
     link processing
     csv data: processing the link quality in csv to plots
     """
-    def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, node_temp, id_list, directory_path):
+    def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, node_temp, id_list, directory_path, filename):
         """
         convert csv files to csv with columns
         utc | sf | tp | frequency | payload length | min_SNR | max_SNR | min_RSSI | max_RSSI | max_hop | max_degree | min_degree | mean_degree | average_temp | node_degree (list) | node_temp (list) | node id with link (matrix)
@@ -198,7 +200,7 @@ class link_quality():
             for cnt_degrees_tx in range(node_num):
                 if(cnt_degrees_rx != cnt_degrees_tx):
                     if (link_matrix[cnt_degrees_rx, cnt_degrees_tx] != 0):
-                        de = de + 1
+                        de = de + 1 * link_matrix[cnt_degrees_rx, cnt_degrees_tx] / 100
             node_degree[cnt_degrees_rx] = de
         mean_degree = np.mean(node_degree)
         std_dev_degree = np.std(node_degree)
@@ -213,6 +215,19 @@ class link_quality():
         link_infomation.insert(len(link_infomation), node_temp)
         link_infomation.insert(len(link_infomation), link_matrix_list)
 
+        # read and save weather data
+        weather_file = filename[:-len(".csv")] + ".json"
+        # logger.debug("weather file for %s", weather_file)
+
+        try:
+            with open(weather_file) as data_file:
+                weather_data = json.load(data_file)
+                link_infomation.extend((weather_data['temperature']['temp']-273.15, weather_data['wind']['speed'], weather_data['wind']['deg'], weather_data['pressure']['press'], weather_data['humidity']))
+        except:
+            logger.info("No weather file for %s", weather_file)
+            link_infomation.extend(('null', 'null', 'null', 'null', 'null'))
+            pass
+
         Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
         with open(directory_path + '\\link_quality\\' + 'link_quality.csv', 'a', newline='') as csvfile:
             writer= csv.writer(csvfile, delimiter=',')
@@ -223,9 +238,16 @@ class link_quality():
     unique csv data: processing the link_quality.csv
     """
     def chirpbox_link_csv_processing(self, directory_path):
-        with open(directory_path + '\\link_quality\\link_quality.csv', newline='') as f:
-            reader = csv.reader(f)
-            list_reader = list(reader)
+        logger.debug("chirpbox_link_csv_processing")
+
+        try:
+            with open(directory_path + '\\link_quality\\link_quality.csv', newline='') as f:
+                reader = csv.reader(f)
+                list_reader = list(reader)
+        except:
+            logger.error("No link quality data!")
+            return False
+
         unique_utc = [i[0] for i in list_reader]
 
         # find the utc with all sf data
@@ -235,7 +257,6 @@ class link_quality():
         try:
             os.remove(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv')
         except:
-            logger.info("link_quality_all_sf.csv does not exist")
             pass
 
         with open(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv', 'a', newline='') as csvfile:
@@ -247,24 +268,39 @@ class link_quality():
         # draw plots with new csv
         df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality_all_sf.csv',
                             sep=',',
-                            names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link"])
+                            names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
-        # plots:
+        # plot1: temperature:
         ax = plt.gca()
+        ax2 = ax.twinx()
+
         for sf in range(7, 13):
-            df_link_sf = df_link.loc[df_link['sf'] == sf]
-            plt.plot(df_link_sf['utc'], df_link_sf['min_snr'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_snr')
-            plt.plot(df_link_sf['utc'], df_link_sf['max_snr'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_snr')
-            plt.plot(df_link_sf['utc'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_rssi')
-            plt.plot(df_link_sf['utc'], df_link_sf['max_rssi'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_rssi')
-            plt.plot(df_link_sf['utc'], df_link_sf['max_hop'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_hop')
-            plt.plot(df_link_sf['utc'], df_link_sf['min_degree'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_degree')
-            plt.plot(df_link_sf['utc'], df_link_sf['max_degree'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'max_degree')
-            plt.plot(df_link_sf['utc'], df_link_sf['average_degree'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'average_degree')
+            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == 490000)]
+            # ax.plot(df_link_sf['utc'], df_link_sf['min_snr'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'min_snr')
+            # ax.plot(df_link_sf['utc'], df_link_sf['max_snr'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_snr')
+            # ax.plot(df_link_sf['utc'], df_link_sf['min_rssi'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'min_rssi')
+            # ax.plot(df_link_sf['utc'], df_link_sf['max_rssi'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_rssi')
+            # ax.plot(df_link_sf['utc'], df_link_sf['max_hop'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_hop')
+            # ax.plot(df_link_sf['utc'], df_link_sf['min_degree'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'min_degree')
+            # ax.plot(df_link_sf['utc'], df_link_sf['max_degree'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_degree')
+            ax.plot(df_link_sf['utc'], df_link_sf['average_degree'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'average_degree')
 
-        plt.plot(df_link['utc'], df_link['average_temperature'], linestyle='None', marker='o', markersize = 10, label = 'average_temperature')
+            if (sf == 7):
+                ax2.plot(df_link_sf['utc'], df_link_sf['average_temperature'], linestyle='--', marker='o', markersize = 10, label = 'temp')
 
-        legend = plt.legend(loc='upper right', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
+        legend = ax.legend(loc='upper left', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
+        legend = ax2.legend(loc='upper right', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
+        plt.show()
+
+        # plot2: degree:
+        ax = plt.gca()
+        ax2 = ax.twinx()
+
+        for sf in range(7, 13):
+            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == 470000)]
+            ax.plot(df_link_sf['average_degree'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_rssi')
+            ax2.plot(df_link_sf['average_degree'], df_link_sf['min_snr'], linestyle='None', marker='^', markersize = 10, label = str(sf) + 'min_snr')
+        legend = ax.legend(loc='upper left', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
         plt.show()
 
     """

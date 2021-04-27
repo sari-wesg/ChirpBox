@@ -59,7 +59,7 @@ class chirpbox_txt():
                             next_line = next(fd)
                         except:
                             next_line = None
-                            logger.info("Next line is the end of the file")
+                            logger.info("Next line is the end of the file %s", filename)
                             pass
 
                         if next_line is not None:
@@ -133,7 +133,7 @@ class chirpbox_txt():
         node_id_with_value = []
         for filename in csv_files:
             # utc:
-            logger.debug("filename:%s", filename)
+            # logger.debug("filename:%s", filename)
 
             utc_string = filename[-len("20210418102702100827).csv"):-len(").csv")]
             dt = datetime(int(utc_string[0:4]), int(utc_string[4:6]), int(utc_string[6:8]), int(utc_string[8:10]), int(utc_string[10:12]), int(utc_string[12:14]), int(utc_string[14:16]))
@@ -189,7 +189,7 @@ class chirpbox_txt():
                                     node_temp = node_temp * (-1)
                                 node_temperature.append(node_temp)
                             except:
-                                logger.info("No infomation for node %s", id_hex)
+                                logger.info("No infomation for node %s in %s", id_hex, filename)
                                 breaker = True
                                 break
                             for id in id_list:
@@ -224,7 +224,7 @@ class chirpbox_txt():
                                             received_rssi.extend((rssi_min, rssi_max))
                                 except:
                                     breaker = True
-                                    logger.info("No infomation for node %s in node %s with sf %s", id, id_hex, sf + CHIRPBOX_LINK_SF7)
+                                    logger.info("No infomation for node %s in node %s with sf %s in file %s", id, id_hex, sf + CHIRPBOX_LINK_SF7, filename)
                                     break
                             if breaker:
                                 break
@@ -238,4 +238,4 @@ class chirpbox_txt():
                         # logger.debug("rssi with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, received_rssi)
                         # logger.debug("temp with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, node_temperature)
                         self._link_processing = lib.chirpbox_tool_link_quality.link_quality()
-                        self._link_processing.processing_link_data_to_csv([utc_value, sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, node_temperature, id_list, directory_path)
+                        self._link_processing.processing_link_data_to_csv([utc_value, sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, node_temperature, id_list, directory_path, filename)
