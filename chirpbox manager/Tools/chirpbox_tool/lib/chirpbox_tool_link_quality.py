@@ -22,6 +22,7 @@ import json
 import math
 import matplotlib.dates as mdates
 import ast
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +164,7 @@ class link_quality():
                                 alpha_value = 1,
                                 cbarlabel="Packet Reception Rate (%)")
 
-        filename = "Linkquality_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + self._plot_suffix
+        filename = "Heatmap_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + self._plot_suffix
         logger.debug("save heatmap %s", filename)
 
         # ax.set_title(filename, fontsize=30)
@@ -473,15 +474,18 @@ class link_quality():
 
         # plot3: heatmap:
         if "heatmap" in plot_type:
-            for index, row in df_link.iterrows():
-                link_infomation = row[:5].values.tolist()
-                # get node link matrix
-                index_no = df_link.columns.get_loc('node_link')
-                # convert panda to list
-                link_matrix = ast.literal_eval(row[index_no])
-                # convert list to numpy
-                link_matrix = np.array(link_matrix)
-                self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
+            for freq in freq_list:
+                for sf in sf_list:
+                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    for index, row in df_link_sf.iterrows():
+                        link_infomation = row[:5].values.tolist()
+                        # get node link matrix
+                        index_no = df_link_sf.columns.get_loc('node_link')
+                        # convert panda to list
+                        link_matrix = ast.literal_eval(row[index_no])
+                        # convert list to numpy
+                        link_matrix = np.array(link_matrix)
+                        self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
 
         # plot4: topology:
         if "topology" in plot_type:
@@ -491,17 +495,34 @@ class link_quality():
             except:
                 logger.info("No using_pos is input")
                 using_pos = 0
-            for index, row in df_link.iterrows():
-                link_infomation = row[:5].values.tolist()
-                # get node link matrix
-                index_no = df_link.columns.get_loc('node_link')
-                # convert panda to list
-                link_matrix = ast.literal_eval(row[index_no])
-                # convert list to numpy
-                link_matrix = np.array(link_matrix)
-                self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, directory_path)
+            for freq in freq_list:
+                for sf in sf_list:
+                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    for index, row in df_link_sf.iterrows():
+                        link_infomation = row[:5].values.tolist()
+                        # get node link matrix
+                        index_no = df_link_sf.columns.get_loc('node_link')
+                        # convert panda to list
+                        link_matrix = ast.literal_eval(row[index_no])
+                        # convert list to numpy
+                        link_matrix = np.array(link_matrix)
+                        self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, directory_path)
 
         return True
+
+
+    """
+    link processing
+    csv data: processing the link quality in csv named "link_quality.csv"
+    """
+    def processing_figure_to_gif(self, directory_path, file_prefix):
+        # filepaths
+        fp_in = directory_path + '\\link_quality\\' + file_prefix + '*.png'
+        fp_out = directory_path + '\\link_quality\\' + file_prefix + '.gif'
+
+        # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#gif
+        img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
+        img.save(fp=fp_out, format='GIF', append_images=imgs,save_all=True, duration=400, loop=0)
 
     """
     link processing
@@ -523,6 +544,10 @@ class link_quality():
             self._chirpbox_txt.chirpbox_link_to_csv(directory_path, self._file_start_name, self._time_zone, id_list)
 
         self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path, plot_type)
+
+        # network heatmap and topology plots to gif
+        self.processing_figure_to_gif(directory_path, 'Heatmap')
+        self.processing_figure_to_gif(directory_path, 'Networktopology')
 
         # remove all processed files in directory
         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')
