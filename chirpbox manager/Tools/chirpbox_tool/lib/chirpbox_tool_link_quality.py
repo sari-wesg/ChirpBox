@@ -10,7 +10,6 @@ import matplotlib.style as style
 import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns
-
 from matplotlib.colors import LinearSegmentedColormap
 import datetime
 from pathlib import Path
@@ -22,6 +21,7 @@ import glob
 import json
 import math
 import matplotlib.dates as mdates
+import ast
 
 logger = logging.getLogger(__name__)
 
@@ -141,9 +141,9 @@ class link_quality():
 
     """
     link processing
-    plots: matrix to plots with heatmap
+    plots: matrix to heatmap
     """
-    def matrix_to_plot(self, link_infomation, link_matrix, node_list, directory_path):
+    def matrix_to_heatmap(self, link_infomation, link_matrix, node_list, directory_path):
         plt.rcParams["figure.figsize"] = (20, 20)
         fig, ax = plt.subplots()
 
@@ -163,17 +163,93 @@ class link_quality():
                                 alpha_value = 1,
                                 cbarlabel="Packet Reception Rate (%)")
 
-        filename = "Linkquality_UTC" + link_infomation[0] + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4]))
-        logger.debug("save file named:%s", filename + ".png")
+        filename = "Linkquality_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + self._plot_suffix
+        logger.debug("save heatmap %s", filename)
 
-        ax.set_title(filename, fontsize=30)
+        # ax.set_title(filename, fontsize=30)
         fig.tight_layout()
-        Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
-        plt.savefig(directory_path + "\\link_quality\\" + filename + ".png", bbox_inches='tight')
+        plt.savefig(directory_path + "\\link_quality\\" + filename, bbox_inches='tight')
+
+
+
 
     """
     link processing
-    csv data: processing the link quality in csv to plots
+    plots: matrix to topology
+    """
+    def matrix_to_topology(self, link_infomation, link_matrix, node_list, using_pos, directory_path):
+        node_num = len(node_list)
+        # Get a adjacent matrix, i.e., remove weight information
+        plt.clf()
+
+        adjacent_matrix = np.zeros((node_num, node_num))
+        for cnt_a_adj_c in range(node_num):
+            for cnt_a_adj_r in range(node_num):
+                if (link_matrix[cnt_a_adj_r, cnt_a_adj_c] != 0):
+                    adjacent_matrix[cnt_a_adj_r, cnt_a_adj_c] = 1
+
+        # G_DIR is a directional graph, G_UNDIR is a undirectional graph
+        G_DIR = nx.from_numpy_matrix(np.array(adjacent_matrix), create_using = nx.MultiDiGraph())
+        G_UNDIR = nx.from_numpy_matrix(np.array(link_matrix))
+
+        data_dir = "."
+        posfilepath = r"\pos.npy"
+        tmp_key = []
+        for cnt in range(node_num):
+            tmp_key.append(cnt)
+
+        topo_drawing_mapping = dict(zip(tmp_key, node_list))
+        G_UNDIR_MAPPING = nx.relabel_nodes(G_UNDIR, topo_drawing_mapping)
+
+        if (using_pos == 1):
+            print(data_dir + posfilepath)
+            txt = np.load(data_dir + posfilepath, allow_pickle = True)
+            fixed_pos = txt.item()
+            fixed_nodes = fixed_pos.keys()
+            pos = nx.spring_layout(G_UNDIR_MAPPING, pos = fixed_pos, fixed = fixed_nodes, scale=3)
+        else:
+            if (using_pos == 0):
+                pos = nx.spring_layout(G_UNDIR_MAPPING)
+            if (using_pos == 2):
+                pos = {0: [356, 277], 1: [463, 758], 2: [1029, 201], 3: [378, 292], 4: [1050, 20], 5: [214, 385], 6: [282, 300], 7: [375, 86], 8: [75, 121], 9: [305, 106], 10: [427, 294], 11: [302, 789], 12: [531, 210], 13: [473, 217], 14: [702, 544], 15: [429, 570], 16: [874, 617], 17: [628, 772], 18: [632, 602], 19: [800, 782], 20: [182, 610]}
+            np.save(data_dir + posfilepath, pos)
+        if (using_pos == 2):
+            img = matplotlib.image.imread("area.png")
+            #plt.scatter(x,y,zorder=1)
+            plt.imshow(img, zorder = 0)
+
+        d = dict(G_UNDIR_MAPPING.degree)
+        # 1. draw
+        nx.draw(G_UNDIR_MAPPING, pos = pos, node_size = 0)
+        color_map = []
+        for node in G_UNDIR_MAPPING:
+            if node == 0:
+                color_map.append('#ED1F24')
+            else:
+                color_map.append('#70AD47')
+        # 2. node
+        nx.draw_networkx_nodes(G_UNDIR_MAPPING, pos = pos, node_color = color_map, node_size=[v * 20 for v in d.values()], linewidths = 0.5, edgecolors = '#000000')
+        # 3. edge
+        # edge color is related to the weight
+        edges,weights = zip(*nx.get_edge_attributes(G_UNDIR_MAPPING,'weight').items())
+        nx.draw_networkx_edges(G_UNDIR_MAPPING,pos,edgelist=edges, edge_color=weights, width=1, edge_cmap=plt.cm.binary)
+        # 4. label
+        # change the label for control node
+        raw_labels = ["C"] + [str(x) for x in range(1, len(node_list))]
+        lab_node = dict(zip(G_UNDIR_MAPPING.nodes, raw_labels))
+        nx.draw_networkx_labels(G_UNDIR_MAPPING, pos = pos, labels=lab_node, font_size = 10, font_weight = 'bold', font_color = '#FFFFFF')
+
+        filename = "Networktopology_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + self._plot_suffix
+        logger.debug("save topology %s", filename)
+
+        plt.savefig(directory_path + "\\link_quality\\" + filename, bbox_inches='tight')
+
+
+
+
+    """
+    link processing
+    csv data: processing the link quality in csv named "link_quality.csv"
     """
     def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, node_temp, id_list, directory_path, filename):
         """
@@ -218,8 +294,6 @@ class link_quality():
         min_degree = np.amin(node_degree)
         max_degree = np.amax(node_degree)
 
-        # self.matrix_to_plot(link_infomation, link_matrix, id_list, directory_path)
-
         link_matrix_list = link_matrix.tolist()
         if ((len(snr_list) > 0) and (len(rssi_list) > 0)):
             link_infomation.extend((min(snr_list), max(snr_list), min(rssi_list), max(rssi_list), max_hop, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
@@ -231,14 +305,12 @@ class link_quality():
 
         # read and save weather data
         weather_file = filename[:-len(".csv")] + ".json"
-        # logger.debug("weather file for %s", weather_file)
 
         try:
             with open(weather_file) as data_file:
                 weather_data = json.load(data_file)
                 link_infomation.extend((weather_data['temperature']['temp']-273.15, weather_data['wind']['speed'], weather_data['wind']['deg'], weather_data['pressure']['press'], weather_data['humidity']))
         except:
-            # logger.debug("No weather file for %s", weather_file)
             link_infomation.extend(('null', 'null', 'null', 'null', 'null'))
             pass
 
@@ -249,9 +321,13 @@ class link_quality():
 
     """
     link processing
-    unique csv data: processing the link_quality.csv
+    clean csv data: processing the link_quality.csv to "link_quality_all_sf.csv" and draw plots based on the plot type
     """
-    def chirpbox_link_csv_processing(self, sf_list, freq_list, id_list, directory_path):
+    def chirpbox_link_csv_processing(self, sf_list, freq_list, id_list, directory_path, plot_type):
+        if "pdf" in plot_type:
+            self._plot_suffix = ".pdf"
+        else:
+            self._plot_suffix = ".png"
         # open the link quality data file
         try:
             with open(directory_path + '\\link_quality\\link_quality.csv', newline='') as f:
@@ -286,113 +362,144 @@ class link_quality():
                             sep=',',
                             names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
-        # plot1: temperature:
         if (df_link.empty):
             logger.error("link data is None")
             return False
+        # plot1: temperature:
+        if "temperature" in plot_type:
+            for freq in freq_list:
+                fig = plt.figure(figsize=(25, 12))
+                ax = plt.gca()
+                ax2 = ax.twinx()
+                for sf in sf_list:
+                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
 
-        for freq in freq_list:
-            fig = plt.figure(figsize=(25, 12))
-            ax = plt.gca()
-            ax2 = ax.twinx()
-            for sf in sf_list:
-                df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
-                dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
+                    # ax.plot(dates, df_link_sf['min_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_snr')
+                    # ax.plot(dates, df_link_sf['max_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_snr')
+                    # ax.plot(dates, df_link_sf['min_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_rssi')
+                    # ax.plot(dates, df_link_sf['max_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_rssi')
+                    # ax.plot(dates, df_link_sf['max_hop'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_hop')
+                    # ax.plot(dates, df_link_sf['min_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_degree')
+                    # ax.plot(dates, df_link_sf['max_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_degree')
 
-                # ax.plot(dates, df_link_sf['min_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_snr')
-                # ax.plot(dates, df_link_sf['max_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_snr')
-                # ax.plot(dates, df_link_sf['min_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_rssi')
-                # ax.plot(dates, df_link_sf['max_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_rssi')
-                # ax.plot(dates, df_link_sf['max_hop'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_hop')
-                # ax.plot(dates, df_link_sf['min_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_degree')
-                # ax.plot(dates, df_link_sf['max_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_degree')
+                    ax.plot(dates, df_link_sf['average_degree'], linestyle='-', marker='o', markersize = 10, color = red_colors[sf - 7 + 2], label = "SF" + str(sf))
 
-                ax.plot(dates, df_link_sf['average_degree'], linestyle='-', marker='o', markersize = 10, color = red_colors[sf - 7 + 2], label = "SF" + str(sf))
+                    if (sf == sf_list[0]):
+                        ax2.plot(dates, df_link_sf['average_temperature'], linestyle='--', marker='o', markersize = 10, label = 'temperature')
 
-                if (sf == sf_list[0]):
-                    ax2.plot(dates, df_link_sf['average_temperature'], linestyle='--', marker='o', markersize = 10, label = 'temperature')
+                ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+                # ax.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+                ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
 
-            ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
-            # ax.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
-            ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+                ax.set_ylabel('Average degree', fontsize = 50)
+                ax2.set_ylabel('Aveage node temperature ($^\circ$C)', fontsize = 50)
+                title = "Average degree and temperature on " + str(freq)
+                # ax.set_title(title, fontsize = 50, pad=20)
 
-            ax.set_ylabel('Average degree', fontsize = 50)
-            ax2.set_ylabel('Aveage node temperature ($^\circ$C)', fontsize = 50)
-            title = "Average degree and temperature on " + str(freq)
-            # ax.set_title(title, fontsize = 50, pad=20)
+                # axis range
+                ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
+                ax.set_ylim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
+                ax2.set_ylim(math.floor(min(df_link['average_temperature'])), math.ceil(max(df_link['average_temperature'])))
 
-            # axis range
-            ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
-            ax.set_ylim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
-            ax2.set_ylim(math.floor(min(df_link['average_temperature'])), math.ceil(max(df_link['average_temperature'])))
+                # Ticks and labels
+                ax.tick_params(labelsize=50)
+                ax2.tick_params(labelsize=50)
+                ax.tick_params(which='major',width=5, length=10)
+                ax2.tick_params(which='major',width=5, length=10)
 
-            # Ticks and labels
-            ax.tick_params(labelsize=50)
-            ax2.tick_params(labelsize=50)
-            ax.tick_params(which='major',width=5, length=10)
-            ax2.tick_params(which='major',width=5, length=10)
+                df_link_freq = df_link.loc[(df_link['channel'] == int(freq))]
+                # ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox',fontsize=50)
+                plt.xticks(fontsize = 15)
+                legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
+                legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
 
-            df_link_freq = df_link.loc[(df_link['channel'] == int(freq))]
-            # ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox',fontsize=50)
-            plt.xticks(fontsize = 15)
-            legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
-            legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
+                plt.savefig(directory_path + '\\link_quality\\' + title + self._plot_suffix, bbox_inches='tight')
 
-            plt.savefig(directory_path + '\\link_quality\\' + title + '.png', bbox_inches='tight')
-
-            fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
-            # plt.show(block=False)
-            # plt.pause(3)
-            # plt.close()
+                fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
+                # plt.show(block=False)
+                # plt.pause(3)
+                # plt.close()
 
         # plot2: degree:
-        for freq in freq_list:
-            fig = plt.figure(figsize=(25, 12))
-            ax = plt.gca()
-            ax2 = ax.twinx()
+        if "degree" in plot_type:
+            for freq in freq_list:
+                fig = plt.figure(figsize=(25, 12))
+                ax = plt.gca()
+                ax2 = ax.twinx()
 
-            for sf in sf_list:
-                df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
-                ax.plot(df_link_sf['average_degree'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 20, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_rssi')
-                ax2.plot(df_link_sf['average_degree'], df_link_sf['min_snr'], linestyle='None', marker='^', markersize = 25, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_snr')
+                for sf in sf_list:
+                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    ax.plot(df_link_sf['average_degree'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 20, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_rssi')
+                    ax2.plot(df_link_sf['average_degree'], df_link_sf['min_snr'], linestyle='None', marker='^', markersize = 25, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_snr')
 
-            ax.set_ylabel('RSSI', fontsize = 50)
-            ax2.set_ylabel('SNR', fontsize = 50)
-            title = "Minimal RSSI and SNR with degree on frequency " + str(freq)
-            # ax.set_title(title, fontsize = 50, pad=20)
+                ax.set_ylabel('RSSI', fontsize = 50)
+                ax2.set_ylabel('SNR', fontsize = 50)
+                title = "Minimal RSSI and SNR with degree on frequency " + str(freq)
+                # ax.set_title(title, fontsize = 50, pad=20)
 
-            # axis range
-            ax.set_xlim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
-            ax.set_ylim(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])))
-            ax2.set_ylim(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])))
+                # axis range
+                ax.set_xlim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
+                ax.set_ylim(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])))
+                ax2.set_ylim(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])))
 
-            # Ticks and labels
-            ax.tick_params(labelsize=50)
-            ax2.tick_params(labelsize=50)
-            ax.tick_params(which='major',width=5, length=10)
-            ax2.tick_params(which='major',width=5, length=10)
+                # Ticks and labels
+                ax.tick_params(labelsize=50)
+                ax2.tick_params(labelsize=50)
+                ax.tick_params(which='major',width=5, length=10)
+                ax2.tick_params(which='major',width=5, length=10)
 
-            x_list = df_link['average_degree'].tolist()
-            x_list = range(math.floor(min(x_list)), math.ceil(max(x_list))+1, 1)
-            ax.set_xticks(x_list,minor=True)
-            ax2.set_xticks(x_list,minor=True)
-            # ax.set_yticks(range(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])) + 1, 1),minor=True)
-            # ax2.set_yticks(range(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])) + 1, 1),minor=True)
-            ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox', fontsize=50)
+                x_list = df_link['average_degree'].tolist()
+                x_list = range(math.floor(min(x_list)), math.ceil(max(x_list))+1, 1)
+                ax.set_xticks(x_list,minor=True)
+                ax2.set_xticks(x_list,minor=True)
+                # ax.set_yticks(range(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])) + 1, 1),minor=True)
+                # ax2.set_yticks(range(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])) + 1, 1),minor=True)
+                ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox', fontsize=50)
 
-            # ax2.set_xticklabels(x_list, ha='right', rotation=45)
-            plt.xticks(x_list, x_list, fontsize = 15)
-            # ax.set_xticks(fontsize=15)
+                # ax2.set_xticklabels(x_list, ha='right', rotation=45)
+                plt.xticks(x_list, x_list, fontsize = 15)
+                # ax.set_xticks(fontsize=15)
 
-            legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
-            legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
+                legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
+                legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
 
-            plt.savefig(directory_path + '\\link_quality\\' + title + '.png', bbox_inches='tight')
+                plt.savefig(directory_path + '\\link_quality\\' + title + self._plot_suffix, bbox_inches='tight')
 
-            fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
-            # plt.show(block=False)
-            # plt.pause(3)
-            # plt.close()
+                fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
+                # plt.show(block=False)
+                # plt.pause(3)
+                # plt.close()
+
+        # plot3: heatmap:
+        if "heatmap" in plot_type:
+            for index, row in df_link.iterrows():
+                link_infomation = row[:5].values.tolist()
+                # get node link matrix
+                index_no = df_link.columns.get_loc('node_link')
+                # convert panda to list
+                link_matrix = ast.literal_eval(row[index_no])
+                # convert list to numpy
+                link_matrix = np.array(link_matrix)
+                self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
+
+        # plot4: topology:
+        if "topology" in plot_type:
+            try:
+                using_pos = [i for i in plot_type if i.startswith('using_pos')][0]
+                using_pos = int(using_pos[-1:])
+            except:
+                logger.info("No using_pos is input")
+                using_pos = 0
+            for index, row in df_link.iterrows():
+                link_infomation = row[:5].values.tolist()
+                # get node link matrix
+                index_no = df_link.columns.get_loc('node_link')
+                # convert panda to list
+                link_matrix = ast.literal_eval(row[index_no])
+                # convert list to numpy
+                link_matrix = np.array(link_matrix)
+                self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, directory_path)
 
         return True
 
@@ -400,7 +507,7 @@ class link_quality():
     link processing
     .txt in folder: process txts in the folder to csv data and plots
     """
-    def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path):
+    def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path, plot_type):
         self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
 
         # convert txt in directory to csv
@@ -415,7 +522,7 @@ class link_quality():
                 pass
             self._chirpbox_txt.chirpbox_link_to_csv(directory_path, self._file_start_name, self._time_zone, id_list)
 
-        self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path)
+        self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path, plot_type)
 
         # remove all processed files in directory
         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')

@@ -38,9 +38,13 @@ DESCRIPTION_STR = VERSION_STR + """
 
 ACTIONS_HELP_STR = """
 list of paramters:
-    -spreading_factor
-    -tx_power
-    -node_id
+    --spreading_factor
+    --tx_power
+    --frequency
+    --payload_len
+    --node_id
+    --directory_path
+    --plot_type
 
 list of available actions:
     link_quality:measurement
@@ -50,16 +54,16 @@ list of available actions:
 
 list of combinations:
     chirpbox_tool.py -sf -tp -f -pl link_quality:measurement
-    chirpbox_tool.py (-sf -f) -id -dir link_quality:processing
+    chirpbox_tool.py (-sf -f -plot) -id -dir -plot_type link_quality:processing
     chirpbox_tool.py (-id) voltage:measurement
     chirpbox_tool.py (-id) -dir voltage:processing
 
 examples:
     chirpbox_tool.py -h
-    chirpbox_tool.py -sf 7-12 -tp 0-14 -f 470000-470400 -pl 8-10 link_quality:measurement
-    chirpbox_tool.py -sf 7,8,9 -tp 0,1,2 -f 470000,470200,470400 -pl 8,32 -id 0,10,20 -dir "../../link_quality_folder" link_quality:processing
-    chirpbox_tool.py -id 0,10,20 voltage:measurement
-    chirpbox_tool.py -id 0,10,20 -dir "voltage_measurement_folder" voltage:processing
+    chirpbox_tool.py -sf 7-12 -tp 0-14 -f 470000,480000,490000 -pl 8-10 link_quality:measurement
+    chirpbox_tool.py -sf 7-12 -f 470000,480000,490000 -plot temperature,degree,heatmap,topology,using_pos2,pdf -id 0-20 -dir "tmp" link_quality:processing
+    chirpbox_tool.py -id 0-20 voltage:measurement
+    chirpbox_tool.py -id 0,10,20 -dir "tmp" voltage:processing
 """
 
 class ChirpBoxTool():
@@ -100,7 +104,7 @@ class ChirpBoxTool():
                     logger.error("Lack param in %s:%s", cmd, params)
                     return False
             elif (params == 'processing'):
-                if (self._dir is None):
+                if (self._id is None) or (self._dir is None):
                     logger.error("Lack param in %s:%s", cmd, params)
                     return False
             else:
@@ -122,7 +126,7 @@ class ChirpBoxTool():
         if params == 'measurement':
             self._action.measurement(self._sf, self._tp, self._f, self._pl)
         elif params == 'processing':
-            self._action.processing(self._sf, self._tp, self._f, self._pl, self._id, self._dir)
+            self._action.processing(self._sf, self._tp, self._f, self._pl, self._id, self._dir, self._plot)
 
     def cmd_voltage(self, params):
         self._action = lib.chirpbox_tool_voltage.voltage()
@@ -150,21 +154,22 @@ class ChirpBoxTool():
             prog='chirpbox_tool', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
         parser.add_argument('-sf', '--spreading_factor', dest='spreading_factor', help='Input the spreading factor')
         parser.add_argument('-tp', '--tx_power', dest='tx_power', help='Input the transmit power')
-        parser.add_argument('-f', '--freq', dest='freq', help='Input the transmit frequency')
+        parser.add_argument('-f', '--frequency', dest='frequency', help='Input the transmit frequency')
         parser.add_argument('-pl', '--payload_len', dest='payload_len', help='Input the payload length')
         parser.add_argument('-id', '--node_id', dest='node_id', help='Input the node_id')
         parser.add_argument('-dir', '--directory_path', dest='directory_path', help='Input the directory path for processing')
+        parser.add_argument('-plot', '--plot_type', dest='plot_type', help='Input the type of plots after processing')
         group_actions = parser.add_argument_group(title='actions')
         group_actions.add_argument('action', nargs='*', help='actions will be processed sequentially')
         args = parser.parse_args(argv)
         self._sf = self.convert_int_string_to_list(args.spreading_factor)
         self._tp = self.convert_int_string_to_list(args.tx_power)
-        self._f = self.convert_int_string_to_list(args.freq)
+        self._f = self.convert_int_string_to_list(args.frequency)
         self._pl = self.convert_int_string_to_list(args.payload_len)
         self._id = self.convert_int_string_to_list(args.node_id)
         self._dir = args.directory_path
+        self._plot = [x.strip() for x in args.plot_type.split(',')]
         logger.info(args)
-        logger.info("self._sf: %s, self._tp: %s, self._f: %s, self._pl: %s, self._id: %s, self._dir: %s", self._sf, self._tp, self._f, self._pl, self._id, self._dir)
         runtime_status = 0
         try:
             if len(args.action) == 0:

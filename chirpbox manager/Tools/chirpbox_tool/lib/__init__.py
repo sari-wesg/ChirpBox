@@ -7,6 +7,9 @@ logging.getLogger('matplotlib').setLevel(logging.ERROR)
 logging.getLogger('matplotlib.font_manager').disabled = True
 logging.getLogger('matplotlib.colorbar').disabled = True
 
+# disable the debug log of PIL.ImageTk library
+pil_logger = logging.getLogger('PIL')
+pil_logger.setLevel(logging.INFO)
 # Log config:
 # Create handlers
 c_handler = logging.StreamHandler()
