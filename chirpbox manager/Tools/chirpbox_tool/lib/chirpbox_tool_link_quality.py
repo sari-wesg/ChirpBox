@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 import matplotlib
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import seaborn as sns#style.use('seaborn-paper') #sets the size of the charts
+import seaborn as sns
+
 from matplotlib.colors import LinearSegmentedColormap
 import datetime
 from pathlib import Path
@@ -19,12 +20,20 @@ import pandas as pd
 import os
 import glob
 import json
+import math
+import matplotlib.dates as mdates
 
 logger = logging.getLogger(__name__)
 
+#style.use('seaborn-paper') #sets the size of the charts
 style.use('seaborn-talk') #sets the size of the charts
 matplotlib.rcParams['font.family'] = "arial"
 sns.set_context('poster')  #Everything is larger
+#sns.set_context('paper')  #Everything is smaller
+#sns.set_context('talk')  #Everything is sized for a presentation
+#style.use('ggplot')
+red_colors = ['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d', '#4e000d']
+green_colors = ['#ffffe5', '#f7fcb9', '#d9f0a3', '#addd8e', '#78c679', '#41ab5d', '#238443', '#006837', '#004529', '#003729']
 
 class link_quality():
     def __init__(self):
@@ -154,7 +163,7 @@ class link_quality():
                                 alpha_value = 1,
                                 cbarlabel="Packet Reception Rate (%)")
 
-        filename = "Linkquality_UTC" + datetime.datetime.fromtimestamp(link_infomation[0]).strftime("%Y%m%d%H%M%S") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4]))
+        filename = "Linkquality_UTC" + link_infomation[0] + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4]))
         logger.debug("save file named:%s", filename + ".png")
 
         ax.set_title(filename, fontsize=30)
@@ -192,6 +201,8 @@ class link_quality():
                 if (max_hop < hop):
                     max_hop = hop
                     # logger.debug("So far, the maximal hop is from %s to %s with hop %s", cnt_degrees_tx, cnt_degrees_rx, max_hop)
+        if (max_hop == 0):
+            max_hop = CHIRPBOX_LINK_MAXHOP_ERROR
 
         # Get the node degree
         node_degree = np.zeros(node_num)
@@ -210,7 +221,10 @@ class link_quality():
         # self.matrix_to_plot(link_infomation, link_matrix, id_list, directory_path)
 
         link_matrix_list = link_matrix.tolist()
-        link_infomation.extend((min(snr_list), max(snr_list), min(rssi_list), max(rssi_list), max_hop, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
+        if ((len(snr_list) > 0) and (len(rssi_list) > 0)):
+            link_infomation.extend((min(snr_list), max(snr_list), min(rssi_list), max(rssi_list), max_hop, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
+        else:
+            link_infomation.extend(('null', 'null', 'null', 'null', max_hop, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
         link_infomation.insert(len(link_infomation), node_degree)
         link_infomation.insert(len(link_infomation), node_temp)
         link_infomation.insert(len(link_infomation), link_matrix_list)
@@ -224,7 +238,7 @@ class link_quality():
                 weather_data = json.load(data_file)
                 link_infomation.extend((weather_data['temperature']['temp']-273.15, weather_data['wind']['speed'], weather_data['wind']['deg'], weather_data['pressure']['press'], weather_data['humidity']))
         except:
-            logger.info("No weather file for %s", weather_file)
+            # logger.debug("No weather file for %s", weather_file)
             link_infomation.extend(('null', 'null', 'null', 'null', 'null'))
             pass
 
@@ -237,9 +251,8 @@ class link_quality():
     link processing
     unique csv data: processing the link_quality.csv
     """
-    def chirpbox_link_csv_processing(self, directory_path):
-        logger.debug("chirpbox_link_csv_processing")
-
+    def chirpbox_link_csv_processing(self, sf_list, freq_list, id_list, directory_path):
+        # open the link quality data file
         try:
             with open(directory_path + '\\link_quality\\link_quality.csv', newline='') as f:
                 reader = csv.reader(f)
@@ -248,60 +261,140 @@ class link_quality():
             logger.error("No link quality data!")
             return False
 
-        unique_utc = [i[0] for i in list_reader]
+        if (sf_list is None):
+            sf_list = list(range(7, 13))
+        if (freq_list is None):
+            freq_list = [470000, 480000, 490000]
 
         # find the utc with all sf data
+        unique_utc = [i[0] for i in list_reader]
         unique_utc = [item for item, count in collections.Counter(unique_utc).items() if count > (12 - 7)]
 
-        # remove rows not in that utc
+        # remove rows not in that utc, and write into a new file
         try:
             os.remove(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv')
         except:
             pass
-
         with open(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv', 'a', newline='') as csvfile:
             writer= csv.writer(csvfile, delimiter=',')
             for row in list_reader:
                 if (row[0] in unique_utc):
-                    writer.writerow([datetime.datetime.fromtimestamp(int(row[0])).strftime("%Y-%m-%d %H:%M")] + row[1:])
+                    writer.writerow(row)
 
-        # draw plots with new csv
+        # draw plots from the new csv
         df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality_all_sf.csv',
                             sep=',',
                             names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
         # plot1: temperature:
-        ax = plt.gca()
-        ax2 = ax.twinx()
+        if (df_link.empty):
+            logger.error("link data is None")
+            return False
 
-        for sf in range(7, 13):
-            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == 490000)]
-            # ax.plot(df_link_sf['utc'], df_link_sf['min_snr'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'min_snr')
-            # ax.plot(df_link_sf['utc'], df_link_sf['max_snr'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_snr')
-            # ax.plot(df_link_sf['utc'], df_link_sf['min_rssi'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'min_rssi')
-            # ax.plot(df_link_sf['utc'], df_link_sf['max_rssi'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_rssi')
-            # ax.plot(df_link_sf['utc'], df_link_sf['max_hop'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_hop')
-            # ax.plot(df_link_sf['utc'], df_link_sf['min_degree'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'min_degree')
-            # ax.plot(df_link_sf['utc'], df_link_sf['max_degree'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'max_degree')
-            ax.plot(df_link_sf['utc'], df_link_sf['average_degree'], linestyle='-', marker='o', markersize = 10, label = str(sf) + 'average_degree')
+        for freq in freq_list:
+            fig = plt.figure(figsize=(25, 12))
+            ax = plt.gca()
+            ax2 = ax.twinx()
+            for sf in sf_list:
+                df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
 
-            if (sf == 7):
-                ax2.plot(df_link_sf['utc'], df_link_sf['average_temperature'], linestyle='--', marker='o', markersize = 10, label = 'temp')
+                # ax.plot(dates, df_link_sf['min_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_snr')
+                # ax.plot(dates, df_link_sf['max_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_snr')
+                # ax.plot(dates, df_link_sf['min_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_rssi')
+                # ax.plot(dates, df_link_sf['max_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_rssi')
+                # ax.plot(dates, df_link_sf['max_hop'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_hop')
+                # ax.plot(dates, df_link_sf['min_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_degree')
+                # ax.plot(dates, df_link_sf['max_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_degree')
 
-        legend = ax.legend(loc='upper left', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
-        legend = ax2.legend(loc='upper right', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
-        plt.show()
+                ax.plot(dates, df_link_sf['average_degree'], linestyle='-', marker='o', markersize = 10, color = red_colors[sf - 7 + 2], label = "SF" + str(sf))
+
+                if (sf == sf_list[0]):
+                    ax2.plot(dates, df_link_sf['average_temperature'], linestyle='--', marker='o', markersize = 10, label = 'temperature')
+
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+            # ax.xaxis.set_major_locator(mdates.MonthLocator(interval=1))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+
+            ax.set_ylabel('Average degree', fontsize = 50)
+            ax2.set_ylabel('Aveage node temperature ($^\circ$C)', fontsize = 50)
+            title = "Average degree and temperature on " + str(freq)
+            # ax.set_title(title, fontsize = 50, pad=20)
+
+            # axis range
+            ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
+            ax.set_ylim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
+            ax2.set_ylim(math.floor(min(df_link['average_temperature'])), math.ceil(max(df_link['average_temperature'])))
+
+            # Ticks and labels
+            ax.tick_params(labelsize=50)
+            ax2.tick_params(labelsize=50)
+            ax.tick_params(which='major',width=5, length=10)
+            ax2.tick_params(which='major',width=5, length=10)
+
+            df_link_freq = df_link.loc[(df_link['channel'] == int(freq))]
+            # ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox',fontsize=50)
+            plt.xticks(fontsize = 15)
+            legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
+            legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
+
+            plt.savefig(directory_path + '\\link_quality\\' + title + '.png', bbox_inches='tight')
+
+            fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
+            # plt.show(block=False)
+            # plt.pause(3)
+            # plt.close()
 
         # plot2: degree:
-        ax = plt.gca()
-        ax2 = ax.twinx()
+        for freq in freq_list:
+            fig = plt.figure(figsize=(25, 12))
+            ax = plt.gca()
+            ax2 = ax.twinx()
 
-        for sf in range(7, 13):
-            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == 470000)]
-            ax.plot(df_link_sf['average_degree'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 10, label = str(sf) + 'min_rssi')
-            ax2.plot(df_link_sf['average_degree'], df_link_sf['min_snr'], linestyle='None', marker='^', markersize = 10, label = str(sf) + 'min_snr')
-        legend = ax.legend(loc='upper left', edgecolor='k',fontsize = 10, fancybox=True, ncol=3)
-        plt.show()
+            for sf in sf_list:
+                df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                ax.plot(df_link_sf['average_degree'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 20, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_rssi')
+                ax2.plot(df_link_sf['average_degree'], df_link_sf['min_snr'], linestyle='None', marker='^', markersize = 25, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_snr')
+
+            ax.set_ylabel('RSSI', fontsize = 50)
+            ax2.set_ylabel('SNR', fontsize = 50)
+            title = "Minimal RSSI and SNR with degree on frequency " + str(freq)
+            # ax.set_title(title, fontsize = 50, pad=20)
+
+            # axis range
+            ax.set_xlim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
+            ax.set_ylim(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])))
+            ax2.set_ylim(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])))
+
+            # Ticks and labels
+            ax.tick_params(labelsize=50)
+            ax2.tick_params(labelsize=50)
+            ax.tick_params(which='major',width=5, length=10)
+            ax2.tick_params(which='major',width=5, length=10)
+
+            x_list = df_link['average_degree'].tolist()
+            x_list = range(math.floor(min(x_list)), math.ceil(max(x_list))+1, 1)
+            ax.set_xticks(x_list,minor=True)
+            ax2.set_xticks(x_list,minor=True)
+            # ax.set_yticks(range(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])) + 1, 1),minor=True)
+            # ax2.set_yticks(range(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])) + 1, 1),minor=True)
+            ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox', fontsize=50)
+
+            # ax2.set_xticklabels(x_list, ha='right', rotation=45)
+            plt.xticks(x_list, x_list, fontsize = 15)
+            # ax.set_xticks(fontsize=15)
+
+            legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
+            legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
+
+            plt.savefig(directory_path + '\\link_quality\\' + title + '.png', bbox_inches='tight')
+
+            fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
+            # plt.show(block=False)
+            # plt.pause(3)
+            # plt.close()
+
+        return True
 
     """
     link processing
@@ -322,7 +415,7 @@ class link_quality():
                 pass
             self._chirpbox_txt.chirpbox_link_to_csv(directory_path, self._file_start_name, self._time_zone, id_list)
 
-        self.chirpbox_link_csv_processing(directory_path)
+        self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path)
 
         # remove all processed files in directory
         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')

@@ -50,7 +50,7 @@ list of available actions:
 
 list of combinations:
     chirpbox_tool.py -sf -tp -f -pl link_quality:measurement
-    chirpbox_tool.py (-sf -tp -f -pl) -id -dir link_quality:processing
+    chirpbox_tool.py (-sf -f) -id -dir link_quality:processing
     chirpbox_tool.py (-id) voltage:measurement
     chirpbox_tool.py (-id) -dir voltage:processing
 

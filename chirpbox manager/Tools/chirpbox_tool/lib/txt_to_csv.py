@@ -132,8 +132,7 @@ class chirpbox_txt():
         # 2. loop csv files, and read node id and payload bytes from csv
         node_id_with_value = []
         for filename in csv_files:
-            # utc:
-            # logger.debug("filename:%s", filename)
+            logger.debug("filename:%s", filename)
 
             utc_string = filename[-len("20210418102702100827).csv"):-len(").csv")]
             dt = datetime(int(utc_string[0:4]), int(utc_string[4:6]), int(utc_string[6:8]), int(utc_string[8:10]), int(utc_string[10:12]), int(utc_string[12:14]), int(utc_string[14:16]))
@@ -189,7 +188,7 @@ class chirpbox_txt():
                                     node_temp = node_temp * (-1)
                                 node_temperature.append(node_temp)
                             except:
-                                logger.info("No infomation for node %s in %s", id_hex, filename)
+                                logger.info("No infomation for node %s in %s", int(id_hex,16), filename)
                                 breaker = True
                                 break
                             for id in id_list:
@@ -237,5 +236,5 @@ class chirpbox_txt():
                         # logger.debug("snr with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, received_snr)
                         # logger.debug("rssi with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, received_rssi)
                         # logger.debug("temp with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, node_temperature)
-                        self._link_processing = lib.chirpbox_tool_link_quality.link_quality()
                         self._link_processing.processing_link_data_to_csv([utc_value, sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, node_temperature, id_list, directory_path, filename)
+                        # self._link_processing.processing_link_data_to_csv([datetime.fromtimestamp(int(utc_value)).strftime("%Y-%m-%d %H:%M"), sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, node_temperature, id_list, directory_path, filename)
