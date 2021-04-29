@@ -23,6 +23,7 @@ import math
 import matplotlib.dates as mdates
 import ast
 from PIL import Image
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +115,8 @@ class link_quality():
         ax.set_xticks(np.arange(data.shape[1]))
         ax.set_yticks(np.arange(data.shape[0]))
         # ... and label them with the respective list entries.
-        ax.set_xticklabels(col_labels,fontsize=60)
-        ax.set_yticklabels(row_labels,fontsize=60)
+        ax.set_xticklabels(col_labels,fontsize=35)
+        ax.set_yticklabels(row_labels,fontsize=35)
         # ax.xaxis.labelpad = 50
 
         # Let the horizontal axes labeling appear on top.
@@ -123,8 +124,8 @@ class link_quality():
 
         # Rotate the tick labels and set their alignment.
         plt.setp(ax.get_xticklabels(),
-                    rotation=90,
-                    # rotation=0,
+                    # rotation=90,
+                    rotation=0,
                     ha="center"
                     # rotation_mode="anchor"
                     )
@@ -152,7 +153,7 @@ class link_quality():
 
         plt.xlabel('Tx Node ID', fontsize=80)
         plt.ylabel('Rx Node ID', fontsize=80)
-        colors = ["#FFFFFF", "#09526A"] # Experiment with this
+        colors = ["#FFFFFF", "#004529"] # Experiment with this
         cm = LinearSegmentedColormap.from_list('test', colors, N=100)
 
         im, cbar = self.heatmap(link_matrix,
@@ -164,13 +165,13 @@ class link_quality():
                                 alpha_value = 1,
                                 cbarlabel="Packet Reception Rate (%)")
 
-        filename = "Heatmap_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + self._plot_suffix
+        filename = "Heatmap" + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
         logger.debug("save heatmap %s", filename)
 
         # ax.set_title(filename, fontsize=30)
         fig.tight_layout()
         plt.savefig(directory_path + "\\link_quality\\" + filename, bbox_inches='tight')
-
+        plt.close(fig)
 
 
 
@@ -178,10 +179,11 @@ class link_quality():
     link processing
     plots: matrix to topology
     """
-    def matrix_to_topology(self, link_infomation, link_matrix, node_list, using_pos, directory_path):
+    def matrix_to_topology(self, link_infomation, link_matrix, node_list, using_pos, max_hop_id, directory_path):
         node_num = len(node_list)
         # Get a adjacent matrix, i.e., remove weight information
-        plt.clf()
+        plt.rcParams["figure.figsize"] = (20, 20)
+        fig = plt.gcf()
 
         adjacent_matrix = np.zeros((node_num, node_num))
         for cnt_a_adj_c in range(node_num):
@@ -200,6 +202,7 @@ class link_quality():
             tmp_key.append(cnt)
 
         topo_drawing_mapping = dict(zip(tmp_key, node_list))
+        G_DIR_MAPPING = nx.relabel_nodes(G_DIR, topo_drawing_mapping)
         G_UNDIR_MAPPING = nx.relabel_nodes(G_UNDIR, topo_drawing_mapping)
 
         if (using_pos == 1):
@@ -212,15 +215,16 @@ class link_quality():
             if (using_pos == 0):
                 pos = nx.spring_layout(G_UNDIR_MAPPING)
             if (using_pos == 2):
-                pos = {0: [356, 277], 1: [463, 758], 2: [1029, 201], 3: [378, 292], 4: [1050, 20], 5: [214, 385], 6: [282, 300], 7: [375, 86], 8: [75, 121], 9: [305, 106], 10: [427, 294], 11: [302, 789], 12: [531, 210], 13: [473, 217], 14: [702, 544], 15: [429, 570], 16: [874, 617], 17: [628, 772], 18: [632, 602], 19: [800, 782], 20: [182, 610]}
+                pos = {0: [356, 277], 1: [463, 758], 2: [1007, 213], 3: [378, 292], 4: [1017, 37], 5: [214, 385], 6: [282, 300], 7: [375, 86], 8: [75, 121], 9: [305, 106], 10: [427, 294], 11: [316, 772], 12: [531, 210], 13: [473, 217], 14: [702, 544], 15: [429, 570], 16: [874, 617], 17: [628, 772], 18: [632, 602], 19: [811, 780], 20: [182, 610]}
             np.save(data_dir + posfilepath, pos)
         if (using_pos == 2):
             img = matplotlib.image.imread("area.png")
-            #plt.scatter(x,y,zorder=1)
+            # plt.scatter(x,y,zorder=1)
             plt.imshow(img, zorder = 0)
 
         d = dict(G_UNDIR_MAPPING.degree)
         # 1. draw
+        # nx.draw(G_DIR_MAPPING, pos = pos, node_size = 0)
         nx.draw(G_UNDIR_MAPPING, pos = pos, node_size = 0)
         color_map = []
         for node in G_UNDIR_MAPPING:
@@ -229,21 +233,52 @@ class link_quality():
             else:
                 color_map.append('#70AD47')
         # 2. node
-        nx.draw_networkx_nodes(G_UNDIR_MAPPING, pos = pos, node_color = color_map, node_size=[v * 20 for v in d.values()], linewidths = 0.5, edgecolors = '#000000')
+        # node size by weight
+        # nx.draw_networkx_nodes(G_UNDIR_MAPPING, pos = pos, node_color = color_map, node_size=[20 + v * 200 for v in d.values()], linewidths = 1, edgecolors = '#000000')
+        # node color by weight
+        low, *_, high = sorted(d.values())
+        norm = matplotlib.colors.Normalize(vmin=low, vmax=high, clip=True)
+        mapper = matplotlib.cm.ScalarMappable(norm=norm, cmap=matplotlib.cm.YlGn)
+        node_color_list = [mapper.to_rgba(i) for i in d.values()]
+        nx.draw_networkx_nodes(G_UNDIR_MAPPING, pos = pos, node_color = node_color_list, node_size=1500, linewidths = 1, edgecolors = '#000000')
         # 3. edge
         # edge color is related to the weight
         edges,weights = zip(*nx.get_edge_attributes(G_UNDIR_MAPPING,'weight').items())
-        nx.draw_networkx_edges(G_UNDIR_MAPPING,pos,edgelist=edges, edge_color=weights, width=1, edge_cmap=plt.cm.binary)
+        nx.draw_networkx_edges(G_UNDIR_MAPPING,pos = pos,edgelist=edges, edge_color=weights, width=1, edge_cmap=plt.cm.binary)
         # 4. label
         # change the label for control node
         raw_labels = ["C"] + [str(x) for x in range(1, len(node_list))]
         lab_node = dict(zip(G_UNDIR_MAPPING.nodes, raw_labels))
-        nx.draw_networkx_labels(G_UNDIR_MAPPING, pos = pos, labels=lab_node, font_size = 10, font_weight = 'bold', font_color = '#FFFFFF')
-
-        filename = "Networktopology_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + self._plot_suffix
+        nx.draw_networkx_labels(G_UNDIR_MAPPING, pos = pos, labels=lab_node, font_size = 18, font_weight = 'bold', font_color = '#000000')
+        # 5. max hop in direction graph
+        path = nx.shortest_path(G_DIR_MAPPING,source=max_hop_id[0],target=max_hop_id[1])
+        path_edges = list(zip(path,path[1:]))
+        color_map = []
+        size_map = []
+        for node in path:
+            if node == max_hop_id[0]:
+                color_map.append('#ED1F24')
+            else:
+                color_map.append('#1F67ED')
+            size_map.append(20 + d[node] * 200)
+        # nx.draw_networkx_nodes(G_DIR_MAPPING,pos,nodelist=path,node_color=color_map, node_size= size_map, linewidths = 0.5, edgecolors = '#000000')
+        # edge label as hop number
+        labels_list = []
+        i = 0
+        for edge in path_edges:
+            i += 1
+            labels_list.append(edge)
+            labels_list.append(str(i))
+        labels = {labels_list[i]: labels_list[i + 1] for i in range(0, len(labels_list), 2)}
+        nx.draw_networkx_edges(G_DIR_MAPPING,pos = pos,edgelist=path_edges,edge_color='#ED1F24', width=5,arrowstyle='-|>', arrowsize=50)
+        # nx.draw_networkx_edge_labels(G_DIR_MAPPING,pos = pos,edge_labels=labels, label_pos=0.5, font_size=18, font_color='#ED1F24',bbox=dict(boxstyle="round", fc="#FFFFFF",ec="#FFFFFF",alpha=0.5, lw=0))
+        # 6. save fig
+        filename = "Networktopology" + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
         logger.debug("save topology %s", filename)
 
+        fig.canvas.start_event_loop(sys.float_info.min) #workaround for Exception in Tkinter callback
         plt.savefig(directory_path + "\\link_quality\\" + filename, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -255,7 +290,7 @@ class link_quality():
     def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, node_temp, id_list, directory_path, filename):
         """
         convert csv files to csv with columns
-        utc | sf | tp | frequency | payload length | min_SNR | max_SNR | min_RSSI | max_RSSI | max_hop | max_degree | min_degree | mean_degree | average_temp | node_degree (list) | node_temp (list) | node id with link (matrix)
+        utc | sf | tp | frequency | payload length | min_SNR | max_SNR | min_RSSI | max_RSSI | max_hop | max_hop_id | max_degree | min_degree | mean_degree | average_temp | node_degree (list) | node_temp (list) | node id with link (matrix)
         """
         node_num = len(node_temp)
 
@@ -277,9 +312,11 @@ class link_quality():
                     pass
                 if (max_hop < hop):
                     max_hop = hop
+                    max_hop_id = [int(cnt_degrees_tx), int(cnt_degrees_rx)]
                     # logger.debug("So far, the maximal hop is from %s to %s with hop %s", cnt_degrees_tx, cnt_degrees_rx, max_hop)
         if (max_hop == 0):
             max_hop = CHIRPBOX_LINK_MAXHOP_ERROR
+            max_hop_id = [0, 0]
 
         # Get the node degree
         node_degree = np.zeros(node_num)
@@ -297,9 +334,9 @@ class link_quality():
 
         link_matrix_list = link_matrix.tolist()
         if ((len(snr_list) > 0) and (len(rssi_list) > 0)):
-            link_infomation.extend((min(snr_list), max(snr_list), min(rssi_list), max(rssi_list), max_hop, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
+            link_infomation.extend((min(snr_list), max(snr_list), min(rssi_list), max(rssi_list), max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
         else:
-            link_infomation.extend(('null', 'null', 'null', 'null', max_hop, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
+            link_infomation.extend(('null', 'null', 'null', 'null', max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
         link_infomation.insert(len(link_infomation), node_degree)
         link_infomation.insert(len(link_infomation), node_temp)
         link_infomation.insert(len(link_infomation), link_matrix_list)
@@ -361,7 +398,7 @@ class link_quality():
         # draw plots from the new csv
         df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality_all_sf.csv',
                             sep=',',
-                            names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
+                            names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
         if (df_link.empty):
             logger.error("link data is None")
@@ -420,7 +457,7 @@ class link_quality():
                 fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
                 # plt.show(block=False)
                 # plt.pause(3)
-                # plt.close()
+                plt.close(fig)
 
         # plot2: degree:
         if "degree" in plot_type:
@@ -434,8 +471,8 @@ class link_quality():
                     ax.plot(df_link_sf['average_degree'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 20, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_rssi')
                     ax2.plot(df_link_sf['average_degree'], df_link_sf['min_snr'], linestyle='None', marker='^', markersize = 25, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_snr')
 
-                ax.set_ylabel('RSSI', fontsize = 50)
-                ax2.set_ylabel('SNR', fontsize = 50)
+                ax.set_ylabel('Minimal received RSSI', fontsize = 50)
+                ax2.set_ylabel('Minimal received SNR', fontsize = 50)
                 title = "Minimal RSSI and SNR with degree on frequency " + str(freq)
                 # ax.set_title(title, fontsize = 50, pad=20)
 
@@ -470,7 +507,7 @@ class link_quality():
                 fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
                 # plt.show(block=False)
                 # plt.pause(3)
-                # plt.close()
+                plt.close(fig)
 
         # plot3: heatmap:
         if "heatmap" in plot_type:
@@ -486,6 +523,13 @@ class link_quality():
                         # convert list to numpy
                         link_matrix = np.array(link_matrix)
                         self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
+
+            # plots to gif
+            try:
+                self.processing_link_gif(directory_path, 'Heatmap', freq_list, sf_list)
+            except:
+                logger.error("No heatmap plots for GIF")
+                pass
 
         # plot4: topology:
         if "topology" in plot_type:
@@ -506,27 +550,57 @@ class link_quality():
                         link_matrix = ast.literal_eval(row[index_no])
                         # convert list to numpy
                         link_matrix = np.array(link_matrix)
-                        self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, directory_path)
+
+                        # get node link matrix
+                        index_no = df_link_sf.columns.get_loc('max_hop_id')
+                        # convert panda to list
+                        max_hop_id = ast.literal_eval(row[index_no])
+                        self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, max_hop_id, directory_path)
+
+            # plots to gif
+            try:
+                self.processing_link_gif(directory_path, 'Networktopology', freq_list, sf_list)
+            except:
+                logger.error("No topology plots for GIF")
+                pass
+
+        if (self._plot_suffix == '.png'):
+            try:
+                self._chirpbox_txt.chirpbox_delete_in_dir(directory_path + '\\link_quality\\', self._plot_suffix)
+            except:
+                pass
 
         return True
 
 
     """
     link processing
-    csv data: processing the link quality in csv named "link_quality.csv"
+    gif: plots to gif
     """
     def processing_figure_to_gif(self, directory_path, file_prefix):
         # filepaths
-        fp_in = directory_path + '\\link_quality\\' + file_prefix + '*.png'
-        fp_out = directory_path + '\\link_quality\\' + file_prefix + '.gif'
+        fp_in = directory_path + file_prefix + '*.png'
+        fp_out = directory_path + file_prefix + '.gif'
+        logger.debug("save gif %s", fp_out)
 
         # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#gif
         img, *imgs = [Image.open(f) for f in sorted(glob.glob(fp_in))]
         img.save(fp=fp_out, format='GIF', append_images=imgs,save_all=True, duration=400, loop=0)
 
+
     """
     link processing
-    .txt in folder: process txts in the folder to csv data and plots
+    gif: link quality plots to gif
+    """
+    def processing_link_gif(self, directory_path, file_prefix, freq_list, sf_list):
+        for freq in freq_list:
+            for sf in sf_list:
+                file_prefix1 = file_prefix + "_SF" + str('{0:02}'.format(sf)) + "_CH" + str('{0:06}'.format(freq))
+                self.processing_figure_to_gif(directory_path + '\\link_quality\\', file_prefix1)
+
+    """
+    link processing
+    .txt in folder: process txts in the folder to csv data/plots/gif
     """
     def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path, plot_type):
         self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
@@ -544,10 +618,6 @@ class link_quality():
             self._chirpbox_txt.chirpbox_link_to_csv(directory_path, self._file_start_name, self._time_zone, id_list)
 
         self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path, plot_type)
-
-        # network heatmap and topology plots to gif
-        self.processing_figure_to_gif(directory_path, 'Heatmap')
-        self.processing_figure_to_gif(directory_path, 'Networktopology')
 
         # remove all processed files in directory
         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')
