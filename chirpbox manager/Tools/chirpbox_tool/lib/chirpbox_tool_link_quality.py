@@ -184,6 +184,7 @@ class link_quality():
         # Get a adjacent matrix, i.e., remove weight information
         plt.rcParams["figure.figsize"] = (20, 20)
         fig = plt.gcf()
+        ax = plt.gca()
 
         adjacent_matrix = np.zeros((node_num, node_num))
         for cnt_a_adj_c in range(node_num):
@@ -273,6 +274,17 @@ class link_quality():
         nx.draw_networkx_edges(G_DIR_MAPPING,pos = pos,edgelist=path_edges,edge_color='#ED1F24', width=5,arrowstyle='-|>', arrowsize=50)
         # nx.draw_networkx_edge_labels(G_DIR_MAPPING,pos = pos,edge_labels=labels, label_pos=0.5, font_size=18, font_color='#ED1F24',bbox=dict(boxstyle="round", fc="#FFFFFF",ec="#FFFFFF",alpha=0.5, lw=0))
         # 6. save fig
+        legend_text = "SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "\n" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H:%M")
+        props = dict(boxstyle="round", facecolor="w", alpha=0.5)
+        ax.text(
+            0.02,
+            0.98,
+            legend_text,
+            transform=ax.transAxes,
+            fontsize=24,
+            verticalalignment="top",
+            bbox=props,
+        )
         filename = "Networktopology" + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
         logger.debug("save topology %s", filename)
 
@@ -602,14 +614,14 @@ class link_quality():
     link processing
     .txt in folder: process txts in the folder to csv data/plots/gif
     """
-    def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path, plot_type):
+    def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path, plot_type, data_exist):
         self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
 
         # convert txt in directory to csv
         self._chirpbox_txt.chirpbox_txt_to_csv(directory_path, self._file_start_name)
 
         # convert csv files to csv with columns
-        if CHIRPBOX_LINK_DATA is not True:
+        if ("True" in data_exist) is False:
             try:
                 shutil.rmtree(directory_path + "\\link_quality\\")
             except:

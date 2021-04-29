@@ -45,6 +45,7 @@ list of paramters:
     --node_id
     --directory_path
     --plot_type
+    --data_exist
 
 list of available actions:
     link_quality:measurement
@@ -54,9 +55,9 @@ list of available actions:
 
 list of combinations:
     chirpbox_tool.py -sf -tp -f -pl link_quality:measurement
-    chirpbox_tool.py (-sf -f -plot) -id -dir -plot_type link_quality:processing
-    chirpbox_tool.py (-id) voltage:measurement
-    chirpbox_tool.py (-id) -dir voltage:processing
+    chirpbox_tool.py (-sf -f -data_exist) -id -dir -plot link_quality:processing
+    chirpbox_tool.py voltage:measurement
+    chirpbox_tool.py -id -dir voltage:processing
 
 examples:
     chirpbox_tool.py -h
@@ -126,7 +127,7 @@ class ChirpBoxTool():
         if params == 'measurement':
             self._action.measurement(self._sf, self._tp, self._f, self._pl)
         elif params == 'processing':
-            self._action.processing(self._sf, self._tp, self._f, self._pl, self._id, self._dir, self._plot)
+            self._action.processing(self._sf, self._tp, self._f, self._pl, self._id, self._dir, self._plot,self._data)
 
     def cmd_voltage(self, params):
         self._action = lib.chirpbox_tool_voltage.voltage()
@@ -159,6 +160,7 @@ class ChirpBoxTool():
         parser.add_argument('-id', '--node_id', dest='node_id', help='Input the node_id')
         parser.add_argument('-dir', '--directory_path', dest='directory_path', help='Input the directory path for processing')
         parser.add_argument('-plot', '--plot_type', dest='plot_type', help='Input the type of plots after processing')
+        parser.add_argument('-data', '--data_exist', dest='data_exist', help='Input the state of processed data: True/False')
         group_actions = parser.add_argument_group(title='actions')
         group_actions.add_argument('action', nargs='*', help='actions will be processed sequentially')
         args = parser.parse_args(argv)
@@ -168,7 +170,11 @@ class ChirpBoxTool():
         self._pl = self.convert_int_string_to_list(args.payload_len)
         self._id = self.convert_int_string_to_list(args.node_id)
         self._dir = args.directory_path
-        self._plot = [x.strip() for x in args.plot_type.split(',')]
+        if (args.plot_type is not None):
+            self._plot = [x.strip() for x in args.plot_type.split(',')]
+        else:
+            self._plot = None
+        self._data = args.data_exist
         logger.info(args)
         runtime_status = 0
         try:
