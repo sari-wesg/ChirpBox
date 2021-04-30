@@ -24,6 +24,8 @@ import matplotlib.dates as mdates
 import ast
 from PIL import Image
 import sys
+import pytz
+local = pytz.timezone ("Asia/Shanghai")
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +170,9 @@ class link_quality():
         filename = "Heatmap" + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
         logger.debug("save heatmap %s", filename)
 
-        # ax.set_title(filename, fontsize=30)
+        legend_text = "SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "\n" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H:%M")
+
+        ax.set_title(legend_text, fontsize=30)
         fig.tight_layout()
         plt.savefig(directory_path + "\\link_quality\\" + filename, bbox_inches='tight')
         plt.close(fig)
@@ -373,7 +377,18 @@ class link_quality():
     link processing
     clean csv data: processing the link_quality.csv to "link_quality_all_sf.csv" and draw plots based on the plot type
     """
-    def chirpbox_link_csv_processing(self, sf_list, freq_list, id_list, directory_path, plot_type):
+    def chirpbox_link_csv_processing(self, sf_list, freq_list, id_list, directory_path, plot_type, plot_date):
+        if plot_date is not None:
+            plot_data_start = plot_date[0]
+            plot_data_end = plot_date[1]
+            # convert time to UTC time
+            plot_data_start1 = datetime.datetime.strptime(plot_data_start, "%Y-%m-%d")
+            plot_data_start1 = local.localize(plot_data_start1, is_dst=None)
+            utc_dt_start = datetime.datetime.timestamp(plot_data_start1)
+            plot_data_end1 = datetime.datetime.strptime(plot_data_end, "%Y-%m-%d")
+            plot_data_end1 = local.localize(plot_data_end1, is_dst=None)
+            utc_dt_end = datetime.datetime.timestamp(plot_data_end1)
+
         if "pdf" in plot_type:
             self._plot_suffix = ".pdf"
         else:
@@ -422,7 +437,10 @@ class link_quality():
                 ax = plt.gca()
                 ax2 = ax.twinx()
                 for sf in sf_list:
-                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    if plot_date is not None:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                    else:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
                     dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
 
                     # ax.plot(dates, df_link_sf['min_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_snr')
@@ -448,7 +466,10 @@ class link_quality():
                 # ax.set_title(title, fontsize = 50, pad=20)
 
                 # axis range
-                ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
+                if plot_date is not None:
+                    ax.set_xlim([pd.to_datetime(datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%Y-%m-%d %H-%M")), pd.to_datetime(datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%Y-%m-%d %H-%M"))])
+                else:
+                    ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
                 ax.set_ylim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
                 ax2.set_ylim(math.floor(min(df_link['average_temperature'])), math.ceil(max(df_link['average_temperature'])))
 
@@ -459,7 +480,7 @@ class link_quality():
                 ax2.tick_params(which='major',width=5, length=10)
 
                 df_link_freq = df_link.loc[(df_link['channel'] == int(freq))]
-                # ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox',fontsize=50)
+                ax.set_xlabel('Datetime tested at frequency ' + str(freq), fontsize=50)
                 plt.xticks(fontsize = 15)
                 legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
                 legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
@@ -469,7 +490,8 @@ class link_quality():
                 fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
                 # plt.show(block=False)
                 # plt.pause(3)
-                plt.close(fig)
+                plt.show(fig)
+                # plt.close(fig)
 
         # plot2: degree:
         if "degree" in plot_type:
@@ -479,7 +501,10 @@ class link_quality():
                 ax2 = ax.twinx()
 
                 for sf in sf_list:
-                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    if plot_date is not None:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                    else:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
                     ax.plot(df_link_sf['average_degree'], df_link_sf['min_rssi'], linestyle='None', marker='o', markersize = 20, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_rssi')
                     ax2.plot(df_link_sf['average_degree'], df_link_sf['min_snr'], linestyle='None', marker='^', markersize = 25, color = red_colors[sf - 7 + 2], label = "SF" + str(sf) + 'min_snr')
 
@@ -505,7 +530,7 @@ class link_quality():
                 ax2.set_xticks(x_list,minor=True)
                 # ax.set_yticks(range(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])) + 1, 1),minor=True)
                 # ax2.set_yticks(range(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])) + 1, 1),minor=True)
-                ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox', fontsize=50)
+                ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox at frequency ' + str(freq), fontsize=50)
 
                 # ax2.set_xticklabels(x_list, ha='right', rotation=45)
                 plt.xticks(x_list, x_list, fontsize = 15)
@@ -519,7 +544,8 @@ class link_quality():
                 fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
                 # plt.show(block=False)
                 # plt.pause(3)
-                plt.close(fig)
+                plt.show(fig)
+                # plt.close(fig)
 
         # plot3: heatmap:
         if "heatmap" in plot_type:
@@ -534,7 +560,12 @@ class link_quality():
                         link_matrix = ast.literal_eval(row[index_no])
                         # convert list to numpy
                         link_matrix = np.array(link_matrix)
-                        self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
+
+                        if plot_date is not None:
+                            if (int(row[0]) >= int(utc_dt_start)) and (int(row[0]) <= int(utc_dt_end)):
+                                self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
+                        else:
+                            self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
 
             # plots to gif
             try:
@@ -567,7 +598,12 @@ class link_quality():
                         index_no = df_link_sf.columns.get_loc('max_hop_id')
                         # convert panda to list
                         max_hop_id = ast.literal_eval(row[index_no])
-                        self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, max_hop_id, directory_path)
+
+                        if plot_date is not None:
+                            if (int(row[0]) >= int(utc_dt_start)) and (int(row[0]) <= int(utc_dt_end)):
+                                self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, max_hop_id, directory_path)
+                        else:
+                            self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, max_hop_id, directory_path)
 
             # plots to gif
             try:
@@ -614,7 +650,7 @@ class link_quality():
     link processing
     .txt in folder: process txts in the folder to csv data/plots/gif
     """
-    def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path, plot_type, data_exist):
+    def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path, plot_type, plot_date, data_exist):
         self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
 
         # convert txt in directory to csv
@@ -629,7 +665,7 @@ class link_quality():
                 pass
             self._chirpbox_txt.chirpbox_link_to_csv(directory_path, self._file_start_name, self._time_zone, id_list)
 
-        self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path, plot_type)
+        self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path, plot_type, plot_date)
 
         # remove all processed files in directory
         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')

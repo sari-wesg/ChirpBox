@@ -127,7 +127,7 @@ class ChirpBoxTool():
         if params == 'measurement':
             self._action.measurement(self._sf, self._tp, self._f, self._pl)
         elif params == 'processing':
-            self._action.processing(self._sf, self._tp, self._f, self._pl, self._id, self._dir, self._plot,self._data)
+            self._action.processing(self._sf, self._tp, self._f, self._pl, self._id, self._dir, self._plot,self._pdate, self._data)
 
     def cmd_voltage(self, params):
         self._action = lib.chirpbox_tool_voltage.voltage()
@@ -160,6 +160,7 @@ class ChirpBoxTool():
         parser.add_argument('-id', '--node_id', dest='node_id', help='Input the node_id')
         parser.add_argument('-dir', '--directory_path', dest='directory_path', help='Input the directory path for processing')
         parser.add_argument('-plot', '--plot_type', dest='plot_type', help='Input the type of plots after processing')
+        parser.add_argument('-pdate', '--plot_date', dest='plot_date', help='Input the start and end date of processed plot: 2021-04-22,2021-04-23')
         parser.add_argument('-data', '--data_exist', dest='data_exist', help='Input the state of processed data: True/False')
         group_actions = parser.add_argument_group(title='actions')
         group_actions.add_argument('action', nargs='*', help='actions will be processed sequentially')
@@ -174,6 +175,10 @@ class ChirpBoxTool():
             self._plot = [x.strip() for x in args.plot_type.split(',')]
         else:
             self._plot = None
+        if (args.plot_date is not None):
+            self._pdate = [x.strip() for x in args.plot_date.split(',')]
+        else:
+            self._pdate = None
         self._data = args.data_exist
         logger.info(args)
         runtime_status = 0
