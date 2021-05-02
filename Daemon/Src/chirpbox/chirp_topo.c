@@ -291,8 +291,10 @@ void topo_dio0_isr()
                     else
                         RssiValue_link = RSSI_OFFSET_LF + rssi_link + (rssi_link >> 4);
                 }
-                if(node_topology_link[Rx_Buffer[0]-1].snr_link_min == -1)
+                if((node_topology_link[Rx_Buffer[0]-1].snr_link_min == -1) && (node_topology_link[Rx_Buffer[0]-1].snr_link_max == -1) && (node_topology_link[Rx_Buffer[0]-1].snr_link_min == -1) && (node_topology_link[Rx_Buffer[0]-1].rssi_link_max == -1))
                 {
+                    node_topology_link[Rx_Buffer[0]-1].snr_total = 0;
+                    node_topology_link[Rx_Buffer[0]-1].rssi_total = 0;
                     node_topology_link[Rx_Buffer[0]-1].snr_link_min = SnrValue;
                     node_topology_link[Rx_Buffer[0]-1].snr_link_max = SnrValue;
                     node_topology_link[Rx_Buffer[0]-1].rssi_link_min = RssiValue_link;
@@ -305,8 +307,8 @@ void topo_dio0_isr()
                     node_topology_link[Rx_Buffer[0]-1].rssi_link_min = (node_topology_link[Rx_Buffer[0]-1].rssi_link_min > RssiValue_link)?RssiValue_link:node_topology_link[Rx_Buffer[0]-1].rssi_link_min;
                     node_topology_link[Rx_Buffer[0]-1].rssi_link_max = (node_topology_link[Rx_Buffer[0]-1].rssi_link_max < RssiValue_link)?RssiValue_link:node_topology_link[Rx_Buffer[0]-1].rssi_link_max;
                 }
-
-
+                    node_topology_link[Rx_Buffer[0]-1].snr_total += SnrValue;
+                    node_topology_link[Rx_Buffer[0]-1].rssi_total += RssiValue_link;
                 PRINTF("RX: %d\n", rx_receive_num);
             }
         }

@@ -110,6 +110,8 @@ typedef struct Topology_result_link_tag
 	int8_t			snr_link_max;
 	int16_t			rssi_link_min;
 	int16_t			rssi_link_max;
+	int16_t			snr_total;
+	int16_t			rssi_total;
 } Topology_result_link;
 
 //Stats ********************************************************************************************
