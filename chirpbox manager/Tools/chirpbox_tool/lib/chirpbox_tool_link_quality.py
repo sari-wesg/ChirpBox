@@ -480,7 +480,7 @@ class link_quality():
                 ax2.tick_params(which='major',width=5, length=10)
 
                 df_link_freq = df_link.loc[(df_link['channel'] == int(freq))]
-                ax.set_xlabel('Datetime tested at frequency ' + str(freq), fontsize=50)
+                ax.set_xlabel('Datetime tested at frequency ' + str("{:.1f}".format(freq/1000)) + " MHz", fontsize=50)
                 plt.xticks(fontsize = 15)
                 legend = ax.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0,1.0))
                 legend = ax2.legend(loc='upper right',fontsize = 24, ncol=2, bbox_to_anchor=(1.0, 1.0 - 0.18))
@@ -488,10 +488,10 @@ class link_quality():
                 plt.savefig(directory_path + '\\link_quality\\' + title + self._plot_suffix, bbox_inches='tight')
 
                 fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
-                # plt.show(block=False)
+                plt.show(block=False)
                 # plt.pause(3)
-                plt.show(fig)
-                # plt.close(fig)
+                # plt.show()
+                plt.close(fig)
 
         # plot2: degree:
         if "degree" in plot_type:
@@ -530,7 +530,7 @@ class link_quality():
                 ax2.set_xticks(x_list,minor=True)
                 # ax.set_yticks(range(math.floor(min(df_link['min_rssi'])), math.ceil(max(df_link['min_rssi'])) + 1, 1),minor=True)
                 # ax2.set_yticks(range(math.floor(min(df_link['min_snr'])), math.ceil(max(df_link['min_snr'])) + 1, 1),minor=True)
-                ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox at frequency ' + str(freq), fontsize=50)
+                ax.set_xlabel('Average degree among ' + str(len(id_list)) + ' nodes on ChirpBox at frequency ' + str("{:.1f}".format(freq/1000)) + " MHz", fontsize=50)
 
                 # ax2.set_xticklabels(x_list, ha='right', rotation=45)
                 plt.xticks(x_list, x_list, fontsize = 15)
@@ -542,10 +542,10 @@ class link_quality():
                 plt.savefig(directory_path + '\\link_quality\\' + title + self._plot_suffix, bbox_inches='tight')
 
                 fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
-                # plt.show(block=False)
+                plt.show(block=False)
                 # plt.pause(3)
-                plt.show(fig)
-                # plt.close(fig)
+                # plt.show()
+                plt.close(fig)
 
         # plot3: heatmap:
         if "heatmap" in plot_type:
