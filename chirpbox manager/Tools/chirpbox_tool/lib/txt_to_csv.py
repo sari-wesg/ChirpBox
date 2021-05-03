@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 import os
 import numpy as np
 import lib.chirpbox_tool_link_quality
+from pathlib import Path
+import statistics
 
 logger = logging.getLogger(__name__)
 
@@ -110,9 +112,10 @@ class chirpbox_txt():
         return (utc_list, node_id_with_value)
 
     def check_link_node_total_num(self, node_total_num, node_value_list):
+        value_pos = int(int(node_total_num * CHIRPBOX_LINK_VALUE_LEN + CHIRPBOX_LINK_MIN_VALUE_LEN - 1) / CHIRPBOX_LINK_MIN_VALUE_LEN) * CHIRPBOX_LINK_MIN_VALUE_LEN
         check = True
         try:
-            for i in range(node_total_num * CHIRPBOX_LINK_VALUE_LEN + 1, (node_total_num + 1) * CHIRPBOX_LINK_VALUE_LEN):
+            for i in range(value_pos + 1, value_pos + CHIRPBOX_LINK_MIN_VALUE_LEN):
                 if(node_value_list[i] != '00'):
                     check = False
                     break
@@ -128,6 +131,11 @@ class chirpbox_txt():
         csv_files = glob.glob(directory_path + "\\" + file_start_name + "*" + self._csv_suffix)
         logger.debug("csv_files: %s\n", csv_files)
         logger.debug("row: %s\n", id_list)
+
+        Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
+        with open(directory_path + '\\link_quality\\' + 'link_quality.csv', 'a', newline='') as csvfile:
+            writer= csv.writer(csvfile, delimiter=',')
+            writer.writerow(["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "avg_snr", "min_rssi", "max_rssi", "avg_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
         # 2. loop csv files, and read node id and payload bytes from csv
         node_id_with_value = []
@@ -171,6 +179,8 @@ class chirpbox_txt():
                     # link matrix:
                     received_snr = []
                     received_rssi = []
+                    received_snr_avg = []
+                    received_rssi_avg = []
                     node_temperature = []
                     link_matrix = np.zeros((len(id_list), len(id_list)))
                     with open(filename, "rt") as infile:
@@ -180,7 +190,7 @@ class chirpbox_txt():
                             try:
                                 node_id_position_in_csv = node_csv_list.index(id_hex)
                                 node_id_position_in_id_list = id_list_hex.index(id_hex)
-                                node_temp = list_read[node_id_position_in_csv][(sf+1) * (node_total_num+1) * CHIRPBOX_LINK_VALUE_LEN + 1 - CHIRPBOX_LINK_VALUE_LEN: (sf+1) * (node_total_num+1) * CHIRPBOX_LINK_VALUE_LEN + 1 - CHIRPBOX_LINK_VALUE_LEN+ CHIRPBOX_LINK_TEMP_LEN]
+                                node_temp = list_read[node_id_position_in_csv][(sf+1) * (node_total_num+1) * CHIRPBOX_LINK_VALUE_LEN + 1 - CHIRPBOX_LINK_MIN_VALUE_LEN: (sf+1) * (node_total_num+1) * CHIRPBOX_LINK_VALUE_LEN + 1 - CHIRPBOX_LINK_MIN_VALUE_LEN + CHIRPBOX_LINK_TEMP_LEN]
                                 node_temp = int("".join(node_temp), base = 16)
                                 if ((node_temp & int("0x80", 0)) == int("0x80", 0)):
                                     node_temp = 255 - node_temp
@@ -221,6 +231,20 @@ class chirpbox_txt():
                                         rssi_max = self.twos_complement("".join(rssi_max), 16)
                                         if not ((rssi_min == -1) and (rssi_max == -1)):
                                             received_rssi.extend((rssi_min, rssi_max))
+                                        # Average of SNR and RSSI:
+                                        received_packet_num = int(node_reliability * CHIRPBOX_LINK_PACKET_NUM / 100)
+
+                                        snr_total = list_read[node_id_position_in_csv][value_reliability_position + CHIRPBOX_LINK_RELIABILITY_LEN + CHIRPBOX_LINK_SNR_LEN*2 + CHIRPBOX_LINK_RSSI_LEN*2: value_reliability_position + CHIRPBOX_LINK_RELIABILITY_LEN + CHIRPBOX_LINK_SNR_LEN*2 + CHIRPBOX_LINK_RSSI_LEN*2 + CHIRPBOX_LINK_AVG_LEN]
+                                        snr_total.reverse()
+                                        snr_total = self.twos_complement("".join(snr_total), 16)
+                                        snr_avg = snr_total / received_packet_num
+                                        received_snr_avg.append(snr_avg)
+
+                                        rssi_total = list_read[node_id_position_in_csv][value_reliability_position + CHIRPBOX_LINK_RELIABILITY_LEN + CHIRPBOX_LINK_SNR_LEN*2 + CHIRPBOX_LINK_RSSI_LEN*2 + CHIRPBOX_LINK_AVG_LEN: value_reliability_position + CHIRPBOX_LINK_RELIABILITY_LEN + CHIRPBOX_LINK_SNR_LEN*2 + CHIRPBOX_LINK_RSSI_LEN*2 + CHIRPBOX_LINK_AVG_LEN*2]
+                                        rssi_total.reverse()
+                                        rssi_total = self.twos_complement("".join(rssi_total), 16)
+                                        rssi_avg = rssi_total / received_packet_num
+                                        received_rssi_avg.append(rssi_avg)
                                 except:
                                     breaker = True
                                     logger.info("No infomation for node %s in node %s with sf %s in file %s", id, id_hex, sf + CHIRPBOX_LINK_SF7, filename)
@@ -236,5 +260,5 @@ class chirpbox_txt():
                         # logger.debug("snr with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, received_snr)
                         # logger.debug("rssi with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, received_rssi)
                         # logger.debug("temp with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, node_temperature)
-                        self._link_processing.processing_link_data_to_csv([utc_value, sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, node_temperature, id_list, directory_path, filename)
+                        self._link_processing.processing_link_data_to_csv([utc_value, sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, statistics.mean(received_snr_avg), statistics.mean(received_rssi_avg), node_temperature, id_list, directory_path, filename)
                         # self._link_processing.processing_link_data_to_csv([datetime.fromtimestamp(int(utc_value)).strftime("%Y-%m-%d %H:%M"), sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, node_temperature, id_list, directory_path, filename)

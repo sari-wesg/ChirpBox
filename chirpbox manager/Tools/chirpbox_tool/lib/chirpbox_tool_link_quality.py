@@ -12,7 +12,6 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import seaborn as sns
 from matplotlib.colors import LinearSegmentedColormap
 import datetime
-from pathlib import Path
 import shutil
 import collections
 import pandas as pd
@@ -303,10 +302,10 @@ class link_quality():
     link processing
     csv data: processing the link quality in csv named "link_quality.csv"
     """
-    def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, node_temp, id_list, directory_path, filename):
+    def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, snr_avg, rssi_avg, node_temp, id_list, directory_path, filename):
         """
         convert csv files to csv with columns
-        utc | sf | tp | frequency | payload length | min_SNR | max_SNR | min_RSSI | max_RSSI | max_hop | max_hop_id | max_degree | min_degree | mean_degree | average_temp | node_degree (list) | node_temp (list) | node id with link (matrix)
+        utc | sf | tp | frequency | payload length | min_SNR | max_SNR | avg_snr | min_RSSI | max_RSSI | avg_rssi | max_hop | max_hop_id | max_degree | min_degree | mean_degree | average_temp | node_degree (list) | node_temp (list) | node id with link (matrix)
         """
         node_num = len(node_temp)
 
@@ -341,7 +340,8 @@ class link_quality():
             for cnt_degrees_tx in range(node_num):
                 if(cnt_degrees_rx != cnt_degrees_tx):
                     if (link_matrix[cnt_degrees_rx, cnt_degrees_tx] != 0):
-                        de = de + 1 * link_matrix[cnt_degrees_rx, cnt_degrees_tx] / 100
+                        # de = de + 1 * link_matrix[cnt_degrees_rx, cnt_degrees_tx] / 100
+                        de = de + 1
             node_degree[cnt_degrees_rx] = de
         mean_degree = np.mean(node_degree)
         std_dev_degree = np.std(node_degree)
@@ -350,7 +350,7 @@ class link_quality():
 
         link_matrix_list = link_matrix.tolist()
         if ((len(snr_list) > 0) and (len(rssi_list) > 0)):
-            link_infomation.extend((min(snr_list), max(snr_list), min(rssi_list), max(rssi_list), max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
+            link_infomation.extend((min(snr_list), max(snr_list), snr_avg, min(rssi_list), max(rssi_list), rssi_avg, max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
         else:
             link_infomation.extend(('null', 'null', 'null', 'null', max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
         link_infomation.insert(len(link_infomation), node_degree)
@@ -368,7 +368,6 @@ class link_quality():
             link_infomation.extend(('null', 'null', 'null', 'null', 'null'))
             pass
 
-        Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
         with open(directory_path + '\\link_quality\\' + 'link_quality.csv', 'a', newline='') as csvfile:
             writer= csv.writer(csvfile, delimiter=',')
             writer.writerow(link_infomation)
@@ -425,7 +424,7 @@ class link_quality():
         # draw plots from the new csv
         df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality_all_sf.csv',
                             sep=',',
-                            names=["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "min_rssi", "max_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
+                            names= ["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "avg_snr", "min_rssi", "max_rssi", "avg_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
         if (df_link.empty):
             logger.error("link data is None")
@@ -651,21 +650,21 @@ class link_quality():
     .txt in folder: process txts in the folder to csv data/plots/gif
     """
     def processing(self, sf_list, tp_list, freq_list, payload_len_list, id_list, directory_path, plot_type, plot_date, data_exist):
-        self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
-
-        # convert txt in directory to csv
-        self._chirpbox_txt.chirpbox_txt_to_csv(directory_path, self._file_start_name)
-
-        # convert csv files to csv with columns
         if ("True" in data_exist) is False:
             try:
                 shutil.rmtree(directory_path + "\\link_quality\\")
             except:
                 logger.info("link_quality folder does not exist")
                 pass
+            # convert csv files to csv with columns:
+            # initialization
+            self._chirpbox_txt = lib.txt_to_csv.chirpbox_txt()
+            # convert txt in directory to csv
+            self._chirpbox_txt.chirpbox_txt_to_csv(directory_path, self._file_start_name)
+            # convert csv in directory to the specified csv file
             self._chirpbox_txt.chirpbox_link_to_csv(directory_path, self._file_start_name, self._time_zone, id_list)
+            # remove all processed files in directory
+            self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')
 
         self.chirpbox_link_csv_processing(sf_list, freq_list, id_list, directory_path, plot_type, plot_date)
 
-        # remove all processed files in directory
-        self._chirpbox_txt.chirpbox_delete_in_dir(directory_path, '.csv')
