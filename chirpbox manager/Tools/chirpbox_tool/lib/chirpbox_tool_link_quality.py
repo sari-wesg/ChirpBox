@@ -501,9 +501,9 @@ class link_quality():
                     # title = fig_title,
                     # legend=dict(x=-0.01, y=-0.9, orientation="h")
                     margin=dict(l=20, r=20, t=20, b=20),
-                    autosize=False,
-                    width=1000,
-                    height=500,
+                    # autosize=False,
+                    # width=1000,
+                    # height=500,
                     )
 
                 fig.update_layout(legend=dict(
@@ -628,9 +628,9 @@ class link_quality():
                     # title = fig_title,
                     # legend=dict(x=-0.01, y=-0.9, orientation="h")
                     margin=dict(l=20, r=20, t=20, b=20),
-                    autosize=False,
-                    width=800,
-                    height=1200,
+                    # autosize=False,
+                    # width=800,
+                    # height=400,
                     )
 
                 fig.update_layout(legend=dict(
