@@ -26,6 +26,16 @@ import sys
 import pytz
 local = pytz.timezone ("Asia/Shanghai")
 
+import plotly
+plotly.offline.init_notebook_mode(connected=True)
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
+from plotly.offline import iplot
+
+import operator
+
+
 logger = logging.getLogger(__name__)
 
 #style.use('seaborn-paper') #sets the size of the charts
@@ -37,6 +47,8 @@ sns.set_context('poster')  #Everything is larger
 #style.use('ggplot')
 red_colors = ['#fff5f0', '#fee0d2', '#fcbba1', '#fc9272', '#fb6a4a', '#ef3b2c', '#cb181d', '#a50f15', '#67000d', '#4e000d']
 green_colors = ['#ffffe5', '#f7fcb9', '#d9f0a3', '#addd8e', '#78c679', '#41ab5d', '#238443', '#006837', '#004529', '#003729']
+blue_colors = ['#ebebff', '#d8d8ff', '#c4c4ff', '#b1b1ff', '#9d9dff', '#7676ff', '#4e4eff', '#3b3bff', '#2727ff', '#1414ff']
+three_colors = ['#3b3bff', '#238443', '#cb181d']
 
 class link_quality():
     def __init__(self):
@@ -429,8 +441,214 @@ class link_quality():
         if (df_link.empty):
             logger.error("link data is None")
             return False
+
+        # plot with plotly: min/avg/max degree and temperature:
+        if "degree_plot" in plot_type:
+            for freq in freq_list:
+                # plot the data
+                fig = make_subplots(specs=[[{"secondary_y": True}]])
+                for sf in sf_list:
+                    if plot_date is not None:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                    else:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
+
+                    fig = fig.add_trace(go.Scatter(x = dates, y = df_link_sf['max_degree'], name='Max - SF' +str(sf),
+                    marker=dict(
+                                # size=10,
+                                color=red_colors[sf - 7 + 3],
+                            ),))
+
+                for sf in sf_list:
+                    if plot_date is not None:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                    else:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
+
+                    fig = fig.add_trace(go.Scatter(x = dates, y = df_link_sf['average_degree'], name='Avg - SF' +str(sf),
+                    marker=dict(
+                                # size=10,
+                                color=green_colors[sf - 7 + 3],
+                            ),))
+
+                for sf in sf_list:
+                    if plot_date is not None:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                    else:
+                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
+
+                    fig = fig.add_trace(go.Scatter(x = dates, y = df_link_sf['min_degree'], name='Min - SF' +str(sf),
+                    marker=dict(
+                                # size=10,
+                                color=blue_colors[sf - 7 + 3],
+                            ),))
+
+                    if (sf == sf_list[-1]):
+                        fig.add_trace(go.Scatter(x=dates, y=df_link_sf['average_temperature'], name='Temperature',
+                        marker=dict(
+                                    # size=10,
+                                    color='black',
+                                ),
+                        line = dict(width=2, dash='dot')
+                        ), secondary_y=True)
+
+                fig_title = "Degree and temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz"
+
+                fig.update_layout(
+                    # title = fig_title,
+                    # legend=dict(x=-0.01, y=-0.9, orientation="h")
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    autosize=False,
+                    width=1000,
+                    height=500,
+                    )
+
+                fig.update_layout(legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=1
+                ))
+
+                # Set x-axis title
+                fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
+
+                # Set y-axes titles
+                fig.update_yaxes(title_text="Degree", title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
+                fig.update_yaxes(title_text="Temperature (°C)", title_font = {"size": 16}, title_standoff = 2, secondary_y=True)
+                fig.show()
+
+        # plot with plotly: min/avg/max RSSI/SNR with average degree:
+        plot_rssi_snr = []
+        if "MAX_RSSI_SNR_Degree_plot" in plot_type:
+            plot_rssi_snr.append("max")
+        if "AVG_RSSI_SNR_Degree_plot" in plot_type:
+            plot_rssi_snr.append("avg")
+        if "MIN_RSSI_SNR_Degree_plot" in plot_type:
+            plot_rssi_snr.append("min")
+        if len(plot_rssi_snr) > 0:
+            for _plot_type in plot_rssi_snr:
+                for freq in freq_list:
+                    # plot the data
+                    fig = make_subplots(specs=[[{"secondary_y": True}]])
+                    for sf in sf_list:
+                        if plot_date is not None:
+                            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                        else:
+                            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+
+                        fig = fig.add_trace(go.Scatter(x = df_link_sf['average_degree'], y = df_link_sf[_plot_type + '_rssi'], name='RSSI - SF' +str(sf),
+                        marker=dict(
+                                    size=10,
+                                    color=red_colors[sf - 7 + 3],
+                                    symbol = 'circle',
+                                ),mode='markers'))
+
+                    for sf in sf_list:
+                        if plot_date is not None:
+                            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                        else:
+                            df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+
+                        fig = fig.add_trace(go.Scatter(x = df_link_sf['average_degree'], y = df_link_sf[_plot_type + '_snr'], name='SNR - SF' +str(sf),
+                        marker=dict(
+                                    size=10,
+                                    color=red_colors[sf - 7 + 3],
+                                    symbol = 'triangle-up-dot',
+                                ),mode='markers'), secondary_y=True)
+
+                    fig_title = "Average degree at frequency " + str("{:.1f}".format(freq/1000)) + " MHz"
+
+                    fig.update_layout(
+                        # title = fig_title,
+                        # legend=dict(x=-0.01, y=-0.9, orientation="h")
+                        margin=dict(l=20, r=20, t=20, b=20),
+                        )
+                    # Set x-axis title
+                    fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
+
+                    # Set y-axes titles
+                    fig.update_yaxes(title_text=_plot_type[0].upper() + _plot_type[1:] + "_RSSI", title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
+                    fig.update_yaxes(title_text=_plot_type[0].upper() + _plot_type[1:] + "_SNR", title_font = {"size": 16}, title_standoff = 2, secondary_y=True)
+                    fig.show()
+
+        # plot with plotly: min/avg/max RSSI/SNR with SF with frequencies:
+        plot_rssi_snr = []
+        if "RSSI_SF_Freq_plot" in plot_type:
+            plot_rssi_snr.append("RSSI")
+        if "SNR_SF_Freq_plot" in plot_type:
+            plot_rssi_snr.append("SNR")
+        if len(plot_rssi_snr) > 0:
+            for _plot_type in plot_rssi_snr:
+                # plot the data
+                fig = make_subplots(specs=[[{"secondary_y": True}]])
+                _plot_rssi_snr = ["max", "min"]
+                # _plot_rssi_snr = ["max", "avg", "min"]
+                for _plot_rssi_snr_tmp in _plot_rssi_snr:
+                    for freq in freq_list:
+                        if plot_date is not None:
+                            df_link_freq = df_link.loc[(df_link['channel'] == int(freq)) & (df_link['utc'] >= int(utc_dt_start)) & (df_link['utc'] <= int(utc_dt_end))]
+                        else:
+                            df_link_freq = df_link.loc[(df_link['channel'] == int(freq))]
+
+                        list_mean = [np.median((df_link_freq.loc[(df_link_freq['sf'] == int(sf))])[_plot_rssi_snr_tmp + '_' + _plot_type.lower()]) for sf in sf_list]
+
+                        # list_error_bar = [np.std((df_link_freq.loc[(df_link_freq['sf'] == int(sf))])[_plot_rssi_snr_tmp + '_' + _plot_type.lower()]) for sf in sf_list]
+                        list_error_bar_up = [np.max((df_link_freq.loc[(df_link_freq['sf'] == int(sf))])[_plot_rssi_snr_tmp + '_' + _plot_type.lower()]) for sf in sf_list]
+                        list_error_bar_down = [np.min((df_link_freq.loc[(df_link_freq['sf'] == int(sf))])[_plot_rssi_snr_tmp + '_' + _plot_type.lower()]) for sf in sf_list]
+
+                        list_error_bar_up = list(map(operator.sub, list_error_bar_up, list_mean))
+                        list_error_bar_down = list(map(operator.sub, list_mean, list_error_bar_down))
+
+                        symbol_list = ['circle', 'square', 'diamond']
+
+                        fig = fig.add_trace(go.Scatter(x = sf_list, y = list_mean,
+                        name = _plot_rssi_snr_tmp[0].upper() + _plot_rssi_snr_tmp[1:] + " - " + str("{:.1f}".format(freq/1000)) + " MHz",
+                        marker=dict(
+                                    size=8,
+                                    color=three_colors[freq_list.index(freq)],
+                                    symbol = symbol_list[_plot_rssi_snr.index(_plot_rssi_snr_tmp)],
+                                ),mode='markers',
+                                error_y=dict(
+                                    type='data',
+                                    symmetric=False,
+                                    array=list_error_bar_up,
+                                    arrayminus=list_error_bar_down,
+                                    # thickness=10,
+                                    width=5,
+                                    )
+                                ))
+
+                fig_title = "SF"
+
+                fig.update_layout(
+                    # title = fig_title,
+                    # legend=dict(x=-0.01, y=-0.9, orientation="h")
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    autosize=False,
+                    width=800,
+                    height=1200,
+                    )
+
+                fig.update_layout(legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=0.95
+                ))
+
+                # Set x-axis title
+                fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
+
+                # Set y-axes titles
+                fig.update_yaxes(title_text=_plot_type.upper(), title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
+                fig.show()
+
         # plot1: temperature:
-        if "temperature" in plot_type:
+        if "average_degree" in plot_type:
             for freq in freq_list:
                 fig = plt.figure(figsize=(25, 12))
                 ax = plt.gca()
@@ -442,15 +660,11 @@ class link_quality():
                         df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
                     dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
 
-                    # ax.plot(dates, df_link_sf['min_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_snr')
-                    # ax.plot(dates, df_link_sf['max_snr'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_snr')
-                    # ax.plot(dates, df_link_sf['min_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_rssi')
-                    # ax.plot(dates, df_link_sf['max_rssi'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_rssi')
-                    # ax.plot(dates, df_link_sf['max_hop'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_hop')
-                    # ax.plot(dates, df_link_sf['min_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'min_degree')
-                    # ax.plot(dates, df_link_sf['max_degree'], linestyle='-', marker='o', markersize = 20, label = "SF" + str(sf) + 'max_degree')
+                    ax.plot(dates, df_link_sf['min_degree'], linestyle='-', marker='o', markersize = 10, color = green_colors[sf - 7 + 2], label = "min_SF" + str(sf))
 
-                    ax.plot(dates, df_link_sf['average_degree'], linestyle='-', marker='o', markersize = 10, color = red_colors[sf - 7 + 2], label = "SF" + str(sf))
+                    ax.plot(dates, df_link_sf['max_degree'], linestyle='-', marker='o', markersize = 10, color = green_colors[sf - 7 + 2], label = "max_SF" + str(sf))
+
+                    ax.plot(dates, df_link_sf['average_degree'], linestyle='-', marker='o', markersize = 10, color = red_colors[sf - 7 + 2], label = "avg_SF" + str(sf))
 
                     if (sf == sf_list[0]):
                         ax2.plot(dates, df_link_sf['average_temperature'], linestyle='--', marker='o', markersize = 10, label = 'temperature')
@@ -469,7 +683,8 @@ class link_quality():
                     ax.set_xlim([pd.to_datetime(datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%Y-%m-%d %H-%M")), pd.to_datetime(datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%Y-%m-%d %H-%M"))])
                 else:
                     ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
-                ax.set_ylim(math.floor(min(df_link['average_degree'])), math.ceil(max(df_link['average_degree'])))
+                ax.set_ylim(0, math.ceil(max(df_link['max_degree'])) + 2)
+                # ax.set_ylim(math.floor(min(df_link['min_degree'])), math.ceil(max(df_link['max_degree'])))
                 ax2.set_ylim(math.floor(min(df_link['average_temperature'])), math.ceil(max(df_link['average_temperature'])))
 
                 # Ticks and labels
@@ -492,8 +707,8 @@ class link_quality():
                 # plt.show()
                 plt.close(fig)
 
-        # plot2: degree:
-        if "degree" in plot_type:
+        # plot2: Minimal RSSI and SNR:
+        if "MIN_RSSI_SNR_Degree" in plot_type:
             for freq in freq_list:
                 fig = plt.figure(figsize=(25, 12))
                 ax = plt.gca()
