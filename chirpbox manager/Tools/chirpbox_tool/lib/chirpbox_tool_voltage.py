@@ -35,7 +35,7 @@ class voltage():
 
             plt.legend(loc="upper left")
 
-        fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
+        # fig.canvas.manager.full_screen_toggle() # toggle fullscreen mode
         plt.show()
 
     def measurement(self):

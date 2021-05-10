@@ -682,7 +682,8 @@ class link_quality():
                 if plot_date is not None:
                     ax.set_xlim([pd.to_datetime(datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%Y-%m-%d %H-%M")), pd.to_datetime(datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%Y-%m-%d %H-%M"))])
                 else:
-                    ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
+                    pass
+                    # ax.set_xlim([pd.to_datetime('2021-04-22 00:00'), pd.to_datetime('2021-04-28 00:00')])
                 ax.set_ylim(0, math.ceil(max(df_link['max_degree'])) + 2)
                 # ax.set_ylim(math.floor(min(df_link['min_degree'])), math.ceil(max(df_link['max_degree'])))
                 ax2.set_ylim(math.floor(min(df_link['average_temperature'])), math.ceil(max(df_link['average_temperature'])))

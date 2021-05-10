@@ -63,7 +63,7 @@ list of combinations:
 examples:
     chirpbox_tool.py -h
     chirpbox_tool.py -sf 7-12 -tp 0-14 -f 470000,480000,490000 -pl 8-10 link_quality:measurement
-    chirpbox_tool.py -sf 7-12 -f 470000,480000,490000 -plot temperature,degree,heatmap,topology,using_pos2,pdf -pdate 2021-04-23,2021-04-24 -id 0-20 -dir "tmp" link_quality:processing
+    chirpbox_tool.py -sf 7-12 -f 470000,480000,490000 -plot RSSI_SF_Freq_plot,SNR_SF_Freq_plot,average_degree,MIN_RSSI_SNR_Degree,heatmap,topology,using_pos2,pdf -pdate 2021-04-23,2021-04-24 -id 0-20 -dir "tmp" link_quality:processing
     chirpbox_tool.py -id 0-20 voltage:measurement
     chirpbox_tool.py -id 0,10,20 -dir "tmp" voltage:processing
 """
