@@ -242,7 +242,9 @@ void topo_result(uint8_t nodes_num, uint8_t topo_test_id)
             FLASH_If_Erase_Pages(1, TOPO_PAGE);
         }
         // write reliability, snr and rssi
-        FLASH_If_Write(topo_flash_address_temp, (uint32_t *)(node_topology_link), (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8) / sizeof(uint32_t));
+        uint32_t node_topology_link_temp[(((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8) / sizeof(uint32_t)];
+        memcpy(node_topology_link_temp, node_topology_link, sizeof(node_topology_link));
+        FLASH_If_Write(topo_flash_address_temp, (uint32_t *)(node_topology_link_temp), (sizeof(node_topology_link_temp) / sizeof(uint32_t)));
         // write temperature
         FLASH_If_Write(topo_flash_address_temp + (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8), (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
     #endif

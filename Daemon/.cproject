@@ -57,7 +57,7 @@
                             							
                             <option id="com.st.stm32cube.ide.mcu.option.internal.toolchain.default.1330605054" name="Internal Toolchain Default" superClass="com.st.stm32cube.ide.mcu.option.internal.toolchain.default" useByScannerDiscovery="false" value="false" valueType="boolean"/>
                             							
-                            <option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain.905274956" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.toolchain.base.gnu-tools-for-stm32.9-2020-q2-update" valueType="string"/>
+                            <option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain.905274956" name="Toolchain" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.toolchain" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.toolchain.base.gnu-tools-for-stm32.9-2020-q2-update" valueType="string"/>
                             							
                             <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform.117529681" isAbstract="false" osList="all" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.targetplatform"/>
                             							
@@ -217,7 +217,7 @@
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
                         						
-                        <entry excluding="gpi/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Src"/>
+                        <entry excluding="chirpbox/chirp_irqhandler copy.c|loradisc/loradisc.c|gpi/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Src"/>
                         					
                     </sourceEntries>
                     				
