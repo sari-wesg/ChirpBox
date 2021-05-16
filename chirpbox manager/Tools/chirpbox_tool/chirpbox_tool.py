@@ -135,7 +135,7 @@ class ChirpBoxTool():
         if params == 'measurement':
             self._action.measurement()
         elif params == 'processing':
-            self._action.processing(self._id, self._dir)
+            self._action.processing(self._id, self._dir, self._pdate)
 
     def cmd(self, param):
         cmd = param[0]
