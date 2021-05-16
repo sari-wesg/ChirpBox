@@ -42,7 +42,6 @@
 #ifdef MX_CONFIG_FILE
 	#include STRINGIFY(MX_CONFIG_FILE)
 #endif
-// #include "gpi/clocks.h"
 
 #if ENERGEST_CONF_ON
 
