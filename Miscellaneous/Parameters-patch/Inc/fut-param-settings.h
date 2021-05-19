@@ -3,13 +3,6 @@
 
 #define CUSTOM_LENGTH 0xFF
 
-/*
-Default LoRa Radio:
-1. Frequency/bandwidth
-2. Spreading factor (SF)
-3. Tx power
-4. Coding rate
-*/
 typedef struct
 {
     uint32_t CUSTOM[CUSTOM_LENGTH];
