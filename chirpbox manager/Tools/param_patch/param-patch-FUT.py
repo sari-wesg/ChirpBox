@@ -85,11 +85,9 @@ def fut_param_patch(param_filename, bin_filename):
         fh.write((bytearray.fromhex("{0:08X}".format(CR)))[::-1])
 
 """
-
 usage example:
-chirpbox_param_patch('chirpbox-param-settings.json', 'Daemon.bin')
-fut_param_patch('fut-param-settings.json', 'tmp_exp_firm.bin')
+fut_param_patch('fut-param-settings.json', 'FUT.bin')
 
 """
 
-chirpbox_param_patch('chirpbox-param-settings.json', 'Daemon.bin')
+fut_param_patch('fut-param-settings.json', 'FUT.bin')

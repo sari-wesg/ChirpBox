@@ -1,7 +1,7 @@
 #ifndef __FUT_PARAM_SETTING_H__
 #define __FUT_PARAM_SETTING_H__
 
-#define NODE_LENGTH 0xFF
+#define CUSTOM_LENGTH 0xFF
 
 /*
 Default LoRa Radio:
@@ -12,10 +12,7 @@ Default LoRa Radio:
 */
 typedef struct
 {
-    uint32_t Frequency; // according to the region
-    uint8_t SF; // 7 - 12
-    int8_t TP;  // -1 - 14 dBm
-    uint8_t CR; // 1 - 4 ~ 4/5 - 4/8s
+    uint32_t CUSTOM[CUSTOM_LENGTH];
 } chirpbox_fut_config;
 
 
@@ -23,7 +20,12 @@ typedef struct
 void
 static print_chirpbox_fut_config(chirpbox_fut_config* p)
 {
-	PRINTF("Frequency: %lu kHz\nSF: %d\nTP: %d\nCR: %d\n", p->Frequency, p->SF, p->TP, p->CR);
+	uint8_t i = 0;
+    while(p->CUSTOM[i])
+    {
+        PRINTF("CUSTOM %d with value 0x%08x\n", i, p->CUSTOM[i]);
+        i++;
+    }
 }
 
 #endif // __FUT_PARAM_SETTING_H__

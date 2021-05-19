@@ -25,7 +25,7 @@ typedef struct
 static void
 print_chirpbox_daemon_config(chirpbox_daemon_config* p)
 {
-	uint8_t i;
+	uint8_t i = 0;
     while(p->UID_list[i])
     {
         PRINTF("Node %d with UID 0x%08x\n", i, p->UID_list[i]);

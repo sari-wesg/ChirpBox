@@ -175,7 +175,7 @@
                                     									
                                     <listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.FUTSettingSection=0x08000610"/>
                                     									
-                                    <listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.text=0x08000620"/>
+                                    <listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.text=0x08000A0C"/>
                                     								
                                 </option>
                                 								

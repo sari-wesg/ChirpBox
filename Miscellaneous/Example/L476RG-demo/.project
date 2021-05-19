@@ -34,12 +34,12 @@
 		<link>
 			<name>Src</name>
 			<type>2</type>
-			<location>D:/TP/Study/wesg/Chirpbox/Miscellaneous/Toggle/Src</location>
+			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/Toggle/Src</locationURI>
 		</link>
 		<link>
 			<name>tools</name>
 			<type>2</type>
-			<location>D:/TP/Study/wesg/Chirpbox/Daemon/Src/tools</location>
+			<locationURI>$%7BPARENT-3-PROJECT_LOC%7D/Daemon/Src/tools</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
