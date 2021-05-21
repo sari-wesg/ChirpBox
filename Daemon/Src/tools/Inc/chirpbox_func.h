@@ -16,8 +16,8 @@
 #endif
 #include "API_ChirpBox.h"
 
-#include "chirpbox-param-settings.h"
-#include "fut-param-settings.h"
+#include "API_DaemonParam.h"
+#include "API_FUTParam.h"
 
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
