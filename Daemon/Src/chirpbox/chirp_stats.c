@@ -20,9 +20,6 @@
 #define PRINTF(...)
 #endif
 
-#if MX_FLASH_FILE
-	#include "flash_if.h"
-#endif
 #include "API_ChirpBox.h"
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************

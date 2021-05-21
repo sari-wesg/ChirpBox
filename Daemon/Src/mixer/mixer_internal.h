@@ -123,10 +123,6 @@
 	#define GPS_DATA								1
 #endif
 
-#ifndef MX_FLASH_FILE
-	#define MX_FLASH_FILE							1
-#endif
-
 #ifndef MX_HEADER_CHECK
 	#define MX_HEADER_CHECK							1
 #endif

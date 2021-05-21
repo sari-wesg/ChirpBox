@@ -1,7 +1,6 @@
 //**************************************************************************************************
 //**** Includes ************************************************************************************
 #include "API_ChirpBox.h"
-#include "flash_if.h"
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -23,6 +22,43 @@
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
+int process_fread(janpatch_ctx *ctx, janpatch_buffer *source, size_t count, uint8_t *buffer) {
+    // it can be that ESC character is actually in the data, but then it's prefixed with another ESC
+    // so... we're looking for a lone ESC character
+    size_t cnt = 0;
+    while (1) {
+        int m = jp_getc(ctx, source);
+			// printf("m:%lu, %d, %d, %d\n", m, (unsigned char)m, cnt, count);
+        if (m == -1) {
+            // End of file stream... rewind 1 character and return, this will yield back to janpatch main function, which will exit
+            // jp_fseek(source, -1, SEEK_CUR);
+            break;
+        }
+        else
+        {
+            buffer[cnt] = (unsigned char)m;
+        }
+        cnt++;
+        if (cnt >= count)
+            break;
+    }
+    return cnt;
+}
+
+int process_fwrite(janpatch_ctx *ctx, janpatch_buffer *target, size_t count, uint8_t *buffer) {
+    // it can be that ESC character is actually in the data, but then it's prefixed with another ESC
+    // so... we're looking for a lone ESC character
+    size_t cnt = 0;
+    while (1) {
+        uint8_t m = buffer[cnt];
+        jp_putc(m, ctx, target);
+        cnt++;
+        if (cnt >= count)
+            break;
+    }
+    return cnt;
+}
+
 int the_fseek(Flash_FILE *file, long int offset, int origin)
 {
     if (origin == SEEK_SET)

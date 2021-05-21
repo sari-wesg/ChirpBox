@@ -98,10 +98,7 @@ RTC_HandleTypeDef hrtc;
 I2C_HandleTypeDef hi2c2;
 IWDG_HandleTypeDef hiwdg;
 ADC_HandleTypeDef hadc1;
-
-#if MX_FLASH_FILE
-  CRC_HandleTypeDef CrcHandle;
-#endif
+CRC_HandleTypeDef CrcHandle;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -354,7 +351,6 @@ static void MX_RTC_Init(void)
   CLEAR_BIT(hrtc.Instance->CR, RTC_CR_WUTE);
 }
 
-#if MX_FLASH_FILE
 
 static void MX_CRC_Init(void)
 {
@@ -385,8 +381,6 @@ static void MX_CRC_Init(void)
     Error_Handler();
   }
 }
-
-#endif
 
 
 /**
@@ -527,9 +521,7 @@ void gpi_platform_init(void)
     MX_GPIO_Init();
     MX_USART2_UART_Init();
     MX_USART3_UART_Init();
-    #if MX_FLASH_FILE
-      MX_CRC_Init();
-    #endif
+    MX_CRC_Init();
     MX_RTC_Init();
     MX_I2C2_Init();
 

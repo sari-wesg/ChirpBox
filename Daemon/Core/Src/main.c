@@ -81,12 +81,9 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 #include "mixer/mixer_internal.h"
 
-#if MX_FLASH_FILE
 #include "menu.h"
-#include "flash_if.h"
 #include "stm32l4xx_hal_flash_ex.h"
 #include "toggle.h"
-#endif
 
 #include "chirp_internal.h"
 #if GPS_DATA

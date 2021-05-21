@@ -1,8 +1,7 @@
 //***** Trace Settings *****************************************************************************
 
-#include "trace_flash.h"
+#include "API_ChirpBox.h"
 
-#if (TRACE_MODE & TRACE_MODE_FLASH)
 //**************************************************************************************************
 #include <stdio.h>
 #include <stdarg.h>
@@ -14,11 +13,6 @@ extern char	_estack [1];
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-
-static Trace_Msg			    s_msg_queue[TRACE_BUFFER_ELEMENTS];
-static volatile unsigned int	s_msg_queue_num_written = 0;
-static volatile unsigned int	s_msg_queue_num_writing = 0;
-static volatile unsigned int	s_msg_queue_num_read = 0;
 
 //**************************************************************************************************
 //***** Local Functions ***************************************************************************
@@ -56,13 +50,40 @@ static inline __attribute__((always_inline)) void trace_int_unlock(int ie)
 
 	TRACE_REORDER_BARRIER();
 }
+//**************************************************************************************************
+//***** Global Variables ***************************************************************************
+/* size of TRACE buffer (number of elements) */
+#ifndef API_TRACE_BUFFER_ELEMENTS
+	#define API_TRACE_BUFFER_ELEMENTS			32
+#endif
 
+/* buffer length of arguments */
+#ifndef API_TRACE_LENGTH_ARGUMENT
+	#define API_TRACE_LENGTH_ARGUMENT			32
+#endif
+
+/* TRACE buffer entry size
+implicitly determines number/size of possible var_args */
+#ifndef API_TRACE_BUFFER_ENTRY_SIZE
+	#define API_TRACE_BUFFER_ENTRY_SIZE			FLASH_PAGE / API_TRACE_BUFFER_ELEMENTS
+#endif
+
+typedef struct API_Trace_Msg_tag
+{
+	uint8_t			arguments[API_TRACE_LENGTH_ARGUMENT];
+	/* 32 bytes */
+	int32_t			var_args[(API_TRACE_BUFFER_ENTRY_SIZE - (API_TRACE_LENGTH_ARGUMENT)) / sizeof(int32_t)];
+	/* 64 bytes */
+} API_Trace_Msg;
+
+static API_Trace_Msg		    s_msg_queue[API_TRACE_BUFFER_ELEMENTS];
+static volatile unsigned int	s_msg_queue_num_written = 0;
+static volatile unsigned int	s_msg_queue_num_writing = 0;
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-
-void trace_store_msg(const char* file_name, const int file_line, const char* fmt, ...)
+void api_trace_store_msg(const char* fmt, ...)
 {
-	Trace_Msg *msg;
+	API_Trace_Msg *msg;
 	unsigned int num_writing;
 	int	ie;
 
@@ -72,11 +93,10 @@ void trace_store_msg(const char* file_name, const int file_line, const char* fmt
 
 	trace_int_unlock(ie);		// implies REORDER_BARRIER() ...
     /* copy to the queue */
-	msg = &s_msg_queue[num_writing % TRACE_BUFFER_ELEMENTS];
-    memset((Trace_Msg *)&s_msg_queue[num_writing % TRACE_BUFFER_ELEMENTS], 0, sizeof(Trace_Msg));
+	msg = &s_msg_queue[num_writing % API_TRACE_BUFFER_ELEMENTS];
+    memset((API_Trace_Msg *)&s_msg_queue[num_writing % API_TRACE_BUFFER_ELEMENTS], 0, sizeof(API_Trace_Msg));
 
-    memcpy(msg->file_name, file_name, sizeof(msg->file_name));
-    msg->file_line = file_line;
+	/* save arguments */
     memcpy(msg->arguments, fmt, sizeof(msg->arguments));
 
     /* save parameters */
@@ -96,34 +116,33 @@ void trace_store_msg(const char* file_name, const int file_line, const char* fmt
 	trace_int_unlock(ie);		// implies REORDER_BARRIER() ...
 }
 
-void trace_to_flash(uint16_t trace_page)
+void api_trace_to_flash()
 {
 	uint8_t	num_read_start;
     int8_t i, k = 0;
-	uint32_t trace_flash_address = FLASH_START_BANK1 + trace_page * FLASH_PAGE;
+	uint32_t trace_flash_address = FLASH_START_BANK1 + TRACE_PAGE * FLASH_PAGE;
 	int	ie;
 	ie = trace_int_lock();	// implies REORDER_BARRIER() ...
+
     /* scope of flash address that can be written */
-	if ((trace_page <= TOPO_PAGE) && (trace_page >= 240))
+	if ((TRACE_PAGE <= TOPO_PAGE) && (TRACE_PAGE >= 240))
 	{
 		// erase flash
-		LL_FLASH_PageErase(trace_page);
+		LL_FLASH_PageErase(TRACE_PAGE);
 
 		/* loop the queue */
-		num_read_start = (uint8_t)(s_msg_queue_num_written % TRACE_BUFFER_ELEMENTS) - 1;
+		num_read_start = (uint8_t)(s_msg_queue_num_written % API_TRACE_BUFFER_ELEMENTS) - 1;
 		if (num_read_start == 0xFF)
-			num_read_start = TRACE_BUFFER_ELEMENTS - 1;
+			num_read_start = API_TRACE_BUFFER_ELEMENTS - 1;
 		for (i = num_read_start; i >= 0; i--, k++)
 		{
-			LL_FLASH_Program64s(trace_flash_address + k * sizeof(Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(Trace_Msg) / sizeof(uint32_t));
+			LL_FLASH_Program64s(trace_flash_address + k * sizeof(API_Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(API_Trace_Msg) / sizeof(uint32_t));
 		}
-		for (i = TRACE_BUFFER_ELEMENTS - 1; i > num_read_start; i--, k++)
+		for (i = API_TRACE_BUFFER_ELEMENTS - 1; i > num_read_start; i--, k++)
 		{
-			LL_FLASH_Program64s(trace_flash_address + k * sizeof(Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(Trace_Msg) / sizeof(uint32_t));
+			LL_FLASH_Program64s(trace_flash_address + k * sizeof(API_Trace_Msg), (uint32_t *)(&s_msg_queue[i]), sizeof(API_Trace_Msg) / sizeof(uint32_t));
 		}
 	}
 
 	trace_int_unlock(ie);		// implies REORDER_BARRIER() ...
 }
-
-#endif // (TRACE_MODE & TRACE_MODE_TRACE)

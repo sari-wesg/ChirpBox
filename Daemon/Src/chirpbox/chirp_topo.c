@@ -17,10 +17,7 @@
 #include GPI_PLATFORM_PATH(sx1276Regs_Fsk.h)
 #include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)
 
-#if MX_FLASH_FILE
-	#include "flash_if.h"
-#endif
-
+#include "flash_if.h"
 #include "menu.h"
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -231,20 +228,18 @@ void topo_result(uint8_t nodes_num, uint8_t topo_test_id)
     temp_flash[0] = (uint32_t)(temp_raw);
     temp_flash[1] = topo_test_id;
 
-    #if MX_FLASH_FILE
-        // menu_preSend(0);
-        uint32_t topo_flash_address_temp = TOPO_FLASH_ADDRESS + topo_test_id * (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8 + sizeof(temp_flash));
-        if (!topo_test_id)
-        {
-            FLASH_If_Erase_Pages(1, TOPO_PAGE);
-        }
-        // write reliability, snr and rssi
-        uint32_t node_topology_link_temp[(((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8) / sizeof(uint32_t)];
-        memcpy(node_topology_link_temp, node_topology_link, sizeof(node_topology_link));
-        FLASH_If_Write(topo_flash_address_temp, (uint32_t *)(node_topology_link_temp), (sizeof(node_topology_link_temp) / sizeof(uint32_t)));
-        // write temperature
-        FLASH_If_Write(topo_flash_address_temp + (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8), (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
-    #endif
+    // menu_preSend(0);
+    uint32_t topo_flash_address_temp = TOPO_FLASH_ADDRESS + topo_test_id * (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8 + sizeof(temp_flash));
+    if (!topo_test_id)
+    {
+        FLASH_If_Erase_Pages(1, TOPO_PAGE);
+    }
+    // write reliability, snr and rssi
+    uint32_t node_topology_link_temp[(((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8) / sizeof(uint32_t)];
+    memcpy(node_topology_link_temp, node_topology_link, sizeof(node_topology_link));
+    FLASH_If_Write(topo_flash_address_temp, (uint32_t *)(node_topology_link_temp), (sizeof(node_topology_link_temp) / sizeof(uint32_t)));
+    // write temperature
+    FLASH_If_Write(topo_flash_address_temp + (((sizeof(Topology_result_link) * nodes_num + 7) / 8) * 8), (uint32_t *)(temp_flash), sizeof(temp_flash) / sizeof(uint32_t));
 
     free(node_topology);
     free(node_topology_link);
