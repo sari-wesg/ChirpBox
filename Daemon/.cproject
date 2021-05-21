@@ -80,6 +80,8 @@
                                     <listOptionValue builtIn="false" value="../Src/chirpbox"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../Src/tools/API"/>
                                     								
                                 </option>
                                 								
@@ -150,6 +152,8 @@
                                     <listOptionValue builtIn="false" value="../Src/loradisc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../Src/tools/API"/>
                                     								
                                 </option>
                                 								
@@ -302,6 +306,8 @@
                                     <listOptionValue builtIn="false" value="../Miscellaneous/Parameters-patch/Inc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../Src/tools/API"/>
                                     								
                                 </option>
                                 								
@@ -372,6 +378,8 @@
                                     <listOptionValue builtIn="false" value="../Miscellaneous/Parameters-patch/Inc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../Src/tools/API"/>
                                     								
                                 </option>
                                 								

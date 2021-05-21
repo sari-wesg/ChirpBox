@@ -22,9 +22,6 @@
 #endif
 
 #include "menu.h"
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX

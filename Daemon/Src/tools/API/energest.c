@@ -39,9 +39,6 @@
  */
 
 #include "energest.h"
-#ifdef MX_CONFIG_FILE
-	#include STRINGIFY(MX_CONFIG_FILE)
-#endif
 
 #if ENERGEST_CONF_ON
 

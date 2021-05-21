@@ -23,9 +23,7 @@
 #if MX_FLASH_FILE
 	#include "flash_if.h"
 #endif
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
+#include "API_ChirpBox.h"
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 

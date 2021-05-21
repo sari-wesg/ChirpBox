@@ -9,9 +9,6 @@
 #ifdef MX_CONFIG_FILE
 #include STRINGIFY(MX_CONFIG_FILE)
 #endif
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX

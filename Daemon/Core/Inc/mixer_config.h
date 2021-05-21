@@ -3,9 +3,6 @@
 // mixer configuration file
 // Adapt the settings to the needs of your application.
 
-#include "gpi/platform_spec.h"		// GPI_ARCH_IS_...
-#include "gpi/tools.h"				// NUM_ELEMENTS()
-
 #define DEBUG_CHIRPBOX 1
 #if DEBUG_CHIRPBOX
 
@@ -50,9 +47,6 @@ uint8_t *payload_distribution;
 #define MX_VERBOSE_CONFIG		0
 #define MX_VERBOSE_STATISTICS	1
 #define MX_VERBOSE_PACKETS		1
-
-/*********************************************************/
-#define ENERGEST_CONF_ON        1
 
 /*********************************************************/
 #define ROUND_HEADER_LENGTH 	        4   /* Data section to represent the round number and node id */

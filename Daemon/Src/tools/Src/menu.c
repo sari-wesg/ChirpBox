@@ -55,9 +55,6 @@
 #include "chirpbox_ds3231.h"
 // #include "gpi/interrupts.h"
 #include "md5.h"
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
 #include "chirpbox_func.h"
 #include "loradisc.h"
 #include <math.h>
