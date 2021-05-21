@@ -62,7 +62,6 @@
 
 #include <stdint.h>
 #include "chirp_internal.h"
-#include "trace_flash.h"
 
 #ifdef MX_CONFIG_FILE
 	#include STRINGIFY(MX_CONFIG_FILE)
