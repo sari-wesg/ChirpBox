@@ -108,10 +108,6 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	BYTE bRestoreBuf[17] = { 0 };
 	BYTE bRestoreBufCnt = 1;
 	BYTE bItemNum = 0;
-	// FILE *pfRead = fopen(pbReadFileName, "rb");
-	// FILE *pfWrite = fopen(pbWriteFileName, "wb");
-	Flash_FILE *pfRead = pbReadFileName;
-	Flash_FILE *pfWrite = pbWriteFileName;
 
     BYTE *bPreBuf = (BYTE *)malloc(1024);
     BYTE *bWindowBuf = (BYTE *)malloc(4196);
@@ -241,8 +237,6 @@ uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	WORD wStart;
 	WORD wMatchStringCnt = 0;
 	WORD wWindowBufCnt = 0;
-	Flash_FILE *pfRead = pbReadFileName;
-	Flash_FILE *pfWrite = pbWriteFileName;
 
     BYTE *bPreBuf = (BYTE *)malloc(1024);
     BYTE *bWindowBuf = (BYTE *)malloc(4196);

@@ -209,7 +209,6 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
     __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
     SX1276SetOpMode( RFLR_OPMODE_SLEEP );
-    return deadline;
 }
 
 void topo_result(uint8_t nodes_num, uint8_t topo_test_id)

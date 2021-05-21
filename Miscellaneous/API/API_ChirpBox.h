@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "Core/energest.h"
 #include "flash_if.h"
+#include "ll_flash.h"
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -66,7 +67,8 @@ size_t the_fwrite(const void *ptr, size_t size, size_t count, Flash_FILE *file);
 size_t the_fread(void *ptr, size_t size, size_t count, Flash_FILE *file);
 int the_fseek(Flash_FILE *file, long int offset, int origin);
 /* logging */
-void log_to_flash_file(const char* fmt, ...);
+void api_trace_store_msg(const char* fmt, ...);
+void api_trace_to_flash();
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
