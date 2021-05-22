@@ -80,6 +80,8 @@
                                     <listOptionValue builtIn="false" value="../Src/chirpbox"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								
@@ -150,6 +152,8 @@
                                     <listOptionValue builtIn="false" value="../Src/loradisc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								
@@ -308,6 +312,8 @@
                                     <listOptionValue builtIn="false" value="../Src/tools/API"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								
@@ -382,6 +388,8 @@
                                     <listOptionValue builtIn="false" value="../Src/tools/API"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								
