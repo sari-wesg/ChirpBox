@@ -1,7 +1,7 @@
 # LoRaWAN
 This repository provides example code for building a LoRaWAN network on given hardwares. See more details in [LoRaWAN on ChirpBox](https://chirpbox.github.io/LoRaWAN/).
 # End node
-The end nodes' [example project](https://github.com/pei-tian/LoRaWAN-ChirpBox/tree/master/STM32CubeExpansion_LRWAN_V1.3.1/Projects/STM32L476RG-Nucleo/Applications/LoRa/End_Node/STM32CubeIDE/sx1276mb1mas) is based on [I-CUBE-LRWAN](https://www.st.com/en/embedded-software/i-cube-lrwan.html), where modifications are within the define-marco `CHIRPBOX_LORAWAN`.
+The end nodes' [example project](https://github.com/sari-wesg/ChirpBox/tree/master/Miscellaneous/Example/LoRaWAN/STM32CubeExpansion_LRWAN_V1.3.1/Projects/STM32L476RG-Nucleo/Applications/LoRa/End_Node/STM32CubeIDE/sx1276mb1mas) is based on [I-CUBE-LRWAN](https://www.st.com/en/embedded-software/i-cube-lrwan.html), where modifications are within the define-marco `CHIRPBOX_LORAWAN`.
 
 # Python example
 Python examples are related to the LoRa gateway's built-in server [ChirpStack](https://www.chirpstack.io/).
