@@ -43,6 +43,7 @@
 
 // #include "sys/rtimer.h"
 #include "gpi/clocks.h"
+#include "API_ChirpBox.h"
 
 typedef struct {
     /*  unsigned long cumulative[2];*/

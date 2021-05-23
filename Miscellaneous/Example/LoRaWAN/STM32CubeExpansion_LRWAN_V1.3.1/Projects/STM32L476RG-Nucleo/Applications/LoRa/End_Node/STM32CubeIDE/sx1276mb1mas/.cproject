@@ -92,6 +92,10 @@
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/Src"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/ChirpBox_APIs/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../../../../../../../../../API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/API_Core"/>
                                     								
                                 </option>
                                 								
@@ -142,6 +146,10 @@
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/Inc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/ChirpBox_APIs/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../../../../../../../../../API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/API_Core"/>
                                     								
                                 </option>
                                 								
@@ -321,6 +329,8 @@
                     					
                     <sourceEntries>
                         						
+                        <entry excluding="Core" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="API"/>
+                        						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
@@ -422,6 +432,10 @@
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/Src"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/ChirpBox_APIs/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../../../../../../../../../API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/API_Core"/>
                                     								
                                 </option>
                                 								
@@ -508,6 +522,10 @@
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/Src"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/ChirpBox_APIs/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../../../../../../../../../API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/API_Core"/>
                                     								
                                 </option>
                                 								
@@ -677,7 +695,7 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="LoRaWAN/Tools|Drivers/BSP/sx1261dvk1bas|Drivers/BSP/sx1262dvk1cas|Drivers/BSP/sx1262dvk1das|Drivers/BSP/sx1272mb2das|Drivers/BSP/sx1276mb1las|Drivers/BSP/X_NUCLEO_IKS01A1|Middlewares/SubGHz_Phy/radio.c|Middlewares/SubGHz_Phy/sx126x.c|Middlewares/SubGHz_Phy/sx1272.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+                        <entry excluding="API/Core|LoRaWAN/Tools|Drivers/BSP/sx1261dvk1bas|Drivers/BSP/sx1262dvk1cas|Drivers/BSP/sx1262dvk1das|Drivers/BSP/sx1272mb2das|Drivers/BSP/sx1276mb1las|Drivers/BSP/X_NUCLEO_IKS01A1|Middlewares/SubGHz_Phy/radio.c|Middlewares/SubGHz_Phy/sx126x.c|Middlewares/SubGHz_Phy/sx1272.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
                         					
                     </sourceEntries>
                     				

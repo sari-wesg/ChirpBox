@@ -106,6 +106,7 @@ void Reset_Handler(void)
 	#endif
 	/* Only examine JUMP when in bank 2 */
 	uint32_t BankActive = READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE);
+	/* If at bank2, check the toggle, if not, no need to check */
 	if (((BankActive != 0) && (TOGGLE_RESET_EXTI_CALLBACK() == FLAG_WRT_OK)) || (BankActive == 0))
 		INTO_MAIN();
 }

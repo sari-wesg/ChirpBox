@@ -59,7 +59,6 @@ uint8_t *payload_distribution;
 #define MX_VERBOSE_PACKETS		1
 
 /*********************************************************/
-#define ENERGEST_CONF_ON        1
 
 /*********************************************************/
 #define ROUND_HEADER_LENGTH 	        4   /* Data section to represent the round number and node id */

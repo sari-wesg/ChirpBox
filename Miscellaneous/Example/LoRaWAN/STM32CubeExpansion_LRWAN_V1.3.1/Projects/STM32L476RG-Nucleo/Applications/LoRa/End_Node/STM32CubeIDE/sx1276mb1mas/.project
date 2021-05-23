@@ -27,6 +27,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>API</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-10-PROJECT_LOC%7D/API</locationURI>
+		</link>
+		<link>
 			<name>Core</name>
 			<type>2</type>
 			<locationURI>$%7BPARENT-7-PROJECT_LOC%7D/Projects/STM32L476RG-Nucleo/Applications/LoRa/End_Node/Core</locationURI>
