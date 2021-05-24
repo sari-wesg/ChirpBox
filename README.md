@@ -13,7 +13,7 @@ The ChirpBox directory is simplified to the following:
 │      └──────📂PCB
 │      └──────📂SCH
 │
-└──────📂chirpbox manager
+└──────📂Chirpbox_manager
 │      │      📜cbmng.py
 │      │      📜cbmng_common.py
 │      │      ...
@@ -34,7 +34,7 @@ The ChirpBox directory is simplified to the following:
 │
 ```
 - `/Hardware`: schematics of the ChirpBox node
-- `/chirpbox manager`: script manager to execute tasks such as monitor nodes' status, file dissemination and collection
+- `/Chirpbox_manager`: script manager to execute tasks such as monitor nodes' status, file dissemination and collection
 - `/Daemon`: source codes of daemon firmware
 - `/Miscellaneous`: available tools and codes for users, for example codes for bank switch
 
