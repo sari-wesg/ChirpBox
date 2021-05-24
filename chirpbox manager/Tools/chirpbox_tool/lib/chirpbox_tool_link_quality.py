@@ -585,8 +585,8 @@ class link_quality():
             for _plot_type in plot_rssi_snr:
                 # plot the data
                 fig = make_subplots(specs=[[{"secondary_y": True}]])
-                _plot_rssi_snr = ["max", "min"]
-                # _plot_rssi_snr = ["max", "avg", "min"]
+                # _plot_rssi_snr = ["max", "min"]
+                _plot_rssi_snr = ["max", "avg", "min"]
                 for _plot_rssi_snr_tmp in _plot_rssi_snr:
                     for freq in freq_list:
                         if plot_date is not None:
@@ -783,11 +783,12 @@ class link_quality():
                             self.matrix_to_heatmap(link_infomation, link_matrix, id_list, directory_path)
 
             # plots to gif
-            try:
-                self.processing_link_gif(directory_path, 'Heatmap', freq_list, sf_list)
-            except:
-                logger.error("No heatmap plots for GIF")
-                pass
+            if(self._plot_suffix == '.png'):
+                try:
+                    self.processing_link_gif(directory_path, 'Heatmap', freq_list, sf_list)
+                except:
+                    logger.error("No heatmap plots for GIF")
+                    pass
 
         # plot4: topology:
         if "topology" in plot_type:
@@ -821,17 +822,18 @@ class link_quality():
                             self.matrix_to_topology(link_infomation, link_matrix, id_list, using_pos, max_hop_id, directory_path)
 
             # plots to gif
-            try:
-                self.processing_link_gif(directory_path, 'Networktopology', freq_list, sf_list)
-            except:
-                logger.error("No topology plots for GIF")
-                pass
+            if(self._plot_suffix == '.png'):
+                try:
+                    self.processing_link_gif(directory_path, 'Networktopology', freq_list, sf_list)
+                except:
+                    logger.error("No topology plots for GIF")
+                    pass
 
-        if (self._plot_suffix == '.png'):
-            try:
-                self._chirpbox_txt.chirpbox_delete_in_dir(directory_path + '\\link_quality\\', self._plot_suffix)
-            except:
-                pass
+        # if (self._plot_suffix == '.png'):
+        #     try:
+        #         self._chirpbox_txt.chirpbox_delete_in_dir(directory_path + '\\link_quality\\', self._plot_suffix)
+        #     except:
+        #         pass
 
         return True
 
