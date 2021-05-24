@@ -1,0 +1,6 @@
+# running with REST Client (https://marketplace.visualstudio.com/items?itemName=humao.rest-client) on Vscode
+# TODO:
+# 1. Replace PIPEDREAM_API_KEY
+
+curl 'https://api.pipedream.com/v1/sources/dc_lVuMA8E/event_summaries?expand=event' \
+  -H 'Authorization: Bearer PIPEDREAM_API_KEY'

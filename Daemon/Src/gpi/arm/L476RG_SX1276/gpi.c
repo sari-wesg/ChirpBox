@@ -10,5 +10,3 @@
 #include "spi.c"
 
 #include "platform.c"
-
-#include "energest.c"

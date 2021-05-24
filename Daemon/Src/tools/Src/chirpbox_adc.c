@@ -46,7 +46,7 @@ uint16_t ADC_GetVoltage(void)
     vbat = vdda * 3 * adc_vbat / 4095;
     vch6 = vdda * 2 * adc_vch6 / 4095;
 
-    PRINTF("vref:%u.%3u, vbat:%lu.%3lu, vch6:%lu.%3lu\n", vref / 1000, vref % 1000, vbat / 1000, vbat % 1000, vch6 / 1000, vch6 % 1000);
+    PRINTF("vref:%u.%03u, vbat:%lu.%03lu, vch6:%lu.%03lu\n", vref / 1000, vref % 1000, vbat / 1000, vbat % 1000, vch6 / 1000, vch6 % 1000);
     return vch6;
 }
 

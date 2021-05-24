@@ -1,0 +1,16 @@
+# running with REST Client (https://marketplace.visualstudio.com/items?itemName=humao.rest-client) on Vscode
+
+# Note:
+# Queries are currently limited to a runtime of 60 seconds.
+# You cannot issue a query that returns over 1GB of data.
+
+# TODO:
+# 1. Replace PIPEDREAM_API_KEY
+# 2. Change "lorawan_chirpbox" to your table name
+# 3. Change ASC/DESC to sort the result in ascending/descending order
+# 4. Change LIMIT number
+
+curl -H 'Authorization: Bearer PIPEDREAM_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{"query": "SELECT * FROM lorawan_chirpbox ORDER BY context.ts DESC LIMIT 3"}' \
+  https://rt.pipedream.com/sql

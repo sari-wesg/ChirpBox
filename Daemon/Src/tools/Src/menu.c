@@ -48,16 +48,12 @@
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
 
-#include "flash_if.h"
 #include "menu.h"
 #include "string.h"
 #include "mixer/mixer_internal.h"
 #include "chirpbox_ds3231.h"
 // #include "gpi/interrupts.h"
 #include "md5.h"
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
 #include "chirpbox_func.h"
 #include "loradisc.h"
 #include <math.h>
@@ -1503,7 +1499,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
 				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				TRACE_MSG(TRACE_PAGE, "---------CHIRP_START---------\n");
+				log_to_flash("---------CHIRP_START---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
 				chirp_outl.payload_len = offsetof(Chirp_Outl, num_nodes) - offsetof(Chirp_Outl, start_year) + DATA_HEADER_LENGTH + 2;
@@ -1559,14 +1555,14 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
             DS3231_GetTime();
             /* Set alarm */
-            TRACE_MSG(TRACE_PAGE, "date:%d, %d, %d, %d\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
             ds3231_time = DS3231_ShowTime();
+            log_to_flash("date:%d, %d, %d, %d\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
             DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
             /* Waiting for bank switch */
             // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
             diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
             RTC_Waiting_Count(diff);
-            TRACE_MSG(TRACE_PAGE, "---------CHIRP_BANK---------\n");
+            log_to_flash("---------CHIRP_BANK---------\n");
             #if BANK_1_RUN
             /* flash protect */
             if (chirp_outl.flash_protection)
@@ -1590,7 +1586,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.disem_file_index_stay = 0;
         chirp_outl.version_hash = 0;
         memset(chirp_outl.firmware_md5, 0, sizeof(chirp_outl.firmware_md5));
-				TRACE_MSG(TRACE_PAGE, "---------MX_DISSEMINATE---------\n");
+				log_to_flash("---------MX_DISSEMINATE---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = task_node_num;
 				chirp_outl.generation_size = chirp_outl.default_generate_size;
@@ -1620,7 +1616,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
 
           chirp_outl.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
-					TRACE_MSG(TRACE_PAGE, "file size:%lu, %d, %d, %lu\n", flash_length, chirp_outl.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
+					log_to_flash("file size:%lu, %d, %d, %lu\n", flash_length, chirp_outl.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
 				}
         chirp_outl.disem_flag = 1;
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
@@ -1671,7 +1667,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         {
 				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				TRACE_MSG(TRACE_PAGE, "---------MX_COLLECT---------\n");
+				log_to_flash("---------MX_COLLECT---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = task_node_num;
 				chirp_outl.generation_size = chirp_outl.num_nodes;
@@ -1724,7 +1720,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
 				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				TRACE_MSG(TRACE_PAGE, "---------CHIRP_CONNECTIVITY---------\n");
+				log_to_flash("---------CHIRP_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
 				chirp_outl.payload_len = DATA_HEADER_LENGTH + 7;
@@ -1782,7 +1778,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
 				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				TRACE_MSG(TRACE_PAGE, "---------CHIRP_TOPO---------\n");
+				log_to_flash("---------CHIRP_TOPO---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = chirp_outl.num_nodes;
@@ -1831,7 +1827,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
 				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				TRACE_MSG(TRACE_PAGE, "---------CHIRP_VERSION---------\n");
+				log_to_flash("---------CHIRP_VERSION---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = chirp_outl.num_nodes;

@@ -75,10 +75,6 @@ GPI_TRACE_CONFIG(mixer, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #include "gpi/tools.h"
 #include "L476RG_SX1276/memxor.h"
 
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
-
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 

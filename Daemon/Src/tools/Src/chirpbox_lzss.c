@@ -69,43 +69,6 @@ BYTE FindSameString(BYTE *pbStrA, WORD wLenA, BYTE *pbStrB, WORD wLenB, WORD *pw
 	return FALSE;
 }
 
-static int process_fread(janpatch_ctx *ctx, janpatch_buffer *source, size_t count, uint8_t *buffer) {
-    // it can be that ESC character is actually in the data, but then it's prefixed with another ESC
-    // so... we're looking for a lone ESC character
-    size_t cnt = 0;
-    while (1) {
-        int m = jp_getc(ctx, source);
-			// printf("m:%lu, %d, %d, %d\n", m, (unsigned char)m, cnt, count);
-        if (m == -1) {
-            // End of file stream... rewind 1 character and return, this will yield back to janpatch main function, which will exit
-            // jp_fseek(source, -1, SEEK_CUR);
-            break;
-        }
-        else
-        {
-            buffer[cnt] = (unsigned char)m;
-        }
-        cnt++;
-        if (cnt >= count)
-            break;
-    }
-    return cnt;
-}
-
-static int process_fwrite(janpatch_ctx *ctx, janpatch_buffer *target, size_t count, uint8_t *buffer) {
-    // it can be that ESC character is actually in the data, but then it's prefixed with another ESC
-    // so... we're looking for a lone ESC character
-    size_t cnt = 0;
-    while (1) {
-        uint8_t m = buffer[cnt];
-        jp_putc(m, ctx, target);
-        cnt++;
-        if (cnt >= count)
-            break;
-    }
-    return cnt;
-}
-
 uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 {
     janpatch_ctx ctx = {
@@ -145,10 +108,6 @@ uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	BYTE bRestoreBuf[17] = { 0 };
 	BYTE bRestoreBufCnt = 1;
 	BYTE bItemNum = 0;
-	// FILE *pfRead = fopen(pbReadFileName, "rb");
-	// FILE *pfWrite = fopen(pbWriteFileName, "wb");
-	Flash_FILE *pfRead = pbReadFileName;
-	Flash_FILE *pfWrite = pbWriteFileName;
 
     BYTE *bPreBuf = (BYTE *)malloc(1024);
     BYTE *bWindowBuf = (BYTE *)malloc(4196);
@@ -278,8 +237,6 @@ uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName)
 	WORD wStart;
 	WORD wMatchStringCnt = 0;
 	WORD wWindowBufCnt = 0;
-	Flash_FILE *pfRead = pbReadFileName;
-	Flash_FILE *pfWrite = pbWriteFileName;
 
     BYTE *bPreBuf = (BYTE *)malloc(1024);
     BYTE *bWindowBuf = (BYTE *)malloc(4196);

@@ -11,14 +11,6 @@
 #include "gpi/olf.h"
 #include GPI_PLATFORM_PATH(radio.h)
 
-#if MX_FLASH_FILE
-	#include "flash_if.h"
-#endif
-
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
-
 #include "loradisc.h"
 #include <stdlib.h>
 #include "chirpbox_func.h"
@@ -48,17 +40,14 @@ uint16_t    calu_payload_hash, rece_hash;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
-#if MX_FLASH_FILE
-    uint8_t                     uartRxBuffer[128];
+uint8_t                     uartRxBuffer[128];
 
-    Mixer_Task                  task;
+Mixer_Task                  task;
 
-    /* indicate whether uart finished receiving */
-    extern volatile uint8_t     uart_read_done;
+/* indicate whether uart finished receiving */
+extern volatile uint8_t     uart_read_done;
 
-    extern UART_HandleTypeDef   huart2;
-
-#endif
+extern UART_HandleTypeDef   huart2;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************

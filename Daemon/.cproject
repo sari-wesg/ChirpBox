@@ -79,7 +79,9 @@
                                     									
                                     <listOptionValue builtIn="false" value="../Src/chirpbox"/>
                                     									
-                                    <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								
@@ -149,7 +151,9 @@
                                     									
                                     <listOptionValue builtIn="false" value="../Src/loradisc"/>
                                     									
-                                    <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								
@@ -212,6 +216,8 @@
                     </folderInfo>
                     					
                     <sourceEntries>
+                        						
+                        <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="API"/>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
                         						
@@ -302,6 +308,12 @@
                                     <listOptionValue builtIn="false" value="../Miscellaneous/Parameters-patch/Inc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../Src/tools/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								
@@ -372,6 +384,12 @@
                                     <listOptionValue builtIn="false" value="../Miscellaneous/Parameters-patch/Inc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/Parameters-patch/Inc"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../Src/tools/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     								
                                 </option>
                                 								

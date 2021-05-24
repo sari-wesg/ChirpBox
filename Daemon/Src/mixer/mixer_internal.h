@@ -62,7 +62,6 @@
 
 #include <stdint.h>
 #include "chirp_internal.h"
-#include "trace_flash.h"
 
 #ifdef MX_CONFIG_FILE
 	#include STRINGIFY(MX_CONFIG_FILE)
@@ -122,10 +121,6 @@
 // TP added:
 #ifndef GPS_DATA
 	#define GPS_DATA								1
-#endif
-
-#ifndef MX_FLASH_FILE
-	#define MX_FLASH_FILE							1
 #endif
 
 #ifndef MX_HEADER_CHECK

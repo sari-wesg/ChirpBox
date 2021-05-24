@@ -82,10 +82,6 @@ GPI_TRACE_CONFIG(mixer_transport, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER)
 #include "gpi/interrupts.h"
 #include "gpi/olf.h"
 
-#if ENERGEST_CONF_ON
-#include GPI_PLATFORM_PATH(energest.h)
-#endif
-
 #include GPI_PLATFORM_PATH(radio.h)
 #include GPI_PLATFORM_PATH(spi.h)
 #include GPI_PLATFORM_PATH(hw_gpio.h)
