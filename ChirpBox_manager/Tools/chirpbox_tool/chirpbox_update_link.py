@@ -58,7 +58,7 @@ list of available actions:
 
 examples:
     chirpbox_update_link.py -h
-    chirpbox_update_link.py -f 470000,480000,490000 -link_dir 'D:\TP\Study\wesg\Chirpbox\Chirpbox_manager\y' -web_dir 'D:\TP\Study\wesg\Chirpbox\Chirpbox_manager\mm' -time 1 -num 10
+    chirpbox_update_link.py -f 470000,480000,490000 -link_dir 'D:\TP\Study\wesg\Chirpbox\Chirpbox_manager\tmp' -web_dir 'D:\TP\Study\Hexo-ChirpBox\blog\themes\vexo\source\images\topology' -time 1 -num 1
 """
 
 
