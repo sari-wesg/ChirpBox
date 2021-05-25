@@ -125,7 +125,7 @@ class ChirpBoxUpdateLink():
         nameSet = set()
         for file in os.listdir(mypath):
             fullpath = os.path.join(mypath, file)
-            if os.path.isfile(fullpath) and os.stat(fullpath).st_size > 0 and file.startswith(file_start) and file.endswith(file_suffix):
+            if os.path.isfile(fullpath) and os.stat(fullpath).st_size > 153600 and file.startswith(file_start) and file.endswith(file_suffix):
                 nameSet.add(fullpath)
 
         # Compare set with saved set to find new files

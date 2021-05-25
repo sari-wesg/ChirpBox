@@ -5,14 +5,14 @@ import subprocess
 import logging
 
 TIMEOUT = 90
-YOUR_HEXO_DIR = '<your_hexo_directory>'
+YOUR_HEXO_DIR = 'D:\\TP\\Study\\Hexo-Chirpbox\\blog'
 
 def gd(logger):
 	'''
 	this function is for hexo g command
 	'''
 	logger.debug('\ngenerating......\n')
-	proc = subprocess.Popen(['hexo', 'g'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=YOUR_HEXO_DIR)
+	proc = subprocess.Popen(['hexo', 'g'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=YOUR_HEXO_DIR)
 	fail = False
 
 	try:
@@ -20,7 +20,7 @@ def gd(logger):
 		if outs:
 			logger.debug('\n' + outs.decode('utf-8'))
 		if errs:
-			logger.error('\n' + errs.decode('utf-8'))
+			logger.error('\n' + errs.decode('gbk'))
 			fail = True
 	except subprocess.TimeoutExpired:
 		proc.kill()
@@ -37,7 +37,7 @@ def deploy(logger):
 	'''
 	this function is for hexo d command
 	'''
-	proc = subprocess.Popen(['hexo', 'd'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=YOUR_HEXO_DIR)
+	proc = subprocess.Popen(['hexo', 'd'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=YOUR_HEXO_DIR)
 	logger.debug('\ndeploying......\n')
 	fail = False
 	try:
@@ -45,7 +45,7 @@ def deploy(logger):
 		if outs:
 			logger.debug('\n'+outs.decode('utf-8'))
 		if errs:
-			logger.error('\n'+errs.decode('utf-8'))
+			logger.error('\n'+errs.decode('gbk'))
 			fail = True
 	except subprocess.TimeoutExpired:
 		proc.kill()
