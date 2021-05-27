@@ -187,7 +187,8 @@ class link_quality():
         fig.tight_layout()
         plt.savefig(directory_path + "\\link_quality\\" + filename, bbox_inches='tight')
         plt.close(fig)
-
+        plt.close('all')
+        plt.ioff()
 
 
     """
@@ -306,7 +307,8 @@ class link_quality():
         fig.canvas.start_event_loop(sys.float_info.min) #workaround for Exception in Tkinter callback
         plt.savefig(directory_path + "\\link_quality\\" + filename, bbox_inches='tight')
         plt.close(fig)
-
+        plt.close('all')
+        plt.ioff()
 
 
 
@@ -707,6 +709,8 @@ class link_quality():
                 # plt.pause(3)
                 # plt.show()
                 plt.close(fig)
+                plt.close('all')
+                plt.ioff()
 
         # plot2: Minimal RSSI and SNR:
         if "MIN_RSSI_SNR_Degree" in plot_type:
@@ -761,6 +765,8 @@ class link_quality():
                 # plt.pause(3)
                 # plt.show()
                 plt.close(fig)
+                plt.close('all')
+                plt.ioff()
 
         # plot3: heatmap:
         if "heatmap" in plot_type:

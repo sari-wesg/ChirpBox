@@ -35,7 +35,7 @@ def generate_start_round():
     chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
 
     bitmap_str = '1fffff'
-    task_start = "cbmng.py " + "-colver " + '7' + " " + "com4 " + '80' + " " + "14 "
+    task_start = "cbmng.py " + "-colver " + '7' + " " + "com3 " + '80' + " " + "14 "
 
     # for pl in [232]:
     #     for slot_num in [80]:
