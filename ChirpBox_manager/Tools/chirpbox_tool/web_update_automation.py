@@ -1,6 +1,5 @@
 # Original Author: 130L
 # free to use, modify and share, but don't get rid of this header
-# TODO: need to change shell=False to shell=True in subprocess.py __init__
 import subprocess
 import logging
 
