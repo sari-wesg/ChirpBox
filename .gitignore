@@ -97,7 +97,7 @@ dkms.conf
 # json
 !chirpbox-param-settings.json
 !fut-param-settings.json
-
+!chirpbox_cbmng_command_param.json
 
 **/.settings
 

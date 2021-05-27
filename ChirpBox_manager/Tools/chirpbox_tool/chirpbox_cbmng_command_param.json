@@ -1,0 +1,12 @@
+{
+    "all_command_sf": 7,
+    "all_command_tp": 14,
+    "all_command_comport": "com3",
+    "all_command_slot_number": 80,
+    "all_command_bitmap": "1FFFFF",
+    "coldata_command_sf": 7,
+    "coldata_payload_len": 232,
+    "OWM_API_KEY": "4dbbaf4cb8263e15f604420c8d66bb3b",
+    "chirpbox_lat": 31.180809739077795,
+    "chirpbox_lon": 121.58960816990215
+}
