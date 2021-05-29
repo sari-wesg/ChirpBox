@@ -235,7 +235,9 @@ class link_quality():
                 pos = {0: [356, 277], 1: [463, 758], 2: [1007, 213], 3: [378, 292], 4: [1017, 37], 5: [214, 385], 6: [282, 300], 7: [375, 86], 8: [75, 121], 9: [305, 106], 10: [427, 294], 11: [316, 772], 12: [531, 210], 13: [473, 217], 14: [702, 544], 15: [429, 570], 16: [874, 617], 17: [628, 772], 18: [632, 602], 19: [811, 780], 20: [182, 610]}
             np.save(data_dir + posfilepath, pos)
         if (using_pos == 2):
-            img = matplotlib.image.imread("area.png")
+            dirname = os.path.dirname(__file__)
+            imgname = os.path.join(dirname, '../area.png')
+            img = matplotlib.image.imread(imgname)
             # plt.scatter(x,y,zorder=1)
             plt.imshow(img, zorder = 0)
 
