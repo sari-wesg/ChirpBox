@@ -17,8 +17,6 @@ import hashlib
 """ LZSS """
 import compression.lzss
 
-import cbmng_exp_globaldef
-
 """ weather """
 import chirpbox_weather
 from pathlib import Path
@@ -34,7 +32,6 @@ running_status = "tmp_exp_running.json"
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
-exppriapp = cbmng_exp_config.myExpPrimitiveConf()
 
 EXPERIMENT_START = 0
 EXPERIMENT_DISSEMINATE = 1
@@ -121,21 +118,19 @@ def compression_compare(test_file):
 
 def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num, used_tp):
 	task_bitmap = "0"
-	if(exppriapp.primitive_conf(cbmng_exp_globaldef.exp_primitive_conf) == True):
-		print(exppriapp.read_configuration())
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
-		# time_now = datetime.datetime.now()
-		# start_time_t = time_now + datetime.timedelta(seconds = 60 * 2)
-		# start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-		# end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
-		# end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
-		# exp_no = cbmng_common.tid_maker()
-		# exp_name = expconfapp.experiment_name
-		# print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
-		# running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
-		# with open(running_status, "w") as f:
-		# 	json.dump(running_dict, f)
+		time_now = datetime.datetime.now()
+		start_time_t = time_now + datetime.timedelta(seconds = 60 * 2)
+		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
+		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
+		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
+		exp_no = cbmng_common.tid_maker()
+		exp_name = expconfapp.experiment_name
+		print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
+		running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
+		with open(running_status, "w") as f:
+			json.dump(running_dict, f)
 	else:
 		return False
 	print("SF: ", command_sf)

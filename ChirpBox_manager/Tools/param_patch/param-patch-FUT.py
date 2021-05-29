@@ -18,20 +18,20 @@ def fut_param_patch(param_filename, bin_filename):
     with open(param_filename) as data_file:
         data = json.load(data_file)
 
-    CUSTOM_list = []
-    for i in data['CUSTOM_list'].split(','):
-        CUSTOM_list.append(int(i, 16))
+    FUT_CUSTOM_list = []
+    for i in data['FUT_CUSTOM_list'].split(','):
+        FUT_CUSTOM_list.append(int(i, 16))
 
     # write settings to the json
     with open(bin_filename, 'r+b') as fh:
         fh.seek(CONST.CUSTOM_ADDR)
-        for i in CUSTOM_list:
+        for i in FUT_CUSTOM_list:
             fh.write((bytearray.fromhex("{0:08X}".format(i)))[::-1])
 
 """
 usage example:
-fut_param_patch('fut-param-settings.json', 'FUT.bin')
+fut_param_patch('example_config_method.json', 'FUT.bin')
 
 """
 
-fut_param_patch('fut-param-settings.json', 'FUT.bin')
+fut_param_patch('example_config_method.json', 'FUT.bin')

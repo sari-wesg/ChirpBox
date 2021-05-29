@@ -104,7 +104,7 @@ class LZSS():
 
 # if __name__ == '__main__':
 #     Demo = LZSS(7)
-#     Demo.LZSS_encode("115.bin", "encode.bin")
+#     Demo.LZSS_encode("decode.bin", "encode.bin")
 #     Demo.LZSS_decode("encode.bin", "decode.bin")
 
 

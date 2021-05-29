@@ -29,17 +29,3 @@ class myExpConfApproach(cbmng_common.ExpConfApproach):
 
 		with open("tmp_exp_conf.json","w") as dump_f:
 			json.dump(load_dict,dump_f)
-		# TODO: Add some codes here
-
-class myExpPrimitiveConf(cbmng_common.ExpPrimitiveConf):
-	primitive_name = ""
-	com_port = ""
-	primitive_config = []
-	def read_configuration(self):
-		with open(cbmng_common.ExpPrimitiveConf.exp_primitive_conf,'r') as load_f:
-			load_dict = json.load(load_f)
-			# For all primitives:
-			# Experiment com port:
-			myExpPrimitiveConf.com_port = load_dict['com_port']
-			myExpPrimitiveConf.primitive_config.append(myExpPrimitiveConf.com_port)
-		return (myExpPrimitiveConf.primitive_config)

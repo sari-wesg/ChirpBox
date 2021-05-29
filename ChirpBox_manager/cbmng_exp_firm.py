@@ -7,6 +7,7 @@ class myExpFirmwareApproach(cbmng_common.ExpFirmwareApproach):
 		if(cbmng_common.ExpFirmwareApproach.firmware_file.endswith(".bin") == True):
 			with open(cbmng_common.ExpFirmwareApproach.firmware_file, 'rb') as f:
 				firmware = f.read()	
+			# TODO: patch firmware according to the experiment configuration
 			with open('tmp_exp_firm.bin', 'wb') as f:
 	 			f.write(firmware)
 		else:

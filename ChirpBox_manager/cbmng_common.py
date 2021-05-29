@@ -49,22 +49,6 @@ class ExpMethodApproach:
 			print("You don't have permission to access this file.")
 			return False
 
-class ExpPrimitiveConf:
-	exp_primitive_conf = ''
-	def primitive_conf(self, exp_primitive_conf):
-		try:
-			f = open(exp_primitive_conf, mode = 'r')
-			f.close()
-			print("The file " + exp_primitive_conf + " has been read as primitive config file of Chirpbox.")
-			ExpPrimitiveConf.exp_primitive_conf = exp_primitive_conf
-			return True
-		except FileNotFoundError:
-			print("File is not found.")
-			return False
-		except PermissionError:
-			print("You don't have permission to access this file.")
-			return False
-
 def tid_maker():
 	return '{0:%Y%m%d%H%M%S%f}'.format(datetime.datetime.now())
 
