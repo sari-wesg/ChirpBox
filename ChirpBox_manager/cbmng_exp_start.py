@@ -159,10 +159,10 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 					end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 					exp_no = cbmng_common.tid_maker()
 					exp_name = expconfapp.experiment_name
-					# print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
-					# running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
-					# with open(running_status, "w") as f:
-					# 	json.dump(running_dict, f)
+					print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
+					running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
+					with open(running_status, "w") as f:
+						json.dump(running_dict, f)
 
 					if(flash_protection == 1):
 						para = start_time_t.strftime("%Y,%m,%d,%H,%M,%S") + "," + end_time_t.strftime("%Y,%m,%d,%H,%M,%S") + ",1" + "," + "%04X" % int(version_hash, 16)
@@ -186,42 +186,11 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 	# TODO:
 	print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
-	# with open(running_status, "w") as f:
-	# 	json.dump(running_dict, f)
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
 
-	# filename_log = "log" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".txt"
-
-	# with open(filename_log, 'w+') as f:
-	# 	while True:
-	# 		try:
-	# 			line = ser.readline().decode('ascii').strip() # skip the empty data
-	# 			if line:
-	# 				print (line)
-	# 				if (line.startswith('counter') or line.startswith('reliability') or line.startswith('energest_init')):
-	# 					time_now = datetime.datetime.now()
-	# 					f.write(line + "\r")
-	# 					line_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-	# 					f.write(line_time + "\r")
-	# 				if (line == "System running from STM32L476 *Bank 2*"):
-	# 					time_now = datetime.datetime.now()
-	# 					f.write(line + "\r")
-	# 					line_time = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-	# 					f.write(line_time + "\r")
-	# 				if (line == "System running from STM32L476 *Bank 1*"):
-	# 					f.write(line + "\r")
-	# 					line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-	# 					f.write(line_write + "\r")
-	# 					break
-	# 		except:
-	# 			pass
-	# with open(filename_log, 'a') as f:
-	# 	line = "end\r"
-	# 	f.write(line)
-	# 	line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-	# 	f.write(line_write + "\r")
-
-	# if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
-	# 	return False
+	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+		return False
 
 	return True
 
