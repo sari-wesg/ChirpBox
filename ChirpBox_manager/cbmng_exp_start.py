@@ -93,7 +93,7 @@ def generate_json_for_upgrade():
 		"start_address": "0807E000",
 		"end_address": "0807E0D0",
 	}
-	with open("tmp.json", "w") as f:
+	with open("tmp_upgrade.json", "w") as f:
 		json.dump(upgrade_dict, f)
 
 def md5(fname):
