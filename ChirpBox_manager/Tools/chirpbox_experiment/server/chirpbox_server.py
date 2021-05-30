@@ -7,6 +7,7 @@ from os import path
 from pathlib import Path
 import shutil
 import csv
+import json
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -52,12 +53,11 @@ examples:
 class ChirpBoxServer():
 
     def __init__(self):
-        self._dirname = os.path.dirname(__file__)
         # TODO:
-        self._server_address = os.path.join(self._dirname, '../upload_files/')
+        self._server_address = os.path.join(sys.path[0], '..\\upload_files\\')
         # create sub folder "testfiles" in the user upload directory
-        Path(os.path.join(self._server_address, 'testfiles/')).mkdir(parents=True, exist_ok=True)
-        self._test_address = os.path.join(self._server_address, 'testfiles/')
+        Path(os.path.join(self._server_address, 'testfiles\\')).mkdir(parents=True, exist_ok=True)
+        self._test_address = os.path.join(self._server_address, 'testfiles\\')
 
     def convert_int_string_to_list(self, my_str):
         if (my_str) is not None:
@@ -106,12 +106,23 @@ class ChirpBoxServer():
     def patch_file(self):
         return True
 
+    def update_config(self, config):
+        with open(config, "r") as jsonFile:
+            data = json.load(jsonFile)
+
+        # TODO:
+        data["experiment_run_time"] = 3
+
+        with open(config, "w") as jsonFile:
+            json.dump(data, jsonFile)
+
     def add_file_to_test(self, file_name):
         try:
             logger.debug(file_name)
             # move files to test files
             shutil.copyfile(os.path.join(self._server_address, os.path.basename(file_name[:-len(".bin")]) + ".json"), os.path.join(self._test_address, os.path.basename(file_name[:-len(".bin")]) + ".json"))
             shutil.copyfile(os.path.join(self._server_address, os.path.basename(file_name)), os.path.join(self._test_address, os.path.basename(file_name)))
+            self.update_config(os.path.join(self._test_address, os.path.basename(file_name[:-len(".bin")]) + ".json"))
         except:
             pass
 

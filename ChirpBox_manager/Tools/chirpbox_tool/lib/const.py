@@ -35,6 +35,8 @@ CHIRPBOX_CONFIG_FILE        = "chirpbox_cbmng_command_param.json"
 
 CHIRPBOX_COLLECT_COMMAND    = "-coldata "
 CHIRPBOX_LINK_COMMAND       = "-connect "
+CHIRPBOX_DISSEM_COMMAND     = "-dissem "
+CHIRPBOX_START_COMMAND      = "-start "
 
 CHIRPBOX_TOPODATA_FLASH_START   = "0807F800 "
 CHIRPBOX_TOPODATA_FLASH_END     = "0807FE30 "

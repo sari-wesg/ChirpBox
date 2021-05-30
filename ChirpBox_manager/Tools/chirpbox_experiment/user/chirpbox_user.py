@@ -44,15 +44,14 @@ list of combinations:
 
 examples:
     chirpbox_user.py -h
-    chirpbox_user.py -dir -config -user
+    chirpbox_user.py -bin -config -user
 """
 
 class ChirpBoxUser():
 
     def __init__(self):
-        self._dirname = os.path.dirname(__file__)
         # TODO:
-        self._server_address = os.path.join(self._dirname, '../upload_files/')
+        self._server_address = os.path.join(sys.path[0], '..\\upload_files\\')
 
     def convert_int_string_to_list(self, my_str):
         if (my_str) is not None:
@@ -64,10 +63,6 @@ class ChirpBoxUser():
 
     def check_param(self):
 
-        # check directory:
-        if path.isdir(self._dir) is False:
-            logger.error("Check directory!")
-            return False
         # check bin file:
         if path.exists(self._bin) is False:
             logger.error("Check bin file!")
@@ -93,12 +88,10 @@ class ChirpBoxUser():
     def start(self, argv):
         parser = argparse.ArgumentParser(
             prog='chirpbox_user', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
-        parser.add_argument('-dir', '--directory', dest='directory', help='Input the directory of bin file and config file')
         parser.add_argument('-bin', '--bin_file_FUT', dest='bin_file_FUT', help='Input the bin file name of FUT')
         parser.add_argument('-config', '--config_file_FUT', dest='config_file_FUT', help='Input the config file name of FUT')
         parser.add_argument('-user', '--user_name', dest='user_name', help='Input the user name')
         args = parser.parse_args(argv)
-        self._dir = args.directory
         self._bin = args.bin_file_FUT
         self._config = args.config_file_FUT
         self._user_name = args.user_name

@@ -9,6 +9,7 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 	rx_energy = False
 	start_address = ''
 	end_address = ''
+	experiment_run_time = 0
 
 	def read_configuration(self):
 		with open(cbmng_common.ExpMethodApproach.methodology_file,'r') as load_f:
@@ -34,6 +35,9 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 			# End_address:
 			myExpMethodApproach.end_address = load_dict['end_address']
 			print("end_address: " + str(myExpMethodApproach.end_address))
+			# End_address:
+			myExpMethodApproach.experiment_run_time = int(load_dict['experiment_run_time'])
+			print("experiment_run_time: " + str(myExpMethodApproach.experiment_run_time))
 		with open("tmp_exp_meth.json","w") as dump_f:
 			json.dump(load_dict,dump_f)
 		# TODO: Add some codes here

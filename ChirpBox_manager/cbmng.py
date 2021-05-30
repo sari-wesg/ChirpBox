@@ -44,7 +44,6 @@ expmethapp = cbmng_exp_method.myExpMethodApproach()
 # python cbmng.py -upgrade ade0.bin ade0 48 4 7 com8 1DFFDF 100 7 100 14 1fffff
 # python cbmng.py -upgrade -upgrade_bin_name -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
 def main(argv):
-	print(argv)
 	if(((argv[1] == "version") or (argv[1] == "-v")) and (len(argv) == 2)):
 		get_current_version(Chirpbox_procedure_manager_version)
 	elif(((argv[1] == "experiment_configuration") or (argv[1] == "-ec")) and (len(argv) == 3)):
