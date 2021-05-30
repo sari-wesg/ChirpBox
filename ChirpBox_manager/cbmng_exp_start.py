@@ -3,12 +3,9 @@ import cbmng_exp_firm
 import cbmng_exp_method
 import cbmng_common
 import datetime
-import time
 import json
 import transfer_to_initiator.myserial.serial_send
-import statistics_process.topo_parser
 
-import serial
 import os
 
 """ Md5 """
@@ -95,7 +92,6 @@ def generate_json_for_upgrade():
 		"rx_energy": "False",
 		"start_address": "0807E000",
 		"end_address": "0807E0D0",
-		"command_sf": 12
 	}
 	with open("tmp.json", "w") as f:
 		json.dump(upgrade_dict, f)
@@ -133,7 +129,6 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 			json.dump(running_dict, f)
 	else:
 		return False
-	print("SF: ", command_sf)
 	dissem_back_sf = 0
 	dissem_back_slot = 0
 
@@ -402,39 +397,30 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 
 	timeout_cnt = 0
 
-	filename_1 = "collect_data" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap) + "_addr"+str(start_address_col)+"_"+str(end_address_col) + ".txt"
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+				print (line)
+				if (line == "Input initiator task:"):
+					task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16)) + "," + '{0:08X}'.format(int(task_bitmap, 16))
+					print(task)
+					ser.write(str(task).encode()) # send commands
+					print(datetime.datetime.now())
 
-	with open(filename_1, 'w+') as f_1:
-		while True:
-			try:
-				line = ser.readline().decode('ascii').strip() # skip the empty data
-				timeout_cnt = timeout_cnt + 1
-				if line:
-					print (line)
-					if (line == "Input initiator task:"):
-						task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16)) + "," + '{0:08X}'.format(int(task_bitmap, 16))
-						print(task)
-						ser.write(str(task).encode()) # send commands
-						print(datetime.datetime.now())
-						f_1.write(line + "\r")
-						line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-						f_1.write(line_write + "\r")
+				if (line == "Waiting for parameter(s)..."):
+					para = "%08X" % int(start_address_col, 16) + "," + "%08X" % int(end_address_col, 16)
+					print(para)
+					ser.write(str(para).encode()) # send commands
+					timeout_cnt = 0
+					print(datetime.datetime.now())
 
-					if (line == "Waiting for parameter(s)..."):
-						para = "%08X" % int(start_address_col, 16) + "," + "%08X" % int(end_address_col, 16)
-						print(para)
-						ser.write(str(para).encode()) # send commands
-						timeout_cnt = 0
-						print(datetime.datetime.now())
-						f_1.write(line + "\r")
-						line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-						f_1.write(line_write + "\r")
-
-						break
-				if(timeout_cnt > 60000 * 30):
 					break
-			except:
-				pass
+			if(timeout_cnt > 60000 * 30):
+				break
+		except:
+			pass
 	if(timeout_cnt > 60000 * 30):
 		print("Timeout...")
 		return False
@@ -461,11 +447,6 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 	if(timeout_cnt > 60000 * 30):
 		print("Timeout...")
 		return False
-	with open(filename_1, 'a') as f_1:
-		line = "end\r"
-		f_1.write(line)
-		line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-		f_1.write(line_write + "\r")
 	print("Results of " + filename + " have been collected!" )
 	return True
 
@@ -487,79 +468,42 @@ def collect_topology(com_port, command_sf, command_len, slot_num, used_tp):
 	task_index = EXPERIMENT_COLTOPO
 
 	timeout_cnt = 0
-	filename_1 = "collect_topology" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + ".txt"
-	with open(filename_1, 'w+') as f_1:
+	with open(filename, 'w+') as f:
+		start_read = 0
+		while True:
+			try:
+				line = ser.readline().decode('ascii').strip() # skip the empty data
+				timeout_cnt = timeout_cnt + 1
+				if line:
+					print (line)
+					if (line == "Input initiator task:"):
+						# ser.write(str(task_index).encode()) # send commands
+						# print(task_index)
+						task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
+						print(task)
+						ser.write(str(task).encode()) # send commands
+						print(datetime.datetime.now())
+						# break
 
-		with open(filename, 'w+') as f:
-			start_read = 0
-			while True:
-				try:
-					line = ser.readline().decode('ascii').strip() # skip the empty data
-					timeout_cnt = timeout_cnt + 1
-					if line:
-						print (line)
-						if (line == "Input initiator task:"):
-							# ser.write(str(task_index).encode()) # send commands
-							# print(task_index)
-							task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
-							print(task)
-							ser.write(str(task).encode()) # send commands
-							print(datetime.datetime.now())
-							f_1.write(line + "\r")
-							line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-							f_1.write(line_write + "\r")
-							# break
-
-						if (line == "output from initiator (topology):"):
-							start_read = 1
-						if ((line == "---------MX_GLOSSY---------") and (start_read == 1)):
-							timeout_cnt = 0
-							break
-						if(start_read == 1):
-							f.write(line + "\r")
-					if(timeout_cnt > 60000 * 20):
+					if (line == "output from initiator (topology):"):
+						start_read = 1
+					if ((line == "---------MX_GLOSSY---------") and (start_read == 1)):
+						timeout_cnt = 0
 						break
-				except:
-					pass
-			f.close()
+					if(start_read == 1):
+						f.write(line + "\r")
+				if(timeout_cnt > 60000 * 20):
+					break
+			except:
+				pass
+		f.close()
 	if(waiting_for_the_execution_timeout(ser, 60000 * 20) == False): # timeout: 800 seconds
 		return False
 
 	if(timeout_cnt > 60000 * 20):
 	 	print("Timeout...")
 	 	return False
-	with open(filename_1, 'a') as f_1:
-		line = "end\r"
-		f_1.write(line)
-		line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-		f_1.write(line_write + "\r")
 	print("Results of " + filename + " have been collected!" )
-	# # filename = "Chirpbox_connectivity_sf7ch470000tp0(20200801141355709008).txt"
-	# results = statistics_process.topo_parser.topo_parser(filename, using_pos)
-	# # max_hop, mean_degree_array, std_dev_degree_array, min_dev_degree_array, max_dev_degree_array
-	# print("Max_hop: " + str(results[0]))
-	# print("Mean_degree: " + str(results[1]))
-	# print("Std_dev_degree: " + str(results[2]))
-	# print("Min_degree: " + str(results[3]))
-	# print("Max_degree: " + str(results[4]))
-	# print("Symmetry: " + str(results[5]))
-	# print("Temperature of nodes: " + str(results[6]))
-	# filename_hop = "hop_" + filename
-	# with open(filename_hop, 'w+') as f:
-	# 	line = ("Max_hop: " + str(results[0]))
-	# 	f.write(line + "\r")
-	# 	line = ("Mean_degree: " + str(results[1]))
-	# 	f.write(line + "\r")
-	# 	line = ("Std_dev_degree: " + str(results[2]))
-	# 	f.write(line + "\r")
-	# 	line = ("Min_degree: " + str(results[3]))
-	# 	f.write(line + "\r")
-	# 	line = ("Max_degree: " + str(results[4]))
-	# 	f.write(line + "\r")
-	# 	line = ("Symmetry: " + str(results[5]))
-	# 	f.write(line + "\r")
-	# 	line = ("Temperature of nodes: " + str(results[6]))
-	# 	f.write(line + "\r")
 	return True
 
 
@@ -628,7 +572,7 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 	return True
 
 
-def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp, task_bitmap):
+def disseminate(com_port, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp, task_bitmap, daemon_patch):
 	BANK2_SIZE = 512 * 1024
 
 	try:
@@ -715,50 +659,43 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 	hash_md5 = md5(firmware)
 	print("hash_md5:", "%16X" % int(hash_md5, 16))
 
-	filename_1 = "disseminate" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S") + "_used_sf" + str(command_sf) + "_task_bitmap" + str(task_bitmap)+"_size"+str(FileSize) + ".txt"
-	with open(filename_1, 'w+') as f_1:
+	while True:
+		try:
+			line = ser.readline().decode('ascii').strip() # skip the empty data
+			timeout_cnt = timeout_cnt + 1
+			if line:
+				print(line)
+				if (line == "Input initiator task:"):
+					# TODO:
+					task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf)) + ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(command_size)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16)) + "," + '{0:08X}'.format(int(task_bitmap, 16))
+					print(task)
+					ser.write(str(task).encode()) # send commands
+					# print(task)
+					print(datetime.datetime.now())
+					line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-		while True:
-			try:
-				line = ser.readline().decode('ascii').strip() # skip the empty data
-				timeout_cnt = timeout_cnt + 1
-				if line:
-					print(line)
-					if (line == "Input initiator task:"):
-						# TODO:
-						task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf)) + ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(command_size)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16)) + "," + '{0:08X}'.format(int(task_bitmap, 16))
-						print(task)
-						ser.write(str(task).encode()) # send commands
-						# print(task)
-						print(datetime.datetime.now())
-						f_1.write(line + "\r")
-						line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-						f_1.write(line_write + "\r")
-
-					if (line == "Waiting for parameter(s)..."):
-						if(using_patch == 1):
-							if(daemon_patch == 1):
-								para = "1,0,"+'{0:01},'.format(int(using_compression))+"%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
-							else:
-								para = "1,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+				if (line == "Waiting for parameter(s)..."):
+					if(using_patch == 1):
+						if(daemon_patch == 1):
+							para = "1,0,"+'{0:01},'.format(int(using_compression))+"%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 						else:
-							if(daemon_patch == 1):
-								para = "0,0,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
-							else:
-								para = "0,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
-						print(para)
-						ser.write(str(para).encode()) # send commands
-						timeout_cnt = 0
-						print(datetime.datetime.now())
-						f_1.write(line + "\r")
-						line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-						f_1.write(line_write + "\r")
+							para = "1,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+					else:
+						if(daemon_patch == 1):
+							para = "0,0,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+						else:
+							para = "0,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+					print(para)
+					ser.write(str(para).encode()) # send commands
+					timeout_cnt = 0
+					print(datetime.datetime.now())
+					line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-						break
-				if(timeout_cnt > 60000 * 3):
 					break
-			except:
-				pass
+			if(timeout_cnt > 60000 * 3):
+				break
+		except:
+			pass
 	if(timeout_cnt > 60000 * 3):
 		print("Timeout...")
 		return False
@@ -805,11 +742,6 @@ def disseminate(com_port, daemon_patch, version_hash, command_len, command_sf, c
 		os.system('copy ' + firmware + ' ' + firmware_burned)
 
 	print("Done!")
-	with open(filename_1, 'a') as f_1:
-		line = "end\r"
-		f_1.write(line)
-		line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-		f_1.write(line_write + "\r")
 	# if(waiting_for_the_execution_timeout(ser, 360) == False): # timeout: 800 seconds
 	# 	return False
 

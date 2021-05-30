@@ -6,7 +6,6 @@ class myExpConfApproach(cbmng_common.ExpConfApproach):
 	experiment_duration = 0
 	experiment_name = ""
 	experiment_description = ""
-	command_sf = 7
 
 	def read_configuration(self):
 		with open(cbmng_common.ExpConfApproach.conf_json,'r') as load_f:
@@ -23,9 +22,6 @@ class myExpConfApproach(cbmng_common.ExpConfApproach):
 			# Experiment duration:
 			myExpConfApproach.experiment_duration = load_dict['experiment_duration']
 			print("experiment_duration: " + str(myExpConfApproach.experiment_duration) + " Second(s)")
-			# Command SF:
-			myExpConfApproach.command_sf = load_dict['command_sf']
-			print("command_sf: " + str(myExpConfApproach.command_sf))
 
 		with open("tmp_exp_conf.json","w") as dump_f:
 			json.dump(load_dict,dump_f)

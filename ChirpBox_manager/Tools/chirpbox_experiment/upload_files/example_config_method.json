@@ -3,13 +3,12 @@
 	"experiment_description": "Just for description",
     "FUT_CUSTOM_list": "0x00000001",
 	"payload_length": 6,
-	"experiment_duration": 25,
+	"experiment_duration": 20,
 	"num_generated_packets": "True",
 	"num_received_packets": "True",
 	"e2e_latency": "True",
 	"tx_energy": "True",
 	"rx_energy": "True",
 	"start_address": "0807E000",
-	"end_address": "0807E266",
-	"command_sf": 7
+	"end_address": "0807E266"
 }
