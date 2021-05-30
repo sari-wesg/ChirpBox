@@ -1,10 +1,10 @@
 import sys
-import time
 import argparse
 import logging
 import os.path
 from os import path
-from pathlib import Path
+import shutil
+import datetime
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -44,19 +44,15 @@ list of combinations:
 
 examples:
     chirpbox_user.py -h
+    chirpbox_user.py -dir -config -user
 """
 
 class ChirpBoxUser():
 
     def __init__(self):
-        self._start_time = time.time()
         self._dirname = os.path.dirname(__file__)
         # TODO:
-        self._user_name = "TP"
         self._server_address = os.path.join(self._dirname, '../upload_files/')
-        # check directory:
-        # if path.isdir(self._server_address) is not True:
-        # logger.debug(path.isdir(self._server_address))
 
     def convert_int_string_to_list(self, my_str):
         if (my_str) is not None:
@@ -87,13 +83,12 @@ class ChirpBoxUser():
         return True
 
     def upload_FUT(self):
-        # create sub folder "testfiles" in the user upload directory
-        Path(os.path.join(self._server_address, 'testfiles/')).mkdir(parents=True, exist_ok=True)
-
-        # rename your bin file and config
-        logger.debug(self._user_name)
-
-
+        # rename your bin file and config and upload to the server address
+        time_upload = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        upload_bin = self._server_address + self._user_name + "_" + time_upload + ".bin"
+        upload_config = self._server_address + self._user_name + "_" + time_upload + ".json"
+        shutil.copyfile(self._bin, upload_bin)
+        shutil.copyfile(self._config, upload_config)
 
     def start(self, argv):
         parser = argparse.ArgumentParser(
