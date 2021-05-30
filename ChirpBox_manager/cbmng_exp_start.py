@@ -70,14 +70,6 @@ def check():
 
 	return True
 
-def check_finished():
-	try:
-		f = open(running_status, mode = 'r')
-		f.close()
-	except FileNotFoundError:
-		return False
-	return True
-
 def generate_json_for_upgrade():
 	upgrade_dict = {
 		"experiment_name": "Upgrade_daemon",

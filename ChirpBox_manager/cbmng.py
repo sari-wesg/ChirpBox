@@ -38,17 +38,11 @@ expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
 
-def experiment_check():
-	if(cbmng_exp_start.check() == True):
-		return True
-	else:
-		return False
-
 # python cbmng.py -dissem 0 ade0 232 16 7 com11 1fFFFF 80 7 80 14 1fffff
 # python cbmng.py -colver 7 com8 80 14
 # python cbmng.py -start 0 ade0 7 com8 1fFFFF 100 14
 # python cbmng.py -upgrade ade0.bin ade0 48 4 7 com8 1DFFDF 100 7 100 14 1fffff
-# python cbmng.py -upgrade -upgradebinname -daemonversion -packet_length -packet_number/per round -disseminate_SF -comport -upgradebitmap -disseminate_slot_number -collect_SF -collect_slot_number -txpower -allnodesbitmap -upgrade_daemon/FUT
+# python cbmng.py -upgrade -upgrade_bin_name -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
 def main(argv):
 	print(argv)
 	if(((argv[1] == "version") or (argv[1] == "-v")) and (len(argv) == 2)):
@@ -69,10 +63,8 @@ def main(argv):
 		else:
 	 	 	exit(0)
 	elif(((argv[1] == "experiment_start") or (argv[1] == "-start")) and (len(argv) == 9)):
-		if (experiment_check() == True):
+	 	if(cbmng_exp_start.check() == True):
 	 		cbmng_exp_start.start(argv[5], int(argv[2]), argv[3], int(argv[4]), argv[6], int(argv[7]), int(argv[8]))
-	 	# if(cbmng_exp_start.check() == True):
-	 	# 	cbmng_exp_start.start(argv[5], int(argv[2]), argv[3], int(argv[4]), argv[6], int(argv[7]), int(argv[8]))
 	 	# exit(0)
 	elif(((argv[1] == "experiment_running_status") or (argv[1] == "-rstatus")) and (len(argv) == 2)):
 		if(cbmng_exp_start.is_running() == True):
@@ -85,12 +77,11 @@ def main(argv):
 		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), argv[6], int(argv[7]), int(argv[8]), int(argv[9]))
 		# exit(1)
 	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 10)):
-		# if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
-		if((True) and (cbmng_exp_start.is_running() == False)):
+		if(cbmng_exp_start.is_running() == False):
 			cbmng_exp_start.collect_data(argv[4], int(argv[2]), int(argv[3]), int(argv[5]), int(argv[6]), argv[7], argv[8], argv[9])
 		# exit(0)
 	elif(((argv[1] == "collect_version") or (argv[1] == "-colver")) and (len(argv) == 6)):
-		if((True) and (cbmng_exp_start.is_running() == False)):
+		if(cbmng_exp_start.is_running() == False):
 			cbmng_exp_start.collect_version(argv[3], int(argv[2]), int(argv[4]), int(argv[5]))
 		# exit(0)
 	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 14)):
