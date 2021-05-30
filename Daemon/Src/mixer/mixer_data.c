@@ -265,7 +265,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
     uint16_t k = 0;
     uint32_t flash_addr;
 
-    if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO))
+    if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT))
     {
         assert_reset(!(chirp_outl->file_chunk_len % sizeof(uint64_t)));
         assert_reset(!((chirp_outl->payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
@@ -277,8 +277,8 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
     memset(file_data, 0, sizeof(file_data));
     memset(data, 0, DATA_HEADER_LENGTH);
 
-    /* MX_DISSEMINATE / MX_COLLECT / CHIRP_TOPO: read file data from flash */
-    if (((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO)))
+    /* MX_DISSEMINATE / MX_COLLECT: read file data from flash */
+    if (((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT)))
     {
         memset(flash_data, 0, sizeof(flash_data));
         if ((chirp_outl->disem_file_index) && (chirp_outl->task == MX_DISSEMINATE))
@@ -292,10 +292,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         else if (((chirp_outl->round > chirp_outl->round_setup) && (chirp_outl->round <= chirp_outl->round_max)))
         {
-            if (chirp_outl->task == MX_COLLECT)
-                flash_addr = chirp_outl->collect_addr_start + chirp_outl->file_chunk_len * (chirp_outl->round - chirp_outl->round_setup - 1);
-            else if (chirp_outl->task == CHIRP_TOPO)
-                flash_addr = TOPO_FLASH_ADDRESS + chirp_outl->file_chunk_len * (chirp_outl->round - chirp_outl->round_setup - 1);
+            flash_addr = chirp_outl->collect_addr_start + chirp_outl->file_chunk_len * (chirp_outl->round - chirp_outl->round_setup - 1);
         }
 
         uint16_t n;
@@ -343,7 +340,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         case MX_DISSEMINATE:
         case MX_COLLECT:
-        case CHIRP_TOPO:
         {
             if (chirp_outl->arrange_task == MX_DISSEMINATE)
             {
@@ -508,7 +504,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                     break;
                 }
                 case MX_COLLECT:
-                case CHIRP_TOPO:
                 {
                     if (chirp_outl->round <= chirp_outl->round_setup)
                     {
@@ -558,7 +553,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     uint32_t mask_negative[chirp_config.my_column_mask.len];
     uint32_t firmware_bitmap_temp[DISSEM_BITMAP_32];
     uint16_t pending;
-    if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO))
+    if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT))
     {
         assert_reset(!((chirp_outl->payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
         assert_reset((chirp_outl->payload_len > DATA_HEADER_LENGTH + 28));
@@ -572,8 +567,6 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
         PRINTF("-----column_pending = %d-----\n", mx.request->my_column_pending);
         if ((chirp_outl->task == MX_COLLECT) && (chirp_outl->round > chirp_outl->round_setup))
             PRINTF("output from initiator (collect):\n");
-        else if (chirp_outl->task == CHIRP_TOPO)
-            PRINTF("output from initiator (topology):\n");
         else if (chirp_outl->task == CHIRP_VERSION)
             PRINTF("output from initiator (version):\n");
     }
@@ -782,7 +775,6 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             break;
                         }
                         case MX_COLLECT:
-                        case CHIRP_TOPO:
                         {
                             /* reconfig chirp_outl (except the initiator) */
                             if (chirp_outl->round <= chirp_outl->round_setup)
@@ -805,7 +797,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             /* round > setup_round */
                             else if ((chirp_outl->round > chirp_outl->round_setup) && (chirp_outl->round <= chirp_outl->round_max))
                             {
-                                if ((chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_TOPO))
+                                if ((chirp_outl->task == MX_COLLECT))
                                 {
                                     memcpy(file_data, p + DATA_HEADER_LENGTH, sizeof(file_data));
                                     PRINT_PACKET(file_data, sizeof(file_data), 0);
@@ -877,7 +869,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     }
 
     /* have received at least a packet */
-    if (((chirp_outl->task == MX_COLLECT) ||(chirp_outl->task == CHIRP_TOPO) ||(chirp_outl->task == CHIRP_VERSION)))
+    if (((chirp_outl->task == MX_COLLECT) || (chirp_outl->task == CHIRP_VERSION)))
     {
         if (round_inc > 1)
         {

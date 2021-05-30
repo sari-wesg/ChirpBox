@@ -589,7 +589,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	uint8_t				flash_protection;
 
-	/* MX_DISSEMINATE / MX_COLLECT / CHIRP_TOPO: mixer config */
+	/* MX_DISSEMINATE / MX_COLLECT : mixer config */
 	uint8_t				num_nodes;
 	uint8_t				generation_size;
 	uint8_t				payload_len;

@@ -724,7 +724,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t task_wait = 0;
 
   uint8_t task[28 + DISSEM_BITMAP_32 * 8 + DISSEM_BITMAP_32 * 8 + 1];
-  PRINTF("\nTask list:\n%d: CHIRP_START\n%d: MX_DISSEMINATE\n%d: MX_COLLECT\n%d: CHIRP_CONNECTIVITY\n%d: CHIRP_TOPO\n%d: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_TOPO, CHIRP_VERSION);
+  PRINTF("\nTask list:\n%d: CHIRP_START\n%d: MX_DISSEMINATE\n%d: MX_COLLECT\n%d: CHIRP_CONNECTIVITY\n%d: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_VERSION);
 
   HAL_StatusTypeDef status;
 
@@ -815,11 +815,6 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
     case CHIRP_CONNECTIVITY:
     {
       PRINTF("CHIRP_CONNECTIVITY\n");
-      break;
-    }
-    case CHIRP_TOPO:
-    {
-      PRINTF("CHIRP_TOPO\n");
       break;
     }
     case CHIRP_VERSION:
@@ -1765,55 +1760,6 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
           Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
           Stats_value_debug(ENERGEST_TYPE_FLASH_WRITE_BANK1, energest_type_time(ENERGEST_TYPE_FLASH_WRITE_BANK1));
-          memcpy((uint32_t *)(&chirp_outl.chirp_energy[2]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
-          FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
-          FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
-          FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
-          FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
-          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
-        #endif
-				break;
-			}
-			case CHIRP_TOPO:
-			{
-				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
-
-				log_to_flash("---------CHIRP_TOPO---------\n");
-				// TODO: tune those parameters
-				chirp_outl.num_nodes = network_num_nodes;
-				chirp_outl.generation_size = chirp_outl.num_nodes;
-				chirp_outl.payload_len = chirp_outl.default_payload_len;
-				chirp_outl.round_setup = 0;
-				chirp_outl.file_chunk_len = chirp_outl.payload_len - DATA_HEADER_LENGTH;
-        assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH));
-				assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
-
-				uint16_t file_size = (((chirp_outl.num_nodes + 1) / 2) * 2) * sizeof(uint32_t);
-				chirp_outl.round_max = chirp_outl.round_setup + (file_size + chirp_outl.file_chunk_len - 1)/ chirp_outl.file_chunk_len;
-
-				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
-        chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-        chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
-				chirp_payload_distribution(chirp_outl.task);
-        while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-
-        #if ENERGEST_CONF_ON
-          ENERGEST_OFF(ENERGEST_TYPE_CPU);
-          Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
-          memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
-          memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
-        #endif
-
-				// chirp_round(node_id, &chirp_outl);
-        if (!chirp_round(node_id, &chirp_outl))
-        {
-          free(payload_distribution);
-          break;
-        }
-				free(payload_distribution);
-        #if ENERGEST_CONF_ON
-          ENERGEST_OFF(ENERGEST_TYPE_CPU);
-          Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[2]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));

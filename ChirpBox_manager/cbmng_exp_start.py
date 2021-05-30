@@ -34,8 +34,7 @@ EXPERIMENT_START = 0
 EXPERIMENT_DISSEMINATE = 1
 EXPERIMENT_COLDATA = 2
 EXPERIMENT_CONNECT = 3
-EXPERIMENT_COLTOPO = 4
-EXPERIMENT_COLVER = 5
+EXPERIMENT_COLVER = 4
 
 
 def check():
@@ -382,63 +381,6 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 		return False
 	print("Results of " + filename + " have been collected!" )
 	return True
-
-
-def collect_topology(com_port, command_sf, command_len, slot_num, used_tp):
-	bitmap = "0"
-	task_bitmap = "0"
-	dissem_back_sf = 0
-	dissem_back_slot = 0
-
-	with open(running_status,'r') as load_f:
-		load_dict = json.load(load_f)
-		filename = "chirpbox_topo//" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
-	print("Collecting ...")
-
-	# config and open the serial port
-	ser = transfer_to_initiator.myserial.serial_send.config_port(com_port)
-	# corresponded task number
-	task_index = EXPERIMENT_COLTOPO
-
-	timeout_cnt = 0
-	with open(filename, 'w+') as f:
-		start_read = 0
-		while True:
-			try:
-				line = ser.readline().decode('ascii').strip() # skip the empty data
-				timeout_cnt = timeout_cnt + 1
-				if line:
-					print (line)
-					if (line == "Input initiator task:"):
-						# ser.write(str(task_index).encode()) # send commands
-						# print(task_index)
-						task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
-						print(task)
-						ser.write(str(task).encode()) # send commands
-						print(datetime.datetime.now())
-						# break
-
-					if (line == "output from initiator (topology):"):
-						start_read = 1
-					if ((line == "---------MX_GLOSSY---------") and (start_read == 1)):
-						timeout_cnt = 0
-						break
-					if(start_read == 1):
-						f.write(line + "\r")
-				if(timeout_cnt > 60000 * 20):
-					break
-			except:
-				pass
-		f.close()
-	if(waiting_for_the_execution_timeout(ser, 60000 * 20) == False): # timeout: 800 seconds
-		return False
-
-	if(timeout_cnt > 60000 * 20):
-	 	print("Timeout...")
-	 	return False
-	print("Results of " + filename + " have been collected!" )
-	return True
-
 
 def collect_version(com_port, command_sf, slot_num, used_tp):
 	bitmap = "0"

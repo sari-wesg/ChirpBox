@@ -62,13 +62,12 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 typedef enum Mixer_Task_tag
 {
 	/* copy packet: CHIRP_START, CHIRP_CONNECTIVITY, MX_ARRANGE */
-	/* all to all: MX_COLLECT, CHIRP_TOPO, CHIRP_VERSION */
+	/* all to all: MX_COLLECT, CHIRP_VERSION */
 	/* one to all: MX_DISSEMINATE */
 	CHIRP_START,
 	MX_DISSEMINATE,
 	MX_COLLECT,
 	CHIRP_CONNECTIVITY,
-	CHIRP_TOPO,
 	CHIRP_VERSION,
 
 	MX_ARRANGE,

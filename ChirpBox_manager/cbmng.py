@@ -32,9 +32,8 @@ As soon as all the steps mentioned above have been configured properly, then one
 6) \"python cbmng.py -dissem [upgrading_daemon] [ver_hash] [payload_len] [generate_size_in_round] [used_SF] [com_port] [bitmap] [slot_num][dissem_back_sf][dissem_back_slot][used_tp][task_bitmap] \" to disseminate the file, e.g., the firmware. A patch for daemon is generated if upgrading_daemon is 1.\n\
 7) \"python cbmng.py -coldata [payload_len] [used_SF] [com_port] [slot_num] [used_tp][task_bitmap] \" to collect the results in the given area of the flash (from [start_addr] to [end_addr]). These addresses are assigned in the methodology file.\n\
 8) \"python cbmng.py -connect [SF] [Channel] [Tx_power] [used_SF] [com_port] [slot_num] [topo_payload_len][used_tp] \" to evaluate connectivity of the network with a given SF, a given Channel (KHz), and a given Tx_power (dBm).\n\
-9) \"python cbmng.py -coltopo [used_SF] [payload_len] [com_port] [slot_num] [used_tp]\" to obtain the topology. If using_pos is 0, the layout of topology is generated randomly; if using_pos is 1, the previously generated layout is used; if using_pos is 2, a specific layout for SARI is used.\n\
-10) \"python cbmng.py -colver [used_SF] [com_port] [slot_num][used_tp]\" to obtain the daemon version.\n\
-11) \"python cbmng.py -upgrade [filename] [ver_hash] [payload_len] [generate_size_in_round] [used_SF] [com_port] [bitmap] [slot_num][dissem_back_sf][dissem_back_slot][used_tp][task_bitmap]\" to upgrade the daemon. The filename is the updated daemon.bin.")
+9) \"python cbmng.py -colver [used_SF] [com_port] [slot_num][used_tp]\" to obtain the daemon version.\n\
+10) \"python cbmng.py -upgrade [filename] [ver_hash] [payload_len] [generate_size_in_round] [used_SF] [com_port] [bitmap] [slot_num][dissem_back_sf][dissem_back_slot][used_tp][task_bitmap]\" to upgrade the daemon. The filename is the updated daemon.bin.")
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
@@ -89,10 +88,6 @@ def main(argv):
 		# if((cbmng_exp_start.check_finished() == True) and (cbmng_exp_start.is_running() == False)):
 		if((True) and (cbmng_exp_start.is_running() == False)):
 			cbmng_exp_start.collect_data(argv[4], int(argv[2]), int(argv[3]), int(argv[5]), int(argv[6]), argv[7], argv[8], argv[9])
-		# exit(0)
-	elif(((argv[1] == "collect_topology") or (argv[1] == "-coltopo")) and (len(argv) == 7)):
-		if((True) and (cbmng_exp_start.is_running() == False)):
-			cbmng_exp_start.collect_topology(argv[4], int(argv[2]), int(argv[3]), int(argv[5]), int(argv[6]))
 		# exit(0)
 	elif(((argv[1] == "collect_version") or (argv[1] == "-colver")) and (len(argv) == 6)):
 		if((True) and (cbmng_exp_start.is_running() == False)):
