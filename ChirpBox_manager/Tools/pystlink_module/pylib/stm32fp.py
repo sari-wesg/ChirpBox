@@ -1,6 +1,6 @@
 import time
-import lib.stm32
-import lib.stlinkex
+import pylib.stm32
+import pylib.stlinkex
 
 
 class Flash():
@@ -36,7 +36,7 @@ class Flash():
         Flash.FLASH_CR_REG = reg_bank + Flash.FLASH_CR_INDEX
         Flash.FLASH_AR_REG = reg_bank + Flash.FLASH_AR_INDEX
         if self._stlink.target_voltage < 2.0:
-            raise lib.stlinkex.StlinkException('Supply voltage is %.2fV, but minimum for FLASH program or erase is 2.0V' % self._stlink.target_voltage)
+            raise pylib.stlinkex.StlinkException('Supply voltage is %.2fV, but minimum for FLASH program or erase is 2.0V' % self._stlink.target_voltage)
         self.unlock()
 
     def clear_sr(self):
@@ -54,7 +54,7 @@ class Flash():
             self._stlink.set_debugreg32(Flash.FLASH_KEYR_REG, 0xcdef89ab)
         # programing locked
         if self._stlink.get_debugreg32(Flash.FLASH_CR_REG) & Flash.FLASH_CR_LOCK_BIT:
-            raise lib.stlinkex.StlinkException('Error unlocking FLASH')
+            raise pylib.stlinkex.StlinkException('Error unlocking FLASH')
 
     def lock(self):
         self._stlink.set_debugreg32(Flash.FLASH_CR_REG, Flash.FLASH_CR_LOCK_BIT)
@@ -100,23 +100,23 @@ class Flash():
                     self._dbg.bargraph_done()
                 return
             time.sleep(wait_time / 20)
-        raise lib.stlinkex.StlinkException('Operation timeout')
+        raise pylib.stlinkex.StlinkException('Operation timeout')
 
     def wait_for_breakpoint(self, wait_time):
         end_time = time.time() + wait_time
-        while time.time() < end_time and not self._stlink.get_debugreg32(lib.stm32.Stm32.DHCSR_REG) & lib.stm32.Stm32.DHCSR_STATUS_HALT_BIT:
+        while time.time() < end_time and not self._stlink.get_debugreg32(pylib.stm32.Stm32.DHCSR_REG) & pylib.stm32.Stm32.DHCSR_STATUS_HALT_BIT:
             time.sleep(wait_time / 20)
         self.end_of_operation(self._stlink.get_debugreg32(Flash.FLASH_SR_REG))
 
     def end_of_operation(self, status):
         if status != Flash.FLASH_SR_EOP_BIT:
-            raise lib.stlinkex.StlinkException('Error writing FLASH with status (FLASH_SR) %08x' % status)
+            raise pylib.stlinkex.StlinkException('Error writing FLASH with status (FLASH_SR) %08x' % status)
         self._stlink.set_debugreg32(Flash.FLASH_SR_REG, status)
 
 
 # support all STM32F MCUs with page access to FLASH
 # (STM32F0xx, STM32F1xx and also STM32F3xx)
-class Stm32FP(lib.stm32.Stm32):
+class Stm32FP(pylib.stm32.Stm32):
     def _flash_erase_all(self, bank=0):
         flash = Flash(self, self._stlink, self._dbg, bank=bank)
         flash.erase_all()
@@ -154,7 +154,7 @@ class Stm32FP(lib.stm32.Stm32):
         if addr is None:
             addr = self.FLASH_START
         elif addr % 2:
-            raise lib.stlinkex.StlinkException('Start address is not aligned to half-word')
+            raise pylib.stlinkex.StlinkException('Start address is not aligned to half-word')
         self._flash_write(addr, data, erase=erase, erase_sizes=erase_sizes)
 
 
@@ -173,7 +173,7 @@ class Stm32FPXL(Stm32FP):
         if addr is None:
             addr = self.FLASH_START
         elif addr % 2:
-            raise lib.stlinkex.StlinkException('Start address is not aligned to half-word')
+            raise pylib.stlinkex.StlinkException('Start address is not aligned to half-word')
         if (addr - self.FLASH_START) + len(data) <= Stm32FPXL.BANK_SIZE:
             self._flash_write(addr, data, erase=erase, erase_sizes=erase_sizes, bank=0)
         elif (addr - self.FLASH_START) > Stm32FPXL.BANK_SIZE:

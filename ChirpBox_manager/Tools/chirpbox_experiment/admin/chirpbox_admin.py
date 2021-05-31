@@ -8,15 +8,18 @@ from pathlib import Path
 import shutil
 import csv
 import glob
+import json
 
 # add path of chirpbox manager
-sys.path.append(os.path.join(sys.path[0], '..\\..\\..\\..\\ChirpBox_manager'))
-sys.path.append(os.path.join(sys.path[0],'..\\..\\..\\..\\ChirpBox_manager\\transfer_to_initiator'))
-sys.path.append(os.path.join(sys.path[0],'..\\..\\..\\..\\ChirpBox_manager\\Tools\\chirpbox_tool'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..\\..\\..\\..\\ChirpBox_manager'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\..\\..\\ChirpBox_manager\\transfer_to_initiator'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\..\\..\\ChirpBox_manager\\Tools\\chirpbox_tool'))
+
 import cbmng
 import cbmng_exp_start
 import lib.chirpbox_tool_cbmng_command
 from lib.const import *
+import Tools.toggle_check
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -63,7 +66,7 @@ class ChirpBoxAdmin():
     def __init__(self):
         self._update_interval = 1 # update time 1 second
         # TODO:
-        self._server_address = os.path.join(sys.path[0], '..\\upload_files\\')
+        self._server_address = os.path.join(os.path.dirname(__file__), '..\\upload_files\\')
         self._test_address = os.path.join(self._server_address, 'testfiles\\')
         self._tested_address = os.path.join(self._test_address, 'tested\\')
         # create tested folder
@@ -74,9 +77,17 @@ class ChirpBoxAdmin():
         logger.debug("setup_chirpbox")
         return True
 
-    def check_toggle(self):
+    # TODO:
+    def is_toggle(self, bin_file):
         logger.debug("check_toggle")
-        return True
+        with open(os.path.join(os.path.dirname(__file__), '..\\..\\..\\..\\ChirpBox_manager\\Tools\\chirpbox_tool', CHIRPBOX_CONFIG_FILE)) as data_file:
+            data = json.load(data_file)
+            serial_sn = data['chirpbox_server_comport_ST_LINK_SN']
+            com_port = data['chirpbox_server_comport']
+        data_file.close()
+        is_toggle = Tools.toggle_check.check_toggle(bin_file, serial_sn, com_port, 5)
+        print(is_toggle)
+        return is_toggle
 
     def setup_experiment(self, bin_file, config_file):
         # -ec
@@ -105,17 +116,25 @@ class ChirpBoxAdmin():
         return True
 
     def manage_chirpbox(self):
-        logger.debug("manage_chirpbox")
         while True:
+            logger.debug("manage_chirpbox")
             if(cbmng_exp_start.is_running() == False):
                 # find the oldest bin file and config file from all files
                 all_bin_files = glob.glob(self._test_address + "\\*.bin")
                 if(len(all_bin_files) > 0):
                     the_oldest_bin_file = sorted(all_bin_files, key=lambda t: os.stat(t).st_mtime)[0]
                     the_oldest_config = the_oldest_bin_file[:-len(".bin")] + ".json"
-                    if path.exists(the_oldest_config) is True and self.check_toggle is True:
-                        self.setup_experiment(the_oldest_bin_file, the_oldest_config)
-                        self.start_experiment()
+                    if path.exists(the_oldest_config) is True:
+                        # if toggle check is ok, start experiment
+                        if self.is_toggle(the_oldest_bin_file) is True:
+                            self.setup_experiment(the_oldest_bin_file, the_oldest_config)
+                            self.start_experiment()
+                        # if toggle check is not ok, remove bin and config file
+                        else:
+                            logger.debug("remove")
+                            os.remove(the_oldest_bin_file)
+                            os.remove(the_oldest_config)
+            time.sleep(1)
 
 
             time.sleep(self._update_interval)

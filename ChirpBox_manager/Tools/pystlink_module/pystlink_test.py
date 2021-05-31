@@ -1,8 +1,8 @@
 import unittest
 
 import pystlink
-import lib.stm32
-import lib.stlinkex
+import pylib.stm32
+import pylib.stlinkex
 
 
 class MockDbg():
@@ -38,7 +38,7 @@ class TestStm32(unittest.TestCase):
     def setUp(self):
         self._pystlink = pystlink.PyStlink()
         self._pystlink._dbg = MockDbg()
-        # self._driver = lib.stm32.Stm32(stlink=None, dbg=dbg)
+        # self._driver = pylib.stm32.Stm32(stlink=None, dbg=dbg)
 
     # def test_read_version(self):
     #     class MockStlink():
@@ -98,7 +98,7 @@ class TestStm32(unittest.TestCase):
                 assert reg == 0xe000ed00
                 return 0x410fc251
         self._pystlink._stlink = MockStlink()
-        with self.assertRaises(lib.stlinkex.StlinkException):
+        with self.assertRaises(pylib.stlinkex.StlinkException):
             self._pystlink.find_mcus_by_core()
 
     def test_find_mcus_by_devid_413(self):
@@ -149,7 +149,7 @@ class TestStm32(unittest.TestCase):
                 assert reg == 0xE0042000
                 return 0x10016417
         self._pystlink._stlink = MockStlink()
-        with self.assertRaises(lib.stlinkex.StlinkException):
+        with self.assertRaises(pylib.stlinkex.StlinkException):
             self._pystlink.find_mcus_by_devid()
 
     def test_find_mcus_by_flash_size_64(self):
@@ -216,7 +216,7 @@ class TestStm32(unittest.TestCase):
                 assert reg == 0x1fff7a22
                 return 512
         self._pystlink._stlink = MockStlink()
-        with self.assertRaises(lib.stlinkex.StlinkException):
+        with self.assertRaises(pylib.stlinkex.StlinkException):
             self._pystlink.find_mcus_by_flash_size()
 
     def test_filter_detected_cpu_two(self):
@@ -250,7 +250,7 @@ class TestStm32(unittest.TestCase):
             {'type': 'STM32F031x8'},
             {'type': 'STM32F051x8'},
         ]
-        with self.assertRaises(lib.stlinkex.StlinkException):
+        with self.assertRaises(pylib.stlinkex.StlinkException):
             self._pystlink.filter_detected_cpu(['STM32F103'])
 
 
@@ -288,7 +288,7 @@ class TestStm32_get_mem(unittest.TestCase):
                 self._index += size
                 return [i & 0xff for i in range(old_index, self._index)]
 
-        self._driver = lib.stm32.Stm32(stlink=MockStlink(self), dbg=MockDbg())
+        self._driver = pylib.stm32.Stm32(stlink=MockStlink(self), dbg=MockDbg())
 
     def _test_get_mem(self, addr, size):
         data = self._driver.get_mem(addr, size)
@@ -419,7 +419,7 @@ class TestStm32_set_mem(unittest.TestCase):
                 self._pointer += len(data)
                 self._index += len(data)
 
-        self._driver = lib.stm32.Stm32(stlink=MockStlink(self), dbg=MockDbg())
+        self._driver = pylib.stm32.Stm32(stlink=MockStlink(self), dbg=MockDbg())
 
     def _test_set_mem(self, addr, size):
         self._driver.set_mem(addr, [i & 0xff for i in range(0, size)])
@@ -548,7 +548,7 @@ class TestStm32_fill_mem(unittest.TestCase):
                 self._pointer += len(data)
                 self._index += len(data)
 
-        self._driver = lib.stm32.Stm32(stlink=MockStlink(self), dbg=MockDbg())
+        self._driver = pylib.stm32.Stm32(stlink=MockStlink(self), dbg=MockDbg())
 
     def _test_fill_mem(self, addr, size):
         self._driver.fill_mem(addr, size, 0x55)

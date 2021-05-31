@@ -1,6 +1,6 @@
 import usb.core
 import usb.util
-import lib.stlinkex
+import pylib.stlinkex
 import re
 
 
@@ -86,13 +86,13 @@ class StlinkUsbConnector():
             self._dbg.info("%2d: STLINK %4s, serial %s" %
                            (num_stlink, self._dev_type['version'],
                             self._get_serial()))
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 "Found multiple devices. Select one with -s SERIAL or -n INDEX")
         if self._dev:
             self._dbg.verbose("Connected to ST-Link/%4s, serial %s" % (
                  self._dev_type['version'],  self._get_serial()))
             return
-        raise lib.stlinkex.StlinkException('ST-Link/V2 is not connected')
+        raise pylib.stlinkex.StlinkException('ST-Link/V2 is not connected')
 
     @property
     def version(self):
@@ -107,7 +107,7 @@ class StlinkUsbConnector():
         self._xfer_counter += 1
         count = self._dev.write(self._dev_type['outPipe'], data, tout)
         if count != len(data):
-            raise lib.stlinkex.StlinkException("Error, only %d Bytes was transmitted to ST-Link instead of expected %d" % (count, len(data)))
+            raise pylib.stlinkex.StlinkException("Error, only %d Bytes was transmitted to ST-Link instead of expected %d" % (count, len(data)))
 
     def _read(self, size, tout=200):
         read_size = size
@@ -124,7 +124,7 @@ class StlinkUsbConnector():
         while (True):
             try:
                 if len(cmd) > self.STLINK_CMD_SIZE_V2:
-                    raise lib.stlinkex.StlinkException("Error too many Bytes in command: %d, maximum is %d" % (len(cmd), self.STLINK_CMD_SIZE_V2))
+                    raise pylib.stlinkex.StlinkException("Error too many Bytes in command: %d, maximum is %d" % (len(cmd), self.STLINK_CMD_SIZE_V2))
                 # pad to 16 bytes
                 cmd += [0] * (self.STLINK_CMD_SIZE_V2 - len(cmd))
                 self._write(cmd, tout)
@@ -136,7 +136,7 @@ class StlinkUsbConnector():
                 if retry:
                     retry -= 1
                     continue
-                raise lib.stlinkex.StlinkException("USB Error: %s" % e)
+                raise pylib.stlinkex.StlinkException("USB Error: %s" % e)
             return None
 
     def unmount_discovery(self):

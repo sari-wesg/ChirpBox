@@ -1,16 +1,12 @@
 import sys
 import os
 
-import time
-from random import random
 from threading import Timer
 
-# insert at 1, 0 is the script path (or '' in REPL)
-sys.path.insert(1, os.path.abspath(os.getcwd() + '/../Chirpbox_manager/'))
-sys.path.insert(1, os.path.abspath(os.getcwd() + '/Tools/pystlink_module/'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\ChirpBox_manager\\'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'pystlink_module'))
 import transfer_to_initiator.myserial.serial_send
-
-from pystlink_module import pystlink
+import pystlink_module.pystlink
 
 toggle_check_alarm = True
 
@@ -21,21 +17,16 @@ def timeout():
     toggle_check_alarm = False
 
 """ check if the firmware under test can be toggled back """
-def check_toggle(FUT, com_port, alarm_time):
+def check_toggle(FUT, serial_sn, com_port, alarm_time = 60):
     # initialize pystlink as pystlink_cmd
-    pystlink_cmd = pystlink.PyStlink()
-    # reserve sys.argv
-    sys_argv_initial = sys.argv
-
+    pystlink_command = "pystlink.py "+"-s " + serial_sn + " flash:erase " + "flash:verify:0x08000000:" + str(os.path.join(os.path.dirname(__file__), '..\\..\\Miscellaneous\\Example\\Toggle-daemon\\Debug\\Toggle-daemon.bin')) + " flash:verify:0x08080000:" + FUT
+    print(pystlink_command)
     # 1. flash erase, flash daemon in bank1 and flash firmware under test in bank2
-    sys.argv = sys_argv_initial
-    sys.argv += ["flash:erase", "flash:verify:0x08000000:"+"Toggle-daemon.bin", "flash:verify:0x08080000:"+FUT]
-    pystlink_cmd.start()
-
+    pystlink_module.pystlink.main(pystlink_command.split())
     # 2. The daemon will switch to bank2 and come back in 60 seconds (depending on the alarm settings). Check daemon with serial
-    check_daemon(com_port, alarm_time)
+    is_toggle = check_daemon(com_port, alarm_time)
 
-    return True
+    return is_toggle
 
 """ check daemon """
 def check_daemon(com_port, alarm_time):
@@ -73,11 +64,12 @@ def check_daemon(com_port, alarm_time):
             pass
 
     print(toggle_check_result)
+    return toggle_check_result
 
 
 def main(argv):
     # TODO: change the FUT name and com port name
-    check_toggle("FUT.bin", "com17", 60)
+    check_toggle("FUT.bin", "066AFF565653756687152608", "com7")
 
 
 if __name__ == "__main__":

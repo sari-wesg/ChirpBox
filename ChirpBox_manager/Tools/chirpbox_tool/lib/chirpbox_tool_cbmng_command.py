@@ -5,8 +5,8 @@ import os.path
 
 import sys
 import os
-sys.path.append(os.path.join(sys.path[0],'..\\..\\'))
-sys.path.append(os.path.join(sys.path[0],'..\\..\\transfer_to_initiator'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\transfer_to_initiator'))
 import cbmng
 import time
 

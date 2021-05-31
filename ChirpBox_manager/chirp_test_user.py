@@ -4,7 +4,7 @@ import time
 import sys
 import os
 # relative to the current working directory
-sys.path.append(os.path.join(sys.path[0],'..\\Chirpbox_manager\\Tools\\chirpbox_tool'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..\\Chirpbox_manager\\Tools\\chirpbox_tool'))
 print(sys.path)
 import chirpbox_tool
 

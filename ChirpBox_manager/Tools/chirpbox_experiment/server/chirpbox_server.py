@@ -10,7 +10,7 @@ import csv
 import json
 
 # add path of chirpbox tools
-sys.path.append(os.path.join(sys.path[0], '..\\..\\..\\Tools\\'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..\\..\\..\\Tools\\'))
 import param_patch.param_patch_FUT
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class ChirpBoxServer():
 
     def __init__(self):
         # TODO:
-        self._server_address = os.path.join(sys.path[0], '..\\upload_files\\')
+        self._server_address = os.path.join(os.path.dirname(__file__), '..\\upload_files\\')
         # create sub folder "testfiles" in the user upload directory
         Path(os.path.join(self._server_address, 'testfiles\\')).mkdir(parents=True, exist_ok=True)
         self._test_address = os.path.join(self._server_address, 'testfiles\\')

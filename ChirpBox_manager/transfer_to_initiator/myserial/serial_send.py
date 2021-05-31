@@ -2,8 +2,7 @@ import serial
 import sys
 import os
 # relative to the current working directory
-sys.path.append(os.path.join(sys.path[0],'./transfer_to_initiator'))
-sys.path.append(os.path.join(sys.path[0],'.././transfer_to_initiator'))
+sys.path.append(os.path.join(os.path.dirname(__file__),'..//..//transfer_to_initiator'))
 from modem import YMODEM
 
 # Serial config
@@ -42,7 +41,7 @@ def putc(data, timeout = 1):
 # Send a file through ymodem
 def YMODEM_send(filename):
     ymodem = YMODEM(getc, putc)
-    result = ymodem.send(os.path.join(sys.path[0], filename))
+    result = ymodem.send(os.path.join(os.path.dirname(__file__), filename))
     return result
 
 # Show all serial tracings

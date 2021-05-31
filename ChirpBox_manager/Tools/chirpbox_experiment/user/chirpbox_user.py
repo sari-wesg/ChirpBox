@@ -51,7 +51,7 @@ class ChirpBoxUser():
 
     def __init__(self):
         # TODO:
-        self._server_address = os.path.join(sys.path[0], '..\\upload_files\\')
+        self._server_address = os.path.join(os.path.dirname(__file__), '..\\upload_files\\')
 
     def convert_int_string_to_list(self, my_str):
         if (my_str) is not None:

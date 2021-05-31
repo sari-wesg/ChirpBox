@@ -1,6 +1,6 @@
 import time
-import lib.stm32
-import lib.stlinkex
+import pylib.stm32
+import pylib.stlinkex
 
 # Stm32 L0 and L1 programming
 class Flash():
@@ -66,11 +66,11 @@ class Flash():
                                         Flash.STM32_NVM_PEKEY2)
             pecr = self._stlink.get_debugreg32(self._nvm + Flash.PECR_OFFSET)
         else :
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 'Unexpected unlock behaviour! FLASH_CR 0x%08x' % pecr)
         # check if programing was unlocked
         if pecr & Flash.PECR_PELOCK:
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 'Error unlocking FLASH_CR: 0x%08x. Reset!' % prcr)
 
     def lock(self):
@@ -83,7 +83,7 @@ class Flash():
         if not pecr & Flash.PECR_PRGLOCK:
             return
         if pecr & Flash.PECR_PELOCK:
-            raise lib.stlinkex.StlinkException('PELOCK still set: %08x' % pecr)
+            raise pylib.stlinkex.StlinkException('PELOCK still set: %08x' % pecr)
         # unlock keys
         self._stlink.set_debugreg32(self._nvm + Flash.PRGKEYR_OFFSET,
                                     Flash.STM32_NVM_PRGKEY1)
@@ -91,7 +91,7 @@ class Flash():
                                     Flash.STM32_NVM_PRGKEY2)
         pecr = self._stlink.get_debugreg32(self._nvm + Flash.PECR_OFFSET)
         if pecr & Flash.PECR_PRGLOCK:
-            raise lib.stlinkex.StlinkException('PRGLOCK still set: %08x' % pecr)
+            raise pylib.stlinkex.StlinkException('PRGLOCK still set: %08x' % pecr)
 
     def erase_pages(self, addr, size):
         self._dbg.verbose('erase_pages from addr 0x%08x for %d byte' %
@@ -130,15 +130,15 @@ class Flash():
                                                  Flash.SR_EOP)
                 return
             time.sleep(wait_time / 20)
-        raise lib.stlinkex.StlinkException('Operation timeout')
+        raise pylib.stlinkex.StlinkException('Operation timeout')
 
     def end_of_operation(self, status):
         if status & Flash.SR_ERROR_MASK:
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 'Error writing FLASH with status (FLASH_SR) %08x' % status)
 
 
-class Stm32L0(lib.stm32.Stm32):
+class Stm32L0(pylib.stm32.Stm32):
     def flash_erase_all(self, flash_size):
         # Mass erase is only possible by setting and removing flash
         # write protection. This will also erase EEPROM!
@@ -146,7 +146,7 @@ class Stm32L0(lib.stm32.Stm32):
 
         self._dbg.debug('Stm32L0.flash_erase_all')
         flash = Flash(self, self._stlink, self._dbg)
-        flash.erase_pages(lib.stm32.Stm32.FLASH_START, flash_size);
+        flash.erase_pages(pylib.stm32.Stm32.FLASH_START, flash_size);
         flash.lock()
 
     def flash_write(self, addr, data, erase=False, erase_sizes=None):
@@ -157,7 +157,7 @@ class Stm32L0(lib.stm32.Stm32):
             '(%s, [data:%dBytes], erase=%s, erase_sizes=%s)'
             % (addr, len(data), erase, erase_sizes))
         if addr % 4:
-            raise lib.stlinkex.StlinkException
+            raise pylib.stlinkex.StlinkException
         ('Start address is not aligned to word')
         flash = Flash(self, self._stlink, self._dbg)
         if erase:

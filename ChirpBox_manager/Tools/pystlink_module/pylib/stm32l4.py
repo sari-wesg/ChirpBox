@@ -1,6 +1,6 @@
 import time
-import lib.stm32
-import lib.stlinkex
+import pylib.stm32
+import pylib.stlinkex
 
 # Stm32 L4 and G0 programming
 class Flash():
@@ -75,14 +75,14 @@ class Flash():
             self._stlink.set_debugreg32(Flash.FLASH_KEYR_REG, 0xcdef89ab)
             cr = self._stlink.get_debugreg32(Flash.FLASH_CR_REG)
         else :
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 'Unexpected unlock behaviour! FLASH_CR 0x%08x' % cr)
         # check if programing was unlocked
         if cr & Flash.FLASH_CR_LOCK_BIT:
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 'Error unlocking FLASH_CR: 0x%08x. Reset!' % cr)
         if not cr & Flash.FLASH_CR_OPTLOCK_BIT:
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 'Error unlocking FLASH_CR: 0x%08x. Reset!' % cr)
 
     def lock(self):
@@ -123,8 +123,8 @@ class Flash():
     def erase_pages(self, addr, size):
         self._dbg.verbose('erase_pages from addr %08x for %d byte' %
                           (addr, size))
-        page =      (addr - lib.stm32.Stm32.FLASH_START       ) // self._page_size
-        last_page = (addr - lib.stm32.Stm32.FLASH_START + size + self._page_size - 1) // self._page_size
+        page =      (addr - pylib.stm32.Stm32.FLASH_START       ) // self._page_size
+        last_page = (addr - pylib.stm32.Stm32.FLASH_START + size + self._page_size - 1) // self._page_size
         self._dbg.verbose('erase_pages %d to %d' % (page, last_page))
         self._dbg.bargraph_start('Erasing FLASH', value_min=page,
                                  value_max=last_page)
@@ -161,16 +161,16 @@ class Flash():
                     self._dbg.bargraph_done()
                 return
             time.sleep(wait_time / 20)
-        raise lib.stlinkex.StlinkException('Operation timeout')
+        raise pylib.stlinkex.StlinkException('Operation timeout')
 
     def end_of_operation(self, status):
         if status & Flash.FLASH_SR_ERROR_MASK:
-            raise lib.stlinkex.StlinkException(
+            raise pylib.stlinkex.StlinkException(
                 'Error writing FLASH with status (FLASH_SR) %08x' % status)
 
 
 # support all STM32L4 and G0 MCUs with page size access to FLASH
-class Stm32L4(lib.stm32.Stm32):
+class Stm32L4(pylib.stm32.Stm32):
     def flash_erase_all(self, flash_size):
         self._dbg.debug('Stm32L4.flash_erase_all()')
         flash = Flash(self, self._stlink, self._dbg)
@@ -184,7 +184,7 @@ class Stm32L4(lib.stm32.Stm32):
             'Stm32l4.flash_write(%s, [data:%dBytes], erase=%s, erase_sizes=%s)'
             % (addr, len(data), erase, erase_sizes))
         if addr % 8:
-            raise lib.stlinkex.StlinkException('Start address is not aligned to word')
+            raise pylib.stlinkex.StlinkException('Start address is not aligned to word')
         # pad data
         if len(data) % 8:
             data.extend([0xff] * (8 - len(data) % 8))
@@ -201,7 +201,7 @@ class Stm32L4(lib.stm32.Stm32):
         self._stlink.set_debugreg32(Flash.FLASH_CR_REG, Flash.FLASH_CR_PG_BIT)
         cr =  self._stlink.get_debugreg32(Flash.FLASH_CR_REG)
         if not cr & Flash.FLASH_CR_PG_BIT:
-            raise lib.stlinkex.StlinkException('Flash_Cr not ready for programming: %08x\n' % cr)
+            raise pylib.stlinkex.StlinkException('Flash_Cr not ready for programming: %08x\n' % cr)
         while data:
             block = data[:256]
             data = data[256:]
