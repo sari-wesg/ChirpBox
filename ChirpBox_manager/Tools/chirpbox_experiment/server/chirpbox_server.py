@@ -9,6 +9,10 @@ import shutil
 import csv
 import json
 
+# add path of chirpbox tools
+sys.path.append(os.path.join(sys.path[0], '..\\..\\..\\Tools\\'))
+import param_patch.param_patch_FUT
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
 logger.setLevel(logging.DEBUG) # <<< Added Line
@@ -100,39 +104,40 @@ class ChirpBoxServer():
 
         return list(newSet)
 
-    def check_toggle(self):
-        return True
-
-    def patch_file(self):
+    def patch_file(self, bin_file, config_file):
+        param_patch.param_patch_FUT.fut_param_patch(bin_file, config_file)
         return True
 
     def update_config(self, config):
         with open(config, "r") as jsonFile:
             data = json.load(jsonFile)
 
-        # TODO:
+        # TODO: should add triscale (https://romain-jacob.github.io/triscale/)
         data["experiment_run_time"] = 3
 
         with open(config, "w") as jsonFile:
             json.dump(data, jsonFile)
 
-    def add_file_to_test(self, file_name):
+    def add_file_to_test(self, bin_file, config_file):
         try:
-            logger.debug(file_name)
-            # move files to test files
-            shutil.copyfile(os.path.join(self._server_address, os.path.basename(file_name[:-len(".bin")]) + ".json"), os.path.join(self._test_address, os.path.basename(file_name[:-len(".bin")]) + ".json"))
-            shutil.copyfile(os.path.join(self._server_address, os.path.basename(file_name)), os.path.join(self._test_address, os.path.basename(file_name)))
-            self.update_config(os.path.join(self._test_address, os.path.basename(file_name[:-len(".bin")]) + ".json"))
+            # move config
+            shutil.copyfile(config_file, os.path.join(self._test_address, os.path.basename(config_file)))
+            # move bin
+            shutil.copyfile(bin_file, os.path.join(self._test_address, os.path.basename(bin_file)))
+            # update config
+            self.update_config(os.path.join(self._test_address, os.path.basename(config_file)))
         except:
             pass
 
     def detect_new_file(self):
-        logger.debug("detect_new_file")
+        # detect new file in directory
+        logger.info("detecting...")
         newList = self.check_new_file(self._server_address, file_suffix = ".bin")
         for i in range(len(newList)):
-            if self.check_toggle() is True and self.patch_file() is True:
-                self.add_file_to_test(newList[i])
-        # detect new file in directory
+            bin_file = os.path.join(self._server_address, os.path.basename(newList[i]))
+            config_file = os.path.join(self._server_address, os.path.basename(newList[i][:-len(".bin")]) + ".json")
+            if path.exists(config_file) is True and self.patch_file(bin_file, config_file) is True:
+                self.add_file_to_test(bin_file, config_file)
         return True
 
     def manage_FUT(self):

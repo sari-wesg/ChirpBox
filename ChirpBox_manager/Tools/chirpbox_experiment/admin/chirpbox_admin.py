@@ -74,6 +74,10 @@ class ChirpBoxAdmin():
         logger.debug("setup_chirpbox")
         return True
 
+    def check_toggle(self):
+        logger.debug("check_toggle")
+        return True
+
     def setup_experiment(self, bin_file, config_file):
         # -ec
         experiment_config = "cbmng.py " + "-ec " + config_file
@@ -88,14 +92,16 @@ class ChirpBoxAdmin():
         shutil.move(bin_file, os.path.join(self._tested_address, os.path.basename(bin_file)))
         shutil.move(config_file, os.path.join(self._tested_address, os.path.basename(config_file)))
 
+    # TODO:
     def start_experiment(self):
         # dissem
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, "jj")
-        logger.debug(expmethapp.experiment_run_time)
-        # start
-        lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, "jj")
-        # collect
-        lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, "jj")
+        for i in range(expmethapp.experiment_run_time):
+            logger.debug(i)
+            # start
+            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, "jj")
+            # collect
+            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, "jj")
         return True
 
     def manage_chirpbox(self):
@@ -107,7 +113,7 @@ class ChirpBoxAdmin():
                 if(len(all_bin_files) > 0):
                     the_oldest_bin_file = sorted(all_bin_files, key=lambda t: os.stat(t).st_mtime)[0]
                     the_oldest_config = the_oldest_bin_file[:-len(".bin")] + ".json"
-                    if path.exists(the_oldest_config) is True:
+                    if path.exists(the_oldest_config) is True and self.check_toggle is True:
                         self.setup_experiment(the_oldest_bin_file, the_oldest_config)
                         self.start_experiment()
 

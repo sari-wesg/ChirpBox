@@ -8,5 +8,8 @@
     "coldata_payload_len": 232,
     "OWM_API_KEY": "4dbbaf4cb8263e15f604420c8d66bb3b",
     "chirpbox_lat": 31.180809739077795,
-    "chirpbox_lon": 121.58960816990215
+    "chirpbox_lon": 121.58960816990215,
+
+    "chirpbox_server_comport": "com8",
+    "chirpbox_server_comport_ST-LINK_SN": "066BFF565653756687196042"
 }
