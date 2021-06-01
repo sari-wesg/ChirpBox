@@ -105,6 +105,7 @@ class ChirpBoxServer():
         return list(newSet)
 
     def patch_file(self, bin_file, config_file):
+        logger.info("patching...")
         param_patch.param_patch_FUT.fut_param_patch(bin_file, config_file)
         return True
 
@@ -119,6 +120,7 @@ class ChirpBoxServer():
             json.dump(data, jsonFile)
 
     def add_file_to_test(self, bin_file, config_file):
+        logger.info("adding to test...")
         try:
             # move config
             shutil.copyfile(config_file, os.path.join(self._test_address, os.path.basename(config_file)))

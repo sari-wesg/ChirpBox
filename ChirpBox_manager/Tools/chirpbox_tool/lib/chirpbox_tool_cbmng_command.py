@@ -30,12 +30,12 @@ class cbmng_command():
                 chirpbox_command = "cbmng.py " + CHIRPBOX_COLLECT_COMMAND + str(data['coldata_payload_len']) + " " + str(data['coldata_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + str(data['all_command_tp']) + " " + data['all_command_bitmap'] + " " + CHIRPBOX_TOPODATA_FLASH_START + CHIRPBOX_TOPODATA_FLASH_END
                 logger.info(chirpbox_command.split())
                 cbmng.main(chirpbox_command.split())
-
+            # TODO:
             elif (command_type == CHIRPBOX_DISSEM_COMMAND):
-                logger.error("jsjk")
+                logger.error("CHIRPBOX_DISSEM_COMMAND")
 
             elif (command_type == CHIRPBOX_START_COMMAND):
-                logger.error("jsjk")
+                logger.error("CHIRPBOX_START_COMMAND")
 
             else:
                 logger.error("Command wrong: %s", command_type)

@@ -1,7 +1,7 @@
 {
 	"experiment_name": "test",
 	"experiment_description": "Just for description",
-    "FUT_CUSTOM_list": "0x00000001",
+    "FUT_CUSTOM_list": "0x0000000A, 0x00000005",
 	"payload_length": 6,
 	"experiment_duration": 20,
 	"num_generated_packets": "True",

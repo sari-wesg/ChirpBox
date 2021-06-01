@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\..\\..\\ChirpBox
 
 import cbmng
 import cbmng_exp_start
+import cbmng_exp_method
 import lib.chirpbox_tool_cbmng_command
 from lib.const import *
 import Tools.toggle_check
@@ -77,7 +78,6 @@ class ChirpBoxAdmin():
         logger.debug("setup_chirpbox")
         return True
 
-    # TODO:
     def is_toggle(self, bin_file):
         logger.debug("check_toggle")
         with open(os.path.join(os.path.dirname(__file__), '..\\..\\..\\..\\ChirpBox_manager\\Tools\\chirpbox_tool', CHIRPBOX_CONFIG_FILE)) as data_file:
@@ -85,9 +85,8 @@ class ChirpBoxAdmin():
             serial_sn = data['chirpbox_server_comport_ST_LINK_SN']
             com_port = data['chirpbox_server_comport']
         data_file.close()
-        is_toggle = Tools.toggle_check.check_toggle(bin_file, serial_sn, com_port, 5)
-        print(is_toggle)
-        return is_toggle
+        is_toggle_True = Tools.toggle_check.check_toggle(bin_file, serial_sn, com_port, 60)
+        return is_toggle_True
 
     def setup_experiment(self, bin_file, config_file):
         # -ec
@@ -99,20 +98,20 @@ class ChirpBoxAdmin():
         # -em
         experiment_method = "cbmng.py " + "-em " + config_file
         cbmng.main(experiment_method.split())
-        # move files to tested file
-        shutil.move(bin_file, os.path.join(self._tested_address, os.path.basename(bin_file)))
-        shutil.move(config_file, os.path.join(self._tested_address, os.path.basename(config_file)))
 
     # TODO:
-    def start_experiment(self):
+    def start_experiment(self, bin_file, config_file):
         # dissem
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, "jj")
-        for i in range(expmethapp.experiment_run_time):
-            logger.debug(i)
+        for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
             # start
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, "jj")
             # collect
-            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, "jj")
+            # lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, "jj")
+
+        # move files to tested file
+        shutil.move(bin_file, os.path.join(self._tested_address, os.path.basename(bin_file)))
+        shutil.move(config_file, os.path.join(self._tested_address, os.path.basename(config_file)))
         return True
 
     def manage_chirpbox(self):
@@ -126,14 +125,14 @@ class ChirpBoxAdmin():
                     the_oldest_config = the_oldest_bin_file[:-len(".bin")] + ".json"
                     if path.exists(the_oldest_config) is True:
                         # if toggle check is ok, start experiment
-                        if self.is_toggle(the_oldest_bin_file) is True:
-                            self.setup_experiment(the_oldest_bin_file, the_oldest_config)
-                            self.start_experiment()
+                        # if self.is_toggle(the_oldest_bin_file) is True:
+                        self.setup_experiment(the_oldest_bin_file, the_oldest_config)
+                        self.start_experiment(the_oldest_bin_file, the_oldest_config)
                         # if toggle check is not ok, remove bin and config file
-                        else:
-                            logger.debug("remove")
-                            os.remove(the_oldest_bin_file)
-                            os.remove(the_oldest_config)
+                        # else:
+                        #     logger.debug("remove")
+                        #     os.remove(the_oldest_bin_file)
+                        #     os.remove(the_oldest_config)
             time.sleep(1)
 
 
