@@ -1,5 +1,6 @@
 import cbmng_common
 import json
+import os
 
 class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 	num_generated_packets = False
@@ -38,6 +39,6 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 			# End_address:
 			myExpMethodApproach.experiment_run_time = int(load_dict['experiment_run_time'])
 			print("experiment_run_time: " + str(myExpMethodApproach.experiment_run_time))
-		with open("tmp_exp_meth.json","w") as dump_f:
+		with open(os.path.join(os.path.dirname(__file__), "tmp_exp_meth.json"),"w") as dump_f:
 			json.dump(load_dict,dump_f)
 		# TODO: Add some codes here

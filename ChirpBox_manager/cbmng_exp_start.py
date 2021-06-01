@@ -18,13 +18,12 @@ import compression.lzss
 import chirpbox_weather
 from pathlib import Path
 
-exp_conf = "tmp_exp_conf.json"
-firmware = "tmp_exp_firm.bin"
-firmware_burned = "tmp_exp_firm_burned.bin"
-firmware_daemon_burned = "daemon_firm_burned.bin"
-exp_meth = "tmp_exp_meth.json"
-running_status = "tmp_exp_running.json"
-
+exp_conf = os.path.join(os.path.dirname(__file__), "tmp_exp_conf.json")
+firmware = os.path.join(os.path.dirname(__file__), "tmp_exp_firm.bin")
+firmware_burned = os.path.join(os.path.dirname(__file__), "tmp_exp_firm_burned.bin")
+firmware_daemon_burned = os.path.join(os.path.dirname(__file__), "daemon_firm_burned.bin")
+exp_meth = os.path.join(os.path.dirname(__file__), "tmp_exp_meth.json")
+running_status = os.path.join(os.path.dirname(__file__), "tmp_exp_running.json")
 
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
