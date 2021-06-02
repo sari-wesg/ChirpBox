@@ -38,11 +38,19 @@ expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
 expmethapp = cbmng_exp_method.myExpMethodApproach()
 
-# python cbmng.py -dissem 0 ade0 232 16 7 com11 1fFFFF 80 7 80 14 1fffff
-# python cbmng.py -colver 7 com8 80 14
-# python cbmng.py -start 0 ade0 7 com8 1fFFFF 100 14
-# python cbmng.py -upgrade ade0.bin ade0 48 4 7 com8 1DFFDF 100 7 100 14 1fffff
-# python cbmng.py -upgrade -upgrade_bin_name -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
+"""
+usage:
+python cbmng.py -dissem -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
+
+python cbmng.py -upgrade -upgrade_bin_name -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
+
+example:
+python cbmng.py -dissem 2b10 232 16 7 com7 1fffff 80 7 80 14 1fffff 0
+python cbmng.py -colver 7 com7 80 14
+python cbmng.py -start 0 2b10 7 com7 1fffff 100 14
+python cbmng.py -upgrade Daemon.bin 2b10 48 4 7 com7 1fffff 100 7 100 14 1fffff 0
+"""
+
 def main(argv):
 	if(((argv[1] == "version") or (argv[1] == "-v")) and (len(argv) == 2)):
 		get_current_version(Chirpbox_procedure_manager_version)
@@ -85,7 +93,7 @@ def main(argv):
 		# exit(0)
 	elif(((argv[1] == "disseminate") or (argv[1] == "-dissem")) and (len(argv) == 14)):
 		if(cbmng_exp_start.check() == True):
-			cbmng_exp_start.disseminate(argv[7], int(argv[2]), argv[3], int(argv[4]), int(argv[6]), int(argv[5]), argv[8], int(argv[9]), int(argv[10]), int(argv[11]), int(argv[12]), argv[13])
+			cbmng_exp_start.disseminate(argv[6], argv[2], int(argv[3]), int(argv[5]), int(argv[4]), argv[7], int(argv[8]), int(argv[9]), int(argv[10]), int(argv[11]), argv[12], int(argv[13]))
 		# exit(0)
 	# TODO:
 	# if bitmap is not full should not use upgrade

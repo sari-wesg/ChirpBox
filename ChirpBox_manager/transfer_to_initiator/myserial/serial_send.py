@@ -41,7 +41,7 @@ def putc(data, timeout = 1):
 # Send a file through ymodem
 def YMODEM_send(filename):
     ymodem = YMODEM(getc, putc)
-    result = ymodem.send(os.path.join(os.path.dirname(__file__), filename))
+    result = ymodem.send(os.path.join(sys.path[0], filename))
     return result
 
 # Show all serial tracings

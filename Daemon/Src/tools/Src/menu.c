@@ -702,7 +702,7 @@ uint32_t menu_initiator_read_file(void)
   FLASH_If_Erase(0);
   /* write file to bank2 */
   uint32_t size = menu_serialDownload(0, 1);
-  CheckOtherBank();
+  // CheckOtherBank();
   return size;
 }
 

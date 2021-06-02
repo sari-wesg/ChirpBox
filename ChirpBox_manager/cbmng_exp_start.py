@@ -238,7 +238,6 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 					task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
 					print(task)
 					ser.write(str(task).encode()) # send commands
-					print(datetime.datetime.now())
 				if (line == "Waiting for parameter(s)..."):
 					if(tx_power >= 0):
 						para = '{0:02}'.format(int(sf_bitmap)) + ',{0:06}'.format(int(channel)) + ',+{0:02}'.format(int(tx_power)) + ',{0:03}'.format(int(topo_payload_len))
@@ -331,15 +330,11 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 					task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16)) + "," + '{0:08X}'.format(int(task_bitmap, 16))
 					print(task)
 					ser.write(str(task).encode()) # send commands
-					print(datetime.datetime.now())
-
 				if (line == "Waiting for parameter(s)..."):
 					para = "%08X" % int(start_address_col, 16) + "," + "%08X" % int(end_address_col, 16)
 					print(para)
 					ser.write(str(para).encode()) # send commands
 					timeout_cnt = 0
-					print(datetime.datetime.now())
-
 					break
 			if(timeout_cnt > 60000 * 30):
 				break
@@ -503,7 +498,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 				print("disseminate the updated firmware...")
 	else:
 		using_patch = 0
-		print("disseminate the updated firmware...")
+		print("disseminate the whole firmware...")
 
 	using_compression = 0
 	if(using_patch):
@@ -537,10 +532,6 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 					task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf)) + ',{0:03}'.format(int(command_len)) + ',{0:03}'.format(int(command_size)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16)) + "," + '{0:08X}'.format(int(task_bitmap, 16))
 					print(task)
 					ser.write(str(task).encode()) # send commands
-					# print(task)
-					print(datetime.datetime.now())
-					line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
 				if (line == "Waiting for parameter(s)..."):
 					if(using_patch == 1):
 						if(daemon_patch == 1):
@@ -548,16 +539,10 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 						else:
 							para = "1,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 					else:
-						if(daemon_patch == 1):
-							para = "0,0,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
-						else:
-							para = "0,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+							para = "0,0,"+'{0:01},'.format(int(using_compression))+ "00000,00000," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 					print(para)
 					ser.write(str(para).encode()) # send commands
 					timeout_cnt = 0
-					print(datetime.datetime.now())
-					line_write = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
 					break
 			if(timeout_cnt > 60000 * 3):
 				break
