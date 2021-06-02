@@ -101,8 +101,7 @@ class ChirpBoxAdmin():
     # TODO:
     def start_experiment(self, bin_file, config_file):
         # dissem
-        cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap
-        lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, "jj")
+        lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "0"])
         for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
             # start
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, "jj")

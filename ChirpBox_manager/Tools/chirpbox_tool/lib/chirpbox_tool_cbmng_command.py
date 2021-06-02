@@ -8,7 +8,6 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\'))
 sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\transfer_to_initiator'))
 import cbmng
-import time
 
 logger = logging.getLogger(__name__)
 
@@ -30,16 +29,14 @@ class cbmng_command():
                 chirpbox_command = "cbmng.py " + CHIRPBOX_COLLECT_COMMAND + str(data['coldata_payload_len']) + " " + str(data['coldata_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + str(data['all_command_tp']) + " " + data['all_command_bitmap'] + " " + CHIRPBOX_TOPODATA_FLASH_START + CHIRPBOX_TOPODATA_FLASH_END
                 logger.info(chirpbox_command.split())
                 cbmng.main(chirpbox_command.split())
-            # TODO:
             elif (command_type == CHIRPBOX_DISSEM_COMMAND):
-                sf_bitmap = str(command_param[0]) + " "
-                freq = str(command_param[1]) + " "
-                tp = str(command_param[2]) + " "
-                pl = str(command_param[3]) + " "
-                chirpbox_command = "cbmng.py " + CHIRPBOX_LINK_COMMAND + sf_bitmap + freq + tp + str(data['all_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + pl + str(data['all_command_tp'])
+                upgrade_bitmap = str(command_param[0]) + " "
+                upgrade_daemon_or_FUT = str(command_param[1])
+                chirpbox_command = "cbmng.py " + CHIRPBOX_DISSEM_COMMAND + str(data['daemon_version']) + " " + str(data['coldata_payload_len']) + " " + str(data['dissem_packet_number_per_round']) + " " + str(data['all_command_sf']) + " " + data['all_command_comport'] + " " + upgrade_bitmap + str(data['all_command_slot_number']) + " " + str(data['all_command_sf']) + " " + str(data['all_command_slot_number']) + " " + str(data['all_command_tp']) + " " + str(data['all_command_bitmap']) + " " + upgrade_daemon_or_FUT
                 logger.info(chirpbox_command.split())
                 cbmng.main(chirpbox_command.split())
 
+            # TODO:
             elif (command_type == CHIRPBOX_START_COMMAND):
                 logger.error("CHIRPBOX_START_COMMAND")
 

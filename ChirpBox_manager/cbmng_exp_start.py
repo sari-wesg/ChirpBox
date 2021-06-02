@@ -24,6 +24,9 @@ firmware_burned = os.path.join(os.path.dirname(__file__), "tmp_exp_firm_burned.b
 firmware_daemon_burned = os.path.join(os.path.dirname(__file__), "daemon_firm_burned.bin")
 exp_meth = os.path.join(os.path.dirname(__file__), "tmp_exp_meth.json")
 running_status = os.path.join(os.path.dirname(__file__), "tmp_exp_running.json")
+encode_file = os.path.join(os.path.dirname(__file__), "encode.bin")
+patch_file = os.path.join(os.path.dirname(__file__), "patch.bin")
+
 
 expconfapp = cbmng_exp_config.myExpConfApproach()
 expfirmapp = cbmng_exp_firm.myExpFirmwareApproach()
@@ -97,9 +100,9 @@ def md5(fname):
 
 def compression_compare(test_file):
 	Demo = compression.lzss.LZSS(7)
-	Demo.LZSS_encode(test_file, "encode.bin")
-	print(cbmng_common.get_FileSize("encode.bin"), cbmng_common.get_FileSize(test_file))
-	if(cbmng_common.get_FileSize("encode.bin") < cbmng_common.get_FileSize(test_file)):
+	Demo.LZSS_encode(test_file, encode_file)
+	print(cbmng_common.get_FileSize(encode_file), cbmng_common.get_FileSize(test_file))
+	if(cbmng_common.get_FileSize(encode_file) < cbmng_common.get_FileSize(test_file)):
 		return True
 	else:
 		return False
@@ -471,27 +474,27 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 
 	if(firmware_burned_existing == 1):
 		if(daemon_patch == 1):
-			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_daemon_burned + " " + firmware + " patch.bin"
+			jdiff = os.path.join(os.path.dirname(__file__), ".\JojoDiff\win32\jdiff.exe ") + firmware_daemon_burned + " " + firmware + " " + patch_file
 		if(daemon_patch == 0):
-			jdiff = ".\JojoDiff\win32\jdiff.exe " + firmware_burned + " " + firmware + " patch.bin"
+			jdiff = os.path.join(os.path.dirname(__file__), ".\JojoDiff\win32\jdiff.exe ") + firmware_burned + " " + firmware + " " + patch_file
 		print(jdiff)
 		r_v = os.system(jdiff)
 		print (r_v)
-		print ("Patch size: " + str(cbmng_common.get_FileSize('patch.bin')))
+		print ("Patch size: " + str(cbmng_common.get_FileSize(patch_file)))
 		print ("The updated firmware size: " + str(cbmng_common.get_FileSize(firmware)))
 		if(daemon_patch == 1):
 			print ("The burned daemon firmware size: " + str(cbmng_common.get_FileSize(firmware_daemon_burned)))
 		if(daemon_patch == 0):
 			print ("The burned firmware size: " + str(cbmng_common.get_FileSize(firmware_burned)))
 		if(daemon_patch == 1):
-			if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_daemon_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
+			if((cbmng_common.get_FileSize(patch_file) < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize(patch_file) < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_daemon_burned) + cbmng_common.get_FileSize(patch_file) < BANK2_SIZE - 4096)):
 				using_patch = 1
 				print("disseminate the patch...")
 			else:
 				using_patch = 0
 				print("disseminate the updated firmware...")
 		if(daemon_patch == 0):
-			if((cbmng_common.get_FileSize('patch.bin') < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_burned) + cbmng_common.get_FileSize('patch.bin') < BANK2_SIZE - 4096)):
+			if((cbmng_common.get_FileSize(patch_file) < cbmng_common.get_FileSize(firmware)) and (cbmng_common.get_FileSize(firmware) + cbmng_common.get_FileSize(patch_file) < BANK2_SIZE - 4096) and (cbmng_common.get_FileSize(firmware_burned) + cbmng_common.get_FileSize(patch_file) < BANK2_SIZE - 4096)):
 				using_patch = 1
 				print("disseminate the patch...")
 			else:
@@ -503,7 +506,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 
 	using_compression = 0
 	if(using_patch):
-		using_compression = compression_compare("patch.bin")
+		using_compression = compression_compare(patch_file)
 	else:
 		using_compression = compression_compare(firmware)
 	if(using_compression == False):
@@ -536,9 +539,9 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 				if (line == "Waiting for parameter(s)..."):
 					if(using_patch == 1):
 						if(daemon_patch == 1):
-							para = "1,0,"+'{0:01},'.format(int(using_compression))+"%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+							para = "1,0,"+'{0:01},'.format(int(using_compression))+"%05X" % cbmng_common.get_FileSize(firmware_daemon_burned) + "," + "%05X" % cbmng_common.get_FileSize(patch_file) + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 						else:
-							para = "1,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize('patch.bin') + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
+							para = "1,1,"+'{0:01},'.format(int(using_compression))+ "%05X" % cbmng_common.get_FileSize(firmware_burned) + "," + "%05X" % cbmng_common.get_FileSize(patch_file) + "," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 					else:
 							para = "0,0,"+'{0:01},'.format(int(using_compression))+ "00000,00000," + "%04X" % int(version_hash, 16) + "," + "%32X" % int(hash_md5, 16)
 					print(para)
@@ -575,13 +578,13 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 	if(using_patch == 1):
 		while(YMODEM_result != True):
 			if(using_compression):
-				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send("encode.bin")
+				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(encode_file)
 			else:
-				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send('patch.bin')
+				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(patch_file)
 	else:
 		while(YMODEM_result != True):
 			if(using_compression):
-				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send("encode.bin")
+				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(encode_file)
 			else:
 				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
