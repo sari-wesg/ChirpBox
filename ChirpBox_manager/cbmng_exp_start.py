@@ -111,17 +111,6 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 	task_bitmap = "0"
 	if(expconfapp.experiment_configuration(exp_conf) == True):
 		expconfapp.read_configuration()
-		time_now = datetime.datetime.now()
-		start_time_t = time_now + datetime.timedelta(seconds = 60 * 2)
-		start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-		end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
-		end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
-		exp_no = cbmng_common.tid_maker()
-		exp_name = expconfapp.experiment_name
-		print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
-		running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': expconfapp.experiment_duration}
-		with open(running_status, "w") as f:
-			json.dump(running_dict, f)
 	else:
 		return False
 	dissem_back_sf = 0
@@ -140,14 +129,13 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 			if line:
 				print (line)
 				if (line == "Input initiator task:"):
-					# slot_num = 100
-					# ser.write(str(task_index).encode()) # send commands
 					task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
 					print(task)
 					ser.write(str(task).encode()) # send commands
 
 				if (line == "Waiting for parameter(s)..."):
 					time_now = datetime.datetime.now()
+					# TODO: start time
 					start_time_t = time_now + datetime.timedelta(seconds = 40)
 					start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 					end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
@@ -166,8 +154,8 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 					print(para)
 					ser.write(str(para).encode()) # send commands
 					timeout_cnt = 0
-
 					break
+
 			if(timeout_cnt > 6000 * 10):
 				break
 		except:
@@ -176,15 +164,7 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 		print("Timeout...")
 		return False
 
-	print("Done!")
-
-	# TODO:
-	print("Experiment #" + exp_no + " (" + exp_name + ") is going to start at " + start_time + ", and stop at " + end_time)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
-	with open(running_status, "w") as f:
-		json.dump(running_dict, f)
-
-	if(waiting_for_the_execution_timeout(ser, 800) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
 		return False
 
 	return True
@@ -215,12 +195,12 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 	time_now = datetime.datetime.now()
 	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	end_time_t = start_time_t + datetime.timedelta(minutes = 10)
+	end_time_t = start_time_t + datetime.timedelta(minutes = 60)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 	exp_name = "Chirpbox_connectivity_sf_bitmap" + str('{0:02}'.format(int(sf_bitmap))) + "ch" + str(channel) + "tp" + str('{0:02}'.format(int(tx_power))) + "topo_payload_len" + str('{0:03}'.format(int(topo_payload_len)))
 	print("Connectivity evaluation (SF bitmap " + str(sf_bitmap) + ", Channel " + str(channel) + " MHz, " + str(tx_power) + " dBm, "  + "topo_len at " + str(topo_payload_len) + ") is going to start at " + start_time + ", and stop at " + end_time)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 3600}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 
@@ -263,12 +243,9 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 		return False
 
 	time_now1 = datetime.datetime.now()
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
-	print("Done!")
-	# if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
-	# 	return False
 
 	# save weather data
 	weather = chirpbox_weather.testbed_weather()
@@ -303,15 +280,15 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 		filename = "tmp\\" + load_dict['exp_name'] +"(" + load_dict['exp_number'] + ").txt"
 
 	time_now = datetime.datetime.now()
-	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time_t = start_time_t + datetime.timedelta(minutes = 20)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 
 	exp_name = "collect_data_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "command_len" + str(command_len) + "_slot_num" + str(slot_num) + "startaddress_" + str(start_address_col) + "end_address" + str(end_address_col)
 	print(exp_name)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 600}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 
@@ -370,6 +347,12 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 	if(timeout_cnt > 60000 * 30):
 		print("Timeout...")
 		return False
+
+	time_now1 = datetime.datetime.now()
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
+
 	print("Results of " + filename + " have been collected!" )
 	return True
 
@@ -382,16 +365,16 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 	dissem_back_slot = 0
 
 	time_now = datetime.datetime.now()
-	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time_t = start_time_t + datetime.timedelta(minutes = 10)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 
 	FileSize = cbmng_common.get_FileSize(firmware)
 	exp_name = "version" + "_used_sf" + str(command_sf) + "_slot_num" + str(slot_num) + "_payload_len_11"
 	print(exp_name)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 600}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 
@@ -433,6 +416,11 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 	if(timeout_cnt > 60000 * 3):
 	 	print("Timeout...")
 	 	return False
+
+	time_now1 = datetime.datetime.now()
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
 
 	print("Version has been collected!" )
 	return True
@@ -597,9 +585,10 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 	else:
 		os.system('copy ' + firmware + ' ' + firmware_burned)
 
-	print("Done!")
-	# if(waiting_for_the_execution_timeout(ser, 360) == False): # timeout: 800 seconds
-	# 	return False
+	time_now1 = datetime.datetime.now()
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
+	with open(running_status, "w") as f:
+		json.dump(running_dict, f)
 
 	return True
 
