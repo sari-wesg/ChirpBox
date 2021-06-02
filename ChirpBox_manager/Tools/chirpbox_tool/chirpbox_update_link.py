@@ -10,6 +10,7 @@ import logging
 from lib.const import *
 import shutil
 from pathlib import Path
+from os import path
 
 
 logger = logging.getLogger(__name__)
@@ -105,13 +106,10 @@ class ChirpBoxUpdateLink():
                 pass
 
         # move GIF to website
-        for _files in glob.glob(self.web_dir + "\*" + ".gif"):
-            os.remove(_files)
         for freq in self._f:
-            try:
-                shutil.copyfile(mypath+"\\topology\\"+str(freq)+"\\"+"Networktopology_" + str(freq) + ".gif", os.path.join(self.web_dir, "Networktopology_" + str(freq) + ".gif"))
-            except:
-                pass
+            if path.exists(os.path.join(mypath, "topology", str(freq), "Networktopology_" + str(freq) + ".gif")) is True:
+                os.remove(os.path.join(self.web_dir, "Networktopology_" + str(freq) + ".gif"))
+            shutil.copyfile(mypath+"\\topology\\"+str(freq)+"\\"+"Networktopology_" + str(freq) + ".gif", os.path.join(self.web_dir, "Networktopology_" + str(freq) + ".gif"))
 
         # update website
         self.update_website()

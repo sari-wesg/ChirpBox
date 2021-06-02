@@ -151,6 +151,7 @@ class link_quality():
         ax.set_yticks(np.arange(data.shape[0] + 1) - .5, minor=True)
         ax.grid(which="minor", color="w", linestyle='-', linewidth=3)
         ax.tick_params(which="minor", bottom=False, left=False)
+        plt.close('all')
 
         return im, cbar
 
