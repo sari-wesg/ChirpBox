@@ -58,7 +58,7 @@ def chirpbox_param_patch(param_filename, bin_filename):
 
 """
 usage example:
-chirpbox_param_patch('chirpbox-param-settings.json', 'Daemon.bin')
+chirpbox_param_patch('param_patch_daemon.json', 'Daemon.bin')
 """
 
-chirpbox_param_patch('chirpbox-param-settings.json', 'Daemon.bin')
+chirpbox_param_patch('param_patch_daemon.json', 'Daemon.bin')

@@ -1,7 +1,5 @@
 # Chirpbox procedure manager
 import sys
-import os
-import copy
 import cbmng_exp_config
 import cbmng_exp_firm
 import cbmng_exp_method
