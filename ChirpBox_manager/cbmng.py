@@ -42,12 +42,17 @@ expmethapp = cbmng_exp_method.myExpMethodApproach()
 usage:
 python cbmng.py -dissem -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
 
+python cbmng.py -start -flash_protection -daemon_version -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -tx_power
+
+python cbmng.py -coldata -packet_length -collect_SF -com_port -collect_slot_number -tx_power -allnodes_bitmap -flash_start -flash_end
+
 python cbmng.py -upgrade -upgrade_bin_name -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
 
 example:
-python cbmng.py -dissem 2b10 232 16 7 com7 1fffff 80 7 80 14 1fffff 0
 python cbmng.py -colver 7 com7 80 14
+python cbmng.py -dissem 2b10 232 16 7 com7 1fffff 80 7 80 14 1fffff 0
 python cbmng.py -start 0 2b10 7 com7 1fffff 100 14
+python cbmng.py -coldata 232 7 com7 80 14 1fffff 0807F800 0807FE30
 python cbmng.py -upgrade Daemon.bin 2b10 48 4 7 com7 1fffff 100 7 100 14 1fffff 0
 """
 

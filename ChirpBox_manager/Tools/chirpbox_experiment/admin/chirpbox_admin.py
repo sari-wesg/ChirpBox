@@ -72,11 +72,6 @@ class ChirpBoxAdmin():
         # create tested folder
         Path(self._tested_address).mkdir(parents=True, exist_ok=True)
 
-    # TODO:
-    def setup_chirpbox(self):
-        logger.debug("setup_chirpbox")
-        return True
-
     def is_toggle(self, bin_file):
         logger.debug("check_toggle")
         with open(os.path.join(os.path.dirname(__file__), '..\\..\\..\\..\\ChirpBox_manager\\Tools\\chirpbox_tool', CHIRPBOX_CONFIG_FILE)) as data_file:
@@ -98,15 +93,14 @@ class ChirpBoxAdmin():
         experiment_method = "cbmng.py " + "-em " + config_file
         cbmng.main(experiment_method.split())
 
-    # TODO:
     def start_experiment(self, bin_file, config_file):
         # dissem
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "0"])
         for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
             # start
-            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, "jj")
+            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])
             # collect
-            # lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, "jj")
+            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, [cbmng_exp_method.myExpMethodApproach().start_address, cbmng_exp_method.myExpMethodApproach().end_address])
 
         # move files to tested file
         shutil.move(bin_file, os.path.join(self._tested_address, os.path.basename(bin_file)))
@@ -141,15 +135,9 @@ class ChirpBoxAdmin():
     def start(self, argv):
         parser = argparse.ArgumentParser(
             prog='chirpbox_admin', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
-        parser.add_argument('-setup', '--setup_admin', dest='setup_admin', help='Input if is the first time using admin')
-        args = parser.parse_args(argv)
-        self._setup = args.setup_admin
 
-        logger.info(args)
         runtime_status = 0
         try:
-            if self._setup is not None and (int(self._setup) == 1):
-                self.setup_chirpbox()
             self.manage_chirpbox()
         except:
             runtime_status = 1

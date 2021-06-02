@@ -9,7 +9,7 @@
 	"e2e_latency": "True",
 	"tx_energy": "True",
 	"rx_energy": "True",
-	"start_address": "0807E000",
-	"end_address": "0807E266",
+	"start_address": "080FD000",
+	"end_address": "080FD800",
 	"experiment_run_bitmap": "1FFFFF"
 }
