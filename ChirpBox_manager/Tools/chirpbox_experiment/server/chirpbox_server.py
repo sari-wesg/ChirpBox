@@ -51,7 +51,6 @@ list of combinations:
 
 examples:
     chirpbox_server.py -h
-    chirpbox_server.py -update
 """
 
 class ChirpBoxServer():
@@ -150,18 +149,10 @@ class ChirpBoxServer():
     def start(self, argv):
         parser = argparse.ArgumentParser(
             prog='chirpbox_server', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
-        parser.add_argument('-update', '--update_time', dest='update_time', help='Input the update time in seconds')
-        args = parser.parse_args(argv)
-        self._update = args.update_time
-
-        logger.info(args)
+        self._update = 10
         runtime_status = 0
         try:
-            if self._update is None:
-                logger.error("No param")
-                runtime_status = 1
-            else:
-                self.manage_FUT()
+            self.manage_FUT()
         except:
             runtime_status = 1
 
