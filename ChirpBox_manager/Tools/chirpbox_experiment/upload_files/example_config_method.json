@@ -10,5 +10,6 @@
 	"tx_energy": "True",
 	"rx_energy": "True",
 	"start_address": "0807E000",
-	"end_address": "0807E266"
+	"end_address": "0807E266",
+	"experiment_run_bitmap": "0x1FFFFF"
 }

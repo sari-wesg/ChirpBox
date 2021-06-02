@@ -32,7 +32,13 @@ class cbmng_command():
                 cbmng.main(chirpbox_command.split())
             # TODO:
             elif (command_type == CHIRPBOX_DISSEM_COMMAND):
-                logger.error("CHIRPBOX_DISSEM_COMMAND")
+                sf_bitmap = str(command_param[0]) + " "
+                freq = str(command_param[1]) + " "
+                tp = str(command_param[2]) + " "
+                pl = str(command_param[3]) + " "
+                chirpbox_command = "cbmng.py " + CHIRPBOX_LINK_COMMAND + sf_bitmap + freq + tp + str(data['all_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + pl + str(data['all_command_tp'])
+                logger.info(chirpbox_command.split())
+                cbmng.main(chirpbox_command.split())
 
             elif (command_type == CHIRPBOX_START_COMMAND):
                 logger.error("CHIRPBOX_START_COMMAND")
