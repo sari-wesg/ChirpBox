@@ -149,7 +149,7 @@ class ChirpBoxServer():
     def start(self, argv):
         parser = argparse.ArgumentParser(
             prog='chirpbox_server', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
-        self._update = 10
+        self._update = 1
         runtime_status = 0
         try:
             self.manage_FUT()

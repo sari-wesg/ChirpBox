@@ -6,7 +6,7 @@
     "all_command_bitmap": "1FFFFF",
     "coldata_command_sf": 7,
     "coldata_payload_len": 232,
-    "daemon_version": "2B10",
+    "daemon_version": "60ad",
     "dissem_packet_number_per_round": 16,
     "OWM_API_KEY": "4dbbaf4cb8263e15f604420c8d66bb3b",
     "chirpbox_lat": 31.180809739077795,
