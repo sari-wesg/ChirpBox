@@ -44,6 +44,8 @@ python cbmng.py -start -flash_protection -daemon_version -disseminate_SF -com_po
 
 python cbmng.py -coldata -packet_length -collect_SF -com_port -collect_slot_number -tx_power -allnodes_bitmap -flash_start -flash_end
 
+python cbmng.py -colver -collect_SF -com_port -collect_slot_number -tx_power
+
 python cbmng.py -upgrade -upgrade_bin_name -daemon_version -packet_length -packet_number_per_round -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -collect_SF -collect_slot_number -tx_power -allnodes_bitmap -upgrade_daemon_or_FUT
 
 example:

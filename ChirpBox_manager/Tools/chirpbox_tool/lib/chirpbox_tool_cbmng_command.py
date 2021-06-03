@@ -36,7 +36,6 @@ class cbmng_command():
                 logger.info(chirpbox_command.split())
                 cbmng.main(chirpbox_command.split())
 
-            # TODO:
             elif (command_type == CHIRPBOX_START_COMMAND):
                 upgrade_bitmap = str(command_param[0]) + " "
                 flash_protection = str(command_param[1]) + " "
@@ -48,6 +47,11 @@ class cbmng_command():
                 flash_start = str(command_param[0]) + " "
                 flash_end = str(command_param[1]) + " "
                 chirpbox_command = "cbmng.py " + CHIRPBOX_COLLECT_COMMAND + str(data['coldata_payload_len']) + " " + str(data['coldata_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + str(data['all_command_tp']) + " " + data['all_command_bitmap'] + " " + flash_start + flash_end
+                logger.info(chirpbox_command.split())
+                cbmng.main(chirpbox_command.split())
+
+            elif (command_type == CHIRPBOX_VERSION_COMMAND):
+                chirpbox_command = "cbmng.py " + CHIRPBOX_VERSION_COMMAND + str(data['coldata_command_sf']) + " " + data['all_command_comport'] + " " + str(data['all_command_slot_number']) + " " + str(data['all_command_tp'])
                 logger.info(chirpbox_command.split())
                 cbmng.main(chirpbox_command.split())
 
