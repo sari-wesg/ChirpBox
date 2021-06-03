@@ -94,11 +94,15 @@ class ChirpBoxAdmin():
         cbmng.main(experiment_method.split())
 
     def start_experiment(self, bin_file, config_file):
+        # TODO:
+        # add connectivity
+        # add collect version
         # dissem
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "0"])
         for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
             # start
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])
+            time.sleep(300) #waiting for all nodes have GPS signal
             # collect
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, [cbmng_exp_method.myExpMethodApproach().start_address, cbmng_exp_method.myExpMethodApproach().end_address])
 

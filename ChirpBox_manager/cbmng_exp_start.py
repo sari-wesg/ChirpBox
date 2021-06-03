@@ -282,7 +282,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 	time_now = datetime.datetime.now()
 	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	end_time_t = start_time_t + datetime.timedelta(minutes = 20)
+	end_time_t = start_time_t + datetime.timedelta(minutes = 30)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 
@@ -447,16 +447,16 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 		return False
 
 	time_now = datetime.datetime.now()
-	start_time_t = time_now + datetime.timedelta(minutes = 0)
+	start_time_t = time_now + datetime.timedelta(minutes = 2)
 	start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-	end_time_t = start_time_t + datetime.timedelta(minutes = 0)
+	end_time_t = start_time_t + datetime.timedelta(minutes = 30)
 	end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 	exp_no = cbmng_common.tid_maker()
 
 	FileSize = cbmng_common.get_FileSize(firmware)
 	exp_name = "disseminate_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "_generate_size" + str(command_size) + "_slot_num" + str(slot_num) + "_bitmap" + str(task_bitmap) + "_FileSize" + str(FileSize) + "_dissem_back_sf" + str(dissem_back_sf) + "_dissem_back_slot" + str(dissem_back_slot)
 	print(exp_name)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 10}
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 1800}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 

@@ -38,8 +38,6 @@ class cbmng_command():
 
             # TODO:
             elif (command_type == CHIRPBOX_START_COMMAND):
-                # python cbmng.py -start -flash_protection -daemon_version -disseminate_SF -com_port -upgrade_bitmap -disseminate_slot_number -tx_power
-                # python cbmng.py -start 0 2b10 7 com7 1fffff 100 14
                 upgrade_bitmap = str(command_param[0]) + " "
                 flash_protection = str(command_param[1]) + " "
                 chirpbox_command = "cbmng.py " + CHIRPBOX_START_COMMAND + flash_protection + str(data['daemon_version']) + " " + str(data['all_command_sf']) + " " + data['all_command_comport'] + " " + upgrade_bitmap + str(data['all_command_slot_number']) + " " + str(data['all_command_tp'])
