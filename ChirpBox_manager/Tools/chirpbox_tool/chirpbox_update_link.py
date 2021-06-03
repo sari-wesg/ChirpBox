@@ -109,7 +109,7 @@ class ChirpBoxUpdateLink():
         for freq in self._f:
             if path.exists(os.path.join(mypath, "topology", str(freq), "Networktopology_" + str(freq) + ".gif")) is True:
                 os.remove(os.path.join(self.web_dir, "Networktopology_" + str(freq) + ".gif"))
-            shutil.copyfile(mypath+"\\topology\\"+str(freq)+"\\"+"Networktopology_" + str(freq) + ".gif", os.path.join(self.web_dir, "Networktopology_" + str(freq) + ".gif"))
+                shutil.copyfile(mypath+"\\topology\\"+str(freq)+"\\"+"Networktopology_" + str(freq) + ".gif", os.path.join(self.web_dir, "Networktopology_" + str(freq) + ".gif"))
 
         # update website
         self.update_website()
