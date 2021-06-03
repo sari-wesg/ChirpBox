@@ -1,5 +1,5 @@
 {
-	"experiment_name": "test",
+	"experiment_name": "test_example",
 	"experiment_description": "Just for description",
     "FUT_CUSTOM_list": "0x0000000A, 0x00000005",
 	"payload_length": 6,
