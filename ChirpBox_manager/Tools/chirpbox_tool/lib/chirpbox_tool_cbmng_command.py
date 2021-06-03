@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class cbmng_command():
 
-    def run_command_with_json(self, command_type, command_param):
+    def run_command_with_json(self, command_type, command_param = ''):
         with open(os.path.dirname(__file__) + '\\..\\' + CHIRPBOX_CONFIG_FILE) as data_file:
             data = json.load(data_file)
 
