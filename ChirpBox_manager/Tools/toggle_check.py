@@ -6,7 +6,7 @@ from threading import Timer
 sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\ChirpBox_manager\\'))
 sys.path.append(os.path.join(os.path.dirname(__file__),'pystlink_module'))
 import transfer_to_initiator.myserial.serial_send
-import pystlink_module.pystlink
+import pystlink
 
 toggle_check_alarm = True
 
@@ -22,7 +22,7 @@ def check_toggle(FUT, serial_sn, com_port, alarm_time = 60):
     pystlink_command = "pystlink.py "+"-s " + serial_sn + " flash:erase " + "flash:verify:0x08000000:" + str(os.path.join(os.path.dirname(__file__), '..\\..\\Miscellaneous\\Example\\Toggle-daemon\\Debug\\Toggle-daemon.bin')) + " flash:verify:0x08080000:" + FUT
     print(pystlink_command)
     # 1. flash erase, flash daemon in bank1 and flash firmware under test in bank2
-    pystlink_module.pystlink.main(pystlink_command.split())
+    pystlink.main(pystlink_command.split())
     # 2. The daemon will switch to bank2 and come back in 60 seconds (depending on the alarm settings). Check daemon with serial
     is_toggle = check_daemon(com_port, alarm_time)
 
