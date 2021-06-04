@@ -2,7 +2,7 @@
     "all_command_sf": 7,
     "all_command_tp": 14,
     "all_command_comport": "com3",
-    "all_command_slot_number": 80,
+    "all_command_slot_number": 100,
     "all_command_bitmap": "1FFFFF",
     "coldata_command_sf": 7,
     "coldata_payload_len": 232,
