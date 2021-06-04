@@ -50,7 +50,7 @@ class ExpMethodApproach:
 			return False
 
 def tid_maker():
-	return '{0:%Y%m%d%H%M%S}'.format(datetime.datetime.now())
+	return '{0:%Y%m%d%H%M%S%f}'.format(datetime.datetime.now())
 
 def get_FileSize(filePath):
 	#filePath = unicode(filePath,'utf8')
