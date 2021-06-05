@@ -101,7 +101,7 @@ class ChirpBoxAdmin():
         # collect version
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
         # dissem
-        lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "0"])
+        lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, ["0"])
         for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
             # start
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])
