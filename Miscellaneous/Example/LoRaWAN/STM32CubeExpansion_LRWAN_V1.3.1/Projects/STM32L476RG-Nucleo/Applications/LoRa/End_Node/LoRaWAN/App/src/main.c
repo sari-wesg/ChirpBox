@@ -255,7 +255,8 @@ int main(void)
 	node_id_restore(node_id_buffer);
 	TOS_NODE_ID = (uint32_t)stm_node_id;
 
-	PRINTF("starting node %x ...\n", TOS_NODE_ID);
+  log_to_flash("starting node %x ...\n", TOS_NODE_ID);
+  log_flush();
   srand(TOS_NODE_ID);
 
 	node_id_allocate = node_id;
@@ -309,7 +310,8 @@ void LoraMacProcessNotify(void)
 static void LORA_HasJoined(void)
 {
 #if( OVER_THE_AIR_ACTIVATION != 0 )
-  PRINTF("JOINED\n\r");
+  log_to_flash("JOINED\n\r");
+  log_flush();
   LL_FLASH_PageErase(RESET_PAGE);
   // /* send everytime timer elapses */
   // TimerInit(&TxTimer, OnTxTimerEvent);
