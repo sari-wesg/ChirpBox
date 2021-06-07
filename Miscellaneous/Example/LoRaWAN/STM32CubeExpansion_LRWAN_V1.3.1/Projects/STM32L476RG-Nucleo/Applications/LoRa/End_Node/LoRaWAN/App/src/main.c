@@ -345,7 +345,8 @@ static void Send(void *context)
     else
     {
       TimerStop(&TxTimer);
-      log_to_flash("rx_time:%lu, tx_time: %lu, cpu: %lu, stop: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_STOP)));
+      log_to_flash("rx_time:%lu, tx_time: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
+      log_to_flash("cpu: %lu, stop: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_STOP)));
       log_flush();
     }
     return;
