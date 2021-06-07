@@ -113,7 +113,7 @@ class ChirpBoxServer():
             data = json.load(jsonFile)
 
         # TODO: should add triscale (https://romain-jacob.github.io/triscale/)
-        data["experiment_run_time"] = 3
+        data["experiment_run_time"] = 1
 
         with open(config, "w") as jsonFile:
             json.dump(data, jsonFile)
