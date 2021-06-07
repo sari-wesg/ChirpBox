@@ -136,7 +136,7 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 				if (line == "Waiting for parameter(s)..."):
 					time_now = datetime.datetime.now()
 					# TODO: start time
-					start_time_t = time_now + datetime.timedelta(seconds = 40)
+					start_time_t = time_now + datetime.timedelta(seconds = 60)
 					start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
 					end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 					end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")

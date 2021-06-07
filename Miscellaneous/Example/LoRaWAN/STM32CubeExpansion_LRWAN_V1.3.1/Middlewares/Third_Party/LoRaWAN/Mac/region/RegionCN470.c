@@ -514,8 +514,6 @@ void RegionCN470ComputeRxWindowParameters( int8_t datarate, uint8_t minRxSymbols
 
     // Get the datarate, perform a boundary check
     rxConfigParams->Datarate = MIN( datarate, CN470_RX_MAX_DATARATE );
-    // TODO:CHIRPBOX_LORAWAN
-    rxConfigParams->Datarate = 5;
 
     rxConfigParams->Bandwidth = GetBandwidth( rxConfigParams->Datarate );
 

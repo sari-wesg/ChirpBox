@@ -583,9 +583,7 @@ void LORA_Join( void)
     MlmeReq_t mlmeReq;
 
     mlmeReq.Type = MLME_JOIN;
-    // mlmeReq.Req.Join.Datarate = LoRaParamInit->TxDatarate;
-    // TODO:CHIRPBOX_LORAWAN
-    mlmeReq.Req.Join.Datarate = DR_5;
+    mlmeReq.Req.Join.Datarate = LoRaParamInit->TxDatarate;
 
     JoinParameters = mlmeReq.Req.Join;
 

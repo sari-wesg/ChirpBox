@@ -17,6 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__),'..\\..\\..\\..\\ChirpBox
 import cbmng
 import cbmng_exp_start
 import cbmng_exp_method
+import cbmng_exp_config
 import lib.chirpbox_tool_cbmng_command
 from lib.const import *
 import Tools.toggle_check
@@ -60,6 +61,7 @@ list of combinations:
 
 examples:
     chirpbox_admin.py -h
+    chirpbox_admin.py -connect -round_robin
 """
 
 class ChirpBoxAdmin():
@@ -72,6 +74,22 @@ class ChirpBoxAdmin():
         self._tested_address = os.path.join(self._test_address, 'tested\\')
         # create tested folder
         Path(self._tested_address).mkdir(parents=True, exist_ok=True)
+
+    def bitmap_list_to_roundrobin(self, bitmap):
+        bitmap = int(bitmap, 16)
+        node_list = []
+        i = 0
+        while (bitmap):
+            i += 1
+            bitmap = bitmap >> 1
+            if(bitmap & 0b1):
+                node_list.append(i)
+
+        bitmap_list = []
+        for i in node_list:
+            bitmap_list.append(hex(1 << i)[len("0x"):])
+
+        return bitmap_list
 
     def is_toggle(self, bin_file):
         logger.debug("check_toggle")
@@ -95,17 +113,24 @@ class ChirpBoxAdmin():
         cbmng.main(experiment_method.split())
 
     def start_experiment(self, bin_file, config_file):
-        # connectivity
-        chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
-        chirpbox_tool.main(chirpbox_tool_command.split())
-        # collect version
-        lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
+        if self._connect is True:
+            # connectivity
+            chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
+            chirpbox_tool.main(chirpbox_tool_command.split())
+            # collect version
+            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
         # dissem
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, ["0"])
         for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
             # start
-            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])
-            time.sleep(300) #waiting for all nodes have GPS signal
+            if self._round_robin is True:
+                bitmap_list = self.bitmap_list_to_roundrobin(cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap)
+                for bitmap in bitmap_list:
+                    lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [bitmap, "1"])
+                    time.sleep(int(cbmng_exp_config.myExpConfApproach().experiment_duration) + 300) #waiting for the end of experiment
+            else:
+                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_time, "1"])
+                time.sleep(300) #waiting for all nodes have GPS signal
             # collect
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, [cbmng_exp_method.myExpMethodApproach().start_address, cbmng_exp_method.myExpMethodApproach().end_address])
 
@@ -142,6 +167,11 @@ class ChirpBoxAdmin():
     def start(self, argv):
         parser = argparse.ArgumentParser(
             prog='chirpbox_admin', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
+        parser.add_argument('-connect', '--connectivity', dest='connectivity', help='Is the connectivity is needed?')
+        parser.add_argument('-round_robin', '--round_robin', dest='round_robin', help='start the experiment in a round robin manner')
+        args = parser.parse_args(argv)
+        self._connect = bool(args.connectivity)
+        self._round_robin = bool(args.round_robin)
 
         runtime_status = 0
         try:
