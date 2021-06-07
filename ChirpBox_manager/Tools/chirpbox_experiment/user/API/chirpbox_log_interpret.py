@@ -66,10 +66,8 @@ def log_txt_interpret(txt_dir, file_start_name):
 
 def log_csv_interpret(csv_files, txt_dir, file_start_name):
     for csv_file in csv_files:
-        logger.debug(csv_file)
         # read csv file
         with open(csv_file, "rt") as infile:
-            logger.debug(csv_file)
             read = csv.reader(infile)
             list_read = list(read)
             log_message_allnode = []
@@ -78,10 +76,9 @@ def log_csv_interpret(csv_files, txt_dir, file_start_name):
                 node_id = list_read[i][0]
                 node_id = lib.txt_to_csv.chirpbox_txt().twos_complement(node_id, 8)
                 log_message = list_read[i][1:]
-                log_message_node = log_message_interpret(csv_file, node_id, log_message)
-                logger.debug(log_message_node)
-                log_message_node.insert(node_id)
-                log_message_allnode.extend(log_message_node)
+                log_message = log_message_interpret(log_message)
+                log_message.insert(0, node_id)
+                log_message_allnode.extend([log_message])
             logger.debug(log_message_allnode)
 
             # save list to csv
@@ -91,7 +88,7 @@ def log_csv_interpret(csv_files, txt_dir, file_start_name):
 
     return True
 
-def log_message_interpret(csv_file, node_id, log_message):
+def log_message_interpret(log_message):
     # logger.debug(log_message)
     log_message_node = []
     for i in range(LOG_CONST.API_TRACE_BUFFER_ELEMENTS):
@@ -113,11 +110,11 @@ def log_message_interpret(csv_file, node_id, log_message):
             variable = (int(variable_tmp[3], 16) << 24) + (int(variable_tmp[2], 16) << 16) + (int(variable_tmp[1], 16) << 8) + int(variable_tmp[0], 16)
             variable_list.append(variable)
         log = one_log_argument % tuple(variable_list[:one_log_argument.count('%')])
-        if((log == len(log) * log[0]) and (log[0] == '\x00')):
+        if((log == len(log) * log[0]) and ((log[0] == '\x00') or (log[0] == '\xFF'))):
             pass
         else:
             log_message_node.append(log)
     return log_message_node
 
-txt_dir = "D:\\TP\\Study\\wesg\\Chirpbox\\ChirpBox_manager\\tmp"
+txt_dir = "C:\\Users\\tecop\\Desktop\\results"
 log_txt_interpret(txt_dir, "LoRaWAN_")
