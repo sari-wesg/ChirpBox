@@ -1,19 +1,9 @@
 import sys
-import argparse
 import logging
 import os.path
-from os import path
-import shutil
-import datetime
 import glob
 import csv
 from pathlib import Path
-if sys.version_info[0] < 3:
-    from StringIO import StringIO
-else:
-    from io import StringIO
-
-import pandas as pd
 
 # add path of chirpbox tools
 sys.path.append(os.path.join(os.path.dirname(__file__), '..\\..\\..\\..\\Tools\\chirpbox_tool'))
@@ -116,5 +106,8 @@ def log_message_interpret(log_message):
             log_message_node.append(log)
     return log_message_node
 
-txt_dir = "C:\\Users\\tecop\\Desktop\\results"
-log_txt_interpret(txt_dir, "LoRaWAN_")
+def main():
+    log_txt_interpret("C:\\Users\\tecop\\Desktop\\results", "LoRaWAN_")
+
+if __name__ == "__main__":
+    main()
