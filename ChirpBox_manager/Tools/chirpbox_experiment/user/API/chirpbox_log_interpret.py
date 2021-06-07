@@ -7,6 +7,13 @@ import shutil
 import datetime
 import glob
 import csv
+from pathlib import Path
+if sys.version_info[0] < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
+import pandas as pd
 
 # add path of chirpbox tools
 sys.path.append(os.path.join(os.path.dirname(__file__), '..\\..\\..\\..\\Tools\\chirpbox_tool'))
@@ -48,39 +55,69 @@ class LOG_CONST(object):
     API_TRACE_BUFFER_ENTRY_SIZE = int(FLASH_PAGE / API_TRACE_BUFFER_ELEMENTS)
     API_TRACE_LENGTH_VAR        = int((API_TRACE_BUFFER_ENTRY_SIZE - API_TRACE_LENGTH_ARGUMENT) / 4)
 
-def log_txt(txt_dir, file_start_name):
-    # change txt to csv:
+def log_txt_interpret(txt_dir, file_start_name):
+    # txt to csv:
     lib.txt_to_csv.chirpbox_txt().chirpbox_txt_to_csv(txt_dir, file_start_name)
 
-    # csv to log arguments and variables
+    # csv to log:
+    Path(os.path.join(txt_dir, 'log\\')).mkdir(parents=True, exist_ok=True)
     csv_files = glob.glob(txt_dir + "\\" + file_start_name + "*" + ".csv")
-    log_csv_interpret(csv_files)
+    log_csv_interpret(csv_files, txt_dir, file_start_name)
 
-def log_message_interpret(csv_file, node_id, log_message):
-    # logger.debug(log_message)
-    for i in range(LOG_CONST.API_TRACE_BUFFER_ELEMENTS):
-        one_log = log_message[i*LOG_CONST.API_TRACE_BUFFER_ENTRY_SIZE:(i+1)*LOG_CONST.API_TRACE_BUFFER_ENTRY_SIZE]
-        one_log_argument = one_log[0:LOG_CONST.API_TRACE_LENGTH_ARGUMENT]
-        one_log_variable = one_log[LOG_CONST.API_TRACE_LENGTH_ARGUMENT:LOG_CONST.API_TRACE_BUFFER_ENTRY_SIZE]
-        if(node_id == 0) and (i == 0):
-            one_log_argument = [int(x, 16) for x in one_log_argument]
-            one_log_argument = ''.join(chr(i) for i in one_log_argument)
-            logger.debug(one_log_argument)
-            logger.debug(one_log_variable)
-
-def log_csv_interpret(csv_files):
+def log_csv_interpret(csv_files, txt_dir, file_start_name):
     for csv_file in csv_files:
-        # obtain the node total number
+        logger.debug(csv_file)
+        # read csv file
         with open(csv_file, "rt") as infile:
             logger.debug(csv_file)
             read = csv.reader(infile)
             list_read = list(read)
+            log_message_allnode = []
+            # log of the node in this file
             for i in range(len(list_read)):
                 node_id = list_read[i][0]
                 node_id = lib.txt_to_csv.chirpbox_txt().twos_complement(node_id, 8)
                 log_message = list_read[i][1:]
-                log_message_interpret(csv_file, node_id, log_message)
+                log_message_node = log_message_interpret(csv_file, node_id, log_message)
+                logger.debug(log_message_node)
+                log_message_node.insert(node_id)
+                log_message_allnode.extend(log_message_node)
+            logger.debug(log_message_allnode)
+
+            # save list to csv
+            with open(os.path.join(txt_dir, 'log\\', "log_" + os.path.basename(csv_file)), "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerows(log_message_allnode)
+
     return True
 
-txt_dir = "C:\\Users\\tecop\\Desktop\\results"
-log_txt(txt_dir, "LoRaWAN_")
+def log_message_interpret(csv_file, node_id, log_message):
+    # logger.debug(log_message)
+    log_message_node = []
+    for i in range(LOG_CONST.API_TRACE_BUFFER_ELEMENTS):
+        # split logs
+        one_log = log_message[i*LOG_CONST.API_TRACE_BUFFER_ENTRY_SIZE:(i+1)*LOG_CONST.API_TRACE_BUFFER_ENTRY_SIZE]
+        # split argument and variables
+        one_log_argument = one_log[0:LOG_CONST.API_TRACE_LENGTH_ARGUMENT]
+        one_log_variable = one_log[LOG_CONST.API_TRACE_LENGTH_ARGUMENT:LOG_CONST.API_TRACE_BUFFER_ENTRY_SIZE]
+        # change hex to int
+        one_log_argument = [int(x, 16) for x in one_log_argument]
+        # change byte to char
+        one_log_argument = ''.join(chr(i) for i in one_log_argument)
+        # remove chars from "\n"
+        one_log_argument = one_log_argument.split('\n', 1)[0]
+        # change 8 bit byte to 32 bit variables
+        variable_list = []
+        for k in range(LOG_CONST.API_TRACE_LENGTH_VAR):
+            variable_tmp = one_log_variable[k*4:(k+1)*4]
+            variable = (int(variable_tmp[3], 16) << 24) + (int(variable_tmp[2], 16) << 16) + (int(variable_tmp[1], 16) << 8) + int(variable_tmp[0], 16)
+            variable_list.append(variable)
+        log = one_log_argument % tuple(variable_list[:one_log_argument.count('%')])
+        if((log == len(log) * log[0]) and (log[0] == '\x00')):
+            pass
+        else:
+            log_message_node.append(log)
+    return log_message_node
+
+txt_dir = "D:\\TP\\Study\\wesg\\Chirpbox\\ChirpBox_manager\\tmp"
+log_txt_interpret(txt_dir, "LoRaWAN_")
