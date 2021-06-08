@@ -32,7 +32,7 @@
 
 #include "API_FUTParam.h"
 #include "App_FUT.h"
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, DR_0, DR_0};
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
@@ -102,7 +102,7 @@ volatile uint16_t send_count = 0;
  * LoRaWAN Default data Rate Data Rate
  * @note Please note that LORAWAN_DEFAULT_DATA_RATE is used only when ADR is disabled
  */
-#define LORAWAN_DEFAULT_DATA_RATE                   DR_5
+#define LORAWAN_DEFAULT_DATA_RATE                   DR_0
 /*!
  * LoRaWAN application port
  * @note do not use 224. It is reserved for certification
@@ -265,6 +265,7 @@ int main(void)
   PRINTF("MAC_VERSION= %02X.%02X.%02X.%02X\r\n", (uint8_t)(__LORA_MAC_VERSION >> 24), (uint8_t)(__LORA_MAC_VERSION >> 16), (uint8_t)(__LORA_MAC_VERSION >> 8), (uint8_t)__LORA_MAC_VERSION);
 
   /* Configure the Lora Stack*/
+  LoRaParamInit.TxDatarate = fut_config.CUSTOM[FUT_JOIN_RATE];
   LORA_Init(&LoRaMainCallbacks, &LoRaParamInit);
 
   LORA_Join();
@@ -331,7 +332,7 @@ static void Send(void *context)
   {
     PRINTF("LORA_Join\n");
     /*Not joined, try again later*/
-    lora_tx_rate(DR_0);
+    lora_tx_rate(fut_config.CUSTOM[FUT_JOIN_RATE]);
     LORA_Join();
     return;
   }
@@ -339,7 +340,7 @@ static void Send(void *context)
   {
     if (send_count < fut_config.CUSTOM[FUT_MAX_SEND])
     {
-      lora_tx_rate(DR_5);
+      lora_tx_rate(fut_config.CUSTOM[FUT_UPLINK_RATE]);
       sensor_send();
     }
     else
