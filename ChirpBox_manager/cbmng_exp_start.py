@@ -107,6 +107,18 @@ def compression_compare(test_file):
 	else:
 		return False
 
+from itertools import zip_longest
+
+# compare two bin files are the same:
+def compare_binaries(path1, path2):
+    with open(path1, 'rb') as f1, open(path2, 'rb') as f2:
+        for line1, line2 in zip_longest(f1, f2, fillvalue=None):
+            if line1 == line2:
+                continue
+            else:
+                return False
+        return True
+
 def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num, used_tp):
 	task_bitmap = "0"
 	if(expconfapp.experiment_configuration(exp_conf) == True):
@@ -462,9 +474,20 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 
 	if(firmware_burned_existing == 1):
 		if(daemon_patch == 1):
+			compare_result = compare_binaries(firmware_daemon_burned, firmware)
 			jdiff = os.path.join(os.path.dirname(__file__), ".\JojoDiff\win32\jdiff.exe ") + firmware_daemon_burned + " " + firmware + " " + patch_file
 		if(daemon_patch == 0):
+			compare_result = compare_binaries(firmware_burned, firmware)
 			jdiff = os.path.join(os.path.dirname(__file__), ".\JojoDiff\win32\jdiff.exe ") + firmware_burned + " " + firmware + " " + patch_file
+		# if two files are same, no need to disseminate (patch)
+		if compare_result is True:
+			time_now1 = datetime.datetime.now()
+			running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
+			with open(running_status, "w") as f:
+				json.dump(running_dict, f)
+
+			return True
+
 		print(jdiff)
 		r_v = os.system(jdiff)
 		print (r_v)
