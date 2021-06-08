@@ -36,6 +36,21 @@ typedef struct Flash_FILE_tag
 
 #include "janpatch.h"
 
+//GPS / RTC ********************************************************************************************
+
+typedef struct Chirp_Time_tag
+{
+	uint16_t		chirp_year;
+	uint8_t			chirp_month;
+	uint8_t			chirp_date;
+	uint8_t			chirp_day;
+	uint8_t			chirp_hour;
+	uint8_t			chirp_min;
+	uint8_t			chirp_sec;
+} Chirp_Time;
+
+#include "ds3231.h"
+
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 // API: logging

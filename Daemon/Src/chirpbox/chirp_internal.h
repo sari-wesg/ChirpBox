@@ -82,19 +82,6 @@ typedef struct Chirpbox_tag
 	Chirp_ISR state; /* the task/state in execution */
 } Chirpbox_ISR;
 
-//GPS / RTC ********************************************************************************************
-
-typedef struct Chirp_Time_tag
-{
-	uint16_t		chirp_year;
-	uint8_t			chirp_month;
-	uint8_t			chirp_date;
-	uint8_t			chirp_day;
-	uint8_t			chirp_hour;
-	uint8_t			chirp_min;
-	uint8_t			chirp_sec;
-} Chirp_Time;
-
 //topology ********************************************************************************************
 
 typedef struct Topology_result_tag

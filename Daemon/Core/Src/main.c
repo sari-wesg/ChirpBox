@@ -86,9 +86,9 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #include "toggle.h"
 
 #include "chirp_internal.h"
-#if GPS_DATA
-#include "chirpbox_ds3231.h"
-#endif
+// #if GPS_DATA
+// #include "chirpbox_ds3231.h"
+// #endif
 #include "chirpbox_func.h"
 
 //**************************************************************************************************

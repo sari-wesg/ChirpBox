@@ -95,7 +95,7 @@ LPTIM_HandleTypeDef hlptim1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 RTC_HandleTypeDef hrtc;
-I2C_HandleTypeDef hi2c2;
+extern I2C_HandleTypeDef hi2c2;
 IWDG_HandleTypeDef hiwdg;
 ADC_HandleTypeDef hadc1;
 CRC_HandleTypeDef CrcHandle;
