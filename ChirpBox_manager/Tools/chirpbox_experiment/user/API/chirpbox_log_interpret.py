@@ -106,8 +106,11 @@ def log_message_interpret(log_message):
             log_message_node.append(log)
     return log_message_node
 
-def main():
-    log_txt_interpret("C:\\Users\\tecop\\Desktop\\results", "LoRaWAN_")
+def main(argv):
+    # argv[1] = log_txt_dir
+    # argv[2] = file_start_name
+    print(argv[1], argv[2])
+    log_txt_interpret(argv[1], argv[2])
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
