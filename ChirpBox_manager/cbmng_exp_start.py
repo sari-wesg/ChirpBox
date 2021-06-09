@@ -151,7 +151,7 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 					start_time_delay = 60
 					start_time_t = time_now + datetime.timedelta(seconds = start_time_delay)
 					start_time = start_time_t.strftime("%Y-%m-%d %H:%M:%S")
-					end_time_t = start_time_t + datetime.timedelta(seconds = start_time_delay + expconfapp.experiment_duration)
+					end_time_t = start_time_t + datetime.timedelta(seconds = expconfapp.experiment_duration)
 					end_time = end_time_t.strftime("%Y-%m-%d %H:%M:%S")
 					exp_no = cbmng_common.tid_maker()
 					exp_name = expconfapp.experiment_name
