@@ -330,6 +330,7 @@ static void Send(void *context)
   // TimerStart(&TxTimer);
   if (LORA_JoinStatus() != LORA_SET)
   {
+    obtain_rtc_time();
     PRINTF("LORA_Join\n");
     /*Not joined, try again later*/
     lora_tx_rate(fut_config.CUSTOM[FUT_JOIN_RATE]);

@@ -71,6 +71,9 @@ typedef struct Chirp_Time_tag
 				printf(fmt, ##args);												\
             } while (0)
 
+// API: time
+#define obtain_rtc_time()		api_obtain_rtc_time()
+
 //**************************************************************************************************
 //***** Forward Declarations ***********************************************************************
 
@@ -84,6 +87,9 @@ int the_fseek(Flash_FILE *file, long int offset, int origin);
 /* logging */
 void api_trace_store_msg(const char* fmt, ...);
 void api_trace_to_flash();
+/* time */
+void MX_I2C2_Init(void);
+Chirp_Time api_obtain_rtc_time();
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************

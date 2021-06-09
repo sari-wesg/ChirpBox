@@ -63,8 +63,6 @@ void SysTick_Handler(void)
 /******************************************************************************/
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
-extern I2C_HandleTypeDef hi2c2;
-
 
 /**
   * @brief This function handles USART2 global interrupt.
@@ -92,23 +90,6 @@ void USART3_IRQHandler(void)
   /* USER CODE BEGIN USART3_IRQn 1 */
 
   /* USER CODE END USART3_IRQn 1 */
-}
-
-
-/**
-  * @brief This function handles I2C2 event interrupt.
-  */
-void I2C2_EV_IRQHandler(void)
-{
-  HAL_I2C_EV_IRQHandler(&hi2c2);
-}
-
-/**
-  * @brief This function handles I2C2 error interrupt.
-  */
-void I2C2_ER_IRQHandler(void)
-{
-  HAL_I2C_ER_IRQHandler(&hi2c2);
 }
 
 /**
