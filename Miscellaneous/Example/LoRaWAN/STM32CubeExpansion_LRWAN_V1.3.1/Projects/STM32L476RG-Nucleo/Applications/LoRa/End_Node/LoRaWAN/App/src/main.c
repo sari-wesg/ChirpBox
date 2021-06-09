@@ -32,7 +32,7 @@
 
 #include "API_FUTParam.h"
 #include "App_FUT.h"
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, DR_0, DR_0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, DR_0, DR_5};
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
