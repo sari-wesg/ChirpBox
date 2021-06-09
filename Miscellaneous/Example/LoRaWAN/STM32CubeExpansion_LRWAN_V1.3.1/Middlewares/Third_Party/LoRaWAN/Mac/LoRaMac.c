@@ -2357,8 +2357,13 @@ LoRaMacStatus_t Send( LoRaMacHeader_t* macHdr, uint8_t fPort, void* fBuffer, uin
 
 LoRaMacStatus_t SendReJoinReq( JoinReqIdentifier_t joinReqType )
 {
-    PRINTF("SendReJoinReq\n");
-
+#if CHIRPBOX_LORAWAN
+    static uint16_t join_count = 0;
+    Chirp_Time time = obtain_rtc_time();
+    join_count++;
+    log_to_flash("ReJoin:%d, time:%d-%d:%d:%d\n", join_count, time.chirp_date, time.chirp_hour, time.chirp_min, time.chirp_sec);
+    log_flush();
+#endif
     LoRaMacStatus_t status = LORAMAC_STATUS_OK;
     LoRaMacHeader_t macHdr;
     macHdr.Value = 0;

@@ -311,7 +311,8 @@ void LoraMacProcessNotify(void)
 static void LORA_HasJoined(void)
 {
 #if( OVER_THE_AIR_ACTIVATION != 0 )
-  log_to_flash("JOINED\n\r");
+  Chirp_Time time = obtain_rtc_time();
+  log_to_flash("JOINED, time:%d-%d:%d:%d\n", time.chirp_date, time.chirp_hour, time.chirp_min, time.chirp_sec);
   log_flush();
   LL_FLASH_PageErase(RESET_PAGE);
   // /* send everytime timer elapses */
@@ -330,8 +331,6 @@ static void Send(void *context)
   // TimerStart(&TxTimer);
   if (LORA_JoinStatus() != LORA_SET)
   {
-    obtain_rtc_time();
-    PRINTF("LORA_Join\n");
     /*Not joined, try again later*/
     lora_tx_rate(fut_config.CUSTOM[FUT_JOIN_RATE]);
     LORA_Join();
