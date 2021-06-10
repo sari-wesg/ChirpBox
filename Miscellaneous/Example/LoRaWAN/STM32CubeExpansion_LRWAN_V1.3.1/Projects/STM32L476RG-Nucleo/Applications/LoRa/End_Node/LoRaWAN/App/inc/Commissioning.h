@@ -77,12 +77,20 @@ extern "C" {
  ******************************************************************************
  ******************************************************************************
  */
-
+#if CHIRPBOX_LORAWAN
+  #define DEVICE_ID_REG0 (*((volatile uint32_t *)0x1FFF7590))
+  #define DEVICE_ID_REG1 (*((volatile uint32_t *)0x1FFF7594))
+  #define DEVICE_ID_REG2 (*((volatile uint32_t *)0x1FFF7598))
+#endif
 /*!
  * When set to 1 the application uses the Over-the-Air activation procedure
  * When set to 0 the application uses the Personalization activation procedure
  */
-#define OVER_THE_AIR_ACTIVATION                            1
+#if CHIRPBOX_LORAWAN_ABP
+  #define OVER_THE_AIR_ACTIVATION                            0
+#else
+  #define OVER_THE_AIR_ACTIVATION                            1
+#endif
 
 /*!
  * When using ABP activation the MAC layer must know in advance to which server
@@ -150,8 +158,11 @@ extern "C" {
  *         a pseudo random generator seeded with a value derived from
  *         BoardUniqueId value
  */
-#define STATIC_DEVICE_ADDRESS                              0
-
+#if CHIRPBOX_LORAWAN_ABP
+  #define STATIC_DEVICE_ADDRESS                              1
+#else
+  #define STATIC_DEVICE_ADDRESS                              1
+#endif
 /*!
  * Device address on the network (big endian)
  *

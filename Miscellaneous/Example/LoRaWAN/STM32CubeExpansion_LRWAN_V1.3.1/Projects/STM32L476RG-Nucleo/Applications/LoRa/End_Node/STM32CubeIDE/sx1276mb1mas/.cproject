@@ -80,6 +80,8 @@
                                     <listOptionValue builtIn="false" value="MX_CONFIG_FILE=mixer_config.h"/>
                                     									
                                     <listOptionValue builtIn="false" value="GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="CHIRPBOX_LORAWAN_ABP=1"/>
                                     								
                                 </option>
                                 								
@@ -168,6 +170,8 @@
                                     <listOptionValue builtIn="false" value="GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG"/>
                                     									
                                     <listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="CHIRPBOX_LORAWAN_ABP=1"/>
                                     								
                                 </option>
                                 								
@@ -444,6 +448,8 @@
                                     <listOptionValue builtIn="false" value="MX_CONFIG_FILE=mixer_config.h"/>
                                     									
                                     <listOptionValue builtIn="false" value="GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="CHIRPBOX_LORAWAN_ABP=1"/>
                                     								
                                 </option>
                                 								
@@ -540,6 +546,8 @@
                                     <listOptionValue builtIn="false" value="MX_CONFIG_FILE=mixer_config.h"/>
                                     									
                                     <listOptionValue builtIn="false" value="GPI_ARCH_PLATFORM=GPI_ARCH_BOARD_NUCLEOL476RG"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="CHIRPBOX_LORAWAN_ABP=1"/>
                                     								
                                 </option>
                                 								

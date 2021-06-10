@@ -37,11 +37,6 @@ volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_c
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
 /*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-#define DEVICE_ID_REG0 (*((volatile uint32_t *)0x1FFF7590))
-#define DEVICE_ID_REG1 (*((volatile uint32_t *)0x1FFF7594))
-#define DEVICE_ID_REG2 (*((volatile uint32_t *)0x1FFF7598))
-/*---------------------------------------------------------------------------*/
 // unsigned short stm_node_id = 0;
 uint32_t stm_node_id = 0;
 
@@ -86,11 +81,7 @@ volatile uint16_t send_count = 0;
 #define LPP_DATATYPE_TEMPERATURE    0x67
 #define LPP_DATATYPE_BAROMETER      0x73
 #define LPP_APP_PORT 99
-/*!
- * Defines the application data transmission duty cycle. 5s, value in [ms].
- */
-#define JOIN_TX_DUTYCYCLE                           5000
-#define APP_TX_DUTYCYCLE                            10000
+
 /*!
  * LoRaWAN Adaptive Data Rate
  * @note Please note that when ADR is enabled the end-device should be static
@@ -315,20 +306,12 @@ static void LORA_HasJoined(void)
   log_to_flash("JOINED, time:%d-%d:%d:%d\n", time.chirp_date, time.chirp_hour, time.chirp_min, time.chirp_sec);
   log_flush();
   LL_FLASH_PageErase(RESET_PAGE);
-  // /* send everytime timer elapses */
-  // TimerInit(&TxTimer, OnTxTimerEvent);
-  // TimerSetValue(&TxTimer, APP_TX_DUTYCYCLE);
-  // OnTxTimerEvent(NULL);
 #endif
   LORA_RequestClass(LORAWAN_DEFAULT_CLASS);
 }
 
 static void Send(void *context)
 {
-  // uint32_t time_value = (rand() % 11) + 5;
-  // printf("time_value:%lu\n");
-  // TimerSetValue(&TxTimer, time_value);
-  // TimerStart(&TxTimer);
   if (LORA_JoinStatus() != LORA_SET)
   {
     /*Not joined, try again later*/
@@ -474,7 +457,7 @@ static void LoraStartTx(TxEventType_t EventType)
   {
     /* send everytime timer elapses */
     TimerInit(&TxTimer, OnTxTimerEvent);
-    TimerSetValue(&TxTimer, JOIN_TX_DUTYCYCLE);
+    TimerSetValue(&TxTimer, fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL]);
     OnTxTimerEvent(NULL);
   }
 }

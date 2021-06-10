@@ -479,11 +479,14 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
   // Choose a random device address
   DevAddr = randr( 0, 0x01FFFFFF );
 #endif
-  PPRINTF( "ABP\n\r");
-  PPRINTF( "DevEui= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\n\r", HEX8(devEui));
-  PPRINTF( "DevAdd=  %08X\n\r", DevAddr) ;
-  PPRINTF( "NwkSKey= %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n\r", HEX16(NwkSEncKey));
-  PPRINTF( "AppSKey= %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n\r", HEX16(AppSKey));
+#if CHIRPBOX_LORAWAN
+  DevAddr = (uint32_t)(DEVICE_ID_REG0);
+#endif
+  PRINTF( "ABP\n\r");
+  PRINTF( "DevEui= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\n\r", HEX8(devEui));
+  PRINTF( "DevAdd=  %08X\n\r", DevAddr) ;
+  PRINTF( "NwkSKey= %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n\r", HEX16(NwkSEncKey));
+  PRINTF( "AppSKey= %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n\r", HEX16(AppSKey));
 #endif
   LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
   LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
