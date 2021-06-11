@@ -170,8 +170,8 @@ class ChirpBoxAdmin():
         parser.add_argument('-connect', '--connectivity', dest='connectivity', help='Is the connectivity is needed?')
         parser.add_argument('-round_robin', '--round_robin', dest='round_robin', help='start the experiment in a round robin manner')
         args = parser.parse_args(argv)
-        self._connect = bool(args.connectivity)
-        self._round_robin = bool(args.round_robin)
+        self._connect = bool(args.connectivity.lower() == 'true')
+        self._round_robin = bool(args.round_robin.lower() == 'true')
 
         runtime_status = 0
         try:
