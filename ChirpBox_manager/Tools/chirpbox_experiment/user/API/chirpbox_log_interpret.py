@@ -96,11 +96,14 @@ def log_message_interpret(log_message):
         # change 8 bit byte to 32 bit variables
         variable_list = []
         for k in range(LOG_CONST.API_TRACE_LENGTH_VAR):
-            variable_tmp = one_log_variable[k*4:(k+1)*4]
-            variable = (int(variable_tmp[3], 16) << 24) + (int(variable_tmp[2], 16) << 16) + (int(variable_tmp[1], 16) << 8) + int(variable_tmp[0], 16)
-            variable_list.append(variable)
+            try:
+                variable_tmp = one_log_variable[k*4:(k+1)*4]
+                variable = (int(variable_tmp[3], 16) << 24) + (int(variable_tmp[2], 16) << 16) + (int(variable_tmp[1], 16) << 8) + int(variable_tmp[0], 16)
+                variable_list.append(variable)
+            except:
+                pass
         log = one_log_argument % tuple(variable_list[:one_log_argument.count('%')])
-        if((log == len(log) * log[0]) and ((log[0] == '\x00') or (log[0] == '\xFF'))):
+        if((len(log) > 0) and (log == len(log) * log[0]) and ((log[0] == '\x00') or (log[0] == '\xFF'))):
             pass
         else:
             log_message_node.append(log)

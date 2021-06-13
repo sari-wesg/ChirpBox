@@ -31,7 +31,6 @@ extern volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
-extern ADC_HandleTypeDef hadc1;
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
@@ -45,8 +44,4 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
 /* Compression with lzss */
 uint32_t LZSS_encode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName);  // File compression
 uint32_t LZSS_decode(Flash_FILE *pbReadFileName, Flash_FILE *pbWriteFileName);  // File decompression
-/* ADC read voltage */
-uint16_t ADC_GetVoltage(void);
-void ADC_CheckVoltage(void);
-
 #endif  /* __CHIRPBOX_FUNC_H__ */

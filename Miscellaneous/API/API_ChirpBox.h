@@ -90,7 +90,11 @@ void api_trace_to_flash();
 /* time */
 void MX_I2C2_Init(void);
 Chirp_Time api_obtain_rtc_time();
-
+/* loudness sensor */
+void MX_ADC1_Init(void);
+uint16_t ADC_GetVoltage(void);
+void ADC_CheckVoltage(void);
+void ADC_GetLoud(void);
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
 
