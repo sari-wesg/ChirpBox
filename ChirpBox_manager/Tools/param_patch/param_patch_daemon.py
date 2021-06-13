@@ -1,4 +1,5 @@
 import json
+import os
 
 """ constant for the parameter struct in ChirpBox setting """
 
@@ -61,4 +62,4 @@ usage example:
 chirpbox_param_patch('param_patch_daemon.json', 'Daemon.bin')
 """
 
-chirpbox_param_patch('param_patch_daemon.json', 'Daemon.bin')
+chirpbox_param_patch(os.path.join(os.path.dirname(__file__), 'param_patch_daemon.json'), os.path.join(os.path.dirname(__file__), 'Daemon.bin'))

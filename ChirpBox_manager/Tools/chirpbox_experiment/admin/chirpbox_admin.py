@@ -129,7 +129,7 @@ class ChirpBoxAdmin():
                     lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [bitmap, "1"])
                     time.sleep(int(cbmng_exp_config.myExpConfApproach().experiment_duration) + 300) #waiting for the end of experiment
             else:
-                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_time, "1"])
+                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])
                 time.sleep(300) #waiting for all nodes have GPS signal
             # collect
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, [cbmng_exp_method.myExpMethodApproach().start_address, cbmng_exp_method.myExpMethodApproach().end_address])
@@ -170,8 +170,8 @@ class ChirpBoxAdmin():
         parser.add_argument('-connect', '--connectivity', dest='connectivity', help='Is the connectivity is needed?')
         parser.add_argument('-round_robin', '--round_robin', dest='round_robin', help='start the experiment in a round robin manner')
         args = parser.parse_args(argv)
-        self._connect = bool(args.connectivity)
-        self._round_robin = bool(args.round_robin)
+        self._connect = bool(args.connectivity.lower() == 'true')
+        self._round_robin = bool(args.round_robin.lower() == 'true')
 
         runtime_status = 0
         try:
