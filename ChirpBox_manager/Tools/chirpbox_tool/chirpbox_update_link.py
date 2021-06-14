@@ -137,6 +137,7 @@ class ChirpBoxUpdateLink():
     def select_update_file(self, mypath, file_start, file_suffix):
         # Start by initializing variables:
         savedSet = set()
+        i = 0
         while True:
             newset_len, savedSet = self.check_new_file(
                 savedSet, mypath, file_start, file_suffix)
@@ -151,6 +152,10 @@ class ChirpBoxUpdateLink():
                         files, key=lambda t: os.stat(t).st_mtime)
                     latest_files.extend(sorted_by_mtime_ascending[-self._num:])
                 self.generate_topology(latest_files, mypath)
+                # in case of "fail to allocate bitmap"
+                i += 1
+                if (i > 10):
+                    sys.exit(0)
 
     def start(self, argv):
         parser = argparse.ArgumentParser(
@@ -197,8 +202,13 @@ class ChirpBoxUpdateLink():
 
         if runtime_status:
             logger.info("sys.exit")
-            sys.exit(runtime_status)
-
+            # sys.exit(runtime_status)
+            restart = True
+            if restart == True:
+                os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+            else:
+                print("\nThe programm will me closed...")
+                sys.exit(0)
 
 def main(argv):
     chirpboxupdatelink = ChirpBoxUpdateLink()
