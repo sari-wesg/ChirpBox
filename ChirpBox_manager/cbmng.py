@@ -53,7 +53,8 @@ python cbmng.py -colver 7 com7 80 14
 python cbmng.py -dissem 2b10 232 16 7 com7 1fffff 80 7 80 14 1fffff 0
 python cbmng.py -start 0 2b10 7 com7 1fffff 100 14
 python cbmng.py -coldata 232 7 com7 80 14 1fffff 0807F800 0807FE30
-python cbmng.py -upgrade Daemon.bin 2b10 48 4 7 com7 1fffff 100 7 100 14 1fffff 0
+python cbmng.py -upgrade Daemon.bin 2b10 48 4 7 com7 1fffff 100 7 100 14 1fffff 1
+python cbmng.py -connect 63 470000 0 7 com7 80 8 14
 """
 
 def main(argv):
