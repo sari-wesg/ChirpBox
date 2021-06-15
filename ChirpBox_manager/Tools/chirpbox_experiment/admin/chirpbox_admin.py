@@ -113,12 +113,12 @@ class ChirpBoxAdmin():
         cbmng.main(experiment_method.split())
 
     def start_experiment(self, bin_file, config_file):
-        if self._connect is True:
-            # connectivity
-            chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
-            chirpbox_tool.main(chirpbox_tool_command.split())
-            # collect version
-            lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
+        # if self._connect is True:
+        #     # connectivity
+        #     chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
+        #     chirpbox_tool.main(chirpbox_tool_command.split())
+        #     # collect version
+        #     lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
         # dissem
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, ["0"])
         for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
@@ -142,6 +142,12 @@ class ChirpBoxAdmin():
     def manage_chirpbox(self):
         while True:
             logger.debug("manage_chirpbox")
+            if self._connect is True:
+                # connectivity
+                chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
+                chirpbox_tool.main(chirpbox_tool_command.split())
+                # collect version
+                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
             if(cbmng_exp_start.is_running() == False):
                 # find the oldest bin file and config file from all files
                 all_bin_files = glob.glob(self._test_address + "\\*.bin")

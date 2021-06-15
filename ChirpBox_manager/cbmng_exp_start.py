@@ -7,6 +7,7 @@ import json
 import transfer_to_initiator.myserial.serial_send
 
 import os
+import shutil
 
 """ Md5 """
 import hashlib
@@ -606,6 +607,9 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 
 	if(daemon_patch == 1):
 		os.system('copy ' + firmware + ' ' + firmware_daemon_burned)
+		# move firmware_burned, because the bank2 has been rewritten
+		if os.path.exists(firmware_burned):
+			shutil.rmtree(firmware_burned)
 	else:
 		os.system('copy ' + firmware + ' ' + firmware_burned)
 
