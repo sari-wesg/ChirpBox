@@ -197,4 +197,8 @@ extern "C" {
 }
 #endif
 
+#include "API_FUTParam.h"
+#include "App_FUT.h"
+extern volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config;
+
 #endif /* __LORA_COMMISSIONING_H__ */

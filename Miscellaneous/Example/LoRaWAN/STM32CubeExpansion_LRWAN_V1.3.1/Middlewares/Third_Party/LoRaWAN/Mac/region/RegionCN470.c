@@ -33,7 +33,9 @@
 #include "RegionCommon.h"
 #include "RegionCN470.h"
 #include "util_console.h"
-
+#if CHIRPBOX_LORAWAN
+    #include "Commissioning.h"
+#endif
 // Definitions
 #define CHANNELS_MASK_SIZE              6
 
@@ -197,6 +199,9 @@ PhyParam_t RegionCN470GetPhyParam( GetPhyParams_t* getPhy )
         case PHY_DEF_TX_POWER:
         {
             phyParam.Value = CN470_DEFAULT_TX_POWER;
+            #if CHIRPBOX_LORAWAN
+                phyParam.Value = ((int8_t)CN470_DEFAULT_MAX_EIRP - fut_config.CUSTOM[FUT_UPLINK_POWER]) / 2;
+            #endif
             break;
         }
         case PHY_DEF_ADR_ACK_LIMIT:

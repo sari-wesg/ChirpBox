@@ -30,9 +30,8 @@
 #include "flash_if.h"
 // #include <stdint.h>
 
-#include "API_FUTParam.h"
-#include "App_FUT.h"
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, DR_0, DR_5};
+#include "Commissioning.h"
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, DR_0, DR_5, 0};
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
@@ -66,7 +65,7 @@ void node_id_restore(uint8_t *id)
 uint32_t __attribute__((section(".data")))	TOS_NODE_ID = 0;
 
 uint8_t node_id_allocate;
-volatile uint16_t send_count = 0;
+static uint16_t send_count = 0;
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define LORAWAN_MAX_BAT   254
