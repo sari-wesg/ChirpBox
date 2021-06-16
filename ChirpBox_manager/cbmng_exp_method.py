@@ -11,6 +11,7 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 	start_address = ''
 	end_address = ''
 	experiment_run_bitmap = ''
+	experiment_run_round = False
 	experiment_run_time = 0
 
 	def read_configuration(self):
@@ -37,9 +38,12 @@ class myExpMethodApproach(cbmng_common.ExpMethodApproach):
 			# End_address:
 			myExpMethodApproach.end_address = load_dict['end_address']
 			print("end_address: " + str(myExpMethodApproach.end_address))
-			# Experiment_run_time:
+			# Experiment_run_bitmap:
 			myExpMethodApproach.experiment_run_bitmap = load_dict['experiment_run_bitmap']
 			print("experiment_run_bitmap: " + str(myExpMethodApproach.experiment_run_bitmap))
+			# Experiment_run_round:
+			myExpMethodApproach.experiment_run_round = load_dict['experiment_run_round']
+			print("experiment_run_round: " + str(myExpMethodApproach.experiment_run_round))
 			# Experiment_run_time:
 			myExpMethodApproach.experiment_run_time = int(load_dict['experiment_run_time'])
 			print("experiment_run_time: " + str(myExpMethodApproach.experiment_run_time))

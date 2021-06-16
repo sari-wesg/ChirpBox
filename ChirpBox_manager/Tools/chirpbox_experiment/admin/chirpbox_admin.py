@@ -61,7 +61,7 @@ list of combinations:
 
 examples:
     chirpbox_admin.py -h
-    chirpbox_admin.py -connect -round_robin
+    chirpbox_admin.py -connect
 """
 
 class ChirpBoxAdmin():
@@ -113,17 +113,10 @@ class ChirpBoxAdmin():
         cbmng.main(experiment_method.split())
 
     def start_experiment(self, bin_file, config_file):
-        # if self._connect is True:
-        #     # connectivity
-        #     chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
-        #     chirpbox_tool.main(chirpbox_tool_command.split())
-        #     # collect version
-        #     lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
-        # dissem
         lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_DISSEM_COMMAND, ["0"])
         for i in range(cbmng_exp_method.myExpMethodApproach().experiment_run_time):
             # start
-            if self._round_robin is True:
+            if (cbmng_exp_method.myExpMethodApproach().experiment_run_round.lower() == 'true'):
                 bitmap_list = self.bitmap_list_to_roundrobin(cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap)
                 for bitmap in bitmap_list:
                     lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [bitmap, "1"])
@@ -174,10 +167,8 @@ class ChirpBoxAdmin():
         parser = argparse.ArgumentParser(
             prog='chirpbox_admin', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
         parser.add_argument('-connect', '--connectivity', dest='connectivity', help='Is the connectivity is needed?')
-        parser.add_argument('-round_robin', '--round_robin', dest='round_robin', help='start the experiment in a round robin manner')
         args = parser.parse_args(argv)
         self._connect = bool(args.connectivity.lower() == 'true')
-        self._round_robin = bool(args.round_robin.lower() == 'true')
 
         runtime_status = 0
         try:

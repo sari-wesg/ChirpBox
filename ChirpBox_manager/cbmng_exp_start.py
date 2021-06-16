@@ -87,6 +87,7 @@ def generate_json_for_upgrade():
 		"start_address": "0807E000",
 		"end_address": "0807E0D0",
 		"experiment_run_bitmap": "1FFFFF",
+		"experiment_run_round": "False",
 		"experiment_run_time": 1,
 	}
 	with open("tmp_upgrade.json", "w") as f:
