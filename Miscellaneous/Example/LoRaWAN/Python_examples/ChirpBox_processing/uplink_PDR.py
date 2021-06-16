@@ -52,7 +52,7 @@ def gateway_log_count(start_time_utc, end_time_utc, gateway_log, experiment_node
         uplink_count_list.append(uplink_count)
     return uplink_count_list
 
-def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log, round_robin):
+def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
 
     with open(os.path.join(os.path.dirname(__file__), "../../../../../ChirpBox_manager//Tools//param_patch//param_patch_daemon.json")) as data_file:
         data = json.load(data_file)
@@ -68,6 +68,7 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log, round_r
             experiment_name = data['experiment_name']
             duration = data['experiment_duration']
             experiment_nodes = bitmap_to_nodes(data['experiment_run_bitmap'])
+            round_robin = data['experiment_run_round'].lower() == 'true'
             uplink_total = int((experiment_name.split('packet')[0])[len("LoRaWAN_"):])
             logger.debug("experiment_name:%s, duration:%s, experiment_nodes:%s\n", experiment_name, duration, experiment_nodes)
 
@@ -101,8 +102,7 @@ def main(argv):
     # argv[2] = experiment_settings_dir
     # argv[3] = log_dir
     # argv[4] = gateway_log_file
-    # argv[5] = round_robin
-    uplink_pdr(argv[1], argv[2], argv[3], argv[4], argv[5].lower() == 'true')
+    uplink_pdr(argv[1], argv[2], argv[3], argv[4])
 
 if __name__ == "__main__":
     main(sys.argv)
