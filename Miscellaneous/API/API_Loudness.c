@@ -12,11 +12,27 @@ ADC_HandleTypeDef hadc1;
 #define VOLTAGE_LOWER_BOUND 2900 // voltage should above 2.7 V
 #define VOLTAGE_INTERVAL 60		 // check the voltage per 60 seconds
 
+const uint32_t dBAnalogQuiet = 50; // envelope - calibrated value from analog input (48 dB equivalent)
+const uint32_t dBAnalogModerate = 12;
+const uint32_t dBAnalogLoud = 17;
+
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
+static uint32_t calculateDecibels(uint32_t envelope)
+{
+	uint32_t decibelsCalculated;
+	if (envelope < 13)
+		decibelsCalculated = 20 * log10(envelope/dBAnalogQuiet);
+	else if ((envelope > 13) && ( envelope <= 23))
+		decibelsCalculated = 20 * log10(envelope/dBAnalogModerate);
+	else if ( envelope > 23)
+		decibelsCalculated = 20 * log10(envelope/dBAnalogLoud);
+
+	return (decibelsCalculated);
+}
 
 /**
   * @brief  Get voltage of the battery. Battery input is connected to the ADC1 channel 6
@@ -46,7 +62,7 @@ static void ADC_GetSound(uint32_t *voltage_list)
 	vdda = vref * 1e3 / adc_vref * 3;
 	// sound sensor
 	voltage_list[0] = vdda * 1 * adc_vch4 / 4095;
-	voltage_list[1] = vdda * 1 * adc_vch9 / 4095;
+	voltage_list[1] = adc_vch9;
 }
 
 //**************************************************************************************************
@@ -259,6 +275,11 @@ void ADC_CheckVoltage(void)
 		RTC_Waiting_Count(VOLTAGE_INTERVAL);
 	}
 }
+static uint8_t read_gate()
+{
+	uint8_t gate = HW_GPIO_Read(GPIOB, GPIO_PIN_2);
+	return gate;
+}
 
 void ADC_GetLoud(void)
 {
@@ -275,13 +296,12 @@ void ADC_GetLoud(void)
 	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
 	uint32_t *voltage_list;
 	voltage_list = (uint32_t *)malloc(2 * sizeof(uint32_t));
-	uint8_t gate;
+	uint32_t the_db = 0;
 	while (1)
 	{
 		ADC_GetSound(voltage_list);
-		gate = HW_GPIO_Read(GPIOB, GPIO_PIN_2);
-		// printf("audio:%lu.%03lu,envelope:%lu.%03lu,gate:%d\n", voltage_list[0] / 1000, voltage_list[0] % 1000, voltage_list[1] / 1000, voltage_list[1] % 1000, gate);
-		printf("audio:%lu.%03lu,envelope:%lu.%03lu\n", voltage_list[0] / 1000, voltage_list[0] % 1000, voltage_list[1] / 1000, voltage_list[1] % 1000);
+		the_db = calculateDecibels(voltage_list[1]);
+		printf("audio:%lu.%03lu,envelope:%lu,gate:%lu\n", voltage_list[0] / 1000, voltage_list[0] % 1000, voltage_list[1], read_gate());
 		HAL_Delay(50);
 	}
 	free(voltage_list);
