@@ -322,6 +322,37 @@ void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t s
   }
 }
 
+void DS3231_GetAlarm1_Time()
+{
+  uint8_t date = 0;
+  uint8_t hour = 0;
+  uint8_t mintue = 0;
+  uint8_t second = 0;
+  uint8_t alarm_flag = 0;
+  uint8_t count = 0;
+  while (!alarm_flag)
+  {
+    count++;
+    assert_reset((count < 10));
+    printf("get alarm\n");
+    /* read alarm time */
+    while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.alarm1_sec, I2C_MEMADD_SIZE_8BIT,
+                            &(DS3231_Buff[DS3231_memaddr.alarm1_sec]), DS3231_ALARM1_LENGTH, 0xffff) != HAL_OK);
+    date = BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_dydt]);
+    hour = BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_hour]);
+    mintue = BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_min]);
+    second = BCD2DEC(DS3231_Buff[DS3231_memaddr.alarm1_sec]);
+    alarm_flag = 1;
+  }
+  char buffer[50];
+  sprintf(buffer, "%02d %02d:%02d:%02d\r\n", date, hour, mintue, second);
+  printf("%s", buffer);
+  while (HAL_I2C_Mem_Read(&hi2c2, DS3231_ADD, DS3231_memaddr.control, I2C_MEMADD_SIZE_8BIT,
+                          &(DS3231.Control), 2, 0xffff) != HAL_OK);
+  uint8_t i = ((DS3231.Control & 0x05) && (!(DS3231.Status & 0x03)));
+  printf("true:%d\n", i);
+}
+
 Chirp_Time api_obtain_rtc_time()
 {
     DS3231_GetTime();
