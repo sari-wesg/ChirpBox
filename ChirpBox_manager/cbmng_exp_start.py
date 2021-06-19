@@ -179,30 +179,8 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 		print("Timeout...")
 		return False
 
-	# Wait for the execution...
-	timeout_value = 12000 * 100
-	timeout_cnt = 0
-	while True:
-		try:
-			line = ser.readline().decode('ascii').strip() # skip the empty data
-			timeout_cnt = timeout_cnt + 1
-			if line:
-				print (line)
-				if line.startswith("System running from STM32L476"):
-					break
-			if(timeout_cnt > timeout_value):
-				break
-		except:
-			pass
-
-	if(timeout_cnt > timeout_value):
-		print("Timeout...")
+	if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
 		return False
-
-	return True
-
-	# if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
-	# 	return False
 
 	return True
 
