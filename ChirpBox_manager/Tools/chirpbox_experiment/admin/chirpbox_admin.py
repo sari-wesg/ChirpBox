@@ -120,7 +120,8 @@ class ChirpBoxAdmin():
                 bitmap_list = self.bitmap_list_to_roundrobin(cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap)
                 for bitmap in bitmap_list:
                     lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [bitmap, "1"])
-                    time.sleep(int(cbmng_exp_config.myExpConfApproach().experiment_duration) + 300) #waiting for the end of experiment
+                    time.sleep(int(cbmng_exp_config.myExpConfApproach().experiment_duration) + 120) #waiting for the end of experiment
+                time.sleep(300) #waiting for all nodes have GPS signal
             else:
                 lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])
                 time.sleep(300) #waiting for all nodes have GPS signal
