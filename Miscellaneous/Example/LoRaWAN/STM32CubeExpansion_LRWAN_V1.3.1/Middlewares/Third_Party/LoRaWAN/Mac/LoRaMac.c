@@ -813,6 +813,7 @@ static void OnRadioTxDone( void )
 
 static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
+#if !CHIRPBOX_LORAWAN_ABP
 #if ENERGEST_CONF_ON
     ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
     gpi_led_off(GPI_LED_1);
@@ -831,6 +832,21 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
     }
 #if !defined(NO_MAC_PRINTF)
     PRINTF("PHY rxDone\n\r" );
+#endif
+#else
+#if ENERGEST_CONF_ON
+    ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
+    gpi_led_off(GPI_LED_1);
+#endif
+    LoRaMacRadioEvents.Events.RxTimeout = 1;
+
+    if( ( MacCtx.MacCallbacks != NULL ) && ( MacCtx.MacCallbacks->MacProcessNotify != NULL ) )
+    {
+        MacCtx.MacCallbacks->MacProcessNotify( );
+    }
+#if !defined(NO_MAC_PRINTF)
+    PRINTF("PHY rxDone\n\r" );
+#endif
 #endif
 }
 
