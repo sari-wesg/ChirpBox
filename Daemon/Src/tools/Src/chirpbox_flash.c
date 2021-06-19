@@ -185,7 +185,7 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
     */
 
     /* 0. The whole process must in bank 1 */
-    assert(!READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE));
+    // assert(!READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE));
     Flash_FILE newFile;
     uint8_t newPage;
     if (patch_update)
