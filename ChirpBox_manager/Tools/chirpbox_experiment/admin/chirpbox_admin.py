@@ -61,7 +61,7 @@ list of combinations:
 
 examples:
     chirpbox_admin.py -h
-    chirpbox_admin.py -connect
+    chirpbox_admin.py -connect -version
 """
 
 class ChirpBoxAdmin():
@@ -140,6 +140,7 @@ class ChirpBoxAdmin():
                 # connectivity
                 chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
                 chirpbox_tool.main(chirpbox_tool_command.split())
+            if self._version is True:
                 # collect version
                 lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_VERSION_COMMAND)
             if(cbmng_exp_start.is_running() == False):
@@ -168,9 +169,10 @@ class ChirpBoxAdmin():
         parser = argparse.ArgumentParser(
             prog='chirpbox_admin', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
         parser.add_argument('-connect', '--connectivity', dest='connectivity', help='Is the connectivity is needed?')
+        parser.add_argument('-version', '--version_collection', dest='version', help='Is the version collection is needed?')
         args = parser.parse_args(argv)
         self._connect = bool(args.connectivity.lower() == 'true')
-
+        self._version = bool(args.version_collection.lower() == 'true')
         runtime_status = 0
         try:
             self.manage_chirpbox()
