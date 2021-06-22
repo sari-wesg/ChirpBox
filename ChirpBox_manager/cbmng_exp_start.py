@@ -610,7 +610,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 		os.system('copy ' + firmware + ' ' + firmware_daemon_burned)
 		# move firmware_burned, because the bank2 has been rewritten
 		if os.path.exists(firmware_burned):
-			shutil.rmtree(firmware_burned)
+			os.remove(firmware_burned)
 	else:
 		os.system('copy ' + firmware + ' ' + firmware_burned)
 
