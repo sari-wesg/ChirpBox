@@ -1541,7 +1541,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           ds3231_time = DS3231_ShowTime();
           diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
           assert_reset((diff > 5));
-          if (((chirp_outl.version_hash == (daemon_config.DAEMON_version))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))))
+          if (((chirp_outl.version_hash == (daemon_config.DAEMON_version))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))) && (CheckOtherBank() == FLASHIF_OK))
           {
             /* erase the user flash page */
             FLASH_If_Erase_Pages(0, 255);
