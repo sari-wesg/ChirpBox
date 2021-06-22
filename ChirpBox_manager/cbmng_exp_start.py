@@ -471,7 +471,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 	FileSize = cbmng_common.get_FileSize(firmware)
 	exp_name = "disseminate_command_len_" + str(command_len) + "_used_sf" + str(command_sf) + "used_tp" + str(used_tp) + "_generate_size" + str(command_size) + "_slot_num" + str(slot_num) + "_bitmap" + str(task_bitmap) + "_FileSize" + str(FileSize) + "_dissem_back_sf" + str(dissem_back_sf) + "_dissem_back_slot" + str(dissem_back_slot)
 	print(exp_name)
-	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 1800}
+	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': end_time_t.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 36000}
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 
@@ -603,7 +603,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 				YMODEM_result = transfer_to_initiator.myserial.serial_send.YMODEM_send(firmware)
 	print("*YMODEM* done\n")
 
-	if(waiting_for_the_execution_timeout(ser, 60000 * 20) == False): # timeout: 800 seconds
+	if(waiting_for_the_execution_timeout(ser, 6000000 * 20) == False): # timeout: 800 seconds
 		return False
 
 	if(daemon_patch == 1):

@@ -169,7 +169,7 @@ class ChirpBoxAdmin():
         parser = argparse.ArgumentParser(
             prog='chirpbox_admin', formatter_class=argparse.RawTextHelpFormatter, description=DESCRIPTION_STR, epilog=ACTIONS_HELP_STR)
         parser.add_argument('-connect', '--connectivity', dest='connectivity', help='Is the connectivity is needed?')
-        parser.add_argument('-version', '--version_collection', dest='version', help='Is the version collection is needed?')
+        parser.add_argument('-version', '--version_collection', dest='version_collection', help='Is the version collection is needed?')
         args = parser.parse_args(argv)
         self._connect = bool(args.connectivity.lower() == 'true')
         self._version = bool(args.version_collection.lower() == 'true')

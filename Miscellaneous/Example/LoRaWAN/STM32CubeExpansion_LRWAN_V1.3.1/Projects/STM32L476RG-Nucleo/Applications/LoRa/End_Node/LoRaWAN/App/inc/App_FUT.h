@@ -27,7 +27,7 @@ typedef enum
 {
     FUT_MAX_SEND = 0,
     FUT_DATA_SEND_INTERVAL,
-    FUT_JOIN_RATE,
+    FUT_RANDOM_INTERVAL,
     FUT_UPLINK_RATE,
     FUT_UPLINK_POWER,
 } FUT_param;

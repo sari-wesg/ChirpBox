@@ -31,7 +31,7 @@
 // #include <stdint.h>
 
 #include "Commissioning.h"
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, DR_0, DR_5, 0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 1, DR_5, 0};
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
@@ -248,6 +248,7 @@ int main(void)
   log_to_flash("starting node %x ...\n", TOS_NODE_ID);
   log_flush();
   srand(TOS_NODE_ID);
+  rand();
 
 	node_id_allocate = node_id;
 
@@ -255,7 +256,7 @@ int main(void)
   PRINTF("MAC_VERSION= %02X.%02X.%02X.%02X\r\n", (uint8_t)(__LORA_MAC_VERSION >> 24), (uint8_t)(__LORA_MAC_VERSION >> 16), (uint8_t)(__LORA_MAC_VERSION >> 8), (uint8_t)__LORA_MAC_VERSION);
 
   /* Configure the Lora Stack*/
-  LoRaParamInit.TxDatarate = fut_config.CUSTOM[FUT_JOIN_RATE];
+  LoRaParamInit.TxDatarate = fut_config.CUSTOM[FUT_UPLINK_RATE];
   LORA_Init(&LoRaMainCallbacks, &LoRaParamInit);
 
   LORA_Join();
@@ -314,7 +315,7 @@ static void Send(void *context)
   if (LORA_JoinStatus() != LORA_SET)
   {
     /*Not joined, try again later*/
-    lora_tx_rate(fut_config.CUSTOM[FUT_JOIN_RATE]);
+    lora_tx_rate(fut_config.CUSTOM[FUT_UPLINK_RATE]);
     LORA_Join();
     return;
   }
@@ -409,8 +410,14 @@ static void LORA_RxData(lora_AppData_t *AppData)
 
 static void OnTxTimerEvent(void *context)
 {
-  uint8_t time_value = fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL];
-  TimerSetValue(&TxTimer, time_value * 1000);
+  uint16_t time_value;
+  if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
+  {
+    time_value = rand() % (fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000) + fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+  }
+  else
+    time_value = fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+  TimerSetValue(&TxTimer, time_value);
   TimerStart(&TxTimer);
   AppProcessRequest = LORA_SET;
   #if ENERGEST_CONF_ON
@@ -456,7 +463,14 @@ static void LoraStartTx(TxEventType_t EventType)
   {
     /* send everytime timer elapses */
     TimerInit(&TxTimer, OnTxTimerEvent);
-    TimerSetValue(&TxTimer, fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL]);
+    uint16_t time_value;
+    if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
+    {
+      time_value = rand() % (fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000) + fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+    }
+    else
+      time_value = fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+    TimerSetValue(&TxTimer, time_value);
     OnTxTimerEvent(NULL);
   }
 }
