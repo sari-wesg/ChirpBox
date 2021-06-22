@@ -6,7 +6,7 @@ import pandas as pd
 import statistics
 import sys
 import logging
-
+import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -61,6 +61,8 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
 
     # find all experiments settings (config files)
     experiment_settings = glob.glob(os.path.join(experiment_settings_dir, user_name + "_*.json"))
+    columns = ['experiment_name','pdr_mean','pdr_std']
+    experiment_df = pd.DataFrame(columns=columns)
     for experiment_setting in experiment_settings:
         # read config one by one
         with open(experiment_setting) as data_file:
@@ -90,19 +92,32 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
                 nodes_real_uplink_total = gateway_log_count(start_time_utc, end_time_utc, gateway_log, experiment_nodes, UID_list)
                 pdr_list = [(x / uplink_total)* 100 for x in nodes_real_uplink_total]
                 logger.debug(pdr_list)
+                pdr_mean= statistics.mean(pdr_list)
                 if (len(pdr_list) > 1):
-                    logger.debug(statistics.mean(pdr_list))
-                    logger.debug(statistics.stdev(pdr_list))
+                    pdr_std = statistics.stdev(pdr_list)
                 else:
-                    logger.debug(statistics.mean(pdr_list))
-                    logger.debug(0)
+                    pdr_std = 0
+                experiment_df.loc[-1] = [experiment_name, pdr_mean, pdr_std]  # adding a row
+                experiment_df.index = experiment_df.index + 1  # shifting index
+                experiment_df = experiment_df.sort_index()  # sorting by index
+    experiment_df = experiment_df.sort_values(by=['pdr_mean'], ascending=True)
+    experiment_df = experiment_df.reset_index(drop=True)
+    logger.debug(experiment_df)
+    return experiment_df
+
+def plot_pdr(experiment_df):
+    fig, ax = plt.subplots()
+    experiment_df[['pdr_mean']].plot.bar(stacked=True, yerr=experiment_df[['pdr_std']].values.T, width=0.3, ax=ax, error_kw=dict(ecolor='k', lw=0.2, markersize='1', capsize=5, capthick=1, elinewidth=2))
+    plt.show()
+
 
 def main(argv):
     # argv[1] = User_name
     # argv[2] = experiment_settings_dir
     # argv[3] = log_dir
     # argv[4] = gateway_log_file
-    uplink_pdr(argv[1], argv[2], argv[3], argv[4])
+    experiment_df = uplink_pdr(argv[1], argv[2], argv[3], argv[4])
+    plot_pdr(experiment_df)
 
 if __name__ == "__main__":
     main(sys.argv)
