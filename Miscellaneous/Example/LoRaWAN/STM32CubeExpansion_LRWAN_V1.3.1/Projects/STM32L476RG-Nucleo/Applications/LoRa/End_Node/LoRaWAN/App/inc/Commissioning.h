@@ -161,7 +161,7 @@ extern "C" {
 #if CHIRPBOX_LORAWAN_ABP
   #define STATIC_DEVICE_ADDRESS                              1
 #else
-  #define STATIC_DEVICE_ADDRESS                              1
+  #define STATIC_DEVICE_ADDRESS                              0
 #endif
 /*!
  * Device address on the network (big endian)

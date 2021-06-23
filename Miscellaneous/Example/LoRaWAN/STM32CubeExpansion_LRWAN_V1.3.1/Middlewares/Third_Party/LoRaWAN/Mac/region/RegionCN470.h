@@ -137,7 +137,7 @@
 /*!
  * Receive delay 2
  */
-#define CN470_RECEIVE_DELAY2                        2000
+#define CN470_RECEIVE_DELAY2                        3000
 
 /*!
  * Join accept delay 1
