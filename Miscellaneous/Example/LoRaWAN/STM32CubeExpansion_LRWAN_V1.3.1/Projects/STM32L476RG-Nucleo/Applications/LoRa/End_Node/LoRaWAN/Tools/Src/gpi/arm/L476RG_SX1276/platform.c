@@ -334,26 +334,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   #endif
 }
 
-static void MX_RTC_Init(void)
-{
-  hrtc.Instance = RTC;
-  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
-  hrtc.Init.AsynchPrediv = 127;
-  hrtc.Init.SynchPrediv = 255;
-  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
-  hrtc.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
-  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
-  if (HAL_RTC_Init(&hrtc) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* Disable the write protection for RTC registers */
-  __HAL_RTC_WRITEPROTECTION_DISABLE(&hrtc);
-  // disable RTC wakeup
-  CLEAR_BIT(hrtc.Instance->CR, RTC_CR_WUTE);
-}
-
 #if MX_FLASH_FILE
 
 static void MX_CRC_Init(void)
