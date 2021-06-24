@@ -260,7 +260,7 @@ void ADC_CheckVoltage(void)
 }
 static uint8_t read_gate()
 {
-	uint8_t gate = HW_GPIO_Read(GPIOB, GPIO_PIN_2);
+	uint8_t gate = HW_GPIO_Read(GPIOC, GPIO_PIN_11);
 	return gate;
 }
 
@@ -268,13 +268,13 @@ void ADC_GetLoud(void)
 {
 	// Init gate pin
 	GPIO_InitTypeDef GPIO_InitStruct;
-	__HAL_RCC_GPIOB_CLK_ENABLE();
+	__HAL_RCC_GPIOC_CLK_ENABLE();
 
-	/*Configure GPIO pin : PB2 */
-	GPIO_InitStruct.Pin = GPIO_PIN_2;
+	/*Configure GPIO pin : PC11 */
+	GPIO_InitStruct.Pin = GPIO_PIN_11;
 	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
 	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
 	uint32_t *voltage_list;

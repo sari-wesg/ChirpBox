@@ -76,8 +76,6 @@
 #define LED3 GPIO_PIN_9
 #define LED4 GPIO_PIN_10
 #define LED5 GPIO_PIN_12
-#define LED6 GPIO_PIN_11
-
 
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
@@ -88,7 +86,6 @@
 // #define GPI_LED_3		LED3
 // #define GPI_LED_4		LED4
 // #define GPI_LED_5		LED5
-// #define GPI_LED_6		LED6
 
 #define GPI_LED_NONE	0
 #define GPI_LED_1		GPI_LED_NONE
@@ -96,7 +93,6 @@
 #define GPI_LED_3		GPI_LED_NONE
 #define GPI_LED_4		GPI_LED_NONE
 #define GPI_LED_5		GPI_LED_NONE
-#define GPI_LED_6		GPI_LED_NONE
 
 #define GPI_BUTTON(x)	x
 /*
