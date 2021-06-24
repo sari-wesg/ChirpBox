@@ -77,6 +77,7 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
             # find all logs belong to this experiment
             experiment_log = glob.glob(log_dir + "\\log_" + experiment_name + "*.csv")
 
+            experiment_pdr = []
             for file in experiment_log:
                 # read log one by one
                 start_time = os.path.basename(file)[-len("20210605023553252823).csv"):-len("123456).csv")]
@@ -91,15 +92,19 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
 
                 nodes_real_uplink_total = gateway_log_count(start_time_utc, end_time_utc, gateway_log, experiment_nodes, UID_list)
                 pdr_list = [(x / uplink_total)* 100 for x in nodes_real_uplink_total]
-                logger.debug(pdr_list)
+                logger.debug("start_time_utc:%s, %s", start_time_utc, end_time_utc)
+                logger.debug(nodes_real_uplink_total)
                 pdr_mean= statistics.mean(pdr_list)
-                if (len(pdr_list) > 1):
-                    pdr_std = statistics.stdev(pdr_list)
-                else:
-                    pdr_std = 0
-                experiment_df.loc[-1] = [experiment_name, pdr_mean, pdr_std]  # adding a row
-                experiment_df.index = experiment_df.index + 1  # shifting index
-                experiment_df = experiment_df.sort_index()  # sorting by index
+                experiment_pdr.append(pdr_mean)
+
+            pdr_mean= statistics.mean(experiment_pdr)
+            if (len(experiment_pdr) > 1):
+                pdr_std = statistics.stdev(experiment_pdr)
+            else:
+                pdr_std = 0
+            experiment_df.loc[-1] = [experiment_name, pdr_mean, pdr_std]  # adding a row
+            experiment_df.index = experiment_df.index + 1  # shifting index
+            experiment_df = experiment_df.sort_index()  # sorting by index
     experiment_df = experiment_df.sort_values(by=['pdr_mean'], ascending=True)
     experiment_df = experiment_df.reset_index(drop=True)
     logger.debug(experiment_df)
@@ -108,8 +113,9 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
 def plot_pdr(experiment_df):
     fig, ax = plt.subplots()
     experiment_df[['pdr_mean']].plot.bar(stacked=True, yerr=experiment_df[['pdr_std']].values.T, width=0.3, ax=ax, error_kw=dict(ecolor='k', lw=0.2, markersize='1', capsize=5, capthick=1, elinewidth=2))
+    ax.set_xticklabels(experiment_df['experiment_name'].tolist())
+    fig.tight_layout()
     plt.show()
-
 
 def main(argv):
     # argv[1] = User_name
