@@ -31,7 +31,7 @@
 // #include <stdint.h>
 
 #include "Commissioning.h"
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 1, DR_5, 0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 0, 0xFFFFFFFF, 0};
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
@@ -256,7 +256,10 @@ int main(void)
   PRINTF("MAC_VERSION= %02X.%02X.%02X.%02X\r\n", (uint8_t)(__LORA_MAC_VERSION >> 24), (uint8_t)(__LORA_MAC_VERSION >> 16), (uint8_t)(__LORA_MAC_VERSION >> 8), (uint8_t)__LORA_MAC_VERSION);
 
   /* Configure the Lora Stack*/
-  LoRaParamInit.TxDatarate = fut_config.CUSTOM[FUT_UPLINK_RATE];
+  if (fut_config.CUSTOM[FUT_UPLINK_RATE] != 0xFFFFFFFF)
+    LoRaParamInit.TxDatarate = fut_config.CUSTOM[FUT_UPLINK_RATE];
+  else
+    LoRaParamInit.TxDatarate = DR_0;
   LORA_Init(&LoRaMainCallbacks, &LoRaParamInit);
 
   LORA_Join();
@@ -315,15 +318,29 @@ static void Send(void *context)
   if (LORA_JoinStatus() != LORA_SET)
   {
     /*Not joined, try again later*/
-    lora_tx_rate(fut_config.CUSTOM[FUT_UPLINK_RATE]);
+    if (fut_config.CUSTOM[FUT_UPLINK_RATE] != 0xFFFFFFFF)
+      lora_tx_rate(fut_config.CUSTOM[FUT_UPLINK_RATE]);
+    else
+      lora_tx_rate(DR_0);
     LORA_Join();
     return;
   }
   else if(LORA_JoinStatus() == LORA_SET)
   {
-    if (send_count < fut_config.CUSTOM[FUT_MAX_SEND])
+    if ((fut_config.CUSTOM[FUT_UPLINK_RATE] != 0xFFFFFFFF) && (send_count < fut_config.CUSTOM[FUT_MAX_SEND]))
     {
       lora_tx_rate(fut_config.CUSTOM[FUT_UPLINK_RATE]);
+      sensor_send();
+    }
+    else if ((fut_config.CUSTOM[FUT_UPLINK_RATE] == 0xFFFFFFFF) && (send_count < fut_config.CUSTOM[FUT_MAX_SEND] * 6))
+    {
+      lora_tx_rate(send_count / fut_config.CUSTOM[FUT_MAX_SEND]);
+      if((send_count % fut_config.CUSTOM[FUT_MAX_SEND] == 0) && (send_count > 0))
+      {
+        log_to_flash("rx_time:%lu, tx_time: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
+        log_to_flash("cpu: %lu, stop: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_STOP)));
+        log_flush();
+      }
       sensor_send();
     }
     else
@@ -421,7 +438,7 @@ static void OnTxTimerEvent(void *context)
   TimerStart(&TxTimer);
   AppProcessRequest = LORA_SET;
   #if ENERGEST_CONF_ON
-    PRINTF("rx_time:%lu, tx_time: %lu, cpu: %lu, stop: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_STOP)));
+    // PRINTF("rx_time:%lu, tx_time: %lu, cpu: %lu, stop: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_STOP)));
   #endif
 }
 
