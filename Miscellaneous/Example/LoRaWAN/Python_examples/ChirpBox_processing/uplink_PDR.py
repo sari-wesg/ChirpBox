@@ -95,6 +95,7 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
             experiment_log = glob.glob(log_dir + "\\log_" + experiment_name + "*.csv")
 
             experiment_pdr = []
+            nodes_real_uplink = []
             for file in experiment_log:
                 # read log one by one
                 start_time = os.path.basename(file)[-len("20210605023553252823).csv"):-len("123456).csv")]
@@ -110,8 +111,7 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
                 nodes_real_uplink_total = gateway_log_count(start_time_utc, end_time_utc, gateway_log, experiment_nodes, UID_list, uplink_SF)
                 if (uplink_SF == "0xFFFFFFFF"):
                     nodes_real_uplink_total_T = list(map(list, zip(*nodes_real_uplink_total)))
-                    logger.debug(nodes_real_uplink_total)
-                    plot_pdr_node(nodes_real_uplink_total, uplink_total)
+                    nodes_real_uplink.extend(nodes_real_uplink_total)
 
                     for i in range(len(nodes_real_uplink_total_T)):
                         pdr_list = [(x / uplink_total)* 100 for x in nodes_real_uplink_total_T[i]]
@@ -123,8 +123,8 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
                     experiment_pdr.append(pdr_mean)
 
             if (uplink_SF == "0xFFFFFFFF"):
-                experiment_pdr = [x.tolist() for x in np.array_split(experiment_pdr, 12-7+1)]
-                logger.debug(experiment_pdr)
+                n = 12-7+1
+                experiment_pdr = [list(i) for i in zip(*[experiment_pdr[i:i+n] for i in range(0, len(experiment_pdr), n)])]
                 for i in range(len(experiment_pdr)):
                     pdr_mean= statistics.mean(experiment_pdr[i])
                     if (len(experiment_pdr[i]) > 1):
@@ -134,6 +134,9 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
                     experiment_df.loc[-1] = [int(12-i), pdr_mean, pdr_std]  # adding a row
                     experiment_df.index = experiment_df.index + 1  # shifting index
                     experiment_df = experiment_df.sort_index()  # sorting by index
+
+                logger.debug(nodes_real_uplink)
+                plot_pdr_node(nodes_real_uplink, uplink_total, len(experiment_log))
             else:
                 pdr_mean= statistics.mean(experiment_pdr)
                 if (len(experiment_pdr) > 1):
@@ -154,20 +157,40 @@ def autolabel(ax, rects):
     """
     for rect in rects:
         height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
+        ax.text(rect.get_x() + rect.get_width()/2., 1*height+5,
                 '%.2f' % float(height),
                 ha='center', va='bottom')
 
-def plot_pdr_node(nodes_real_uplink_total, uplink_total):
-    data = np.array(nodes_real_uplink_total)
-    data = data / uplink_total * 100
+def plot_pdr_node(nodes_real_uplink, uplink_total, test_time):
+    node_len = int(len(nodes_real_uplink) / test_time)
+    logger.debug(node_len)
+
+    nodes_real_uplink_mean=[]
+    nodes_real_uplink_std=[]
+    for i in range(node_len):
+        for j in range(12-7+1):
+            node_sf = []
+            for k in range(int(test_time)):
+                node_sf.append(nodes_real_uplink[k*node_len + i][j])
+            node_sf = np.array(node_sf)
+            node_sf = node_sf / uplink_total * 100
+            nodes_real_uplink_mean.append(statistics.mean(node_sf))
+            nodes_real_uplink_std.append(statistics.stdev(node_sf))
+    nodes_real_uplink_mean = [x.tolist() for x in np.array_split(nodes_real_uplink_mean, node_len)]
+    nodes_real_uplink_std = [x.tolist() for x in np.array_split(nodes_real_uplink_std, node_len)]
+    logger.debug(nodes_real_uplink_mean)
+    logger.debug(nodes_real_uplink_std)
+
+    data = np.array(nodes_real_uplink_mean)
+    data_err = np.array(nodes_real_uplink_std)
     x = np.arange(data.shape[0])
     dx = (np.arange(data.shape[1])-data.shape[1]/2.)/(data.shape[1]+2.)
     d = 1./(data.shape[1]+2.)
 
     fig, ax=plt.subplots()
     for i in range(data.shape[1]):
-        ax.bar(x+dx[i],data[:,i], width=d, label="SF {}".format(12-i), color = red_colors[len(red_colors) - 2 - i])
+        ax.bar(x+dx[i],data[:,i], width=d, label="SF {}".format(12-i), color = red_colors[len(red_colors) - 2 - i], yerr=data_err[:,i], error_kw=dict(ecolor='k', lw=0.02, markersize='1', capsize=1, capthick=0.5, elinewidth=0.5))
+
     ax.set_xticklabels([*range(1,21)], rotation='horizontal')
     ax.set_xticks(np.arange(len(x)))
 
