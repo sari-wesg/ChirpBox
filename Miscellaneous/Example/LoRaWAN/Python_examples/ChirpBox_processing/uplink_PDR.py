@@ -95,6 +95,7 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
             experiment_log = glob.glob(log_dir + "\\log_" + experiment_name + "*.csv")
 
             experiment_pdr = []
+            nodes_real_uplink = []
             for file in experiment_log:
                 # read log one by one
                 start_time = os.path.basename(file)[-len("20210605023553252823).csv"):-len("123456).csv")]
@@ -110,8 +111,7 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
                 nodes_real_uplink_total = gateway_log_count(start_time_utc, end_time_utc, gateway_log, experiment_nodes, UID_list, uplink_SF)
                 if (uplink_SF == "0xFFFFFFFF"):
                     nodes_real_uplink_total_T = list(map(list, zip(*nodes_real_uplink_total)))
-                    logger.debug(nodes_real_uplink_total)
-                    plot_pdr_node(nodes_real_uplink_total, uplink_total)
+                    nodes_real_uplink.extend(nodes_real_uplink_total)
 
                     for i in range(len(nodes_real_uplink_total_T)):
                         pdr_list = [(x / uplink_total)* 100 for x in nodes_real_uplink_total_T[i]]
@@ -123,8 +123,8 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
                     experiment_pdr.append(pdr_mean)
 
             if (uplink_SF == "0xFFFFFFFF"):
-                experiment_pdr = [x.tolist() for x in np.array_split(experiment_pdr, 12-7+1)]
-                logger.debug(experiment_pdr)
+                n = 12-7+1
+                experiment_pdr = [list(i) for i in zip(*[experiment_pdr[i:i+n] for i in range(0, len(experiment_pdr), n)])]
                 for i in range(len(experiment_pdr)):
                     pdr_mean= statistics.mean(experiment_pdr[i])
                     if (len(experiment_pdr[i]) > 1):
@@ -134,6 +134,9 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
                     experiment_df.loc[-1] = [int(12-i), pdr_mean, pdr_std]  # adding a row
                     experiment_df.index = experiment_df.index + 1  # shifting index
                     experiment_df = experiment_df.sort_index()  # sorting by index
+
+                logger.debug(nodes_real_uplink)
+                plot_pdr_node(nodes_real_uplink, uplink_total, len(experiment_log))
             else:
                 pdr_mean= statistics.mean(experiment_pdr)
                 if (len(experiment_pdr) > 1):
@@ -148,50 +151,123 @@ def uplink_pdr(user_name, experiment_settings_dir, log_dir, gateway_log):
     logger.debug(experiment_df)
     return experiment_df
 
-def autolabel(ax, rects):
+def autolabel(ax, rects, int_True):
     """
     Attach a text label above each bar displaying its height
     """
-    for rect in rects:
-        height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
-                '%.2f' % float(height),
-                ha='center', va='bottom')
+    if int_True is True:
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width()/2., 1*height+1,
+                    '%d' % int(height),
+                    ha='center', va='bottom', fontsize=18)
+    else:
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width()/2., 1*height+5,
+                    '%.2f' % float(height),
+                    ha='center', va='bottom', fontsize=18)
 
-def plot_pdr_node(nodes_real_uplink_total, uplink_total):
-    data = np.array(nodes_real_uplink_total)
-    data = data / uplink_total * 100
+def plot_pdr_node(nodes_real_uplink, uplink_total, test_time):
+    node_len = int(len(nodes_real_uplink) / test_time)
+    logger.debug(node_len)
+
+    nodes_real_uplink_mean=[]
+    nodes_real_uplink_std=[]
+    for i in range(node_len):
+        for j in range(12-7+1):
+            node_sf = []
+            for k in range(int(test_time)):
+                node_sf.append(nodes_real_uplink[k*node_len + i][j])
+            node_sf = np.array(node_sf)
+            node_sf = node_sf / uplink_total * 100
+            nodes_real_uplink_mean.append(statistics.mean(node_sf))
+            nodes_real_uplink_std.append(statistics.stdev(node_sf))
+    nodes_real_uplink_mean = [x.tolist() for x in np.array_split(nodes_real_uplink_mean, node_len)]
+    nodes_real_uplink_std = [x.tolist() for x in np.array_split(nodes_real_uplink_std, node_len)]
+    logger.debug(nodes_real_uplink_mean)
+    logger.debug(nodes_real_uplink_std)
+
+    data = np.array(nodes_real_uplink_mean)
+    data_err = np.array(nodes_real_uplink_std)
     x = np.arange(data.shape[0])
     dx = (np.arange(data.shape[1])-data.shape[1]/2.)/(data.shape[1]+2.)
     d = 1./(data.shape[1]+2.)
 
-    fig, ax=plt.subplots()
+    fig, ax = plt.subplots(figsize=(16, 9))
     for i in range(data.shape[1]):
-        ax.bar(x+dx[i],data[:,i], width=d, label="SF {}".format(12-i), color = red_colors[len(red_colors) - 2 - i])
+        ax.bar(x+dx[i],data[:,i], width=d, label="SF {}".format(12-i), color = red_colors[len(red_colors) - 2 - i], yerr=data_err[:,i], error_kw=dict(ecolor='k', lw=0.02, markersize='1', capsize=1, capthick=0.5, elinewidth=0.5))
+
     ax.set_xticklabels([*range(1,21)], rotation='horizontal')
     ax.set_xticks(np.arange(len(x)))
 
-    ax.set_xlabel('Node ID')
-    ax.set_ylabel('PDR (%)')
-    plt.title('Each node’s PDR of LoRaWAN uplink packets', fontsize=12)
-    # plt.legend(framealpha=1)
-    legend = plt.legend(loc='upper right', bbox_to_anchor=(1.14, 1.02), edgecolor='k',fontsize = 10, fancybox=False)
+    ax.set_xlabel('Node ID', fontsize=40)
+    ax.set_ylabel('PDR (%)', fontsize=40)
+    ax.xaxis.set_tick_params(labelsize=28)
+    ax.yaxis.set_tick_params(labelsize=28)
+    plt.title('Each node’s PDR of LoRaWAN uplink packets', fontsize=40)
+    legend = plt.legend(loc="best", fontsize = 20, fancybox=False,ncol=6)
     fig.tight_layout()
 
-    plt.show()
+    # plt.show()
+    plt.savefig("Each node PDR", dpi = 600)
 
 def plot_pdr(experiment_df):
     fig, ax = plt.subplots()
     ax.set_ylim(0,100)
-    ax.set_xlabel('Spreading factor')
-    ax.set_ylabel('PDR (%)')
+    ax.set_xlabel('Spreading factor', fontsize=18)
+    ax.set_ylabel('PDR (%)', fontsize=18)
+    ax.xaxis.set_tick_params(labelsize=18)
+    ax.yaxis.set_tick_params(labelsize=18)
     # ax.set_xticklabels(experiment_df['experiment_name'].tolist(), rotation='horizontal')
     width = 0.3
-    rects1 = ax.bar(experiment_df['experiment_name'].tolist(), experiment_df['PDR'], width=width, color='b', yerr=experiment_df['pdr_std'].tolist(), error_kw=dict(ecolor='k', lw=0.2, markersize='1', capsize=5, capthick=1, elinewidth=2))
-    autolabel(ax, rects1)
-    plt.title('Average PDR of LoRaWAN uplink packets', fontsize=12)
+    rects1 = ax.bar(experiment_df['experiment_name'].tolist(), experiment_df['PDR'], width=width, color='#006837', yerr=experiment_df['pdr_std'].tolist(), error_kw=dict(ecolor='k', lw=0.2, markersize='1', capsize=5, capthick=1, elinewidth=2))
+    autolabel(ax, rects1, False)
+    plt.title('Average PDR of LoRaWAN uplink packets', fontsize=18)
     fig.tight_layout()
-    plt.show()
+    # plt.show()
+    plt.savefig("plot_pdr", dpi = 600)
+
+def gateway_log_count_packets(gateway_log_file, time_duration):
+    df = pd.read_csv(gateway_log_file, sep=',')
+    df.columns = ["utc", "channel", "sf"]
+    start_time_utc = df['utc'][0]
+    end_time_utc = start_time_utc + time_duration
+    df = df[df.iloc[:,0].between(start_time_utc, end_time_utc)]
+    channel_list = df['channel'].unique()
+    sf_list = df['sf'].unique()
+    logger.debug(sorted(channel_list))
+    logger.debug(sorted(sf_list))
+    uplink_count_list = []
+    logger.debug(df)
+    for sf in sf_list:
+        for channel in channel_list:
+            df_sf = df.loc[(df['channel'] == channel) & (df['sf'] == sf)]
+            uplink_count_list.append(len(df_sf))
+    return (uplink_count_list, channel_list, sf_list)
+
+def gateway(gateway_log_file):
+    time_duration = 3600
+    gateway_log_count_packets(gateway_log_file, time_duration)
+    (uplink_count_list, channel_list, sf_list) = gateway_log_count_packets(gateway_log_file, time_duration)
+    logger.debug(uplink_count_list)
+
+    fig, ax = plt.subplots()
+    ax.set_ylim(0,120)
+    ax.set_xlabel('Channel ID', fontsize=18)
+    ax.set_ylabel('Number of packets', fontsize=18)
+    ax.xaxis.set_tick_params(labelsize=18)
+    ax.yaxis.set_tick_params(labelsize=18)
+    width = 0.3
+    rects1 = ax.bar(range(1, len(channel_list)+1), uplink_count_list, width=width, color='b', yerr=0)
+    # ax.legend(rects1,'SF12',loc="lower right", bbox_to_anchor=(1., 1.02) , borderaxespad=0., ncol=2)
+    ax.legend(rects1,['SF 12'],loc="best", fontsize=18)
+    autolabel(ax, rects1, True)
+    plt.title('Interference LoRaWAN packets (one hour)', fontsize=18)
+    fig.tight_layout()
+    # plt.show()
+    plt.savefig("gateway", dpi = 600)
+
 
 def main(argv):
     # argv[1] = User_name
@@ -200,6 +276,7 @@ def main(argv):
     # argv[4] = gateway_log_file
     experiment_df = uplink_pdr(argv[1], argv[2], argv[3], argv[4])
     plot_pdr(experiment_df)
+    gateway(argv[4])
 
 if __name__ == "__main__":
     main(sys.argv)
