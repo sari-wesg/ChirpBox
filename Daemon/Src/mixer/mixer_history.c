@@ -98,9 +98,9 @@ GPI_TRACE_CONFIG(mixer_history, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 // remove node from list
 static void unlink_node(uint16_t node_id)
 {
-	assert_reset((node_id < chirp_config.mx_num_nodes));
+	assert_reset((node_id < loradisc_config.mx_num_nodes));
 
-	Node *list_head = (Node *)mx.history[mx.history[node_id]->list_id + chirp_config.mx_num_nodes];
+	Node *list_head = (Node *)mx.history[mx.history[node_id]->list_id + loradisc_config.mx_num_nodes];
 
 	assert_reset((list_head->mx_num_nodes > 0));
 
@@ -120,12 +120,12 @@ static void append_node(uint16_t node_id, Node *list_head)
 	// ATTENTION: list_head is variable; so depending on sizeof(mx.history[0]), ARRAY_INDEX() may
 	// generate an expensive division operation. To avoid that, we manually decide what to do.
 	// NOTE: the condition checks get resolved at compile time
-	if (IS_POWER_OF_2(chirp_config.history_len_8))
-		head_index = ARRAY_INDEX_SIZE_ADD(list_head, &(mx.history[0]->prev), chirp_config.history_len_8);
-	else if (chirp_config.history_len_8 < 0x100)
-		head_index = gpi_divu_16x8((uintptr_t)list_head - (uintptr_t)&(mx.history[0]->prev), chirp_config.history_len_8, 1);
+	if (IS_POWER_OF_2(loradisc_config.history_len_8))
+		head_index = ARRAY_INDEX_SIZE_ADD(list_head, &(mx.history[0]->prev), loradisc_config.history_len_8);
+	else if (loradisc_config.history_len_8 < 0x100)
+		head_index = gpi_divu_16x8((uintptr_t)list_head - (uintptr_t)&(mx.history[0]->prev), loradisc_config.history_len_8, 1);
 //	else assert_reset(0, "inefficient program, see source code comments");
-	assert_reset(IS_POWER_OF_2((chirp_config.history_len_8) || chirp_config.history_len_8 < 0x100));
+	assert_reset(IS_POWER_OF_2((loradisc_config.history_len_8) || loradisc_config.history_len_8 < 0x100));
 
 	// link node
 	mx.history[node_id]->prev = list_head->prev;
@@ -133,7 +133,7 @@ static void append_node(uint16_t node_id, Node *list_head)
 	mx.history[list_head->prev]->next = node_id;
 	list_head->prev = node_id;
 
-	mx.history[node_id]->list_id = head_index - chirp_config.mx_num_nodes;
+	mx.history[node_id]->list_id = head_index - loradisc_config.mx_num_nodes;
 
 	++(list_head->mx_num_nodes);
 }
@@ -149,32 +149,32 @@ void mx_init_history()
 
 	// Initially all nodes are chained together in the absent list.
 
-	for (i = 0; i < chirp_config.mx_num_nodes; i++)
+	for (i = 0; i < loradisc_config.mx_num_nodes; i++)
 	{
 
 		mx.history[i]->prev 		= i - 1;
 		mx.history[i]->next 		= i + 1;
 		mx.history[i]->value		= 0;
-		mx.history[i]->list_id	= ARRAY_INDEX_SIZE_ADD(mx_absent_head, &(mx.history[0]->prev), chirp_config.history_len_8) - chirp_config.mx_num_nodes;
+		mx.history[i]->list_id	= ARRAY_INDEX_SIZE_ADD(mx_absent_head, &(mx.history[0]->prev), loradisc_config.history_len_8) - loradisc_config.mx_num_nodes;
 
 #if MX_REQUEST && (MX_REQUEST_HEURISTIC > 1)
-		memset(&(mx.history[i]->row_map_chunk[0]), 0, chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		memset(&(mx.history[i]->row_map_chunk[0]), 0, loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 #endif
 	}
 
-	mx.history[0]->prev			= ARRAY_INDEX_SIZE_ADD(mx_absent_head, &(mx.history[0]->prev), chirp_config.history_len_8);
-	mx.history[--i]->next 		= ARRAY_INDEX_SIZE_ADD(mx_absent_head, &(mx.history[0]->prev), chirp_config.history_len_8);
+	mx.history[0]->prev			= ARRAY_INDEX_SIZE_ADD(mx_absent_head, &(mx.history[0]->prev), loradisc_config.history_len_8);
+	mx.history[--i]->next 		= ARRAY_INDEX_SIZE_ADD(mx_absent_head, &(mx.history[0]->prev), loradisc_config.history_len_8);
 
 	mx_absent_head->next		= 0;
 	mx_absent_head->prev 		= i;
 	mx_absent_head->mx_num_nodes 	= ++i;
 
-	mx_present_head->next   	= ARRAY_INDEX_SIZE_ADD(mx_present_head, &(mx.history[0]->prev), chirp_config.history_len_8);
-	mx_present_head->prev   	= ARRAY_INDEX_SIZE_ADD(mx_present_head, &(mx.history[0]->prev), chirp_config.history_len_8);
+	mx_present_head->next   	= ARRAY_INDEX_SIZE_ADD(mx_present_head, &(mx.history[0]->prev), loradisc_config.history_len_8);
+	mx_present_head->prev   	= ARRAY_INDEX_SIZE_ADD(mx_present_head, &(mx.history[0]->prev), loradisc_config.history_len_8);
 	mx_present_head->mx_num_nodes	= 0;
 
-	mx_finished_head->next  	= ARRAY_INDEX_SIZE_ADD(mx_finished_head, &(mx.history[0]->prev), chirp_config.history_len_8);
-	mx_finished_head->prev  	= ARRAY_INDEX_SIZE_ADD(mx_finished_head, &(mx.history[0]->prev), chirp_config.history_len_8);
+	mx_finished_head->next  	= ARRAY_INDEX_SIZE_ADD(mx_finished_head, &(mx.history[0]->prev), loradisc_config.history_len_8);
+	mx_finished_head->prev  	= ARRAY_INDEX_SIZE_ADD(mx_finished_head, &(mx.history[0]->prev), loradisc_config.history_len_8);
 	mx_finished_head->mx_num_nodes	= 0;
 
 	GPI_TRACE_RETURN();
@@ -243,7 +243,7 @@ void mx_purge_history()
 
 		age = reference - (mx.history[node]->last_slot_number << 2);
 
-		uint16_t history_window = 3 * chirp_config.mx_num_nodes;
+		uint16_t history_window = 3 * loradisc_config.mx_num_nodes;
 		if (age <= (history_window << 2))
 		{
 			break;
@@ -263,7 +263,7 @@ void mx_purge_history()
 
 		age = reference - (mx.history[node]->last_slot_number << 2);
 
-		uint16_t history_window_finished = 1 * chirp_config.mx_num_nodes;
+		uint16_t history_window_finished = 1 * loradisc_config.mx_num_nodes;
 		if (age <= (history_window_finished << 2))
 			break;
 

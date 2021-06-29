@@ -1764,17 +1764,17 @@ void gpi_radio_init()
     spi_init();
     SX1276Init();
 
-    SX1276SetChannel(chirp_config.lora_freq);
+    SX1276SetChannel(loradisc_config.lora_freq);
 
 #if defined( USE_MODEM_LORA )
 
-    SX1276SetTxConfig( MODEM_LORA, chirp_config.lora_tx_pwr, 0, chirp_config.lora_bw,
-                    chirp_config.lora_sf, chirp_config.lora_cr,
-                    chirp_config.lora_plen, LORA_FIX_LENGTH_PAYLOAD_ON,
+    SX1276SetTxConfig( MODEM_LORA, loradisc_config.lora_tx_pwr, 0, loradisc_config.lora_bw,
+                    loradisc_config.lora_sf, loradisc_config.lora_cr,
+                    loradisc_config.lora_plen, LORA_FIX_LENGTH_PAYLOAD_ON,
                     true, 0, 0, LORA_IQ_INVERSION_ON, TX_TIMEOUT_VALUE );
 
-    SX1276SetRxConfig( MODEM_LORA, chirp_config.lora_bw, chirp_config.lora_sf,
-                    chirp_config.lora_cr, 0, chirp_config.lora_plen,
+    SX1276SetRxConfig( MODEM_LORA, loradisc_config.lora_bw, loradisc_config.lora_sf,
+                    loradisc_config.lora_cr, 0, loradisc_config.lora_plen,
                     LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                     0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
 

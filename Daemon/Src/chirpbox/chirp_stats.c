@@ -139,7 +139,7 @@ void Stats_to_Flash(Mixer_Task task)
         FLASH_If_Write(DAEMON_FLASH_ADDRESS, (uint32_t *)stats_array, sizeof(stats_array) / sizeof(uint32_t));
         #if MX_LBT_ACCESS
         stats_lbt_len = (LBT_CHANNEL_NUM + 1) / 2;
-        FLASH_If_Write(DAEMON_FLASH_ADDRESS + sizeof(stats_array) * 2, (uint32_t *)&chirp_config.lbt_channel_time_stats_us[0], stats_lbt_len * sizeof(uint64_t) / sizeof(uint32_t));
+        FLASH_If_Write(DAEMON_FLASH_ADDRESS + sizeof(stats_array) * 2, (uint32_t *)&loradisc_config.lbt_channel_time_stats_us[0], stats_lbt_len * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
     }
     else if (task == MX_COLLECT)
@@ -150,7 +150,7 @@ void Stats_to_Flash(Mixer_Task task)
             FLASH_If_Write(DAEMON_FLASH_ADDRESS + sizeof(stats_array), (uint32_t *)stats_array, sizeof(stats_array) / sizeof(uint32_t));
             #if MX_LBT_ACCESS
             stats_lbt_len = (LBT_CHANNEL_NUM + 1) / 2;
-            FLASH_If_Write(DAEMON_FLASH_ADDRESS + sizeof(stats_array) * 2 + stats_lbt_len * sizeof(uint64_t), (uint32_t *)&chirp_config.lbt_channel_time_stats_us[0], stats_lbt_len * sizeof(uint64_t) / sizeof(uint32_t));
+            FLASH_If_Write(DAEMON_FLASH_ADDRESS + sizeof(stats_array) * 2 + stats_lbt_len * sizeof(uint64_t), (uint32_t *)&loradisc_config.lbt_channel_time_stats_us[0], stats_lbt_len * sizeof(uint64_t) / sizeof(uint32_t));
             #endif
         }
     }

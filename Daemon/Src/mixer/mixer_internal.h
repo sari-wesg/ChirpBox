@@ -331,7 +331,7 @@ typedef struct Packet_Vector_Tag
 	uint8_t len;
 } Packet_Vector;
 
-typedef struct __attribute__((packed)) Chirp_Config_tag
+typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 {
 	/* mixer packet configuration and node number */
 	uint16_t 	mx_num_nodes;
@@ -410,7 +410,7 @@ typedef struct __attribute__((packed)) Chirp_Config_tag
 	#endif
 	uint8_t		glossy_task;
 	Disc_Primitive primitive;
-} Chirp_Config;
+} LoRaDisC_Config;
 
 #if INFO_VECTOR_QUEUE
 typedef struct Packet_info_vector_tag
@@ -728,7 +728,7 @@ extern Pt_Context				pt_data[3];
 
 //**************************************************************************************************
 
-extern Chirp_Config chirp_config;
+extern LoRaDisC_Config loradisc_config;
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************

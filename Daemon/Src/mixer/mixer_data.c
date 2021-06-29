@@ -110,89 +110,89 @@ void uart_read_command(uint8_t *p, uint8_t rxbuffer_len)
  */
 void chirp_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive)
 {
-    memset(&chirp_config, 0, offsetof(Chirp_Config, mx_slot_length_in_us));
-    chirp_config.primitive = primitive;
-    // chirp_config
-    chirp_config.mx_num_nodes = mx_num_nodes;
-    chirp_config.mx_generation_size = mx_generation_size;
-    chirp_config.mx_payload_size = mx_payload_size;
+    memset(&loradisc_config, 0, offsetof(LoRaDisC_Config, mx_slot_length_in_us));
+    loradisc_config.primitive = primitive;
+    // loradisc_config
+    loradisc_config.mx_num_nodes = mx_num_nodes;
+    loradisc_config.mx_generation_size = mx_generation_size;
+    loradisc_config.mx_payload_size = mx_payload_size;
 
-    chirp_config.coding_vector.pos = 0;
-    chirp_config.coding_vector.len = (chirp_config.mx_generation_size + 7) / 8;
-    chirp_config.payload.pos = chirp_config.coding_vector.pos + chirp_config.coding_vector.len;
-    chirp_config.payload.len = chirp_config.mx_payload_size;
-    chirp_config.info_vector.pos = chirp_config.payload.pos + chirp_config.payload.len;
-    chirp_config.info_vector.len = (chirp_config.mx_generation_size + 7) / 8;
-    chirp_config._padding_2.pos = chirp_config.info_vector.pos + chirp_config.info_vector.len;
-    chirp_config._padding_2.len = PADDING_MAX(0,
-                            PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-                            + PADDING_SIZE(chirp_config.mx_payload_size)
+    loradisc_config.coding_vector.pos = 0;
+    loradisc_config.coding_vector.len = (loradisc_config.mx_generation_size + 7) / 8;
+    loradisc_config.payload.pos = loradisc_config.coding_vector.pos + loradisc_config.coding_vector.len;
+    loradisc_config.payload.len = loradisc_config.mx_payload_size;
+    loradisc_config.info_vector.pos = loradisc_config.payload.pos + loradisc_config.payload.len;
+    loradisc_config.info_vector.len = (loradisc_config.mx_generation_size + 7) / 8;
+    loradisc_config._padding_2.pos = loradisc_config.info_vector.pos + loradisc_config.info_vector.len;
+    loradisc_config._padding_2.len = PADDING_MAX(0,
+                            PADDING_SIZE((loradisc_config.mx_generation_size + 7) / 8)
+                            + PADDING_SIZE(loradisc_config.mx_payload_size)
             #if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-                            - ((chirp_config.mx_generation_size + 7) / 8)
+                            - ((loradisc_config.mx_generation_size + 7) / 8)
             #endif
                             );
-    chirp_config.rand.pos = chirp_config._padding_2.pos + chirp_config._padding_2.len;
-    chirp_config.rand.len = 1;
-    chirp_config._padding_3.pos = chirp_config.rand.pos + chirp_config.rand.len;
-    chirp_config._padding_3.len = PADDING_SIZE(
-                                ((chirp_config.mx_generation_size + 7) / 8) +	// coding_vector
-                                chirp_config.mx_payload_size +					// payload
+    loradisc_config.rand.pos = loradisc_config._padding_2.pos + loradisc_config._padding_2.len;
+    loradisc_config.rand.len = 1;
+    loradisc_config._padding_3.pos = loradisc_config.rand.pos + loradisc_config.rand.len;
+    loradisc_config._padding_3.len = PADDING_SIZE(
+                                ((loradisc_config.mx_generation_size + 7) / 8) +	// coding_vector
+                                loradisc_config.mx_payload_size +					// payload
 #if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
-                                ((chirp_config.mx_generation_size + 7) / 8) +	// info_vector
+                                ((loradisc_config.mx_generation_size + 7) / 8) +	// info_vector
     #if !GPI_ARCH_IS_BOARD(TMOTE)
                                 PADDING_MAX(0,						// _padding_2
-                                    PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-                                    + PADDING_SIZE(chirp_config.mx_payload_size)
-                                    - ((chirp_config.mx_generation_size + 7) / 8)
+                                    PADDING_SIZE((loradisc_config.mx_generation_size + 7) / 8)
+                                    + PADDING_SIZE(loradisc_config.mx_payload_size)
+                                    - ((loradisc_config.mx_generation_size + 7) / 8)
                                     ) +
     #endif
 #else
     #if !GPI_ARCH_IS_BOARD(TMOTE)
                                 PADDING_MAX(0,						// _padding_2
-                                    PADDING_SIZE((chirp_config.mx_generation_size + 7) / 8)
-                                    + PADDING_SIZE(chirp_config.mx_payload_size)) +
+                                    PADDING_SIZE((loradisc_config.mx_generation_size + 7) / 8)
+                                    + PADDING_SIZE(loradisc_config.mx_payload_size)) +
     #endif
 #endif
                                 1);
-    chirp_config.packet_chunk_len = chirp_config.coding_vector.len + chirp_config.payload.len + chirp_config.info_vector.len + chirp_config._padding_2.len + chirp_config.rand.len + chirp_config._padding_3.len;
-    chirp_config.phy_payload_size = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.coding_vector.len + chirp_config.payload.len + chirp_config.info_vector.len;
-    chirp_config.packet_len = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.packet_chunk_len;
-    assert_reset(!(chirp_config.packet_len % sizeof(uint_fast_t)));
+    loradisc_config.packet_chunk_len = loradisc_config.coding_vector.len + loradisc_config.payload.len + loradisc_config.info_vector.len + loradisc_config._padding_2.len + loradisc_config.rand.len + loradisc_config._padding_3.len;
+    loradisc_config.phy_payload_size = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.coding_vector.len + loradisc_config.payload.len + loradisc_config.info_vector.len;
+    loradisc_config.packet_len = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.packet_chunk_len;
+    assert_reset(!(loradisc_config.packet_len % sizeof(uint_fast_t)));
 
-    chirp_config.matrix_coding_vector_8.pos = 0;
-    chirp_config.matrix_coding_vector_8.len = chirp_config.coding_vector.len;
-    chirp_config.matrix_payload_8.pos = chirp_config.matrix_coding_vector_8.pos + chirp_config.matrix_coding_vector_8.len;
-    chirp_config.matrix_payload_8.len = chirp_config.payload.len;
+    loradisc_config.matrix_coding_vector_8.pos = 0;
+    loradisc_config.matrix_coding_vector_8.len = loradisc_config.coding_vector.len;
+    loradisc_config.matrix_payload_8.pos = loradisc_config.matrix_coding_vector_8.pos + loradisc_config.matrix_coding_vector_8.len;
+    loradisc_config.matrix_payload_8.len = loradisc_config.payload.len;
 
-    chirp_config.matrix_coding_vector.pos = 0;
-    chirp_config.matrix_coding_vector.len = (chirp_config.mx_generation_size + (sizeof(uint_fast_t) * 8) - 1) / (sizeof(uint_fast_t) * 8);
-    chirp_config.matrix_payload.pos = chirp_config.matrix_coding_vector.pos + chirp_config.matrix_coding_vector.len;
-    chirp_config.matrix_payload.len = (chirp_config.mx_payload_size + sizeof(uint_fast_t) - 1) / sizeof(uint_fast_t);
+    loradisc_config.matrix_coding_vector.pos = 0;
+    loradisc_config.matrix_coding_vector.len = (loradisc_config.mx_generation_size + (sizeof(uint_fast_t) * 8) - 1) / (sizeof(uint_fast_t) * 8);
+    loradisc_config.matrix_payload.pos = loradisc_config.matrix_coding_vector.pos + loradisc_config.matrix_coding_vector.len;
+    loradisc_config.matrix_payload.len = (loradisc_config.mx_payload_size + sizeof(uint_fast_t) - 1) / sizeof(uint_fast_t);
 
-    chirp_config.matrix_chunk_8_len = chirp_config.matrix_coding_vector_8.len + chirp_config.matrix_payload_8.len;
-    chirp_config.matrix_chunk_32_len = chirp_config.matrix_coding_vector.len + chirp_config.matrix_payload.len;
-    chirp_config.matrix_size_32 = chirp_config.matrix_chunk_32_len + 1;
+    loradisc_config.matrix_chunk_8_len = loradisc_config.matrix_coding_vector_8.len + loradisc_config.matrix_payload_8.len;
+    loradisc_config.matrix_chunk_32_len = loradisc_config.matrix_coding_vector.len + loradisc_config.matrix_payload.len;
+    loradisc_config.matrix_size_32 = loradisc_config.matrix_chunk_32_len + 1;
 
-    chirp_config.history_len_8 = offsetof(Node, row_map_chunk) + chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t);
+    loradisc_config.history_len_8 = offsetof(Node, row_map_chunk) + loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t);
 
-    uint8_t hash_factor = (((chirp_config.mx_num_nodes + 7) / 8 + chirp_config.info_vector.len - 1) / chirp_config.info_vector.len);
-    chirp_config.map.pos = 0;
-    chirp_config.map.len = hash_factor * chirp_config.info_vector.len;
-    chirp_config.hash.pos = chirp_config.map.pos + chirp_config.map.len;
-    chirp_config.hash.len = chirp_config.info_vector.len;
+    uint8_t hash_factor = (((loradisc_config.mx_num_nodes + 7) / 8 + loradisc_config.info_vector.len - 1) / loradisc_config.info_vector.len);
+    loradisc_config.map.pos = 0;
+    loradisc_config.map.len = hash_factor * loradisc_config.info_vector.len;
+    loradisc_config.hash.pos = loradisc_config.map.pos + loradisc_config.map.len;
+    loradisc_config.hash.len = loradisc_config.info_vector.len;
 
-    chirp_config.row_all_mask.pos = 0;
-    chirp_config.row_all_mask.len = chirp_config.matrix_coding_vector.len;
-    chirp_config.row_any_mask.pos = chirp_config.row_all_mask.pos + chirp_config.row_all_mask.len;
-    chirp_config.row_any_mask.len = chirp_config.matrix_coding_vector.len;
-    chirp_config.column_all_mask.pos = chirp_config.row_any_mask.pos + chirp_config.row_any_mask.len;
-    chirp_config.column_all_mask.len = chirp_config.matrix_coding_vector.len;
-    chirp_config.column_any_mask.pos = chirp_config.column_all_mask.pos + chirp_config.column_all_mask.len;
-    chirp_config.column_any_mask.len = chirp_config.matrix_coding_vector.len;
-    chirp_config.my_row_mask.pos = chirp_config.column_any_mask.pos + chirp_config.column_any_mask.len;
-    chirp_config.my_row_mask.len = chirp_config.matrix_coding_vector.len;
-    chirp_config.my_column_mask.pos = chirp_config.my_row_mask.pos + chirp_config.my_row_mask.len;
-    chirp_config.my_column_mask.len = chirp_config.matrix_coding_vector.len;
+    loradisc_config.row_all_mask.pos = 0;
+    loradisc_config.row_all_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.row_any_mask.pos = loradisc_config.row_all_mask.pos + loradisc_config.row_all_mask.len;
+    loradisc_config.row_any_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.column_all_mask.pos = loradisc_config.row_any_mask.pos + loradisc_config.row_any_mask.len;
+    loradisc_config.column_all_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.column_any_mask.pos = loradisc_config.column_all_mask.pos + loradisc_config.column_all_mask.len;
+    loradisc_config.column_any_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.my_row_mask.pos = loradisc_config.column_any_mask.pos + loradisc_config.column_any_mask.len;
+    loradisc_config.my_row_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.my_column_mask.pos = loradisc_config.my_row_mask.pos + loradisc_config.my_row_mask.len;
+    loradisc_config.my_column_mask.len = loradisc_config.matrix_coding_vector.len;
 }
 /* slot length is mx_slot_length_in_us microseconds,
 needed slot number is mx_round_length,
@@ -200,30 +200,30 @@ round is last for mx_period_time_us seconds */
 void chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus)
 {
     uint32_t mx_period_time_us;
-    memset(&chirp_config + offsetof(Chirp_Config, mx_slot_length_in_us), 0, offsetof(Chirp_Config, lora_sf) - offsetof(Chirp_Config, mx_slot_length_in_us));
-    chirp_config.mx_slot_length_in_us = mx_slot_length_in_us;
+    memset(&loradisc_config + offsetof(LoRaDisC_Config, mx_slot_length_in_us), 0, offsetof(LoRaDisC_Config, lora_sf) - offsetof(LoRaDisC_Config, mx_slot_length_in_us));
+    loradisc_config.mx_slot_length_in_us = mx_slot_length_in_us;
     #if MX_LBT_ACCESS
-    chirp_config.mx_slot_length_in_us += chirp_config.lbt_detect_duration_us * CHANNEL_ALTER;
+    loradisc_config.mx_slot_length_in_us += loradisc_config.lbt_detect_duration_us * CHANNEL_ALTER;
     #endif
-    chirp_config.mx_slot_length = GPI_TICK_US_TO_FAST2(chirp_config.mx_slot_length_in_us);
-    chirp_config.mx_round_length = mx_round_length;
-    mx_period_time_us =  chirp_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
-    chirp_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
+    loradisc_config.mx_slot_length = GPI_TICK_US_TO_FAST2(loradisc_config.mx_slot_length_in_us);
+    loradisc_config.mx_round_length = mx_round_length;
+    mx_period_time_us =  loradisc_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
+    loradisc_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
 }
 
 void chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency)
 {
-    memset(&chirp_config + offsetof(Chirp_Config, lora_sf), 0, sizeof(chirp_config) - offsetof(Chirp_Config, lora_sf));
-    chirp_config.lora_sf = lora_spreading_factor;
-    chirp_config.lora_bw = lora_bandwidth;
-    chirp_config.lora_cr = lora_codingrate;
-    chirp_config.lora_plen = lora_preamble_length;
-    chirp_config.lora_tx_pwr = tx_output_power;
-    chirp_config.lora_freq = lora_frequency * 1e3; /* kHz -> Hz */
+    memset(&loradisc_config + offsetof(LoRaDisC_Config, lora_sf), 0, sizeof(loradisc_config) - offsetof(LoRaDisC_Config, lora_sf));
+    loradisc_config.lora_sf = lora_spreading_factor;
+    loradisc_config.lora_bw = lora_bandwidth;
+    loradisc_config.lora_cr = lora_codingrate;
+    loradisc_config.lora_plen = lora_preamble_length;
+    loradisc_config.lora_tx_pwr = tx_output_power;
+    loradisc_config.lora_freq = lora_frequency * 1e3; /* kHz -> Hz */
     gpi_radio_init();
 	#if MX_LBT_ACCESS
-    uint32_t symbol_time_us = SX1276GetSymbolTime(chirp_config.lora_sf, chirp_config.lora_bw);
-    chirp_config.lbt_detect_duration_us = (6 * symbol_time_us >= LBT_DELAY_IN_US) ? 6 * symbol_time_us : LBT_DELAY_IN_US;
+    uint32_t symbol_time_us = SX1276GetSymbolTime(loradisc_config.lora_sf, loradisc_config.lora_bw);
+    loradisc_config.lbt_detect_duration_us = (6 * symbol_time_us >= LBT_DELAY_IN_US) ? 6 * symbol_time_us : LBT_DELAY_IN_US;
     #endif
 }
 
@@ -235,25 +235,25 @@ void chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, u
 void chirp_payload_distribution(Mixer_Task mx_task)
 {
     uint8_t i;
-    chirp_config.disem_copy = 0;
+    loradisc_config.disem_copy = 0;
     if ((mx_task == MX_DISSEMINATE))
     {
-        payload_distribution = (uint8_t *)malloc(chirp_config.mx_generation_size);
+        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_generation_size);
         /* Only the initiator has packets */
-        for (i = 0; i < chirp_config.mx_generation_size; i++)
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
             payload_distribution[i] = 0;
     }
     else
     {
         /* Each node has a packet */
-        assert_reset((chirp_config.mx_num_nodes == chirp_config.mx_generation_size));
-        payload_distribution = (uint8_t *)malloc(chirp_config.mx_num_nodes);
+        assert_reset((loradisc_config.mx_num_nodes == loradisc_config.mx_generation_size));
+        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_num_nodes);
 
-        for (i = 0; i < chirp_config.mx_num_nodes; i++)
+        for (i = 0; i < loradisc_config.mx_num_nodes; i++)
             payload_distribution[i] = i;
 
         if ((mx_task == MX_ARRANGE) || (mx_task == CHIRP_START) || (mx_task == CHIRP_CONNECTIVITY))
-            chirp_config.disem_copy = 1;
+            loradisc_config.disem_copy = 1;
     }
 }
 
@@ -388,7 +388,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                     else
                     {
                         data[6] = chirp_outl->disem_flag_full_rank;
-                        chirp_config.disem_copy = 0;
+                        loradisc_config.disem_copy = 0;
                     }
                 }
             }
@@ -476,7 +476,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     assert_reset((k <= DATA_HEADER_LENGTH));
 
-    for (i = 0; i < chirp_config.mx_generation_size; i++)
+    for (i = 0; i < loradisc_config.mx_generation_size; i++)
     {
         if (payload_distribution[i] == node_id)
         {
@@ -550,7 +550,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     uint8_t round_hash = 0;
     uint8_t k = 0;
     uint8_t packet_correct = 0;
-    uint32_t mask_negative[chirp_config.my_column_mask.len];
+    uint32_t mask_negative[loradisc_config.my_column_mask.len];
     uint32_t firmware_bitmap_temp[DISSEM_BITMAP_32];
     uint16_t pending;
     if ((chirp_outl->task == MX_DISSEMINATE) || (chirp_outl->task == MX_COLLECT))
@@ -576,22 +576,22 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
         if ((!node_id) && (!chirp_outl->disem_flag))
         {
             memcpy((uint32_t *)&(firmware_bitmap_temp[0]), (uint32_t *)&(chirp_outl->firmware_bitmap[0]), DISSEM_BITMAP_32 * sizeof(uint32_t));
-            for (i = 0; i < chirp_config.my_column_mask.len; i++)
-                mask_negative[i] = ~mx.request->mask[chirp_config.my_column_mask.pos + i];
+            for (i = 0; i < loradisc_config.my_column_mask.len; i++)
+                mask_negative[i] = ~mx.request->mask[loradisc_config.my_column_mask.pos + i];
             pending = mx_request_clear((uint32_t *)&(firmware_bitmap_temp[0]), (uint_fast_t *)&(mask_negative[0]), DISSEM_BITMAP_32 * sizeof(uint32_t));
             if (pending == 0)
-                chirp_config.full_column = 0;
+                loradisc_config.full_column = 0;
         }
 
-        for (i = 0; i < chirp_config.mx_generation_size; i++)
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
         {
             void *p = mixer_read(i);
             if (NULL != p)
             {
-                memcpy(receive_payload, p, chirp_config.matrix_payload_8.len);
-                calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, chirp_config.matrix_payload_8.len - 2);
-                rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
-                PRINTF("rece_hash:%d, %x, %x, %d\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
+                memcpy(receive_payload, p, loradisc_config.matrix_payload_8.len);
+                calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, loradisc_config.matrix_payload_8.len - 2);
+                rece_hash = receive_payload[loradisc_config.matrix_payload_8.len - 2] << 8 | receive_payload[loradisc_config.matrix_payload_8.len - 1];
+                PRINTF("rece_hash:%d, %x, %x, %d\n", i, rece_hash, (uint16_t)calu_payload_hash, loradisc_config.matrix_payload_8.len);
                 if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                 {
                     rece_dissem_index = (receive_payload[ROUND_HEADER_LENGTH] << 8 | receive_payload[ROUND_HEADER_LENGTH + 1]);
@@ -604,21 +604,21 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             }
         }
 
-        if (round_hash == chirp_config.mx_generation_size)
-            chirp_config.full_rank = 1;
+        if (round_hash == loradisc_config.mx_generation_size)
+            loradisc_config.full_rank = 1;
         else
         {
             mx.stat_counter.slot_decoded = 0;
         }
     }
-	if (chirp_config.primitive != FLOODING)
+	if (loradisc_config.primitive != FLOODING)
 	{
         free(mx.request);
     }
 
-    if (((chirp_config.full_rank) && (chirp_outl->task == MX_DISSEMINATE)) || (chirp_outl->task != MX_DISSEMINATE))
+    if (((loradisc_config.full_rank) && (chirp_outl->task == MX_DISSEMINATE)) || (chirp_outl->task != MX_DISSEMINATE))
     {
-        for (i = 0; i < chirp_config.mx_generation_size; i++)
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
         {
             void *p = mixer_read(i);
             if (NULL != p)
@@ -626,10 +626,10 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 memcpy(data, p, sizeof(data));
                 if (chirp_outl->task != MX_DISSEMINATE)
                 {
-                    memcpy(receive_payload, p, chirp_config.matrix_payload_8.len);
-                    calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, chirp_config.matrix_payload_8.len - 2);
-                    rece_hash = receive_payload[chirp_config.matrix_payload_8.len - 2] << 8 | receive_payload[chirp_config.matrix_payload_8.len - 1];
-                    PRINTF("rece_hash:%d, %x, %x, %d\n", i, rece_hash, (uint16_t)calu_payload_hash, chirp_config.matrix_payload_8.len);
+                    memcpy(receive_payload, p, loradisc_config.matrix_payload_8.len);
+                    calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, loradisc_config.matrix_payload_8.len - 2);
+                    rece_hash = receive_payload[loradisc_config.matrix_payload_8.len - 2] << 8 | receive_payload[loradisc_config.matrix_payload_8.len - 1];
+                    PRINTF("rece_hash:%d, %x, %x, %d\n", i, rece_hash, (uint16_t)calu_payload_hash, loradisc_config.matrix_payload_8.len);
                 }
                 // PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);
                 packet_correct = 0;
@@ -862,7 +862,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             }
         }
     }
-	if (chirp_config.primitive != FLOODING)
+	if (loradisc_config.primitive != FLOODING)
     {
     free(mx.matrix[0]);
     mx.matrix[0] = NULL;
@@ -917,7 +917,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
     gpi_watchdog_periodic();
 	// Gpi_Fast_Tick_Native deadline;
     Gpi_Fast_Tick_Extended deadline;
-    Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((chirp_config.mx_period_time_s * 1000) / 1) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));
+    Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_period_time_s * 1000) / 1) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
 
     uint8_t failed_round = 0;
 
@@ -926,18 +926,18 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
     /* set current state as mixer */
 	chirp_isr.state = ISR_MIXER;
 
-	// deadline = gpi_tick_fast_native() + 2 * chirp_config.mx_slot_length;
+	// deadline = gpi_tick_fast_native() + 2 * loradisc_config.mx_slot_length;
 	// deadline = gpi_tick_fast_native();
 	deadline = gpi_tick_fast_extended();
 
     clear_data();
 
-    chirp_config.task = chirp_outl->task;
+    loradisc_config.task = chirp_outl->task;
 
-	if (chirp_config.primitive != FLOODING)
-        chirp_config.packet_hash = DISC_HEADER;
+	if (loradisc_config.primitive != FLOODING)
+        loradisc_config.packet_hash = DISC_HEADER;
     else
-        chirp_config.packet_hash = FLOODING_HEADER;
+        loradisc_config.packet_hash = FLOODING_HEADER;
 
 	while (1)
 	{
@@ -951,7 +951,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             ENERGEST_ON(ENERGEST_TYPE_CPU);
         #endif
         /* except these two task that all nodes need to upload data, others only initiator transmit data */
-        if (chirp_config.primitive == DISSEMINATION)
+        if (loradisc_config.primitive == DISSEMINATION)
         {
             if (!node_id)
                 chirp_write(node_id, chirp_outl);
@@ -972,9 +972,9 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             /* because other nodes need time to erase pages */
             if ((chirp_outl->task == MX_DISSEMINATE) && (chirp_outl->round == 1))
                 // deadline += GPI_TICK_MS_TO_FAST2(8000);
-                deadline += (Gpi_Fast_Tick_Extended)1 * chirp_config.mx_slot_length;
+                deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length;
             else
-                deadline += (Gpi_Fast_Tick_Extended)1 * chirp_config.mx_slot_length;
+                deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length;
         }
 
 		/* start when deadline reached
@@ -983,29 +983,29 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         #if MX_LBT_ACCESS
             lbt_check_time();
             chirp_isr.state = ISR_MIXER;
-            if (chirp_config.primitive != FLOODING)
+            if (loradisc_config.primitive != FLOODING)
             {
-            chirp_config.lbt_channel_primary = (chirp_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
+            loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
             if ((!chirp_outl->disem_flag) && (chirp_outl->task == MX_DISSEMINATE) && (chirp_outl->round >= 2))
             {
-                chirp_config.lbt_channel_primary = (chirp_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
+                loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
             }
             }
-            SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
-            PRINTF("-------lbt_channel_primary:%d\n", chirp_config.lbt_channel_primary);
+            SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+            PRINTF("-------lbt_channel_primary:%d\n", loradisc_config.lbt_channel_primary);
         #endif
 		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
         #if ENERGEST_CONF_ON
             ENERGEST_OFF(ENERGEST_TYPE_CPU);
         #endif
         /* used in mixer_write, and revalue before mixer round */
-        chirp_config.full_rank = 0;
-        chirp_config.full_column = UINT8_MAX;
+        loradisc_config.full_rank = 0;
+        loradisc_config.full_column = UINT8_MAX;
         rece_dissem_index = UINT16_MAX;
 
 		deadline = mixer_start();
 
-        if (chirp_config.primitive != FLOODING)
+        if (loradisc_config.primitive != FLOODING)
         {
         if (chirp_outl->task != MX_DISSEMINATE)
         {
@@ -1086,7 +1086,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     free(payload_distribution);
                     chirp_radio_config(chirp_outl->default_sf, 7, 1, 8, chirp_outl->default_tp, chirp_outl->default_freq);
                     /* If now is confirm, the initiator collect all nodes information about whether they are full rank last round, if so, then send the next file chunk, file index++, else do not increase file index */
-                    if ((!node_id) && (chirp_config.full_column == 0))
+                    if ((!node_id) && (loradisc_config.full_column == 0))
                     {
                         chirp_outl->disem_file_index++;
                         chirp_outl->disem_file_index_stay = 0;
@@ -1094,7 +1094,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     }
                     PRINTF("next: disem_flag: %d, %d\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     chirp_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
-                    chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+                    chirp_outl->packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
                     chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
                     chirp_payload_distribution(chirp_outl->task);
                     chirp_outl->disem_flag = 1;
@@ -1118,7 +1118,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     PRINTF("next: collect disem_flag: %d, %d\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                     // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                     chirp_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL, COLLECTION);
-                    chirp_outl->packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+                    chirp_outl->packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
                     if (chirp_outl->dissem_back_slot_num == 0)
                         chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
                     chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
@@ -1130,7 +1130,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     if (chirp_outl->disem_file_index > rece_dissem_index)
                     {
                         PRINTF("full disem_copy\n");
-                        chirp_config.disem_copy = 1;
+                        loradisc_config.disem_copy = 1;
                         chirp_outl->disem_flag_full_rank = mx.stat_counter.slot_full_rank;
                     }
                 }
@@ -1155,13 +1155,13 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         else
         {
-            Gpi_Fast_Tick_Native resync_plus =  GPI_TICK_MS_TO_FAST2(((chirp_config.mx_slot_length_in_us * 5 / 2) * (chirp_config.mx_round_length / 2 - 1) / 1000) - chirp_config.mx_round_length * (chirp_config.mx_slot_length_in_us / 1000));
-            if (!chirp_config.glossy_task)
+            Gpi_Fast_Tick_Native resync_plus =  GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
+            if (!loradisc_config.glossy_task)
                 deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
             else
                 deadline += (Gpi_Fast_Tick_Extended)(update_period);
             while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-            return chirp_config.glossy_task;
+            return loradisc_config.glossy_task;
         }
 	}
 }

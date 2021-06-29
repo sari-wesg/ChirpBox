@@ -1195,13 +1195,13 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
   chirp_outl.default_freq = daemon_config.Frequency;
 
   #if MX_LBT_ACCESS
-    memset(&chirp_config.lbt_init_time, 0, sizeof(chirp_config.lbt_init_time));
-    chirp_config.lbt_channel_total = LBT_CHANNEL_NUM;
+    memset(&loradisc_config.lbt_init_time, 0, sizeof(loradisc_config.lbt_init_time));
+    loradisc_config.lbt_channel_total = LBT_CHANNEL_NUM;
     int32_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
     uint32_t m;
-    for (m = sizeof(uint32_t) * 8; m-- > chirp_config.lbt_channel_total;)
+    for (m = sizeof(uint32_t) * 8; m-- > loradisc_config.lbt_channel_total;)
         mask >>= 1;
-    chirp_config.lbt_channel_mask = ~(mask << 1);
+    loradisc_config.lbt_channel_mask = ~(mask << 1);
   #endif
 
   Chirp_Time ds3231_time;
@@ -1209,7 +1209,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
   time_t sleep_sec;
 
   Chirp_Time gps_time;
-  chirp_config.lbt_channel_primary = 0;
+  loradisc_config.lbt_channel_primary = 0;
   uint8_t sync_channel_id = 0;
   sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
   chirp_outl.glossy_gps_on = 1;
@@ -1239,7 +1239,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       ENERGEST_ON(ENERGEST_TYPE_CPU);
     #endif
     // just finish a task
-    if (chirp_config.glossy_task == 2)
+    if (loradisc_config.glossy_task == 2)
     {
       #if GPS_DATA
       DS3231_GetTime();
@@ -1282,26 +1282,26 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
 		chirp_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
-    chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, 8);
+    chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, 8);
     chirp_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
 
-    chirp_config.glossy_task = 0;
+    loradisc_config.glossy_task = 0;
     if (!node_id)
     {
       if (!menu_wait_task(&chirp_outl))
-        chirp_config.glossy_task = 1;
+        loradisc_config.glossy_task = 1;
       else
-        chirp_config.glossy_task = 2;
+        loradisc_config.glossy_task = 2;
     }
 
-    PRINTF("chirp_config.glossy_task:%d\n", chirp_config.glossy_task);
+    PRINTF("loradisc_config.glossy_task:%d\n", loradisc_config.glossy_task);
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
     #endif
     sync_channel_id = 0;
-    chirp_config.lbt_channel_primary = sync_channel_id;
-    SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
+    loradisc_config.lbt_channel_primary = sync_channel_id;
+    SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
     // no task
 		if (chirp_round(node_id, &chirp_outl) != 2)
 		{
@@ -1314,7 +1314,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
           Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
         #endif
-        PRINTF("chirp_round:%d\n", chirp_config.glossy_task);
+        PRINTF("chirp_round:%d\n", loradisc_config.glossy_task);
         if (!node_id)
         {
           #if GPS_DATA
@@ -1331,7 +1331,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         else
         {
           // this time glossy no task but sync true
-          if (chirp_config.glossy_task)
+          if (loradisc_config.glossy_task)
           {
             chirp_outl.glossy_resync = 0;
             // close gps if on
@@ -1344,7 +1344,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
             }
           }
           // long time no glossy, open the gps
-          if (!chirp_config.glossy_task)
+          if (!loradisc_config.glossy_task)
           {
             chirp_outl.glossy_resync++;
             if ((chirp_outl.glossy_resync >= 5) && (!chirp_outl.glossy_gps_on))
@@ -1372,7 +1372,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           }
           else
           {
-            // RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
+            // RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
             DS3231_GetTime();
             /* Set alarm */
             ds3231_time = DS3231_ShowTime();
@@ -1382,7 +1382,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           }
         }
         #if ENERGEST_CONF_ON
-          energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - chirp_config.mx_period_time_s - 2));
+          energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
           Stats_value_debug(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP));
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[0]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
         #endif
@@ -1408,7 +1408,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       #endif
       // // start at minute
       // if (node_id)
-      //   RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
+      //   RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
       // else
       //   GPS_Wakeup(60);
 
@@ -1418,7 +1418,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       chirp_outl.arrange_task = MX_ARRANGE;
 
       #if ENERGEST_CONF_ON
-        energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - chirp_config.mx_period_time_s - 2));
+        energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
         ENERGEST_ON(ENERGEST_TYPE_CPU);
       #endif
 		PRINTF("---------MX_ARRANGE---------\n");
@@ -1432,7 +1432,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 
 		chirp_radio_config(11, 7, 1, 8, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
-    chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+    chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
     chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 3, 1500000);
 		chirp_payload_distribution(chirp_outl.task);
     #if ENERGEST_CONF_ON
@@ -1462,7 +1462,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.task = chirp_outl.arrange_task;
     memset(&chirp_stats_all, 0, sizeof(chirp_stats_all));
     #if MX_LBT_ACCESS
-      memset(&chirp_config.lbt_channel_time_stats_us, 0, sizeof(chirp_config.lbt_channel_time_stats_us));
+      memset(&loradisc_config.lbt_channel_time_stats_us, 0, sizeof(loradisc_config.lbt_channel_time_stats_us));
     #endif
 
 		Gpi_Fast_Tick_Native deadline;
@@ -1504,7 +1504,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					chirp_controller_read_command(&chirp_outl);
 				}
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
-        chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+        chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
@@ -1531,7 +1531,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
           FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
-          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 
 				#if GPS_DATA
@@ -1613,7 +1613,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				}
         chirp_outl.disem_flag = 1;
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
-        chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+        chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
@@ -1648,7 +1648,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
           FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
-          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 
         }
@@ -1678,7 +1678,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 					PRINTF("set:%d\n", chirp_outl.round_max);
 				}
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
-        chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+        chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
@@ -1705,7 +1705,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
           FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
-          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 				break;
 			}
@@ -1722,7 +1722,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				if (!node_id)
 					chirp_controller_read_command(&chirp_outl);
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
-        chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+        chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
@@ -1763,7 +1763,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
           FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
           FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
-          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&chirp_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
+          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
 				break;
 			}
@@ -1780,7 +1780,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.round_max = chirp_outl.round_setup;
 
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
-        chirp_outl.packet_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, 1, 0, 8, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+        chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);

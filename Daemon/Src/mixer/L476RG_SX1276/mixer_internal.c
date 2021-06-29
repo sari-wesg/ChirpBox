@@ -93,14 +93,14 @@ int_fast16_t mx_get_leading_index(const uint8_t *pcv)
 	const uint32_t	*p = (const uint32_t*)pcv;
 	int_fast16_t	i;
 
-	for (i = 0; i < chirp_config.coding_vector.len * 32; i += 32, p++)
+	for (i = 0; i < loradisc_config.coding_vector.len * 32; i += 32, p++)
 	{
 		if (*p)
 		{
 			i += gpi_get_lsb(*p);
 
 			// ATTENTION: unused coding vector bits may be non-zero
-			return (i < chirp_config.mx_generation_size) ? i : -1;
+			return (i < loradisc_config.mx_generation_size) ? i : -1;
         }
 	}
 
@@ -118,15 +118,15 @@ void unwrap_chunk(uint8_t *p)
 // 			sizeof_member(Packet, coding_vector),
 // 		inconsistent_alignment);
 	assert_reset((
-		chirp_config.payload.pos ==
-		chirp_config.coding_vector.pos +
-		chirp_config.coding_vector.len));
+		loradisc_config.payload.pos ==
+		loradisc_config.coding_vector.pos +
+		loradisc_config.coding_vector.len));
 
 	/* double-check alignment of matrix row fields */
 	// ASSERT_CT(!(offsetof(Matrix_Row, coding_vector) % sizeof(uint_fast_t)),inconsistent_alignment);
 	// ASSERT_CT(!(offsetof(Matrix_Row, matrix_chunk) % sizeof(uint_fast_t)),inconsistent_alignment);
 	// ASSERT_CT(!(offsetof(Matrix_Row, payload) % sizeof(uint_fast_t)),inconsistent_alignment);
-	assert_reset(!((chirp_config.matrix_payload.pos * sizeof(uint_fast_t)) % sizeof(uint_fast_t)));
+	assert_reset(!((loradisc_config.matrix_payload.pos * sizeof(uint_fast_t)) % sizeof(uint_fast_t)));
 	// ASSERT_CT(
 	// 	offsetof(Matrix_Row, coding_vector_8) == offsetof(Matrix_Row, coding_vector),
 	// 	inconsisten_alignment);
@@ -136,19 +136,19 @@ void unwrap_chunk(uint8_t *p)
 	// 	offsetof(Matrix_Row, payload_8) ==
 	// 		offsetof(Matrix_Row, coding_vector_8) + sizeof_member(Matrix_Row, coding_vector_8),
 	// 	inconsisten_alignment);
-	assert_reset((chirp_config.matrix_payload_8.pos == chirp_config.matrix_coding_vector_8.pos + chirp_config.matrix_coding_vector_8.len));
+	assert_reset((loradisc_config.matrix_payload_8.pos == loradisc_config.matrix_coding_vector_8.pos + loradisc_config.matrix_coding_vector_8.len));
 
 	/* NOTE: condition gets resolved at compile time */
-	if (offsetof(Matrix_Row, matrix_chunk_8) + chirp_config.matrix_payload_8.pos != offsetof(Matrix_Row, matrix_chunk) + (chirp_config.matrix_payload.pos) * sizeof(uint_fast_t))
+	if (offsetof(Matrix_Row, matrix_chunk_8) + loradisc_config.matrix_payload_8.pos != offsetof(Matrix_Row, matrix_chunk) + (loradisc_config.matrix_payload.pos) * sizeof(uint_fast_t))
 	{
 		/* #pragma GCC diagnostic push
 		#pragma GCC diagnostic ignored "-Warray-bounds" */
 
-		uint8_t			*s = p + chirp_config.matrix_coding_vector_8.len;
-		uint8_t			*d = s + chirp_config.matrix_payload_8.len;
+		uint8_t			*s = p + loradisc_config.matrix_coding_vector_8.len;
+		uint8_t			*d = s + loradisc_config.matrix_payload_8.len;
 		unsigned int	i;
 
-		for (i = (offsetof(Matrix_Row, matrix_chunk) + (chirp_config.matrix_payload.pos) * sizeof(uint_fast_t)) - (offsetof(Matrix_Row, matrix_chunk_8) + chirp_config.matrix_payload_8.pos); i-- > 0;)
+		for (i = (offsetof(Matrix_Row, matrix_chunk) + (loradisc_config.matrix_payload.pos) * sizeof(uint_fast_t)) - (offsetof(Matrix_Row, matrix_chunk_8) + loradisc_config.matrix_payload_8.pos); i-- > 0;)
 			*d++ = *s++;
 
 		/* #pragma GCC diagnostic pop */
@@ -159,7 +159,7 @@ void unwrap_chunk(uint8_t *p)
 
 void unwrap_row(unsigned int i)
 {
-	unwrap_chunk(&(mx.matrix[i]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos]));
+	unwrap_chunk(&(mx.matrix[i]->matrix_chunk_8[loradisc_config.matrix_coding_vector_8.pos]));
 }
 
 //**************************************************************************************************
@@ -167,16 +167,16 @@ void unwrap_row(unsigned int i)
 void wrap_chunk(uint8_t *p)
 {
 	// NOTE: condition gets resolved at compile time
-	if (offsetof(Matrix_Row, matrix_chunk_8) + chirp_config.matrix_payload_8.pos != offsetof(Matrix_Row, matrix_chunk) + (chirp_config.matrix_payload.pos) * sizeof(uint_fast_t))
+	if (offsetof(Matrix_Row, matrix_chunk_8) + loradisc_config.matrix_payload_8.pos != offsetof(Matrix_Row, matrix_chunk) + (loradisc_config.matrix_payload.pos) * sizeof(uint_fast_t))
 	{
 //		#pragma GCC diagnostic push
 //		#pragma GCC diagnostic ignored "-Warray-bounds"
 
-		uint8_t			*d = p + chirp_config.matrix_coding_vector_8.len;
-		uint8_t			*s = d + chirp_config.matrix_payload_8.len;
+		uint8_t			*d = p + loradisc_config.matrix_coding_vector_8.len;
+		uint8_t			*s = d + loradisc_config.matrix_payload_8.len;
 		unsigned int	i;
 
-		for (i = (offsetof(Matrix_Row, matrix_chunk) + (chirp_config.matrix_payload.pos) * sizeof(uint_fast_t)) - (offsetof(Matrix_Row, matrix_chunk_8) + chirp_config.matrix_payload_8.pos); i-- > 0;)
+		for (i = (offsetof(Matrix_Row, matrix_chunk) + (loradisc_config.matrix_payload.pos) * sizeof(uint_fast_t)) - (offsetof(Matrix_Row, matrix_chunk_8) + loradisc_config.matrix_payload_8.pos); i-- > 0;)
 			*d++ = *s++;
 
 //		#pragma GCC diagnostic pop

@@ -85,7 +85,7 @@ uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t paylo
     tx_num_max = 20;
     tx_payload_len = payload_len;
     assert_reset((payload_len > 0) && (payload_len <= BUFFER_SIZE));
-    packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, chirp_config.lora_plen, payload_len) + 50000;
+    packet_time_us = SX1276GetPacketTime(sf, 7, 1, 0, loradisc_config.lora_plen, payload_len) + 50000;
     if (packet_time_us > 1000000)
         packet_time_us += 500000;
     node_topology = (Topology_result *)malloc(nodes_num * sizeof(Topology_result));
@@ -272,14 +272,14 @@ void topo_dio0_isr()
 
                 if (SnrValue < 0)
                 {
-                    if (chirp_config.lora_freq > RF_MID_BAND_THRESH)
+                    if (loradisc_config.lora_freq > RF_MID_BAND_THRESH)
                         RssiValue_link = RSSI_OFFSET_HF + rssi_link + (rssi_link >> 4) + SnrValue;
                     else
                         RssiValue_link = RSSI_OFFSET_LF + rssi_link + (rssi_link >> 4) + SnrValue;
                 }
                 else
                 {
-                    if (chirp_config.lora_freq > RF_MID_BAND_THRESH)
+                    if (loradisc_config.lora_freq > RF_MID_BAND_THRESH)
                         RssiValue_link = RSSI_OFFSET_HF + rssi_link + (rssi_link >> 4);
                     else
                         RssiValue_link = RSSI_OFFSET_LF + rssi_link + (rssi_link >> 4);

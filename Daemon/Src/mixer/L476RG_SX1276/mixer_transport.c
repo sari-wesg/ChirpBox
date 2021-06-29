@@ -244,15 +244,15 @@ static struct
 
 static void mixer_transport_initiate_radio()
 {
-	uint32_t symbol_bandwidth = ( chirp_config.lora_bw > 8) ? 500000 : ( ( chirp_config.lora_bw - 6) * 125000 );
-	uint32_t symbol_rate = ( ( symbol_bandwidth ) / ( 1 << chirp_config.lora_sf ) );
+	uint32_t symbol_bandwidth = ( loradisc_config.lora_bw > 8) ? 500000 : ( ( loradisc_config.lora_bw - 6) * 125000 );
+	uint32_t symbol_rate = ( ( symbol_bandwidth ) / ( 1 << loradisc_config.lora_sf ) );
 
 	uint32_t symbol_time = (uint32_t)1e6 / symbol_rate;
 
-	uint32_t payload_air_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, chirp_config.lora_cr, 0, chirp_config.lora_plen, chirp_config.phy_payload_size + HASH_TAIL_CODE);
-	uint32_t drift_tolerance = MIN(2500, MAX((chirp_config.mx_slot_length + 999) / 1000, 1));
+	uint32_t payload_air_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, loradisc_config.lora_cr, 0, loradisc_config.lora_plen, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
+	uint32_t drift_tolerance = MIN(2500, MAX((loradisc_config.mx_slot_length + 999) / 1000, 1));
 
-	radio.header_time = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, chirp_config.lora_cr, 1, chirp_config.lora_plen, 2);
+	radio.header_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, loradisc_config.lora_cr, 1, loradisc_config.lora_plen, 2);
 
 	radio.after_header_time = payload_air_time - radio.header_time;
 
@@ -265,7 +265,7 @@ static void mixer_transport_initiate_radio()
 	radio.rx_window_increment = 2 * drift_tolerance;
 
 	#if (!MX_LBT_ACCESS)
-		radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (chirp_config.mx_slot_length - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
+		radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (loradisc_config.mx_slot_length - radio.packet_air_time - radio.rx_to_grid_offset) / 2));
 	#else
 		radio.rx_window_max = MIN(0x7FFFFFFF, MIN(15 * radio.rx_window_increment, (GPI_TICK_US_TO_HYBRID(symbol_time)) / 2));
 	#endif
@@ -287,13 +287,13 @@ static void mixer_transport_initiate_radio()
 	radio.max_tb_interval = GPI_TICK_US_TO_HYBRID(2000);
 
 	#if MX_HEADER_CHECK
-	uint32_t after_header_us = SX1276GetPacketTime(chirp_config.lora_sf, chirp_config.lora_bw, chirp_config.lora_cr, 0, chirp_config.lora_plen, HASH_HEADER) - radio.header_time + 2 * symbol_time;
+	uint32_t after_header_us = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, loradisc_config.lora_cr, 0, loradisc_config.lora_plen, HASH_HEADER) - radio.header_time + 2 * symbol_time;
 
 	radio.after_header_hybrid = GPI_TICK_US_TO_HYBRID2(after_header_us);
 	#endif
 
 	#if MX_LBT_ACCESS
-		s.lbt_sensitivity_in_dbm = 3 * (chirp_config.lora_bw - 7) - 81;
+		s.lbt_sensitivity_in_dbm = 3 * (loradisc_config.lora_bw - 7) - 81;
 		s.lbt_rx_on = 0;
 		s.lbt_tx_on = CCA_NONE;
 
@@ -586,7 +586,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		// if LEN or CRC not ok: regard packet as invisible
 		volatile uint8_t packet_len = (uint8_t)SX1276Read( REG_LR_RXNBBYTES );
 		volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
-		if( ( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR ) || ( packet_len != chirp_config.phy_payload_size + HASH_TAIL_CODE )
+		if( ( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR ) || ( packet_len != loradisc_config.phy_payload_size + HASH_TAIL_CODE )
 		)
 		{
 			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
@@ -606,7 +606,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		// if packet ok: process packet
 		else
 		{
-			if (chirp_config.primitive == FLOODING)
+			if (loradisc_config.primitive == FLOODING)
 			{
 				PRINTF_CHIRP("ok\n");
 			}
@@ -618,23 +618,23 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			SX1276ReadFifo( RxPacketBuffer, packet_len );
 			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 
-			uint16_t code_tail_hash_rx = Chirp_RSHash((uint8_t *)RxPacketBuffer, chirp_config.phy_payload_size);
+			uint16_t code_tail_hash_rx = Chirp_RSHash((uint8_t *)RxPacketBuffer, loradisc_config.phy_payload_size);
 			uint16_t hash_code_rx = RxPacketBuffer[packet_len - 2] << 8 | RxPacketBuffer[packet_len - 1];
 			if ((hash_code_rx == code_tail_hash_rx) && (hash_code_rx))
 			{
 				// allocate rx queue destination slot
 				Packet	*packet;
 
-				gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, chirp_config.phy_payload_size);
+				gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, loradisc_config.phy_payload_size);
 				packet = mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
 					#if INFO_VECTOR_QUEUE
-					gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.coding_vector.pos), chirp_config.coding_vector.len);
-					gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + chirp_config.info_vector.pos), chirp_config.info_vector.len);
+					gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.coding_vector.pos), loradisc_config.coding_vector.len);
+					gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.info_vector.pos), loradisc_config.info_vector.len);
 
-				if (chirp_config.primitive == FLOODING)
+				if (loradisc_config.primitive == FLOODING)
 				{
-					chirp_config.glossy_task = packet->flags.all;
-					gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), chirp_config.phy_payload_size - LORADISC_HEADER_LEN);
+					loradisc_config.glossy_task = packet->flags.all;
+					gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
 				}
 				#else
 				gpi_memcpy_dma_aligned(&mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)].phy_payload_begin, RxPacketBuffer, PHY_PAYLOAD_SIZE);
@@ -661,7 +661,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					// Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow;
 					/* see "Longshot", ipsn 2019 */
 					uint32_t rx_processing_time[6] = {682, 1372, 2850, 5970, 12800, 27000};
-					Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow - GPI_TICK_US_TO_HYBRID2(rx_processing_time[chirp_config.lora_sf - 7]);
+					Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow - GPI_TICK_US_TO_HYBRID2(rx_processing_time[loradisc_config.lora_sf - 7]);
 
 					ASSERT_CT(sizeof(Gpi_Slow_Tick_Native) >= sizeof(uint16_t));
 
@@ -672,7 +672,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
 						#endif
 
-						s.next_grid_tick = event_tick - radio.packet_air_time + chirp_config.mx_slot_length;
+						s.next_grid_tick = event_tick - radio.packet_air_time + loradisc_config.mx_slot_length;
 
 						s.grid_drift = 0;
 						s.grid_drift_cumulative = 0;
@@ -687,7 +687,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 						mx.slot_number = packet->slot_number;
 						GPI_TRACE_MSG_FAST(TRACE_INFO, "(re)synchronized to slot %u", mx.slot_number);
-						if (chirp_config.primitive == FLOODING)
+						if (loradisc_config.primitive == FLOODING)
 						{
 							//once receive a packet, tx in next slot
 							set_event(SLOT_UPDATE);
@@ -697,7 +697,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					else
 					{
 						#if MX_LBT_ACCESS
-							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US + s.lbt_channel_seq_no * chirp_config.lbt_detect_duration_us);
+							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US + s.lbt_channel_seq_no * loradisc_config.lbt_detect_duration_us);
 							s.lbt_channel_seq_no = 0;
 						#endif
 
@@ -794,14 +794,14 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 					// special handling during start-up phase, see tx decision for details
 					#if (MX_COORDINATED_TX && !MX_BENCHMARK_NO_COORDINATED_STARTUP)
-						if (!strobe_resync && (mx.slot_number < chirp_config.mx_generation_size) && packet->flags.has_next_payload)
+						if (!strobe_resync && (mx.slot_number < loradisc_config.mx_generation_size) && packet->flags.has_next_payload)
 						{
 							// ATTENTION: don't rely on mx.tx_sideload or mx.tx_reserve at this point
 							// (mx.tx_sideload may change between here and next trigger tick, mx.tx_reserve
 							// may point to an incosistent row since it is not guarded w.r.t. ISR level).
 							// Instead, there is a very high probability that mx.tx_packet is ready since
 							// we did not TX in current slot (otherwise we wouldn't be here).
-							if (((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS) && (STOP != s.next_slot_task))
+							if (((mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS) && (STOP != s.next_slot_task))
 							{
 								GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "tx decision: has_next_payload set");
 								s.next_slot_task = TX;
@@ -827,9 +827,9 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 					mx.rx_queue_num_written++;
 
 					// use packet as next Tx sideload (-> fast tx update)
-					if (chirp_config.mx_generation_size != mx.rank)
+					if (loradisc_config.mx_generation_size != mx.rank)
 					{
-						mx.tx_sideload = &(packet->packet_chunk[chirp_config.coding_vector.pos]);
+						mx.tx_sideload = &(packet->packet_chunk[loradisc_config.coding_vector.pos]);
 					}
 
 					set_event(RX_READY);
@@ -843,7 +843,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				{
 					GPI_TRACE_MSG_FAST(TRACE_INFO, "Rx queue overflow, NW: %u, NR: %u", mx.rx_queue_num_writing, mx.rx_queue_num_read);
 
-					if (mx.rank < chirp_config.mx_generation_size)
+					if (mx.rank < loradisc_config.mx_generation_size)
 					{
 						mx.stat_counter.num_rx_queue_overflow++;
 					}
@@ -1101,12 +1101,12 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 			{
 				Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
 				/* hop to another channel, random seed is related to round seq, slot number and channel seq */
-				uint8_t now_channel = lbt_pesudo_channel(chirp_config.lbt_channel_total, chirp_config.lbt_channel_primary, mx.slot_number + chirp_config.lbt_channel_primary + s.lbt_channel_seq_no, chirp_config.lbt_channel_mask);
+				uint8_t now_channel = lbt_pesudo_channel(loradisc_config.lbt_channel_total, loradisc_config.lbt_channel_primary, mx.slot_number + loradisc_config.lbt_channel_primary + s.lbt_channel_seq_no, loradisc_config.lbt_channel_mask);
 
-				SX1276SetChannel(chirp_config.lora_freq + now_channel * CHANNEL_STEP);
+				SX1276SetChannel(loradisc_config.lora_freq + now_channel * CHANNEL_STEP);
 				SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 				/* waiting for a valid header time */
-				Gpi_Hybrid_Tick t = s.next_grid_tick_last + s.rx_trigger_offset - radio.rx_to_grid_offset + GPI_TICK_US_TO_FAST2(chirp_config.lbt_detect_duration_us * (s.lbt_channel_seq_no + 1) - radio.isr_latency_buffer + LBT_DELAY_IN_US);
+				Gpi_Hybrid_Tick t = s.next_grid_tick_last + s.rx_trigger_offset - radio.rx_to_grid_offset + GPI_TICK_US_TO_FAST2(loradisc_config.lbt_detect_duration_us * (s.lbt_channel_seq_no + 1) - radio.isr_latency_buffer + LBT_DELAY_IN_US);
 				MAIN_TIMER_CC_REG = r.fast_capture + (t - r.hybrid_tick) * FAST_HYBRID_RATIO;
 
 				unmask_main_timer(1);
@@ -1124,7 +1124,7 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 					ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 				#endif
 				/* no packets in this slot */
-				SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
+				SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
 			}
 		}
 	}
@@ -1138,7 +1138,7 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 		SX1276Write( REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ));
 		SX1276ReadFifo( APP_HEADER_FIFO, HASH_HEADER );
 		uint32_t app_header = APP_HEADER_FIFO[3] << 24 | APP_HEADER_FIFO[2] << 16 | APP_HEADER_FIFO[1] << 8 | APP_HEADER_FIFO[0];
-		if (app_header == chirp_config.packet_hash)
+		if (app_header == loradisc_config.packet_hash)
 		{
 			Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
 			s.slow_trigger = r.hybrid_tick + radio.packet_air_time;
@@ -1286,14 +1286,14 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		// trigger_tick_slow = LP_TIMER_CMP_REG + (Gpi_Slow_Tick_Native)((Gpi_Fast_Tick_Native)(ISR_LATENCY_SLOW) / (Gpi_Fast_Tick_Native)HYBRID_SLOW_RATIO);
 
 		// rx begin
-		assert_reset((chirp_config.lora_bw >= 7)&&(chirp_config.lora_bw <= 9));
+		assert_reset((loradisc_config.lora_bw >= 7)&&(loradisc_config.lora_bw <= 9));
 
 		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
 		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 
 		SX1276Write( REG_LR_DETECTOPTIMIZE, SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
 		SX1276Write( REG_LR_IFFREQ2, 0x00 );
-		if(chirp_config.lora_bw != 9)
+		if(loradisc_config.lora_bw != 9)
 		{
 			SX1276Write( REG_LR_IFFREQ1, 0x40 );
 		}
@@ -1383,7 +1383,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// -> grid timer) and hence current time might be far away from s.next_grid_tick. With
 			// s.next_grid_tick += MX_SLOT_LENGTH_RESYNC, s.next_grid_tick could end up in the far
 			// future if it gets incremented frequently.
-			s.next_grid_tick = r.hybrid_tick + ((chirp_config.mx_slot_length * 5) / 2);
+			s.next_grid_tick = r.hybrid_tick + ((loradisc_config.mx_slot_length * 5) / 2);
 			s.next_trigger_tick = s.next_grid_tick;
 			start_grid_timer();
 		}
@@ -1397,7 +1397,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				s.lbt_channel_seq_no = 0;
 				SX1276Write( REG_LR_MODEMSTAT, SX1276Read( REG_LR_MODEMSTAT ) & ~ RFLR_MODEMSTAT_MODEM_STATUS_SIGNAL_MASK);
 				t = s.next_grid_tick + s.rx_trigger_offset - radio.rx_to_grid_offset +
-				GPI_TICK_US_TO_HYBRID2(chirp_config.lbt_detect_duration_us) * CHANNEL_ALTER + 4 * radio.grid_drift_offset + GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
+				GPI_TICK_US_TO_HYBRID2(loradisc_config.lbt_detect_duration_us) * CHANNEL_ALTER + 4 * radio.grid_drift_offset + GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
 			#else
 				/* waiting for a valid header time */
 				t = s.next_grid_tick + s.rx_trigger_offset - radio.rx_to_grid_offset +
@@ -1410,7 +1410,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				/* reserve the current slot tick */
 				s.next_grid_tick_last = s.next_grid_tick;
 				t = s.next_grid_tick_last + s.rx_trigger_offset - radio.rx_to_grid_offset +
-				GPI_TICK_US_TO_HYBRID2(chirp_config.lbt_detect_duration_us - radio.isr_latency_buffer + LBT_DELAY_IN_US);
+				GPI_TICK_US_TO_HYBRID2(loradisc_config.lbt_detect_duration_us - radio.isr_latency_buffer + LBT_DELAY_IN_US);
 			#endif
 
 			MAIN_TIMER_CC_REG = r.fast_capture + (t - r.hybrid_tick) * FAST_HYBRID_RATIO;
@@ -1437,7 +1437,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 	{
 		PROFILE_ISR("grid timer ISR start Tx begin");
 
-		assert_reset(!(chirp_config.packet_len % sizeof(uint_fast_t)));
+		assert_reset(!(loradisc_config.packet_len % sizeof(uint_fast_t)));
 		ASSERT_CT(!((uintptr_t)&s.tx_fifo % sizeof(uint_fast_t)), alignment_issue);
 
 		Gpi_Fast_Tick_Native 	trigger_tick;
@@ -1459,9 +1459,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				if (!s.lbt_channel_seq_no)
 				{
 					s.next_grid_tick_last = s.next_grid_tick;
-					s.tx_now_channel = chirp_config.lbt_channel_primary;
+					s.tx_now_channel = loradisc_config.lbt_channel_primary;
 
-					SX1276SetChannel(chirp_config.lora_freq + chirp_config.lbt_channel_primary * CHANNEL_STEP);
+					SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
 
 					t_ps_us = 0;
 					trigger_tick = MAIN_TIMER_CC_REG + GPI_TICK_US_TO_FAST(radio.isr_latency_buffer);
@@ -1474,13 +1474,13 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				{
 					s.lbt_channel_seq_no ++;
 
-					s.tx_now_channel = lbt_pesudo_channel(chirp_config.lbt_channel_total, chirp_config.lbt_channel_primary, mx.slot_number + 1 + chirp_config.lbt_channel_primary + s.lbt_channel_seq_no, chirp_config.lbt_channel_mask);
-					SX1276SetChannel(chirp_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
+					s.tx_now_channel = lbt_pesudo_channel(loradisc_config.lbt_channel_total, loradisc_config.lbt_channel_primary, mx.slot_number + 1 + loradisc_config.lbt_channel_primary + s.lbt_channel_seq_no, loradisc_config.lbt_channel_mask);
+					SX1276SetChannel(loradisc_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
 
 					if (s.lbt_channel_seq_no < CHANNEL_ALTER)
 					{
 						s.lbt_tx_on = CCA_NONE;
-						MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(chirp_config.lbt_detect_duration_us - radio.isr_latency_buffer);
+						MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST2(loradisc_config.lbt_detect_duration_us - radio.isr_latency_buffer);
 						unmask_main_timer(1);
 
 						#if	ENERGEST_CONF_ON
@@ -1525,11 +1525,11 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				{
 					if (s.lbt_channel_seq_no < CHANNEL_ALTER)
 					{
-						s.tx_now_channel = lbt_pesudo_channel(chirp_config.lbt_channel_total, chirp_config.lbt_channel_primary, mx.slot_number + 1 + chirp_config.lbt_channel_primary + s.lbt_channel_seq_no, chirp_config.lbt_channel_mask);
+						s.tx_now_channel = lbt_pesudo_channel(loradisc_config.lbt_channel_total, loradisc_config.lbt_channel_primary, mx.slot_number + 1 + loradisc_config.lbt_channel_primary + s.lbt_channel_seq_no, loradisc_config.lbt_channel_mask);
 
-						SX1276SetChannel(chirp_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
+						SX1276SetChannel(loradisc_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
 
-						t_lbt = s.next_grid_tick_last + s.tx_trigger_offset - radio.tx_to_grid_offset + GPI_TICK_US_TO_HYBRID2(chirp_config.lbt_detect_duration_us * s.lbt_channel_seq_no - radio.isr_latency_buffer);
+						t_lbt = s.next_grid_tick_last + s.tx_trigger_offset - radio.tx_to_grid_offset + GPI_TICK_US_TO_HYBRID2(loradisc_config.lbt_detect_duration_us * s.lbt_channel_seq_no - radio.isr_latency_buffer);
 						r_lbt = gpi_tick_hybrid_reference();
 
 						MAIN_TIMER_CC_REG = r_lbt.fast_capture + (t_lbt - r_lbt.hybrid_tick) * FAST_HYBRID_RATIO;
@@ -1555,7 +1555,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				else
 				{
 					s.lbt_tx_on = CCA_DONE;
-					t_lbt = s.next_grid_tick_last + s.tx_trigger_offset - radio.tx_to_grid_offset + GPI_TICK_US_TO_HYBRID2((s.lbt_channel_seq_no - 1) * chirp_config.lbt_detect_duration_us + LBT_DELAY_IN_US - radio.isr_latency_buffer);
+					t_lbt = s.next_grid_tick_last + s.tx_trigger_offset - radio.tx_to_grid_offset + GPI_TICK_US_TO_HYBRID2((s.lbt_channel_seq_no - 1) * loradisc_config.lbt_detect_duration_us + LBT_DELAY_IN_US - radio.isr_latency_buffer);
 					s.lbt_channel_seq_no = 0;
 					r_lbt = gpi_tick_hybrid_reference();
 
@@ -1612,7 +1612,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
         }
 
 		// init FIFO
-		SX1276Write( REG_LR_PAYLOADLENGTH, chirp_config.phy_payload_size + HASH_TAIL_CODE);
+		SX1276Write( REG_LR_PAYLOADLENGTH, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
 		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
 		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 		// Full buffer used for Tx
@@ -1636,18 +1636,18 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		// finalize header
 		{
-			mx.tx_packet->app_header = chirp_config.packet_hash;
+			mx.tx_packet->app_header = loradisc_config.packet_hash;
 			uint16_t slot_number = mx.slot_number + 1;
 
 			mx.tx_packet->slot_number = slot_number;
 			mx.tx_packet->flags.all = 0;
 
-			if ((slot_number < chirp_config.mx_generation_size) && (0 == mx.matrix[slot_number]->birth_slot))
+			if ((slot_number < loradisc_config.mx_generation_size) && (0 == mx.matrix[slot_number]->birth_slot))
 			{
 				mx.tx_packet->flags.has_next_payload = 1;
 			}
 
-			if (chirp_config.mx_generation_size == mx.rank)
+			if (loradisc_config.mx_generation_size == mx.rank)
 			{
 				mx.tx_packet->flags.is_full_rank = 1;
 				#if MX_SMART_SHUTDOWN
@@ -1661,7 +1661,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
             }
 
 			#if MX_REQUEST
-			else if (slot_number >= chirp_config.mx_generation_size)
+			else if (slot_number >= loradisc_config.mx_generation_size)
 			{
 				// f(x) = (1 - 2 ^ (-0.125 * x)) / (1 - 2 ^ (-0.125))
 				static const uint8_t LUT1[] =
@@ -1676,10 +1676,10 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				// -> could be computed directly, but the (small) LUT is the faster variant
 				static const uint8_t LUT2[] = {0x3f, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
-				uint8_t  	x = LUT1[MIN(chirp_config.mx_generation_size - mx.rank, NUM_ELEMENTS(LUT1) - 1)];
+				uint8_t  	x = LUT1[MIN(loradisc_config.mx_generation_size - mx.rank, NUM_ELEMENTS(LUT1) - 1)];
 				uint16_t 	age = slot_number - mx.recent_innovative_slot;
 
-				uint8_t	 	rand = mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_RAND;		// prepared on thread level
+				uint8_t	 	rand = mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_RAND;		// prepared on thread level
 
 			#if MX_COORDINATED_TX
 				if ((age >= x) || (0 == mx_present_head->mx_num_nodes))
@@ -1699,21 +1699,21 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
             }
 			#endif
 
-			if (chirp_config.primitive == FLOODING)
-				mx.tx_packet->flags.all = chirp_config.glossy_task;
+			if (loradisc_config.primitive == FLOODING)
+				mx.tx_packet->flags.all = loradisc_config.glossy_task;
 
 			write_tx_fifo(&(mx.tx_packet->phy_payload_begin),
-			NULL, offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + chirp_config.coding_vector.pos);
+			NULL, offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.coding_vector.pos);
 		}
 
-		if (chirp_config.primitive != FLOODING)
+		if (loradisc_config.primitive != FLOODING)
 		// write coding vector and payload
 		{
-			assert_reset((chirp_config.payload.pos == chirp_config.coding_vector.pos + chirp_config.coding_vector.len));
+			assert_reset((loradisc_config.payload.pos == loradisc_config.coding_vector.pos + loradisc_config.coding_vector.len));
 
-			const unsigned int	CHUNK_SIZE = chirp_config.coding_vector.len + chirp_config.payload.len;
+			const unsigned int	CHUNK_SIZE = loradisc_config.coding_vector.len + loradisc_config.payload.len;
 
-			p = &(mx.tx_packet->packet_chunk[chirp_config.coding_vector.pos]);
+			p = &(mx.tx_packet->packet_chunk[loradisc_config.coding_vector.pos]);
 
 			// NOTE: we cast const away which is a bit dirty. We need this only to restore
 			// sideload's packed version which is such a negligible change that we prefer
@@ -1727,9 +1727,9 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				{
 					help_index--;
 					if (
-						(!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))||!(((uint_fast_t*)p)[help_index / (sizeof(uint_fast_t) * 8)] & mx.request->help_bitmask))
+						(!((mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))||!(((uint_fast_t*)p)[help_index / (sizeof(uint_fast_t) * 8)] & mx.request->help_bitmask))
 						{
-						ps = &(mx.matrix[help_index]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
+						ps = &(mx.matrix[help_index]->matrix_chunk_8[loradisc_config.matrix_coding_vector_8.pos + 0]);
 						}
 					mx.request->last_update_slot = mx.slot_number + 1;
 				}
@@ -1742,7 +1742,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					// is not ready, it is right to do the sideload anyway.
 					// if (!mx.tx_packet.is_ready || (help_index < mx_get_leading_index(p)))
 					{
-						ps = &(mx.matrix[help_index]->matrix_chunk_8[chirp_config.matrix_coding_vector_8.pos + 0]);
+						ps = &(mx.matrix[help_index]->matrix_chunk_8[loradisc_config.matrix_coding_vector_8.pos + 0]);
 
 						mx.request->last_update_slot = mx.slot_number + 1;
 					}
@@ -1756,15 +1756,15 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// point), but it is very easy to forget about that. Hence we do it here to avoid
 			// programming mistakes.
 			// NOTE: the outer condition is resolved at compile time
-			if (chirp_config.matrix_payload_8.pos != chirp_config.matrix_payload_8.pos * sizeof(uint_fast_t))
+			if (loradisc_config.matrix_payload_8.pos != loradisc_config.matrix_payload_8.pos * sizeof(uint_fast_t))
 			{
-				if ((uintptr_t)ps - (uintptr_t)&(mx.matrix[0]->birth_slot) < chirp_config.mx_generation_size * ((1 + chirp_config.matrix_chunk_32_len) * sizeof(uint_fast_t)))
+				if ((uintptr_t)ps - (uintptr_t)&(mx.matrix[0]->birth_slot) < loradisc_config.mx_generation_size * ((1 + loradisc_config.matrix_chunk_32_len) * sizeof(uint_fast_t)))
 				{
 					wrap_chunk(ps);
 				}
             }
 
-			if (!((mx.tx_packet->packet_chunk[chirp_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))
+			if (!((mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS))
 			{
 				assert_reset((NULL != ps));
 
@@ -1773,7 +1773,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				#if MX_VERBOSE_PACKETS || MX_REQUEST
 					// mark the packet as broken since it could be possible that we interrupt
 					// prepare_tx_packet() right now, hence writing data may damage the packet
-					mx.tx_packet->packet_chunk[chirp_config.rand.pos] &= PACKET_IS_VALID_MASK;
+					mx.tx_packet->packet_chunk[loradisc_config.rand.pos] &= PACKET_IS_VALID_MASK;
 				#endif
 			}
 
@@ -1798,41 +1798,41 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			}
 		}
 
-		if (chirp_config.primitive != FLOODING)
+		if (loradisc_config.primitive != FLOODING)
 		{
 			// write info vector
 			if (NULL != p)
 			{
 				#if MX_REQUEST || MX_SMART_SHUTDOWN_MAP
 
-					assert_reset((chirp_config.info_vector.pos == chirp_config.payload.pos + chirp_config.payload.len));
+					assert_reset((loradisc_config.info_vector.pos == loradisc_config.payload.pos + loradisc_config.payload.len));
 
 					void *ps;
 
 					#if MX_SMART_SHUTDOWN_MAP && MX_REQUEST
 						if (mx.tx_packet->flags.is_full_rank)
 						{
-							ps = (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.hash.pos + 0]);
+							ps = (uint8_t *)&(mx.full_rank_map->map_hash[loradisc_config.hash.pos + 0]);
 						}
 						else if (mx.tx_packet->flags.request_column)
-							ps = &(mx.request->mask[chirp_config.my_column_mask.pos]);
-						else ps = &(mx.request->mask[chirp_config.my_row_mask.pos]);
+							ps = &(mx.request->mask[loradisc_config.my_column_mask.pos]);
+						else ps = &(mx.request->mask[loradisc_config.my_row_mask.pos]);
 					#elif MX_SMART_SHUTDOWN_MAP
-						ps = (uint8_t *)&(mx.full_rank_map->map_hash[chirp_config.hash.pos + 0]);
+						ps = (uint8_t *)&(mx.full_rank_map->map_hash[loradisc_config.hash.pos + 0]);
 					#elif MX_REQUEST
 						if (mx.tx_packet->flags.request_column)
-							ps = &(mx.request->mask[chirp_config.my_column_mask.pos]);
-						else ps = &(mx.request->mask[chirp_config.my_row_mask.pos]);
+							ps = &(mx.request->mask[loradisc_config.my_column_mask.pos]);
+						else ps = &(mx.request->mask[loradisc_config.my_row_mask.pos]);
 					#else
 						#error inconsistent code
 					#endif
 
-					write_tx_fifo(ps, NULL, chirp_config.info_vector.len);
+					write_tx_fifo(ps, NULL, loradisc_config.info_vector.len);
 				#endif
 			}
 		}
 		// if zero packet: abort transmission
-		if ((NULL == p) && (chirp_config.primitive != FLOODING))
+		if ((NULL == p) && (loradisc_config.primitive != FLOODING))
 		{
 			#if MX_LBT_ACCESS
 				tx_failed_:
@@ -1869,17 +1869,17 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// NOTE: not all fields are needed for MX_REQUEST,
 			// particularly payload could be dropped (e.g. if time is critical)
 			// TODO:
-			uint8_t Buffer2[chirp_config.phy_payload_size];
+			uint8_t Buffer2[loradisc_config.phy_payload_size];
 
 			SX1276Write( REG_LR_FIFOADDRPTR, 0);
-			SX1276ReadBuffer( 0, Buffer2, chirp_config.phy_payload_size );
+			SX1276ReadBuffer( 0, Buffer2, loradisc_config.phy_payload_size );
 			SX1276Write( REG_LR_FIFOADDRPTR, 0);
 
-			uint16_t code_tail_hash_tx = Chirp_RSHash((uint8_t *)Buffer2, chirp_config.phy_payload_size);
+			uint16_t code_tail_hash_tx = Chirp_RSHash((uint8_t *)Buffer2, loradisc_config.phy_payload_size);
 			uint8_t hash_code_tx[2];
 			hash_code_tx[0] = code_tail_hash_tx >> 8;
 			hash_code_tx[1] = code_tail_hash_tx;
-			SX1276Write( REG_LR_FIFOADDRPTR, chirp_config.phy_payload_size );
+			SX1276Write( REG_LR_FIFOADDRPTR, loradisc_config.phy_payload_size );
 			write_tx_fifo(hash_code_tx, NULL, HASH_TAIL_CODE);
 
 			// unmask IRQ
@@ -1895,7 +1895,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// DIO0=TxDone
 			SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
 
-			gpi_memcpy_dma_aligned(&(mx.tx_packet->phy_payload_begin), Buffer2, chirp_config.phy_payload_size);
+			gpi_memcpy_dma_aligned(&(mx.tx_packet->phy_payload_begin), Buffer2, loradisc_config.phy_payload_size);
 
 			set_event(TX_READY);
 
@@ -1907,7 +1907,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		s.slot_state = TX_RUNNING;
 
-		mx.tx_packet->packet_chunk[chirp_config.rand.pos] &= PACKET_IS_READY_MASK;
+		mx.tx_packet->packet_chunk[loradisc_config.rand.pos] &= PACKET_IS_READY_MASK;
 		mx.tx_sideload = NULL;
 		s.next_slot_task = RX;
 		PROFILE_ISR("grid timer ISR start Tx end");
@@ -1918,7 +1918,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		mx.slot_number++;
 		set_event(SLOT_UPDATE);
 
-		s.next_grid_tick += chirp_config.mx_slot_length + s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
+		s.next_grid_tick += loradisc_config.mx_slot_length + s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
 
 		s.hybrid_trigger = s.next_grid_tick;
 
@@ -2006,7 +2006,7 @@ void mixer_transport_start()
 	GPI_TRACE_FUNCTION_FAST();
 
 	GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "start grid timer");
-	if (chirp_config.primitive != FLOODING)
+	if (loradisc_config.primitive != FLOODING)
 	{
 	if (mx.tx_sideload)		// if initiator
 		enter_resync(2);

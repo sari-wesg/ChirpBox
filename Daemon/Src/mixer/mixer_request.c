@@ -155,32 +155,32 @@ static void update_request_marker(Request_Flag flag, const Packet *p)
 	uint_fast16_t *any_pending;
 	if (flag == Request_row)
 	{
-		any_mask = (uint_fast_t *)&(mx.request->mask[chirp_config.row_any_mask.pos + 0]);
-		all_mask = (uint_fast_t *)&(mx.request->mask[chirp_config.row_all_mask.pos + 0]);
+		any_mask = (uint_fast_t *)&(mx.request->mask[loradisc_config.row_any_mask.pos + 0]);
+		all_mask = (uint_fast_t *)&(mx.request->mask[loradisc_config.row_all_mask.pos + 0]);
 		any_pending = (uint_fast16_t *)&(mx.request->row_any_pending);
 	}
 	else if(flag == Request_column)
 	{
-		any_mask = (uint_fast_t *)&(mx.request->mask[chirp_config.column_any_mask.pos + 0]);
-		all_mask = (uint_fast_t *)&(mx.request->mask[chirp_config.column_all_mask.pos + 0]);
+		any_mask = (uint_fast_t *)&(mx.request->mask[loradisc_config.column_any_mask.pos + 0]);
+		all_mask = (uint_fast_t *)&(mx.request->mask[loradisc_config.column_all_mask.pos + 0]);
 		any_pending = (uint_fast16_t *)&(mx.request->column_any_pending);
 	}
 
 	if (!(*any_pending))
 	{
-		gpi_memcpy_dma_inline(any_mask, &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-		gpi_memcpy_dma_inline(all_mask, &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		gpi_memcpy_dma_inline(any_mask, &(p->packet_chunk[loradisc_config.info_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		gpi_memcpy_dma_inline(all_mask, &(p->packet_chunk[loradisc_config.info_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 
 		*any_pending = 1;	// temporary, will be updated together with following coding vector snoop
 	}
 	else
 	{
-		request_or (any_mask, &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-		request_and(all_mask, &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		request_or (any_mask, &(p->packet_chunk[loradisc_config.info_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		request_and(all_mask, &(p->packet_chunk[loradisc_config.info_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 	}
 
-	any_mask[chirp_config.matrix_coding_vector.len - 1] &= mx.request->padding_mask;
-	all_mask[chirp_config.matrix_coding_vector.len - 1] &= mx.request->padding_mask;
+	any_mask[loradisc_config.matrix_coding_vector.len - 1] &= mx.request->padding_mask;
+	all_mask[loradisc_config.matrix_coding_vector.len - 1] &= mx.request->padding_mask;
 
 	mx.request->last_update_slot = p->slot_number;
 
@@ -219,12 +219,12 @@ void mx_update_request(const Packet *p)
 				// information. This could happen at the following memcpy() if we don't handle sender_id in
 				// a save way.
 				uint8_t sender_id = p->sender_id;
-				if (sender_id >= chirp_config.mx_num_nodes)
+				if (sender_id >= loradisc_config.mx_num_nodes)
 				{
 					return;
 				}
 
-				gpi_memcpy_dma_inline(&(mx.history[sender_id]->row_map_chunk[0]), &(p->packet_chunk[chirp_config.info_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+				gpi_memcpy_dma_inline(&(mx.history[sender_id]->row_map_chunk[0]), &(p->packet_chunk[loradisc_config.info_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 			}
 		#endif
 	}
@@ -236,8 +236,8 @@ void mx_update_request(const Packet *p)
 		uint_fast16_t last = mx.request->column_any_pending;
 
 		mx.request->column_any_pending =
-			request_clear((uint_fast_t *)&(mx.request->mask[chirp_config.column_any_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-		request_clear(&(mx.request->mask[chirp_config.column_all_mask.pos]), &(p->packet_chunk[chirp_config.coding_vector.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+			request_clear((uint_fast_t *)&(mx.request->mask[loradisc_config.column_any_mask.pos]), &(p->packet_chunk[loradisc_config.coding_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+		request_clear(&(mx.request->mask[loradisc_config.column_all_mask.pos]), &(p->packet_chunk[loradisc_config.coding_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 
 		if (mx.request->column_any_pending != last)
 			mx.request->last_update_slot = p->slot_number;
@@ -245,24 +245,24 @@ void mx_update_request(const Packet *p)
 
 	if (mx.request->row_any_pending)
 	{
-		int_fast16_t i = mx_get_leading_index(&(p->packet_chunk[chirp_config.coding_vector.pos]));
+		int_fast16_t i = mx_get_leading_index(&(p->packet_chunk[loradisc_config.coding_vector.pos]));
 		if (i >= 0)
 		{
 			uint_fast_t m = gpi_slu(1, i);
 
-			if (mx.request->mask[chirp_config.row_any_mask.pos + i / (sizeof(m) * 8)] & m)
+			if (mx.request->mask[loradisc_config.row_any_mask.pos + i / (sizeof(m) * 8)] & m)
 			{
-				mx.request->mask[chirp_config.row_any_mask.pos + i / (sizeof(m) * 8)] &= ~m;
-				mx.request->mask[chirp_config.row_all_mask.pos + i / (sizeof(m) * 8)] &= ~m;
+				mx.request->mask[loradisc_config.row_any_mask.pos + i / (sizeof(m) * 8)] &= ~m;
+				mx.request->mask[loradisc_config.row_all_mask.pos + i / (sizeof(m) * 8)] &= ~m;
 
 				mx.request->last_update_slot = p->slot_number;
             }
         }
 
 		mx.request->row_any_pending = 0;
-		for (i = chirp_config.matrix_coding_vector.len; i-- > 0;)
+		for (i = loradisc_config.matrix_coding_vector.len; i-- > 0;)
 		{
-			if (mx.request->mask[chirp_config.row_any_mask.pos + i])
+			if (mx.request->mask[loradisc_config.row_any_mask.pos + i])
 			{
 				mx.request->row_any_pending = 1;
 				break;
@@ -272,8 +272,8 @@ void mx_update_request(const Packet *p)
 
 	PROFILE("mx_update_request() end");
 
-	TRACE_DUMP(1, "any_row_mask:", &(mx.request->mask[chirp_config.row_any_mask.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-	TRACE_DUMP(1, "any_column_mask:", &(mx.request->mask[chirp_config.column_any_mask.pos]), chirp_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+	TRACE_DUMP(1, "any_row_mask:", &(mx.request->mask[loradisc_config.row_any_mask.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+	TRACE_DUMP(1, "any_column_mask:", &(mx.request->mask[loradisc_config.column_any_mask.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
 
 	GPI_TRACE_RETURN();
 }
