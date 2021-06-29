@@ -32,5 +32,6 @@ time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, 
 void GPS_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
 void GPS_Waiting_PPS(uint32_t PPS_wait);
 void GPS_Wakeup(uint32_t interval_sec);
+void MX_USART3_UART_Init(void);
 
 #endif /* __GPS_H__ */
