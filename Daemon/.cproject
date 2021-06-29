@@ -227,7 +227,7 @@
                         						
                         <entry excluding="gpi/arm" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="LoRaDisC"/>
                         						
-                        <entry excluding="gpi|chirpbox/chirp_irqhandler copy.c|loradisc/loradisc.c|gpi/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Src"/>
+                        <entry excluding="mixer|gpi|chirpbox/chirp_irqhandler copy.c|loradisc/loradisc.c|gpi/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Src"/>
                         					
                     </sourceEntries>
                     				

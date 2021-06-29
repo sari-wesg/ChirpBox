@@ -120,7 +120,7 @@
 #endif
 // TP added:
 #ifndef GPS_DATA
-	#define GPS_DATA								1
+	#define GPS_DATA								0
 #endif
 
 #ifndef MX_HEADER_CHECK
