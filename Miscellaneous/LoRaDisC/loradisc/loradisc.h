@@ -26,6 +26,13 @@ typedef enum Disc_Primitive_tag
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
+void loradisc(uint8_t node_id);
+void lorawan_listen();
+void lorawan_transmission();
+
+void lorawan_main_timer_isr();
+void lorawan_dio0_isr();
+void lorawan_dio3_isr();
 
 
 #endif  /* __LORADISC_H__ */

@@ -145,17 +145,17 @@
                                     									
                                     <listOptionValue builtIn="false" value="../Src/chirpbox"/>
                                     									
-                                    <listOptionValue builtIn="false" value="../Src/mixer"/>
-                                    									
                                     <listOptionValue builtIn="false" value="../Src/tools/Inc"/>
-                                    									
-                                    <listOptionValue builtIn="false" value="../Src/loradisc"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/LoRaDisC"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/LoRaDisC/mixer"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/LoRaDisC/loradisc"/>
                                     								
                                 </option>
                                 								
@@ -225,7 +225,7 @@
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
                         						
-                        <entry excluding="gpi/arm" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="LoRaDisC"/>
+                        <entry excluding="loradisc/loradisc.c|gpi/arm" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="LoRaDisC"/>
                         						
                         <entry excluding="mixer|gpi|chirpbox/chirp_irqhandler copy.c|loradisc/loradisc.c|gpi/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Src"/>
                         					
