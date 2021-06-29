@@ -71,6 +71,6 @@ Chirp_Time DS3231_ShowTime();
 void DS3231_ClearAlarm1_Time();
 void DS3231_SetAlarm1_Time(uint8_t date, uint8_t hour, uint8_t mintue, uint8_t second);
 void DS3231_GetAlarm1_Time();
-
+void MX_I2C2_Init(void);
 
 #endif /* __RTC_H__ */

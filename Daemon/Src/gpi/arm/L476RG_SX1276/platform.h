@@ -64,11 +64,6 @@
 #define USART3_TX_GPIO_Port GPIOC
 #define USART3_RX_Pin GPIO_PIN_5
 #define USART3_RX_GPIO_Port GPIOC
-/*gps-------------------*/
-#define GPS_TRIGGER_Pin GPIO_PIN_2
-#define GPS_TRIGGER_Port GPIOC
-#define GPS_PPS_Pin GPIO_PIN_0
-#define GPS_PPS_Port GPIOC
 /*-------------------*/
 #define LED_GPIO_Port GPIOC
 #define LED1 GPIO_PIN_8

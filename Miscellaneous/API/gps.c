@@ -1,26 +1,15 @@
 //**************************************************************************************************
 //**** Includes ************************************************************************************
-#include "mixer_internal.h"
 
-//**************************************************************************************************
-
-#include "chirp_internal.h"
 #include "stm32l4xx_hal.h"
-
-#ifdef MX_CONFIG_FILE
-#include STRINGIFY(MX_CONFIG_FILE)
-#endif
+#include "gps.h"
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#if DEBUG_CHIRPBOX
 #include <stdio.h>
 #include <stdlib.h>
 
 #define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 #define UTC_BASE_YEAR 1970
 #define MONTH_PER_YEAR 12
@@ -338,12 +327,20 @@ void GPS_Wakeup(uint32_t interval_sec)
         while (pps_count <= sleep_sec)
         {
             // enter low-power mode
-            gpi_int_disable();
+            __disable_irq();
+            /* Clear SLEEPDEEP bit of Cortex System Control Register */
+            CLEAR_BIT(SCB->SCR, ((uint32_t)SCB_SCR_SLEEPDEEP_Msk));
 
-            gpi_sleep();
+            // Wait for Interrupt
+            __WFI();
 
+            // sleep...
+
+            // restore standard behavior
+            // NOTE: PRIMASK = 0 reenables interrupts. In consequence, pending IRQ(s) will be taken.
+            __set_PRIMASK(0);
             /* wake by the timer interrupt */
-            gpi_int_enable();
+            __enable_irq();
         }
     }
     pps_count = 0;

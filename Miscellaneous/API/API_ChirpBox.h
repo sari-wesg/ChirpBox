@@ -50,6 +50,7 @@ typedef struct Chirp_Time_tag
 } Chirp_Time;
 
 #include "ds3231.h"
+#include "gps.h"
 
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
@@ -88,7 +89,6 @@ int the_fseek(Flash_FILE *file, long int offset, int origin);
 void api_trace_store_msg(const char* fmt, ...);
 void api_trace_to_flash();
 /* time */
-void MX_I2C2_Init(void);
 Chirp_Time api_obtain_rtc_time();
 /* loudness sensor */
 void MX_ADC1_Init(void);

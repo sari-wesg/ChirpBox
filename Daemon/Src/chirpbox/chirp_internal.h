@@ -5,9 +5,7 @@
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
 #include "stdint.h"
-#include <time.h>
 
-// #include "mixer_internal.h"
 #include "gpi/interrupts.h"
 
 #include "gpi/clocks.h"
@@ -161,17 +159,6 @@ void SX1276OnDio0Irq();
 void SX1276OnDio3Irq();
 
 //**************************************************************************************************
-/* GPS */
-void GPS_Init();
-void GPS_On();
-void GPS_Off();
-void GPS_Uart_Irq();
-Chirp_Time GPS_Get_Time();
-time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
-void GPS_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
-void GPS_Waiting_PPS(uint32_t PPS_wait);
-void GPS_Wakeup(uint32_t interval_sec);
-
 /* Topology */
 uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len);
 void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i);
