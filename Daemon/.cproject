@@ -154,6 +154,8 @@
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API"/>
                                     									
                                     <listOptionValue builtIn="false" value="../../Miscellaneous/API/Core"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="../../Miscellaneous/LoRaDisC"/>
                                     								
                                 </option>
                                 								
@@ -223,7 +225,9 @@
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
                         						
-                        <entry excluding="chirpbox/chirp_irqhandler copy.c|loradisc/loradisc.c|gpi/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Src"/>
+                        <entry excluding="gpi/arm" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="LoRaDisC"/>
+                        						
+                        <entry excluding="gpi|chirpbox/chirp_irqhandler copy.c|loradisc/loradisc.c|gpi/arm" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="Src"/>
                         					
                     </sourceEntries>
                     				

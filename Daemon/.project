@@ -36,5 +36,10 @@
 			<type>2</type>
 			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Miscellaneous/API</locationURI>
 		</link>
+		<link>
+			<name>LoRaDisC</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/Miscellaneous/LoRaDisC</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>
