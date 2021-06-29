@@ -162,13 +162,28 @@ static void change_unix(long ts, Chirp_Time *gps_time)
     PRINTF("%d-%d-%d %d:%d:%d week: %d\n", gps_time->chirp_year, gps_time->chirp_month, gps_time->chirp_date, gps_time->chirp_hour, gps_time->chirp_min, gps_time->chirp_sec, gps_time->chirp_day);
 }
 
+// convert gps time to utc
+static time_t GPS_Conv(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t min, uint8_t sec)
+{
+    time_t retval = 0;
+    struct tm tm;
+    tm.tm_year = year - 1900;
+    tm.tm_mon = month - 1;
+    tm.tm_mday = date;
+    tm.tm_hour = hour;
+    tm.tm_min = min;
+    tm.tm_sec = sec;
+    tm.tm_isdst = -1;
+    retval = mktime(&tm);
+    return retval;
+}
+
 void gps_pps_IRQ()
 {
     gpi_watchdog_periodic();
     pps_count++;
     PRINTF("pps:%lu\n", pps_count);
 }
-
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
 
@@ -223,18 +238,15 @@ void GPS_Off()
 void GPS_Uart_Irq()
 {
     // change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
-    gps_done = 2;
+    gps_done = 1;
 
     HAL_UART_Abort(&huart3);
     /* Disable usart, stop receiving data */
     __HAL_UART_DISABLE_IT(&huart3, UART_IT_RXNE);
-    /* Disable Main Timer, since we have received GPS time */
-    __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
 }
 
 Chirp_Time GPS_Get_Time()
 {
-	chirp_isr.state = ISR_GPS;
     gps_state = GPS_GET_TIME;
 
     __HAL_UART_DISABLE(&huart3);
@@ -245,34 +257,15 @@ Chirp_Time GPS_Get_Time()
     HAL_UART_Receive_IT(&huart3, (uint8_t *)aRxBuffer, sizeof(aRxBuffer));
 
     HAL_GPIO_WritePin(GPS_TRIGGER_Port, GPS_TRIGGER_Pin, GPIO_PIN_SET);
-    __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
-    MAIN_TIMER_CC_REG = MAIN_TIMER_CNT_REG + GPI_TICK_US_TO_FAST(1000000);
-    __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_CC1);
     HAL_GPIO_WritePin(GPS_TRIGGER_Port, GPS_TRIGGER_Pin, GPIO_PIN_RESET);
     gps_done = 0;
-    while (gps_done == 0)
-        ;
-    if (gps_done == 2)
+    while (gps_done == 0);
+    if (gps_done == 1)
     {
         PRINTF("GPS timestamp:%s\n", aRxBuffer);
         change_unix(strtol(aRxBuffer, NULL, 10) - 1, &chirp_time);
     }
     return chirp_time;
-}
-
-time_t GPS_Conv(uint16_t year, uint8_t month, uint8_t date, uint8_t hour, uint8_t min, uint8_t sec)
-{
-    time_t retval = 0;
-    struct tm tm;
-    tm.tm_year = year - 1900;
-    tm.tm_mon = month - 1;
-    tm.tm_mday = date;
-    tm.tm_hour = hour;
-    tm.tm_min = min;
-    tm.tm_sec = sec;
-    tm.tm_isdst = -1;
-    retval = mktime(&tm);
-    return retval;
 }
 
 time_t GPS_Diff(Chirp_Time *gps_time, uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec)
@@ -325,7 +318,8 @@ void GPS_Waiting_PPS(uint32_t PPS_wait)
 }
 
 /**
-  * @brief  obtain current gps time to calculate the length of main timer interrupt compare time
+  * @brief  call this to go into sleep mode, and wake up at whole time point according to GPS time. Should not exceed 263 s, which is the longest duration of main timer.
+  *         obtain current gps time to calculate the length of main timer interrupt compare time
   * @param  interval_sec: interval time of interrupt
   * @retval none
   */
@@ -336,10 +330,8 @@ void GPS_Wakeup(uint32_t interval_sec)
     time_t sleep_sec = interval_sec - (time_t)(0 - diff) % interval_sec;
     PRINTF("sleep_sec:%ld\n", (int32_t)sleep_sec);
     gps_state = GPS_WAKEUP;
-    __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
 
     HAL_NVIC_EnableIRQ( EXTI0_IRQn );
-    // sleep_sec += 1;
     if (sleep_sec > 0)
     {
         pps_count = 0;
@@ -358,28 +350,4 @@ void GPS_Wakeup(uint32_t interval_sec)
     HAL_NVIC_DisableIRQ( EXTI0_IRQn );
 }
 
-/**
-  * @brief  call this to go into sleep mode, and wake up at whole time point according to GPS time. Should not exceed 263 s, which is the longest duration of main timer
-  * @param  interval_sec: interval time of interrupt
-  * @retval none
-  */
-void GPS_Sleep(uint32_t interval_sec)
-{
-    GPS_Wakeup(interval_sec);
-}
-
-void gps_main_timer_isr(void)
-{
-    gpi_watchdog_periodic();
-    #if GPS_DATA
-    if (gps_state == GPS_GET_TIME)
-    {
-        __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
-
-        __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
-        gps_done = 1;
-        PRINTF("gps timeout!\n");
-    }
-    #endif
-}
 //**************************************************************************************************

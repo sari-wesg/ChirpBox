@@ -36,7 +36,6 @@ void __attribute__((naked)) MAIN_TIMER_ISR_NAME()
 		".align 2							\n"		// ensure alignment and correct offset
 		"b.w	mixer_main_timer_isr 		\n"		// 0: mixer_main_timer_isr (don't return to here)
 		"b.w	topo_main_timer_isr			\n"		// 4: topo_main_timer_isr (don't return to here)
-		"b.w	gps_main_timer_isr			\n"		// 8: gps_main_timer_isr (don't return to here)
 		"1:									\n"
 		".word	%c0							\n"
 		: : "i"(&chirp_isr.state)

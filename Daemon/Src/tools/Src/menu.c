@@ -1215,8 +1215,8 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
   chirp_outl.glossy_gps_on = 1;
 
   #if GPS_DATA
-  GPS_Sleep(60);
-  gps_time = GPS_Get_Time();
+  GPS_Wakeup(60);
+  // gps_time = GPS_Get_Time();
   // uint8_t gps_time_str[2];
   // memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
   // uint32_t channel_seed;
@@ -1257,7 +1257,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       }
       else
       {
-          GPS_Sleep(60);
+          GPS_Wakeup(60);
       }
     #endif
     #if ENERGEST_CONF_ON
@@ -1318,7 +1318,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
         if (!node_id)
         {
           #if GPS_DATA
-          GPS_Sleep(60);
+          GPS_Wakeup(60);
           #else
           DS3231_GetTime();
           /* Set alarm */
@@ -1352,7 +1352,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
               chirp_outl.glossy_gps_on = 1;
               GPS_On();
               GPS_Waiting_PPS(10);
-              // GPS_Sleep(60);
+              // GPS_Wakeup(60);
               // gps_time = GPS_Get_Time();
               // sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
               // sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
@@ -1368,7 +1368,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
           // wait on each 60 seconds
           if (chirp_outl.glossy_gps_on)
           {
-            GPS_Sleep(60);
+            GPS_Wakeup(60);
           }
           else
           {
@@ -1410,7 +1410,7 @@ void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
       // if (node_id)
       //   RTC_Waiting_Count(60 - chirp_config.mx_period_time_s - 2);
       // else
-      //   GPS_Sleep(60);
+      //   GPS_Wakeup(60);
 
 		/* default mode is MX_ARRANGE (task arrangement) */
 		chirp_outl.task = MX_ARRANGE;
