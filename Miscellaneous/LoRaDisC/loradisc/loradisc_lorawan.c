@@ -23,12 +23,12 @@
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
 
-typedef enum Topology_State_tag
+typedef enum LoRaWAN_State_tag
 {
 	IDLE		= 0,
 	RX_RUNNING	= 16,
 	TX_RUNNING	= 12,
-} Topology_State;
+} LoRaWAN_State;
 
 //**************************************************************************************************
 //***** Forward Declarations ***********************************************************************
@@ -38,7 +38,7 @@ typedef enum Topology_State_tag
 uint8_t Tx_Buffer[BUFFER_SIZE];
 
 uint8_t Rx_Buffer[BUFFER_SIZE];
-Topology_State topology_state;
+LoRaWAN_State lorawan_state;
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
@@ -48,12 +48,12 @@ Topology_State topology_state;
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-void loradisc(uint8_t node_id)
+void lorawan_listen_init(uint8_t node_id)
 {
     SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 	chirp_radio_config(7, 7, 1, 8, 14, 486300);
 	chirp_isr.state = ISR_LORAWAN;
-	topology_state = IDLE;
+	lorawan_state = IDLE;
 	SX1276SetPublicNetwork(true);
 	if(node_id == 0)
 		lorawan_listen();
@@ -63,7 +63,7 @@ void loradisc(uint8_t node_id)
 
 void lorawan_listen()
 {
-	PRINTF("lorawan_listen\n");
+	printf("lorawan_listen\n");
 	// rx config
 	SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 										//RFLR_IRQFLAGS_RXDONE |
@@ -83,7 +83,7 @@ void lorawan_listen()
 	SX1276Write( REG_LR_IFFREQ1, 0x40 );
 
 	SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
-	topology_state = RX_RUNNING;
+	lorawan_state = RX_RUNNING;
 
 	// int i;
 	// for (i = 0; i <= 0x39; i++)
@@ -121,7 +121,7 @@ void lorawan_transmission()
 	SX1276Write( REG_LR_FIFOADDRPTR, 0 );
 
 	SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
-	topology_state = TX_RUNNING;
+	lorawan_state = TX_RUNNING;
 }
 
 void lorawan_main_timer_isr()
@@ -137,7 +137,7 @@ void lorawan_main_timer_isr()
 void lorawan_dio0_isr()
 {
     gpi_watchdog_periodic();
-    if (topology_state == RX_RUNNING)
+    if (lorawan_state == RX_RUNNING)
 	{
 		SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
 		volatile uint8_t packet_len = (uint8_t)SX1276Read( REG_LR_RXNBBYTES );
@@ -164,7 +164,7 @@ void lorawan_dio0_isr()
 		SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 		SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 	}
-	else if (topology_state == TX_RUNNING)
+	else if (lorawan_state == TX_RUNNING)
 	{
         PRINTF("TXDONE\n");
         SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
@@ -172,7 +172,7 @@ void lorawan_dio0_isr()
         Gpi_Fast_Tick_Native tx_interval = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST2(1000000);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), tx_interval) < 0);
 		SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
-		topology_state = TX_RUNNING;
+		lorawan_state = TX_RUNNING;
 	}
 }
 
