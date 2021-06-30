@@ -3,6 +3,7 @@
 
 //**************************************************************************************************
 #include "chirp_internal.h"
+#include "mixer_config.h"
 
 #include GPI_PLATFORM_PATH(sx1276Regs_Fsk.h)
 #include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)

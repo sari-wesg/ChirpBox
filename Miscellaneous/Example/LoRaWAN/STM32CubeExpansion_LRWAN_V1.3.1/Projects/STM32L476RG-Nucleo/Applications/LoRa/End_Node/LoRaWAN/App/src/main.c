@@ -31,7 +31,7 @@
 // #include <stdint.h>
 
 #include "Commissioning.h"
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 0, 0xFFFFFFFF, 0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 0, DR_5, 0};
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
