@@ -19,14 +19,6 @@ typedef enum Disc_Primitive_tag
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 /***************************** function config ****************************/
-#ifndef GPS_DATA
-	#define GPS_DATA								1
-#endif
-
-#ifndef MX_FLASH_FILE
-	#define MX_FLASH_FILE							1
-#endif
-
 #ifndef MX_HEADER_CHECK
 	#define MX_HEADER_CHECK							1
 #endif
@@ -35,13 +27,9 @@ typedef enum Disc_Primitive_tag
 	#define MX_LBT_ACCESS							1
 #endif
 
-#ifndef BANK_1_RUN
-	#define BANK_1_RUN								1
-#endif
-
 /***************************** radio config ****************************/
-#define REGION_CN470				// Frequency by country
-#define USE_MODEM_LORA				// Radio modem
+#define REGION_CN470							   // Frequency by country
+#define USE_MODEM_LORA							   // Radio modem
 #define CHANNEL_MAX                                9
 #define CHANNEL_MIN                                0
 #define CHANNEL_STEP                               200000
@@ -68,6 +56,9 @@ typedef enum Disc_Primitive_tag
 #else
     #error "Please define a modem in the compiler options."
 #endif
+/***************************** physical config ****************************/
+#define LoRaDisC_DEFAULT_BW				7   /* 7: 125 kHz, 8: 250 kHz, 9: 500kHz */
+#define LoRaDisC_PREAMBLE_LENGTH		8   /* 8: 8 symbols */
 
 /************************ packet format config **************************/
 #define LORADISC_HEADER_LEN				8

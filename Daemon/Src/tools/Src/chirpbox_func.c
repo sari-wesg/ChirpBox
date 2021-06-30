@@ -1279,7 +1279,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.round_max = 0;
 		chirp_outl.file_chunk_len = 0;
 
-		chirp_radio_config(12, 7, 1, 8, 14, chirp_outl.default_freq);
+		chirp_radio_config(12, 1, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, 8);
     chirp_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
@@ -1429,7 +1429,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.round_max = 1;
 		chirp_outl.file_chunk_len = 0;
 
-		chirp_radio_config(11, 7, 1, 8, 14, chirp_outl.default_freq);
+		chirp_radio_config(11, 1, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
     chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 3, 1500000);
@@ -1489,7 +1489,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		{
 			case CHIRP_START:
 			{
-				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				log_to_flash("---------CHIRP_START---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
@@ -1572,7 +1572,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
-				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
         chirp_outl.disem_file_index = 0;
         chirp_outl.disem_file_max = UINT16_MAX / 2;
         chirp_outl.disem_file_index_stay = 0;
@@ -1657,7 +1657,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
-				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				log_to_flash("---------MX_COLLECT---------\n");
 				// TODO: tune those parameters
@@ -1710,7 +1710,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_CONNECTIVITY:
 			{
-				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				log_to_flash("---------CHIRP_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
@@ -1747,7 +1747,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         #endif
 
         // initiate LoRa radio with sf 7 and testing TP and frequency.
-        chirp_radio_config(7, 7, 1, 8, chirp_outl.tx_power, chirp_outl.freq);
+        chirp_radio_config(7, 1, chirp_outl.tx_power, chirp_outl.freq);
         topo_manager(chirp_outl.num_nodes, node_id, chirp_outl.sf_bitmap, chirp_outl.topo_payload_len);
 
 				free(payload_distribution);
@@ -1768,7 +1768,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 			}
 			case CHIRP_VERSION:
 			{
-				chirp_radio_config(chirp_outl.default_sf, 7, 1, 8, chirp_outl.default_tp, chirp_outl.default_freq);
+				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
 				log_to_flash("---------CHIRP_VERSION---------\n");
 				// TODO: tune those parameters

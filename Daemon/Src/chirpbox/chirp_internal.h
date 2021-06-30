@@ -27,6 +27,15 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 } Chirp_ISR;
 
 //**************************************************************************************************
+/* chirpbox config */
+#ifndef GPS_DATA
+	#define GPS_DATA								1
+#endif
+
+#ifndef BANK_1_RUN
+	#define BANK_1_RUN								1
+#endif
+
 /* DATA config */
 #define DISSEM_MAX              32
 #define DISSEM_BITMAP_32        ((DISSEM_MAX + 32 - 1) / 32)
@@ -36,7 +45,7 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 	#define TOPO_DEFAULT_SF			7	// The LoRa default under test spreading factor is 7
 #endif
 
- /* TIMER2 */
+/* TIMER2 */
 #define MAIN_TIMER htim2.Instance
 #define MAIN_TIMER_IRQ TIM2_IRQn
 #define MAIN_TIMER_ISR_NAME TIM2_IRQHandler
@@ -44,7 +53,7 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 #define MAIN_TIMER_CC_REG (MAIN_TIMER->CCR1)  /* compare interrupt count */
 #define MAIN_TIMER_CNT_REG (MAIN_TIMER->CNT)  /* timer2 now count */
 
- /* LPTIM1 */
+/* LPTIM1 */
 #define LP_TIMER hlptim1.Instance
 #define LP_TIMER_IRQ LPTIM1_IRQn
 #define LP_TIMER_ISR_NAME LPTIM1_IRQHandler
@@ -52,7 +61,7 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 #define LP_TIMER_CMP_REG (LP_TIMER->CMP)  /* compare interrupt count */
 #define LP_TIMER_CNT_REG (LP_TIMER->CNT)  /* lptim1 now count */
 
- /* RTC */
+/* RTC */
 #define RTC_TIMER hrtc.Instance
 #define RTC_TIMER_ISR_NAME RTC_WKUP_IRQHandler
 //**************************************************************************************************
