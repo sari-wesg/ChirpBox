@@ -9,9 +9,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "stm32l4xx_hal.h"
-#ifdef MX_CONFIG_FILE
-#include STRINGIFY(MX_CONFIG_FILE)
-#endif
+#include "loradisc.h"
+
 
 /*sx1276mb1mas---------------------------------------------------------------------------*/
 #define BOARD_WAKEUP_TIME  0                       // no TCXO

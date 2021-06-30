@@ -1,7 +1,6 @@
 
 #include "chirpbox_func.h"
 #include <string.h>
-#include "menu.h"
 #include "md5.h"
 #include "stm32l4xx_hal_def.h"
 

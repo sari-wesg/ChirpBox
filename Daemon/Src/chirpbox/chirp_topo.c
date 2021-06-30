@@ -18,7 +18,6 @@
 #include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)
 
 #include "flash_if.h"
-#include "menu.h"
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 #if DEBUG_CHIRPBOX

@@ -63,10 +63,6 @@
 #include <stdint.h>
 #include "chirp_internal.h"
 
-#ifdef MX_CONFIG_FILE
-	#include STRINGIFY(MX_CONFIG_FILE)
-#endif
-
 // TODO:
 #include "mixer_config.h"
 #include "loradisc.h"
@@ -117,22 +113,6 @@
 
 #ifndef MX_BENCHMARK_PSEUDO_PAYLOAD
 	#define MX_BENCHMARK_PSEUDO_PAYLOAD				0
-#endif
-// TP added:
-#ifndef GPS_DATA
-	#define GPS_DATA								0
-#endif
-
-#ifndef MX_HEADER_CHECK
-	#define MX_HEADER_CHECK							1
-#endif
-
-#ifndef MX_LBT_ACCESS
-	#define MX_LBT_ACCESS							1
-#endif
-
-#ifndef BANK_1_RUN
-	#define BANK_1_RUN								1
 #endif
 
 #ifndef MX_AGE_TO_INCLUDE_PROBABILITY
@@ -543,95 +523,6 @@ typedef struct Request_Data_tag
 } Request_Data;
 
 //**************************************************************************************************
-typedef struct __attribute__((packed)) Chirp_Outline_tag
-{
-	Mixer_Task 			task;
-
-	uint16_t			round; 				/* current round num */
-	uint16_t			round_max; 			/* desired round num to carriage task */
-	uint8_t				round_setup; 		/* setup round for all nodes synchronization */
-
-	Mixer_Task 			arrange_task;		/* MX_ARRANGE: to arrange the next task */
-
-	uint32_t			packet_time;
-	uint16_t			default_slot_num;
-	uint32_t			default_sf;
-	uint32_t			default_freq;
-	int8_t				default_tp;
-	uint8_t				default_payload_len;
-	uint8_t				default_generate_size;
-	uint32_t			firmware_bitmap[DISSEM_BITMAP_32];
-	uint32_t			task_bitmap[DISSEM_BITMAP_32];
-
-	// send back the results in dissem
-	uint8_t				dissem_back_sf;
-	uint8_t				dissem_back_slot_num;
-
-	uint32_t			hash_header;
-
-	uint8_t				glossy_resync;
-	uint8_t				glossy_gps_on;
-
-	/* CHIRP_START: mixer config */
-	uint16_t			start_year;
-	uint8_t				start_month;
-	uint8_t				start_date;
-	uint8_t				start_hour;
-	uint8_t				start_min;
-	uint8_t				start_sec;
-
-	uint16_t			end_year;
-	uint8_t				end_month;
-	uint8_t				end_date;
-	uint8_t				end_hour;
-	uint8_t				end_min;
-	uint8_t				end_sec;
-
-	uint8_t				flash_protection;
-
-	/* MX_DISSEMINATE / MX_COLLECT : mixer config */
-	uint8_t				num_nodes;
-	uint8_t				generation_size;
-	uint8_t				payload_len;
-	uint16_t 			file_chunk_len;
-
-	/* MX_DISSEMINATE */
-	uint32_t			firmware_size;
-	uint8_t				firmware_md5[16];
-	uint16_t			version_hash;
-
-	uint32_t			file_compression;
-
-	uint8_t				patch_update;
-	uint8_t 			patch_bank;
-
-	uint8_t				patch_page;
-	uint32_t			old_firmware_size;
-
-	uint8_t				disem_flag;
-	uint16_t			disem_file_index;
-	uint16_t			disem_file_max;
-	uint16_t			disem_file_index_stay;
-	uint8_t				disem_flag_full_rank;
-	uint32_t			*disem_file_memory;
-
-	/* MX_COLLECT */
-	uint32_t			collect_addr_start;
-	uint32_t			collect_addr_end;
-	uint32_t			collect_length;
-
-	/* CHIRP_CONNECTIVITY */
-	uint8_t				sf_bitmap;
-	uint32_t			freq;
-	int8_t				tx_power;
-	uint8_t				topo_payload_len;
-
-	/* debug energy */
-	Chirp_Energy		chirp_energy[3];
-	// idle1, arrange1, start, idle2, arrange2, disfut, idle3, arrange3, collre, idle4, arrange4, connect, idle5, arrange5, colltopo
-} Chirp_Outl;
-
-//**************************************************************************************************
 
 typedef enum Slot_Activity_tag
 {
@@ -776,11 +667,6 @@ void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 	void 		chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
 	void 		chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_bandwidth, uint8_t lora_codingrate, uint8_t lora_preamble_length, int8_t tx_output_power, uint32_t lora_frequency);
 	void 		chirp_payload_distribution(Mixer_Task mx_task);
-
-	/* chirpbox */
-		void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);
-		uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
-		uint8_t		chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl);
 
 #ifdef __cplusplus
 	}

@@ -4,7 +4,6 @@
 
 #include "chirp_internal.h"
 #include "stm32l4xx_hal.h"
-// #include "menu.h"
 
 #ifdef MX_CONFIG_FILE
 #include STRINGIFY(MX_CONFIG_FILE)

@@ -11,9 +11,6 @@
 #include GPI_PLATFORM_PATH(sx1276Regs_Fsk.h)
 #include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)
 // TODO:
-#ifdef MX_CONFIG_FILE
-	#include STRINGIFY(MX_CONFIG_FILE)
-#endif
 #include "mixer/mixer_internal.h"
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************

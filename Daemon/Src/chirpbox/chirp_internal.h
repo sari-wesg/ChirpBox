@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include "stm32l4xx_hal.h"
 #include "API_ChirpBox.h"
+#include "mixer_config.h"
+
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 
@@ -24,10 +26,15 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 	ISR_LORAWAN  = 8,
 } Chirp_ISR;
 
+//**************************************************************************************************
+/* DATA config */
+#define DISSEM_MAX              32
+#define DISSEM_BITMAP_32        ((DISSEM_MAX + 32 - 1) / 32)
+
+/* TOPO */
 #ifndef TOPO_DEFAULT_SF
 	#define TOPO_DEFAULT_SF			7	// The LoRa default under test spreading factor is 7
 #endif
-//**************************************************************************************************
 
  /* TIMER2 */
 #define MAIN_TIMER htim2.Instance
@@ -142,6 +149,95 @@ typedef struct __attribute__((packed)) Chirp_Energy_tag
 } Chirp_Energy;
 
 //**************************************************************************************************
+typedef struct __attribute__((packed)) Chirp_Outline_tag
+{
+	Mixer_Task 			task;
+
+	uint16_t			round; 				/* current round num */
+	uint16_t			round_max; 			/* desired round num to carriage task */
+	uint8_t				round_setup; 		/* setup round for all nodes synchronization */
+
+	Mixer_Task 			arrange_task;		/* MX_ARRANGE: to arrange the next task */
+
+	uint32_t			packet_time;
+	uint16_t			default_slot_num;
+	uint32_t			default_sf;
+	uint32_t			default_freq;
+	int8_t				default_tp;
+	uint8_t				default_payload_len;
+	uint8_t				default_generate_size;
+	uint32_t			firmware_bitmap[DISSEM_BITMAP_32];
+	uint32_t			task_bitmap[DISSEM_BITMAP_32];
+
+	// send back the results in dissem
+	uint8_t				dissem_back_sf;
+	uint8_t				dissem_back_slot_num;
+
+	uint32_t			hash_header;
+
+	uint8_t				glossy_resync;
+	uint8_t				glossy_gps_on;
+
+	/* CHIRP_START: mixer config */
+	uint16_t			start_year;
+	uint8_t				start_month;
+	uint8_t				start_date;
+	uint8_t				start_hour;
+	uint8_t				start_min;
+	uint8_t				start_sec;
+
+	uint16_t			end_year;
+	uint8_t				end_month;
+	uint8_t				end_date;
+	uint8_t				end_hour;
+	uint8_t				end_min;
+	uint8_t				end_sec;
+
+	uint8_t				flash_protection;
+
+	/* MX_DISSEMINATE / MX_COLLECT : mixer config */
+	uint8_t				num_nodes;
+	uint8_t				generation_size;
+	uint8_t				payload_len;
+	uint16_t 			file_chunk_len;
+
+	/* MX_DISSEMINATE */
+	uint32_t			firmware_size;
+	uint8_t				firmware_md5[16];
+	uint16_t			version_hash;
+
+	uint32_t			file_compression;
+
+	uint8_t				patch_update;
+	uint8_t 			patch_bank;
+
+	uint8_t				patch_page;
+	uint32_t			old_firmware_size;
+
+	uint8_t				disem_flag;
+	uint16_t			disem_file_index;
+	uint16_t			disem_file_max;
+	uint16_t			disem_file_index_stay;
+	uint8_t				disem_flag_full_rank;
+	uint32_t			*disem_file_memory;
+
+	/* MX_COLLECT */
+	uint32_t			collect_addr_start;
+	uint32_t			collect_addr_end;
+	uint32_t			collect_length;
+
+	/* CHIRP_CONNECTIVITY */
+	uint8_t				sf_bitmap;
+	uint32_t			freq;
+	int8_t				tx_power;
+	uint8_t				topo_payload_len;
+
+	/* debug energy */
+	Chirp_Energy		chirp_energy[3];
+	// idle1, arrange1, start, idle2, arrange2, disfut, idle3, arrange3, collre, idle4, arrange4, connect, idle5, arrange5, colltopo
+} Chirp_Outl;
+
+//**************************************************************************************************
 //***** Global Variables ***************************************************************************
 /* main */
 uint8_t MX_NUM_NODES_CONF;
@@ -160,6 +256,11 @@ void SX1276OnDio0Irq();
 void SX1276OnDio3Irq();
 
 //**************************************************************************************************
+/* chirpbox */
+void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);
+uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
+uint8_t		chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl);
+
 /* Topology */
 uint32_t topo_init(uint8_t nodes_num, uint8_t node_id, uint8_t sf, uint8_t payload_len);
 void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i);

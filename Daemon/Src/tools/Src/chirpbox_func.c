@@ -48,7 +48,6 @@
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
 
-#include "menu.h"
 #include "string.h"
 #include "mixer/mixer_internal.h"
 #include "md5.h"
@@ -1186,7 +1185,7 @@ void randomPermutation1(uint8_t channel_sync, uint8_t n)
   }
 }
 
-void chirp_start(uint8_t node_id, uint8_t network_num_nodes)
+void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 {
   gpi_watchdog_periodic();
 	Chirp_Outl chirp_outl;
