@@ -81,7 +81,6 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 #include "mixer/mixer_internal.h"
 
-#include "menu.h"
 #include "stm32l4xx_hal_flash_ex.h"
 #include "toggle.h"
 
@@ -258,7 +257,7 @@ int main(void)
 	node_id_allocate = node_id;
 
 	/************************************ Chirpbox ************************************/
-	chirp_start(node_id, MX_NUM_NODES_CONF);
+	chirpbox_start(node_id, MX_NUM_NODES_CONF);
 
 	return 0;
 }
