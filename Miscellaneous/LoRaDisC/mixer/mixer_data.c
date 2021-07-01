@@ -391,7 +391,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                     else
                     {
                         data[6] = chirp_outl->disem_flag_full_rank;
-                        loradisc_config.disem_copy = 0;
                     }
                 }
             }
@@ -1079,7 +1078,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 //         return 0;
                 //     }
                 // }
-                /* dissemination session: disseminate files to all nodes */
+                /* next is dissemination session: disseminate files to all nodes */
                 if (!chirp_outl->disem_flag)
                 {
                     Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1102,7 +1101,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     chirp_payload_distribution(chirp_outl->task);
                     chirp_outl->disem_flag = 1;
                 }
-                /* confirm session: collect all nodes condition (if full rank in last mixer round) */
+                /* next is confirm session: collect all nodes condition (if full rank in last mixer round) */
                 else
                 {
                     Stats_value(RX_STATS, (uint32_t)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)));
@@ -1133,7 +1132,6 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     if (chirp_outl->disem_file_index > rece_dissem_index)
                     {
                         PRINTF("full disem_copy\n");
-                        loradisc_config.disem_copy = 1;
                         chirp_outl->disem_flag_full_rank = mx.stat_counter.slot_full_rank;
                     }
                 }
