@@ -249,7 +249,7 @@ static void mixer_transport_initiate_radio()
 
 	uint32_t symbol_time = (uint32_t)1e6 / symbol_rate;
 
-	uint32_t payload_air_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, loradisc_config.lora_cr, 0, loradisc_config.lora_plen, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
+	uint32_t payload_air_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, loradisc_config.lora_cr, 0, loradisc_config.lora_plen, loradisc_config.phy_payload_size);
 	uint32_t drift_tolerance = MIN(2500, MAX((loradisc_config.mx_slot_length + 999) / 1000, 1));
 
 	radio.header_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, loradisc_config.lora_cr, 1, loradisc_config.lora_plen, 2);
@@ -586,7 +586,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		// if LEN or CRC not ok: regard packet as invisible
 		volatile uint8_t packet_len = (uint8_t)SX1276Read( REG_LR_RXNBBYTES );
 		volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
-		if( ( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR ) || ( packet_len != loradisc_config.phy_payload_size + HASH_TAIL_CODE )
+		if( ( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR ) || ( packet_len != loradisc_config.phy_payload_size )
 		)
 		{
 			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
@@ -618,263 +618,251 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			SX1276ReadFifo( RxPacketBuffer, packet_len );
 			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 
-			uint16_t code_tail_hash_rx = Chirp_RSHash((uint8_t *)RxPacketBuffer, loradisc_config.phy_payload_size);
-			uint16_t hash_code_rx = RxPacketBuffer[packet_len - 2] << 8 | RxPacketBuffer[packet_len - 1];
-			if ((hash_code_rx == code_tail_hash_rx) && (hash_code_rx))
+			// allocate rx queue destination slot
+			Packet	*packet;
+
+			gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, loradisc_config.phy_payload_size);
+			packet = mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
+				#if INFO_VECTOR_QUEUE
+				gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.coding_vector.pos), loradisc_config.coding_vector.len);
+				gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.info_vector.pos), loradisc_config.info_vector.len);
+
+			if (loradisc_config.primitive == FLOODING)
 			{
-				// allocate rx queue destination slot
-				Packet	*packet;
+				loradisc_config.glossy_task = packet->flags.all;
+				gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
+			}
+			#else
+			gpi_memcpy_dma_aligned(&mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)].phy_payload_begin, RxPacketBuffer, PHY_PAYLOAD_SIZE);
+			packet = &mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
+				#if INFO_VECTOR_QUEUE
+				gpi_memcpy_dma_inline(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)].vector, (uint8_t *)(RxPacketBuffer + offsetof(Packet, coding_vector)), sizeof_member(Packet, coding_vector));
+				gpi_memcpy_dma_inline(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)].vector, (uint8_t *)(RxPacketBuffer + offsetof(Packet, info_vector)), sizeof_member(Packet, info_vector));
+				#endif
+			#endif
 
-				gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, loradisc_config.phy_payload_size);
-				packet = mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
-					#if INFO_VECTOR_QUEUE
-					gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.coding_vector.pos), loradisc_config.coding_vector.len);
-					gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.info_vector.pos), loradisc_config.info_vector.len);
+			PROFILE_ISR("radio ISR process Rx packet begin");
 
-				if (loradisc_config.primitive == FLOODING)
+			int	strobe_resync = 0;
+
+			GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "CRC ok");
+
+			#if MX_VERBOSE_STATISTICS
+				mx.stat_counter.num_rx_success++;
+			#endif
+
+			// update slot timing control values
+			{
+				// Gpi_Hybrid_Tick	event_tick;
+				// Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow;
+				/* see "Longshot", ipsn 2019 */
+				uint32_t rx_processing_time[6] = {682, 1372, 2850, 5970, 12800, 27000};
+				Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow - GPI_TICK_US_TO_HYBRID2(rx_processing_time[loradisc_config.lora_sf - 7]);
+
+				ASSERT_CT(sizeof(Gpi_Slow_Tick_Native) >= sizeof(uint16_t));
+
+				// if RESYNC requested: realign slot grid based on capture value
+				if (RESYNC == s.slot_state)
 				{
-					loradisc_config.glossy_task = packet->flags.all;
-					gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
-				}
-				#else
-				gpi_memcpy_dma_aligned(&mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)].phy_payload_begin, RxPacketBuffer, PHY_PAYLOAD_SIZE);
-				packet = &mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
-					#if INFO_VECTOR_QUEUE
-					gpi_memcpy_dma_inline(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)].vector, (uint8_t *)(RxPacketBuffer + offsetof(Packet, coding_vector)), sizeof_member(Packet, coding_vector));
-					gpi_memcpy_dma_inline(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)].vector, (uint8_t *)(RxPacketBuffer + offsetof(Packet, info_vector)), sizeof_member(Packet, info_vector));
+					#if MX_LBT_ACCESS
+						event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
 					#endif
-				#endif
 
-				PROFILE_ISR("radio ISR process Rx packet begin");
+					s.next_grid_tick = event_tick - radio.packet_air_time + loradisc_config.mx_slot_length;
 
-				int	strobe_resync = 0;
+					s.grid_drift = 0;
+					s.grid_drift_cumulative = 0;
+					s.tx_trigger_offset = radio.tx_to_grid_offset;
 
-				GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "CRC ok");
+					// don't set Rx window to tight after resync because we don't have
+					// any information on grid drift yet
+					// TODO:
+					s.rx_trigger_offset = radio.rx_to_grid_offset + radio.rx_window_max / 2;
 
-				#if MX_VERBOSE_STATISTICS
-					mx.stat_counter.num_rx_success++;
-				#endif
+					s.slot_state = RX_RUNNING;
 
-				// update slot timing control values
-				{
-					// Gpi_Hybrid_Tick	event_tick;
-					// Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow;
-					/* see "Longshot", ipsn 2019 */
-					uint32_t rx_processing_time[6] = {682, 1372, 2850, 5970, 12800, 27000};
-					Gpi_Hybrid_Tick event_tick = dio0_event_tick_slow - GPI_TICK_US_TO_HYBRID2(rx_processing_time[loradisc_config.lora_sf - 7]);
-
-					ASSERT_CT(sizeof(Gpi_Slow_Tick_Native) >= sizeof(uint16_t));
-
-					// if RESYNC requested: realign slot grid based on capture value
-					if (RESYNC == s.slot_state)
+					mx.slot_number = packet->slot_number;
+					GPI_TRACE_MSG_FAST(TRACE_INFO, "(re)synchronized to slot %u", mx.slot_number);
+					if (loradisc_config.primitive == FLOODING)
 					{
-						#if MX_LBT_ACCESS
-							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
+						//once receive a packet, tx in next slot
+						set_event(SLOT_UPDATE);
+					}
+				}
+				// else use phase-lock control loop to track grid
+				else
+				{
+					#if MX_LBT_ACCESS
+						event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US + s.lbt_channel_seq_no * loradisc_config.lbt_detect_duration_us);
+						s.lbt_channel_seq_no = 0;
+					#endif
+
+					int32_t	gd;
+
+					if (mx.slot_number != packet->slot_number)
+					{
+						#if MX_VERBOSE_STATISTICS
+							mx.stat_counter.num_rx_slot_mismatch++;
 						#endif
-
-						s.next_grid_tick = event_tick - radio.packet_air_time + loradisc_config.mx_slot_length;
-
-						s.grid_drift = 0;
-						s.grid_drift_cumulative = 0;
-						s.tx_trigger_offset = radio.tx_to_grid_offset;
-
-						// don't set Rx window to tight after resync because we don't have
-						// any information on grid drift yet
-						// TODO:
-						s.rx_trigger_offset = radio.rx_to_grid_offset + radio.rx_window_max / 2;
-
-						s.slot_state = RX_RUNNING;
+						GPI_TRACE_MSG_FAST(TRACE_WARNING, "!!! slot_number mismatch: expected: %u, received: %u !!!",
+							mx.slot_number, packet->slot_number);
 
 						mx.slot_number = packet->slot_number;
-						GPI_TRACE_MSG_FAST(TRACE_INFO, "(re)synchronized to slot %u", mx.slot_number);
-						if (loradisc_config.primitive == FLOODING)
-						{
-							//once receive a packet, tx in next slot
-							set_event(SLOT_UPDATE);
-						}
+						// TODO: should not happen -> start RESYNC?
 					}
-					// else use phase-lock control loop to track grid
+					// update grid drift and next grid tick
+					// NOTE: s.grid_drift uses fix point format with ld(GRID_DRIFT_FILTER_DIV) fractional digits
+
+					// compute SFD event deviation
+					// NOTE: result is bounded by Rx window size
+					event_tick -= s.event_tick_nominal;
+
+					// keep Rx window in this range (with some margin)
+					// TODO:
+					s.rx_trigger_offset = radio.rx_window_min;
+					gd = (uint32_t)MAX(ABS(s.grid_drift / radio.grid_drift_filter_div), ABS((int32_t)event_tick));
+					if (s.rx_trigger_offset < (uint32_t)gd + radio.rx_window_increment)
+						s.rx_trigger_offset = (uint32_t)gd + radio.rx_window_increment;
+					s.rx_trigger_offset += radio.rx_to_grid_offset;
+
+					// restore nominal grid tick (i.e. remove previously added control value)
+					// TODO:
+					s.next_grid_tick -= s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
+
+					// update grid drift:
+					// new = 1/c * measurement + (c-1)/c * old = old - 1/c * old + 1/c * measurement
+					// + GRID_DRIFT_FILTER_DIV / 2 leads to rounding
+					s.grid_drift -= (s.grid_drift + radio.grid_drift_filter_div / 2) / radio.grid_drift_filter_div;
+					gd = s.grid_drift;
+					gd += (int32_t)event_tick;
+					s.grid_drift = gd;
+
+					// if drift exceeds limit: start RESYNC
+					// NOTE: saturation could also help since obviously we are still able to receive
+					// something (at the moment). Nevertheless it seems that we are in a critical
+					// situation, so resync appears adequate as well.
+					if (ABS(gd) > 500 * radio.grid_drift_max)
+					{
+						#if MX_VERBOSE_STATISTICS
+							mx.stat_counter.num_grid_drift_overflow++;
+							mx.stat_counter.num_resync++;
+						#endif
+						GPI_TRACE_MSG_FAST(TRACE_INFO, "grid drift overflow: %d > %d -> enter RESYNC",
+							ABS(gd), radio.grid_drift_max);
+
+						strobe_resync = 1;
+					}
+
 					else
 					{
-						#if MX_LBT_ACCESS
-							event_tick -= GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US + s.lbt_channel_seq_no * loradisc_config.lbt_detect_duration_us);
-							s.lbt_channel_seq_no = 0;
-						#endif
-
-						int32_t	gd;
-
-						if (mx.slot_number != packet->slot_number)
-						{
-							#if MX_VERBOSE_STATISTICS
-								mx.stat_counter.num_rx_slot_mismatch++;
-							#endif
-							GPI_TRACE_MSG_FAST(TRACE_WARNING, "!!! slot_number mismatch: expected: %u, received: %u !!!",
-								mx.slot_number, packet->slot_number);
-
-							mx.slot_number = packet->slot_number;
-							// TODO: should not happen -> start RESYNC?
-						}
-						// update grid drift and next grid tick
-						// NOTE: s.grid_drift uses fix point format with ld(GRID_DRIFT_FILTER_DIV) fractional digits
-
-						// compute SFD event deviation
-						// NOTE: result is bounded by Rx window size
-						event_tick -= s.event_tick_nominal;
-
-						// keep Rx window in this range (with some margin)
+						// update grid tick
+						// NOTE: this realizes the proportional term of a PID controller
 						// TODO:
-						s.rx_trigger_offset = radio.rx_window_min;
-						gd = (uint32_t)MAX(ABS(s.grid_drift / radio.grid_drift_filter_div), ABS((int32_t)event_tick));
-						if (s.rx_trigger_offset < (uint32_t)gd + radio.rx_window_increment)
-							s.rx_trigger_offset = (uint32_t)gd + radio.rx_window_increment;
-						s.rx_trigger_offset += radio.rx_to_grid_offset;
+						s.next_grid_tick += s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
 
-						// restore nominal grid tick (i.e. remove previously added control value)
+						// keep cumulative grid drift
+						// NOTE: this is the base for the integral component of a PID controller
+						gd = s.grid_drift_cumulative;
+						gd += s.grid_drift;
+						if (gd > 0x7FFF)
+							gd = 0x7FFF;
+						else if (gd < -0x8000l)
+							gd = -0x8000l;
+						s.grid_drift_cumulative = gd;
+
+						// update tx trigger offset
+						// NOTE: this realizes the integral term of a PID controller in an indirect way
+						// (through a loopback with potentially high uncertainty on its reaction)
 						// TODO:
-						s.next_grid_tick -= s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
+						s.tx_trigger_offset = s.grid_drift_cumulative / (radio.grid_drift_filter_div * radio.tx_offset_filter_div);
 
-						// update grid drift:
-						// new = 1/c * measurement + (c-1)/c * old = old - 1/c * old + 1/c * measurement
-						// + GRID_DRIFT_FILTER_DIV / 2 leads to rounding
-						s.grid_drift -= (s.grid_drift + radio.grid_drift_filter_div / 2) / radio.grid_drift_filter_div;
-						gd = s.grid_drift;
-						gd += (int32_t)event_tick;
-						s.grid_drift = gd;
+						if ((int32_t)s.tx_trigger_offset < 0)
+							s.tx_trigger_offset = 0;
+						else if (s.tx_trigger_offset > radio.tx_offset_max)
+							s.tx_trigger_offset = radio.tx_offset_max;
+						s.tx_trigger_offset += radio.tx_to_grid_offset;
 
-						// if drift exceeds limit: start RESYNC
-						// NOTE: saturation could also help since obviously we are still able to receive
-						// something (at the moment). Nevertheless it seems that we are in a critical
-						// situation, so resync appears adequate as well.
-						if (ABS(gd) > 500 * radio.grid_drift_max)
-						{
-							#if MX_VERBOSE_STATISTICS
-								mx.stat_counter.num_grid_drift_overflow++;
-								mx.stat_counter.num_resync++;
-							#endif
-							GPI_TRACE_MSG_FAST(TRACE_INFO, "grid drift overflow: %d > %d -> enter RESYNC",
-								ABS(gd), radio.grid_drift_max);
-
-							strobe_resync = 1;
-						}
-
-						else
-						{
-							// update grid tick
-							// NOTE: this realizes the proportional term of a PID controller
-							// TODO:
-							s.next_grid_tick += s.grid_drift / (radio.grid_drift_filter_div * radio.grid_tick_update_div);
-
-							// keep cumulative grid drift
-							// NOTE: this is the base for the integral component of a PID controller
-							gd = s.grid_drift_cumulative;
-							gd += s.grid_drift;
-							if (gd > 0x7FFF)
-								gd = 0x7FFF;
-							else if (gd < -0x8000l)
-								gd = -0x8000l;
-							s.grid_drift_cumulative = gd;
-
-							// update tx trigger offset
-							// NOTE: this realizes the integral term of a PID controller in an indirect way
-							// (through a loopback with potentially high uncertainty on its reaction)
-							// TODO:
-							s.tx_trigger_offset = s.grid_drift_cumulative / (radio.grid_drift_filter_div * radio.tx_offset_filter_div);
-
-							if ((int32_t)s.tx_trigger_offset < 0)
-								s.tx_trigger_offset = 0;
-							else if (s.tx_trigger_offset > radio.tx_offset_max)
-								s.tx_trigger_offset = radio.tx_offset_max;
-							s.tx_trigger_offset += radio.tx_to_grid_offset;
-
-							GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "grid_drift_cum: %d, tx_offset: %u",
-								s.grid_drift_cumulative, s.tx_trigger_offset - radio.tx_to_grid_offset);
-						}
+						GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "grid_drift_cum: %d, tx_offset: %u",
+							s.grid_drift_cumulative, s.tx_trigger_offset - radio.tx_to_grid_offset);
 					}
-
-
-					// special handling during start-up phase, see tx decision for details
-					#if (MX_COORDINATED_TX && !MX_BENCHMARK_NO_COORDINATED_STARTUP)
-						if (!strobe_resync && (mx.slot_number < loradisc_config.mx_generation_size) && packet->flags.has_next_payload)
-						{
-							// ATTENTION: don't rely on mx.tx_sideload or mx.tx_reserve at this point
-							// (mx.tx_sideload may change between here and next trigger tick, mx.tx_reserve
-							// may point to an incosistent row since it is not guarded w.r.t. ISR level).
-							// Instead, there is a very high probability that mx.tx_packet is ready since
-							// we did not TX in current slot (otherwise we wouldn't be here).
-							if (((mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS) && (STOP != s.next_slot_task))
-							{
-								GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "tx decision: has_next_payload set");
-								s.next_slot_task = TX;
-							}
-						}
-					#endif
-
-					s.next_trigger_tick = s.next_grid_tick -
-						((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
-
-					GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "next_grid: %lu, grid_drift: %+d (%+dus)",
-						(long)gpi_tick_hybrid_to_us(s.next_grid_tick), s.grid_drift,
-						(s.grid_drift >= 0) ?
-							(int)gpi_tick_hybrid_to_us(s.grid_drift / radio.grid_drift_filter_div) :
-							-(int)gpi_tick_hybrid_to_us(-s.grid_drift / radio.grid_drift_filter_div)
-					);
 				}
 
 
-				// check potential queue overflow, if ok: keep packet
-				if (mx.rx_queue_num_writing - mx.rx_queue_num_read < NUM_ELEMENTS(mx.rx_queue))
-				{
-					mx.rx_queue_num_written++;
-
-					// use packet as next Tx sideload (-> fast tx update)
-					if (loradisc_config.mx_generation_size != mx.rank)
+				// special handling during start-up phase, see tx decision for details
+				#if (MX_COORDINATED_TX && !MX_BENCHMARK_NO_COORDINATED_STARTUP)
+					if (!strobe_resync && (mx.slot_number < loradisc_config.mx_generation_size) && packet->flags.has_next_payload)
 					{
-						mx.tx_sideload = &(packet->packet_chunk[loradisc_config.coding_vector.pos]);
+						// ATTENTION: don't rely on mx.tx_sideload or mx.tx_reserve at this point
+						// (mx.tx_sideload may change between here and next trigger tick, mx.tx_reserve
+						// may point to an incosistent row since it is not guarded w.r.t. ISR level).
+						// Instead, there is a very high probability that mx.tx_packet is ready since
+						// we did not TX in current slot (otherwise we wouldn't be here).
+						if (((mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_IS_READY) >> PACKET_IS_READY_POS) && (STOP != s.next_slot_task))
+						{
+							GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "tx decision: has_next_payload set");
+							s.next_slot_task = TX;
+						}
 					}
-
-					set_event(RX_READY);
-
-					#if MX_VERBOSE_STATISTICS
-						mx.stat_counter.num_received++;
-					#endif
-				}
-				#if MX_VERBOSE_STATISTICS
-				else
-				{
-					GPI_TRACE_MSG_FAST(TRACE_INFO, "Rx queue overflow, NW: %u, NR: %u", mx.rx_queue_num_writing, mx.rx_queue_num_read);
-
-					if (mx.rank < loradisc_config.mx_generation_size)
-					{
-						mx.stat_counter.num_rx_queue_overflow++;
-					}
-					else mx.stat_counter.num_rx_queue_overflow_full_rank++;
-				}
 				#endif
-				ASSERT_CT(NUM_ELEMENTS(mx.rx_queue) >= 2, single_entry_rx_queue_will_not_work);
 
-				// start RESYNC if requested
-				if (strobe_resync)
-				{
-					#if MX_VERBOSE_STATISTICS
-						mx.stat_counter.num_resync++;
-					#endif
-					enter_resync(0);
-				}
-				// handover to grid timer (if not already done by enter_resync())
-				else
-				{
-					start_grid_timer();
-				}
+				s.next_trigger_tick = s.next_grid_tick -
+					((s.next_slot_task == TX) ? s.tx_trigger_offset : s.rx_trigger_offset);
 
-				PROFILE_ISR("radio ISR process Rx packet end");
+				GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "next_grid: %lu, grid_drift: %+d (%+dus)",
+					(long)gpi_tick_hybrid_to_us(s.next_grid_tick), s.grid_drift,
+					(s.grid_drift >= 0) ?
+						(int)gpi_tick_hybrid_to_us(s.grid_drift / radio.grid_drift_filter_div) :
+						-(int)gpi_tick_hybrid_to_us(-s.grid_drift / radio.grid_drift_filter_div)
+				);
 			}
+
+
+			// check potential queue overflow, if ok: keep packet
+			if (mx.rx_queue_num_writing - mx.rx_queue_num_read < NUM_ELEMENTS(mx.rx_queue))
+			{
+				mx.rx_queue_num_written++;
+
+				// use packet as next Tx sideload (-> fast tx update)
+				if (loradisc_config.mx_generation_size != mx.rank)
+				{
+					mx.tx_sideload = &(packet->packet_chunk[loradisc_config.coding_vector.pos]);
+				}
+
+				set_event(RX_READY);
+
+				#if MX_VERBOSE_STATISTICS
+					mx.stat_counter.num_received++;
+				#endif
+			}
+			#if MX_VERBOSE_STATISTICS
 			else
 			{
-				// trigger timeout timer (immediately) -> do error handling there
-				// NOTE: don't need to unmask timer here because it already is
-				trigger_main_timer(0);
-				unmask_main_timer(1);
+				GPI_TRACE_MSG_FAST(TRACE_INFO, "Rx queue overflow, NW: %u, NR: %u", mx.rx_queue_num_writing, mx.rx_queue_num_read);
+
+				if (mx.rank < loradisc_config.mx_generation_size)
+				{
+					mx.stat_counter.num_rx_queue_overflow++;
+				}
+				else mx.stat_counter.num_rx_queue_overflow_full_rank++;
 			}
+			#endif
+			ASSERT_CT(NUM_ELEMENTS(mx.rx_queue) >= 2, single_entry_rx_queue_will_not_work);
+
+			// start RESYNC if requested
+			if (strobe_resync)
+			{
+				#if MX_VERBOSE_STATISTICS
+					mx.stat_counter.num_resync++;
+				#endif
+				enter_resync(0);
+			}
+			// handover to grid timer (if not already done by enter_resync())
+			else
+			{
+				start_grid_timer();
+			}
+
+			PROFILE_ISR("radio ISR process Rx packet end");
 		}
     }
 
@@ -1612,7 +1600,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
         }
 
 		// init FIFO
-		SX1276Write( REG_LR_PAYLOADLENGTH, loradisc_config.phy_payload_size + HASH_TAIL_CODE);
+		SX1276Write( REG_LR_PAYLOADLENGTH, loradisc_config.phy_payload_size);
 		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
 		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 		// Full buffer used for Tx
@@ -1874,13 +1862,6 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			SX1276Write( REG_LR_FIFOADDRPTR, 0);
 			SX1276ReadBuffer( 0, Buffer2, loradisc_config.phy_payload_size );
 			SX1276Write( REG_LR_FIFOADDRPTR, 0);
-
-			uint16_t code_tail_hash_tx = Chirp_RSHash((uint8_t *)Buffer2, loradisc_config.phy_payload_size);
-			uint8_t hash_code_tx[2];
-			hash_code_tx[0] = code_tail_hash_tx >> 8;
-			hash_code_tx[1] = code_tail_hash_tx;
-			SX1276Write( REG_LR_FIFOADDRPTR, loradisc_config.phy_payload_size );
-			write_tx_fifo(hash_code_tx, NULL, HASH_TAIL_CODE);
 
 			// unmask IRQ
 			SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |

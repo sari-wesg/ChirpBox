@@ -417,6 +417,8 @@ typedef union __attribute__((packed)) Packet_tag
 			uint8_t		phy_payload_begin;	// just a marker (e.g. for offsetof(Packet, phy_payload_begin))
 			// uint16_t	slot_number;
 			uint32_t	app_header;
+			// uint16_t	app_header;
+			// uint8_t 	packet_header[2];
         };
 
 		uint16_t		slot_number;

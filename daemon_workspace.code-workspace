@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "Miscellaneous\\API"
+		},
+		{
+			"path": "Miscellaneous\\LoRaDisC"
+		},
+		{
+			"path": "Daemon"
+		}
+	],
+	"settings": {}
+}

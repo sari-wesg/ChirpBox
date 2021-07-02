@@ -128,6 +128,10 @@ class ChirpBoxAdmin():
             # collect
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, [cbmng_exp_method.myExpMethodApproach().start_address, cbmng_exp_method.myExpMethodApproach().end_address])
 
+            # if self._connect is True:
+            #     # connectivity
+            #     chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
+            #     chirpbox_tool.main(chirpbox_tool_command.split())
         # move files to tested file
         shutil.move(bin_file, os.path.join(self._tested_address, os.path.basename(bin_file)))
         shutil.move(config_file, os.path.join(self._tested_address, os.path.basename(config_file)))
@@ -171,8 +175,14 @@ class ChirpBoxAdmin():
         parser.add_argument('-connect', '--connectivity', dest='connectivity', help='Is the connectivity is needed?')
         parser.add_argument('-version', '--version_collection', dest='version_collection', help='Is the version collection is needed?')
         args = parser.parse_args(argv)
-        self._connect = bool(args.connectivity.lower() == 'true')
-        self._version = bool(args.version_collection.lower() == 'true')
+        if args.connectivity is not None:
+            self._connect = bool(args.connectivity.lower() == 'true')
+        else:
+            self._connect = 'false'
+        if args.version_collection is not None:
+            self._version = bool(args.version_collection.lower() == 'true')
+        else:
+            self._version = 'false'
         runtime_status = 0
         try:
             self.manage_chirpbox()
