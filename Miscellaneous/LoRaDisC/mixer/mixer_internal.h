@@ -375,7 +375,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 	uint8_t		update_slot;
 
 	uint16_t	packet_hash;
-	uint8_t		padding[2]; // padding the struct
+	uint8_t 	glossy_packet_header[2];
 
 	#if MX_LBT_ACCESS
 		uint8_t		lbt_channel_primary;
@@ -417,9 +417,12 @@ typedef union __attribute__((packed)) Packet_tag
 		{
 			uint8_t		phy_payload_begin;	// just a marker (e.g. for offsetof(Packet, phy_payload_begin))
 			// uint16_t	slot_number;
-			uint32_t	app_header_align;
-			uint16_t	app_header;
-			uint16_t 	packet_header[2];
+			struct __attribute__((packed))
+			{
+				uint16_t	app_header;
+
+				uint8_t 	packet_header[2]; // only used when flooding packets in glossy
+			};
         };
 
 		uint16_t		slot_number;

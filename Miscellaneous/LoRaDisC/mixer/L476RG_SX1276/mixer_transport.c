@@ -630,6 +630,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			if (loradisc_config.primitive == FLOODING)
 			{
 				loradisc_config.glossy_task = packet->flags.all;
+				gpi_memcpy_dma_inline((uint8_t *)(loradisc_config.glossy_packet_header), (uint8_t *)&(packet->packet_header[0]), 2);
 				gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
 			}
 			#else
@@ -1688,7 +1689,10 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			#endif
 
 			if (loradisc_config.primitive == FLOODING)
+			{
 				mx.tx_packet->flags.all = loradisc_config.glossy_task;
+				gpi_memcpy_dma_inline((uint8_t *)&(mx.tx_packet->packet_header[0]), (uint8_t *)(loradisc_config.glossy_packet_header), 2);
+			}
 
 			write_tx_fifo(&(mx.tx_packet->phy_payload_begin),
 			NULL, offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.coding_vector.pos);

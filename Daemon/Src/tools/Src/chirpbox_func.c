@@ -1284,13 +1284,17 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, 8);
     chirp_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
 
+    // initialize glossy
     loradisc_config.glossy_task = 0;
+    memset(loradisc_config.glossy_packet_header, 0, sizeof(loradisc_config.glossy_packet_header));
     if (!node_id)
     {
       if (!menu_wait_task(&chirp_outl))
         loradisc_config.glossy_task = 1;
       else
         loradisc_config.glossy_task = 2;
+      // TODO:
+      memset(loradisc_config.glossy_packet_header, 0xFF, sizeof(loradisc_config.glossy_packet_header));
     }
 
     PRINTF("loradisc_config.glossy_task:%d\n", loradisc_config.glossy_task);
