@@ -65,9 +65,8 @@ typedef enum Disc_Primitive_tag
 
 #define ROUND_HEADER_LENGTH 	        4   /* Data section to represent the round number and node id */
 #define DATA_HEADER_LENGTH     	        8   /* Reservation section to transmit commands, real data is written behind that section */
-#define HASH_HEADER            	        4
+#define HASH_HEADER            	        2
 #define HASH_TAIL            	        2
-#define HASH_TAIL_CODE            	    2
 
 #define DISC_HEADER            	        0x1234
 #define FLOODING_HEADER            	    0x5678
