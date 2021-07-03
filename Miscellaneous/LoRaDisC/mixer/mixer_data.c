@@ -1158,13 +1158,13 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
         {
             Gpi_Fast_Tick_Native resync_plus =  GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
             // haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node
-            if (!loradisc_config.glossy_task)
+            if (!loradisc_config.flooding_state)
                 deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
             // have synchronized to a node
             else
                 deadline += (Gpi_Fast_Tick_Extended)(update_period);
             while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-            return loradisc_config.glossy_task;
+            return loradisc_config.flooding_state;
         }
 	}
 }

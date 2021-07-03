@@ -8,6 +8,13 @@
 
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
+typedef enum Flooding_State_tag
+{
+	UN_SYNCHRONIZED = 0,
+	SYNCHRONIZED = 1,
+	PACKET_FLOODING = 2,
+	END_FLOODING = 3
+} Flooding_State;
 
 typedef enum Disc_Primitive_tag
 {

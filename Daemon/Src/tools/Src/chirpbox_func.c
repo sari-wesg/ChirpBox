@@ -1238,7 +1238,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       ENERGEST_ON(ENERGEST_TYPE_CPU);
     #endif
     // just finish a task
-    if (loradisc_config.glossy_task == 2)
+    if (loradisc_config.flooding_state == PACKET_FLOODING)
     {
       #if GPS_DATA
       DS3231_GetTime();
@@ -1285,19 +1285,19 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
 
     // initialize glossy
-    loradisc_config.glossy_task = 0;
+    loradisc_config.flooding_state = UN_SYNCHRONIZED;
     memset(loradisc_config.glossy_packet_header, 0, sizeof(loradisc_config.glossy_packet_header));
     if (!node_id)
     {
       if (!menu_wait_task(&chirp_outl))
-        loradisc_config.glossy_task = 1;
+        loradisc_config.flooding_state = SYNCHRONIZED;
       else
-        loradisc_config.glossy_task = 2;
+        loradisc_config.flooding_state = PACKET_FLOODING;
       // TODO:
       memset(loradisc_config.glossy_packet_header, 0xFF, sizeof(loradisc_config.glossy_packet_header));
     }
 
-    PRINTF("loradisc_config.glossy_task:%d\n", loradisc_config.glossy_task);
+    PRINTF("loradisc_config.flooding_state:%d\n", loradisc_config.flooding_state);
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1317,7 +1317,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
           Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
         #endif
-        PRINTF("chirp_round:%d\n", loradisc_config.glossy_task);
         if (!node_id)
         {
           #if GPS_DATA
@@ -1334,7 +1333,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         else
         {
           // this time glossy no task but sync true
-          if (loradisc_config.glossy_task)
+          if (loradisc_config.flooding_state)
           {
             chirp_outl.glossy_resync = 0;
             // close gps if on
@@ -1347,7 +1346,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
             }
           }
           // long time no glossy, open the gps
-          if (!loradisc_config.glossy_task)
+          if (!loradisc_config.flooding_state)
           {
             chirp_outl.glossy_resync++;
             if ((chirp_outl.glossy_resync >= 5) && (!chirp_outl.glossy_gps_on))
@@ -1393,7 +1392,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     // have a task to do
     else
     {
-      PRINTF("glossy_task == 2\n");
+      PRINTF("flooding_state == PACKET_FLOODING\n");
       chirp_outl.glossy_resync = 0;
       if ((chirp_outl.glossy_gps_on) && (node_id))
       {

@@ -389,7 +389,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 		uint32_t 	lbt_channel_time_us[LBT_CHANNEL_NUM];
 		uint32_t 	lbt_channel_time_stats_us[LBT_CHANNEL_NUM];
 	#endif
-	uint8_t		glossy_task;
+	uint8_t		flooding_state;
 	Disc_Primitive primitive;
 } LoRaDisC_Config;
 
