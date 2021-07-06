@@ -267,6 +267,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
 	uint8_t i;
     uint16_t k = 0;
     uint32_t flash_addr;
+    uint8_t flooding_data[3];
 
     if ((chirp_outl->task == CB_DISSEMINATE) || (chirp_outl->task == CB_COLLECT))
     {
@@ -276,6 +277,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
     /* file data is read from flash on the other bank */
     uint32_t flash_data[chirp_outl->file_chunk_len / sizeof(uint32_t)];
     uint8_t file_data[chirp_outl->payload_len];
+    memset(flooding_data, 0, sizeof(flooding_data));
     memset(flash_data, 0, sizeof(flash_data));
     memset(file_data, 0, sizeof(file_data));
     memset(data, 0, DATA_HEADER_LENGTH);
@@ -469,6 +471,18 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 16;
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 8;
             file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0];
+            k = 0;
+            break;
+        }
+        case CB_GLOSSY:
+        {
+            k = 0;
+            flooding_data[k++] = chirp_outl->arrange_task;
+            /* loradisc write: */
+            if (k < FLOODING_SURPLUS_LENGTH)
+            {
+				memcpy((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)flooding_data, FLOODING_SURPLUS_LENGTH);
+            }
             k = 0;
             break;
         }

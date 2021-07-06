@@ -1229,7 +1229,6 @@ void chirpbox_packet_write(Chirp_Outl *chirp_outl, uint8_t node_id)
 
   /* Step1: generate packets for LoRaDisC transmission */
   uint8_t data_size = chirpbox_packet_data(chirp_outl, node_id, chirpbox_data);
-
   /* Step2: write packets for LoRaDisC with (flooding, disseminate or collection) */
   /* Flooding in LoRaDisC */
   if ((chirp_outl->task == CB_GLOSSY) || (chirp_outl->task == CB_GLOSSY_ARRANGE) || (chirp_outl->task == CB_CONNECTIVITY) || (chirp_outl->task == CB_START))
@@ -1317,8 +1316,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       ENERGEST_ON(ENERGEST_TYPE_CPU);
     #endif
     // just finish a task
-    // if (loradisc_config.flooding_state == PACKET_FLOODING)
-    if (chirp_outl.arrange_task == CB_GLOSSY_ARRANGE)
+    if (chirp_outl.arrange_task < CB_GLOSSY_SYNCHRONIZED)
     {
       #if GPS_DATA
       DS3231_GetTime();
@@ -1365,18 +1363,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
 
     // initialize glossy
-    // loradisc_config.flooding_state = UN_SYNCHRONIZED;
     memset(loradisc_config.flooding_packet_header, 0, sizeof(loradisc_config.flooding_packet_header));
     if (!node_id)
     {
       if (!menu_wait_task(&chirp_outl))
         chirp_outl.arrange_task = CB_GLOSSY_SYNCHRONIZED;
-        // loradisc_config.flooding_state = SYNCHRONIZED;
-      // else
-      //   chirp_outl.arrange_task = CB_GLOSSY_ARRANGE;
-        // loradisc_config.flooding_state = PACKET_FLOODING;
-      // TODO:
-      loradisc_config.flooding_packet_header[0] = chirp_outl.arrange_task;
     }
 
     PRINTF("chirp_outl.arrange_task:%d\n", chirp_outl.arrange_task);
@@ -1458,7 +1449,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           {
             RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
             DS3231_GetTime();
-            /* Set alarm */
             ds3231_time = DS3231_ShowTime();
             diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
             sleep_sec = 60 - (time_t)(0 - diff) % 60;

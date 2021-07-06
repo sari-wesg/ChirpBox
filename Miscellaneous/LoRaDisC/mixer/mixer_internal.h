@@ -391,7 +391,6 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 	uint16_t	packet_hash;
 	uint8_t 	flooding_packet_header[FLOODING_SURPLUS_LENGTH];
 
-	// uint8_t		flooding_state;
 	Disc_Primitive primitive;
 } LoRaDisC_Config;
 

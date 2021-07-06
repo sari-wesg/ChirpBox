@@ -624,7 +624,6 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 			if (loradisc_config.primitive == FLOODING)
 			{
-				// loradisc_config.flooding_state = packet->flags.all;
 				gpi_memcpy_dma_inline((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)&(packet->packet_header[0]), FLOODING_SURPLUS_LENGTH - sizeof(packet->flags));
 				gpi_memcpy_dma_inline((uint8_t *)&(loradisc_config.flooding_packet_header[FLOODING_SURPLUS_LENGTH - sizeof(packet->flags)]), (uint8_t *)&(packet->flags.all), sizeof(packet->flags));
 				gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
