@@ -73,23 +73,38 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
 
-typedef enum Mixer_Task_tag
+typedef enum ChirpBox_Task_tag
 {
-	/* copy packet: CHIRP_START, CHIRP_CONNECTIVITY, MX_ARRANGE */
-	/* all to all: MX_COLLECT, CHIRP_VERSION */
-	/* one to all: MX_DISSEMINATE */
-	CHIRP_START,
-	MX_DISSEMINATE,
-	MX_COLLECT,
-	CHIRP_CONNECTIVITY,
-	CHIRP_VERSION,
+	/* copy packet: CB_START, CB_CONNECTIVITY, CB_GLOSSY_ARRANGE */
+	/* all to all: CB_COLLECT, CB_VERSION */
+	/* one to all: CB_DISSEMINATE */
+	CB_START,
+	CB_DISSEMINATE,
+	CB_COLLECT,
+	CB_CONNECTIVITY,
+	CB_VERSION,
 
-	MX_ARRANGE,
+	/* Note: do not change the sequence! */
+	CB_GLOSSY_ARRANGE,
+	CB_GLOSSY_SYNCHRONIZED,
+	CB_GLOSSY,
 
-	MX_TASK_FIRST = CHIRP_START,
-	MX_TASK_LAST = MX_ARRANGE - 1,
-	MX_GLOSSY = MX_TASK_LAST + 1 + 1
-} Mixer_Task;
+	CB_TASK_FIRST = CB_START,
+	CB_TASK_LAST = CB_GLOSSY_ARRANGE - 1,
+} ChirpBox_Task;
+
+typedef enum ChirpBox_ArrangeDataLength_tag
+{
+	/* copy packet: CB_START, CB_CONNECTIVITY, CB_GLOSSY_ARRANGE */
+	/* all to all: CB_COLLECT, CB_VERSION */
+	/* one to all: CB_DISSEMINATE */
+	CB_START_LENGTH = 0xFF,
+	CB_DISSEMINATE_LENGTH = 0xFF,
+	CB_COLLECT_LENGTH = 0xFF,
+	CB_CONNECTIVITY_LENGTH = 0xFF,
+	CB_VERSION_LENGTH = 0xFF,
+	CB_GLOSSY_LENGTH = 1
+} ChirpBox_ArrangeDataLength;
 
 typedef struct Chirpbox_tag
 {
@@ -160,13 +175,13 @@ typedef struct __attribute__((packed)) Chirp_Energy_tag
 //**************************************************************************************************
 typedef struct __attribute__((packed)) Chirp_Outline_tag
 {
-	Mixer_Task 			task;
+	ChirpBox_Task 		task;
 
 	uint16_t			round; 				/* current round num */
 	uint16_t			round_max; 			/* desired round num to carriage task */
 	uint8_t				round_setup; 		/* setup round for all nodes synchronization */
 
-	Mixer_Task 			arrange_task;		/* MX_ARRANGE: to arrange the next task */
+	ChirpBox_Task 		arrange_task;
 
 	uint32_t			packet_time;
 	uint16_t			default_slot_num;
@@ -187,7 +202,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				glossy_resync;
 	uint8_t				glossy_gps_on;
 
-	/* CHIRP_START: mixer config */
+	/* CB_START: mixer config */
 	uint16_t			start_year;
 	uint8_t				start_month;
 	uint8_t				start_date;
@@ -204,13 +219,13 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	uint8_t				flash_protection;
 
-	/* MX_DISSEMINATE / MX_COLLECT : mixer config */
+	/* CB_DISSEMINATE / CB_COLLECT : mixer config */
 	uint8_t				num_nodes;
 	uint8_t				generation_size;
 	uint8_t				payload_len;
 	uint16_t 			file_chunk_len;
 
-	/* MX_DISSEMINATE */
+	/* CB_DISSEMINATE */
 	uint32_t			firmware_size;
 	uint8_t				firmware_md5[16];
 	uint16_t			version_hash;
@@ -230,12 +245,12 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				disem_flag_full_rank;
 	uint32_t			*disem_file_memory;
 
-	/* MX_COLLECT */
+	/* CB_COLLECT */
 	uint32_t			collect_addr_start;
 	uint32_t			collect_addr_end;
 	uint32_t			collect_length;
 
-	/* CHIRP_CONNECTIVITY */
+	/* CB_CONNECTIVITY */
 	uint8_t				sf_bitmap;
 	uint32_t			freq;
 	int8_t				tx_power;
@@ -281,7 +296,7 @@ void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t
 /* Stats */
 void Stats_value(uint8_t stats_type, uint32_t value);
 void Stats_value_debug(uint8_t energy_type, uint32_t value);
-void Stats_to_Flash(Mixer_Task task);
+void Stats_to_Flash(ChirpBox_Task task);
 
 /* LBT */
 uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available);

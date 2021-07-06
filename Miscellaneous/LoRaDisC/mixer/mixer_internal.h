@@ -367,15 +367,6 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 
 	/* In the second dissemination mode, which we use to arrange a task or command, as well as to make sure all the nodes have received our commands. Each node that received a packet at first time should copy that packet to their own row. In the end, all nodes share the same packet that is from initiator. */
 	uint8_t		disem_copy;
-	uint8_t		full_rank;
-	uint8_t		full_column;
-
-	/* to short arrange session */
-	Mixer_Task	task;
-	uint8_t		update_slot;
-
-	uint16_t	packet_hash;
-	uint8_t 	glossy_packet_header[2];
 
 	#if MX_LBT_ACCESS
 		uint8_t		lbt_channel_primary;
@@ -389,7 +380,18 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 		uint32_t 	lbt_channel_time_us[LBT_CHANNEL_NUM];
 		uint32_t 	lbt_channel_time_stats_us[LBT_CHANNEL_NUM];
 	#endif
-	uint8_t		flooding_state;
+
+	uint8_t		full_rank;
+	uint8_t		full_column;
+
+	/* to short arrange session */
+	// ChirpBox_Task	task;
+	uint8_t		update_slot;
+
+	uint16_t	packet_hash;
+	uint8_t 	flooding_packet_header[FLOODING_SURPLUS_LENGTH];
+
+	// uint8_t		flooding_state;
 	Disc_Primitive primitive;
 } LoRaDisC_Config;
 
@@ -672,7 +674,7 @@ void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 	void 		chirp_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
 	void 		chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
 	void 		chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrate, int8_t tx_output_power, uint32_t lora_frequency);
-	void 		chirp_payload_distribution(Mixer_Task mx_task);
+	void 		chirp_payload_distribution(ChirpBox_Task mx_task);
 
 #ifdef __cplusplus
 	}

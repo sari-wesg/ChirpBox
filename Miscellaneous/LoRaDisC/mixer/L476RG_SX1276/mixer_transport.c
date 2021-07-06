@@ -90,11 +90,6 @@ GPI_TRACE_CONFIG(mixer_transport, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER)
 #include <inttypes.h>
 #include <stdlib.h>
 
-#if 0
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 extern uint8_t node_id_allocate;
 
 //**************************************************************************************************
@@ -629,8 +624,9 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 
 			if (loradisc_config.primitive == FLOODING)
 			{
-				loradisc_config.flooding_state = packet->flags.all;
-				gpi_memcpy_dma_inline((uint8_t *)(loradisc_config.glossy_packet_header), (uint8_t *)&(packet->packet_header[0]), 2);
+				// loradisc_config.flooding_state = packet->flags.all;
+				gpi_memcpy_dma_inline((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)&(packet->packet_header[0]), FLOODING_SURPLUS_LENGTH - sizeof(packet->flags));
+				gpi_memcpy_dma_inline((uint8_t *)&(loradisc_config.flooding_packet_header[FLOODING_SURPLUS_LENGTH - sizeof(packet->flags)]), (uint8_t *)&(packet->flags.all), sizeof(packet->flags));
 				gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
 			}
 			#else
@@ -1690,8 +1686,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 			if (loradisc_config.primitive == FLOODING)
 			{
-				mx.tx_packet->flags.all = loradisc_config.flooding_state;
-				gpi_memcpy_dma_inline((uint8_t *)&(mx.tx_packet->packet_header[0]), (uint8_t *)(loradisc_config.glossy_packet_header), 2);
+				gpi_memcpy_dma_inline((uint8_t *)&(mx.tx_packet->packet_header[0]), (uint8_t *)(loradisc_config.flooding_packet_header), FLOODING_SURPLUS_LENGTH - sizeof(mx.tx_packet->flags));
+				mx.tx_packet->flags.all = loradisc_config.flooding_packet_header[FLOODING_SURPLUS_LENGTH - sizeof(mx.tx_packet->flags)];
 			}
 
 			write_tx_fifo(&(mx.tx_packet->phy_payload_begin),

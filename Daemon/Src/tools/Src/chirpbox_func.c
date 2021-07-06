@@ -710,7 +710,7 @@ uint32_t menu_initiator_read_file(void)
  */
 uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
 {
-  Mixer_Task mx_task;
+  ChirpBox_Task mx_task;
   uint8_t default_sf;
   uint8_t default_payload_len;
   uint8_t default_generate_size;
@@ -721,7 +721,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t task_wait = 0;
 
   uint8_t task[28 + DISSEM_BITMAP_32 * 8 + DISSEM_BITMAP_32 * 8 + 1];
-  PRINTF("\nTask list:\n%d: CHIRP_START\n%d: MX_DISSEMINATE\n%d: MX_COLLECT\n%d: CHIRP_CONNECTIVITY\n%d: CHIRP_VERSION\n", CHIRP_START, MX_DISSEMINATE, MX_COLLECT, CHIRP_CONNECTIVITY, CHIRP_VERSION);
+  PRINTF("\nTask list:\n%d: CB_START\n%d: CB_DISSEMINATE\n%d: CB_COLLECT\n%d: CB_CONNECTIVITY\n%d: CB_VERSION\n", CB_START, CB_DISSEMINATE, CB_COLLECT, CB_CONNECTIVITY, CB_VERSION);
 
   HAL_StatusTypeDef status;
 
@@ -777,13 +777,13 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
         data = 10 + data - 'A';
       chirp_outl->task_bitmap[(i - 37) / 8] += data * pow(0x10, sizeof(uint32_t) * 2 - 1 - ((i - 37) % (sizeof(uint32_t) * 2)));
     }
-  } while ((mx_task > MX_TASK_LAST) || (mx_task < MX_TASK_FIRST));
+  } while ((mx_task > CB_TASK_LAST) || (mx_task < CB_TASK_FIRST));
 
   SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
 
   PRINTF("Select: ");
 
-  chirp_outl->arrange_task = (Mixer_Task )mx_task;
+  chirp_outl->arrange_task = (ChirpBox_Task )mx_task;
   chirp_outl->default_sf = default_sf;
   chirp_outl->default_tp = default_tp;
   chirp_outl->default_payload_len = default_payload_len;
@@ -794,29 +794,29 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   PRINTF("default sf:%lu, %d, %d, %d, %d, %d, %d, %02x, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0], chirp_outl->task_bitmap[0]);
   switch (mx_task)
   {
-    case CHIRP_START:
+    case CB_START:
     {
-      PRINTF("CHIRP_START\n");
+      PRINTF("CB_START\n");
       break;
     }
-    case MX_DISSEMINATE:
+    case CB_DISSEMINATE:
     {
-      PRINTF("MX_DISSEMINATE\n");
+      PRINTF("CB_DISSEMINATE\n");
       break;
     }
-    case MX_COLLECT:
+    case CB_COLLECT:
     {
-      PRINTF("MX_COLLECT\n");
+      PRINTF("CB_COLLECT\n");
       break;
     }
-    case CHIRP_CONNECTIVITY:
+    case CB_CONNECTIVITY:
     {
-      PRINTF("CHIRP_CONNECTIVITY\n");
+      PRINTF("CB_CONNECTIVITY\n");
       break;
     }
-    case CHIRP_VERSION:
+    case CB_VERSION:
     {
-      PRINTF("CHIRP_VERSION\n");
+      PRINTF("CB_VERSION\n");
       break;
     }
     default:
@@ -840,22 +840,22 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
 
   switch (chirp_outl->arrange_task)
   {
-      case CHIRP_START:
+      case CB_START:
       {
           rxbuffer_len = 46;
           break;
       }
-      case MX_DISSEMINATE:
+      case CB_DISSEMINATE:
       {
           rxbuffer_len = 55;
           break;
       }
-      case MX_COLLECT:
+      case CB_COLLECT:
       {
           rxbuffer_len = 17;
           break;
       }
-      case CHIRP_CONNECTIVITY:
+      case CB_CONNECTIVITY:
       {
           rxbuffer_len = 17;
           break;
@@ -874,7 +874,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
 
   switch (chirp_outl->arrange_task)
   {
-      case CHIRP_START:
+      case CB_START:
       {
         chirp_outl->version_hash = 0;
         // "2020,12,31,15,18,20,2020,12,31,16,18,20,0,6A75" 0: upgrade, 1: user, 6A75:version
@@ -977,7 +977,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
         PRINTF("\tSTART at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, start user:%d, ver:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
         break;
       }
-      case MX_DISSEMINATE:
+      case CB_DISSEMINATE:
       {
         /* ("0,0,00000,00000,6A75": update whole firmware, "1,0,7f800,7f500,6A75": patch firmware of bank1, "1,1,7f800,7f500,6A75": patch firmware of bank2) */
         /* hash code is 0x6A75 */
@@ -1043,7 +1043,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
             }
           }
         }
-        PRINTF("MX_DISSEMINATE:%d, %d, %lu, %lu, %d, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash, chirp_outl->file_compression);
+        PRINTF("CB_DISSEMINATE:%d, %d, %lu, %lu, %d, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash, chirp_outl->file_compression);
         for (i = 0; i < 16; i++)
         {
           PRINTF("%02X", chirp_outl->firmware_md5[i]);
@@ -1055,7 +1055,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
         }
         break;
       }
-      case MX_COLLECT:
+      case CB_COLLECT:
       {
         // "0807F800,08080000"
         memset(&(chirp_outl->collect_addr_start), 0, offsetof(Chirp_Outl, sf_bitmap) - offsetof(Chirp_Outl, collect_addr_start));
@@ -1088,7 +1088,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
         PRINTF("Start address: 0x%x, End address: 0x%x\n", chirp_outl->collect_addr_start, chirp_outl->collect_addr_end);
         break;
       }
-      case CHIRP_CONNECTIVITY:
+      case CB_CONNECTIVITY:
       {
         // "63,478600,-01"
         uint8_t tx_sign = 0;
@@ -1185,6 +1185,84 @@ void randomPermutation1(uint8_t channel_sync, uint8_t n)
   }
 }
 
+/**
+  * @brief  generate packets for transmission in ChirpBox
+  * @param  chirp_outl: ChirpBox handle
+  * @param  node_id: 0 is the initiator
+  * @param  chirpbox_data: pointer of data for transmission in ChirpBox
+  * @retval data_size: length of chirpbox_data (at least 0 byte)
+  */
+uint32_t chirpbox_packet_data(Chirp_Outl *chirp_outl, uint8_t node_id, uint8_t *chirpbox_data)
+{
+  uint32_t data_size = 0;
+  uint8_t i = 0;
+
+  switch (chirp_outl->task)
+  {
+    case CB_GLOSSY:
+      if (!node_id)
+      {
+        data_size = CB_GLOSSY_LENGTH;
+        chirpbox_data = (uint8_t *)malloc(data_size);
+        chirpbox_data[i++] = chirp_outl->arrange_task;
+        /* An arrange packet is required only when ChirpBox needs to disseminate or collect */
+        // uint8_t is_need_arrange_packet = ((chirp_outl->arrange_task != CB_COLLECT) || (chirp_outl->arrange_task != CB_DISSEMINATE))?1:0;
+        // chirpbox_data[i++] = is_need_arrange_packet;
+      }
+      break;
+    default:
+      break;
+  }
+  return data_size;
+}
+
+/**
+  * @brief  write packets for transmission in ChirpBox
+  * @param  chirp_outl: ChirpBox handle
+  * @param  node_id: 0 is the initiator
+  * @retval None
+  */
+void chirpbox_packet_write(Chirp_Outl *chirp_outl, uint8_t node_id)
+{
+  /* chirpbox_data: will be allocated data for transmission, should be freed after usage */
+  uint8_t *chirpbox_data;
+
+  /* Step1: generate packets for LoRaDisC transmission */
+  uint8_t data_size = chirpbox_packet_data(chirp_outl, node_id, chirpbox_data);
+
+  /* Step2: write packets for LoRaDisC with (flooding, disseminate or collection) */
+  /* Flooding in LoRaDisC */
+  if ((chirp_outl->task == CB_GLOSSY) || (chirp_outl->task == CB_GLOSSY_ARRANGE) || (chirp_outl->task == CB_CONNECTIVITY) || (chirp_outl->task == CB_START))
+  {
+    /* Only initiator initiates a packet in flooding */
+    if (!node_id)
+    {
+      /* Write the flooding packet in LoRaDisC */
+      loradisc_packet_write(FLOODING, chirpbox_data);
+    }
+  }
+
+  /* Dissemination in LoRaDisC */
+  else if (chirp_outl->task == CB_DISSEMINATE)
+  {
+      // loradisc_packet_write(DISSEMINATION, data)
+  }
+
+  /* Collection in LoRaDisC */
+  else if ((chirp_outl->task == CB_COLLECT) || (chirp_outl->task == CB_VERSION))
+  {
+      // loradisc_packet_write(COLLECTION, data)
+  }
+  /* Step3: free packets */
+  if (data_size > 0)
+    free(chirpbox_data);
+}
+
+void chirpbox_packet_receive(Chirp_Outl *chirp_outl, uint8_t node_id)
+{
+
+}
+
 void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 {
   gpi_watchdog_periodic();
@@ -1212,7 +1290,8 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
   uint8_t sync_channel_id = 0;
   sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
   chirp_outl.glossy_gps_on = 1;
-
+  // slot number is related to the hop count
+  uint8_t hop_count = network_num_nodes > 10? 6 : 4;
   #if GPS_DATA
   GPS_Wakeup(60);
   // gps_time = GPS_Get_Time();
@@ -1238,7 +1317,8 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       ENERGEST_ON(ENERGEST_TYPE_CPU);
     #endif
     // just finish a task
-    if (loradisc_config.flooding_state == PACKET_FLOODING)
+    // if (loradisc_config.flooding_state == PACKET_FLOODING)
+    if (chirp_outl.arrange_task == CB_GLOSSY_ARRANGE)
     {
       #if GPS_DATA
       DS3231_GetTime();
@@ -1266,9 +1346,9 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     #endif
     }
 
-		/* MX_GLOSSY (sync) */
-		chirp_outl.task = MX_GLOSSY;
-		chirp_outl.arrange_task = MX_GLOSSY;
+		/* CB_GLOSSY (sync) */
+		chirp_outl.task = CB_GLOSSY;
+		chirp_outl.arrange_task = CB_GLOSSY;
 
 		PRINTF("---------MX_GLOSSY---------\n");
 		// TODO: glossy without mixer payload
@@ -1282,22 +1362,24 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_radio_config(12, 1, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, 8);
-    chirp_slot_config(chirp_outl.packet_time + 100000, 12, 10000000);
+    chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
 
     // initialize glossy
-    loradisc_config.flooding_state = UN_SYNCHRONIZED;
-    memset(loradisc_config.glossy_packet_header, 0, sizeof(loradisc_config.glossy_packet_header));
+    // loradisc_config.flooding_state = UN_SYNCHRONIZED;
+    memset(loradisc_config.flooding_packet_header, 0, sizeof(loradisc_config.flooding_packet_header));
     if (!node_id)
     {
       if (!menu_wait_task(&chirp_outl))
-        loradisc_config.flooding_state = SYNCHRONIZED;
-      else
-        loradisc_config.flooding_state = PACKET_FLOODING;
+        chirp_outl.arrange_task = CB_GLOSSY_SYNCHRONIZED;
+        // loradisc_config.flooding_state = SYNCHRONIZED;
+      // else
+      //   chirp_outl.arrange_task = CB_GLOSSY_ARRANGE;
+        // loradisc_config.flooding_state = PACKET_FLOODING;
       // TODO:
-      memset(loradisc_config.glossy_packet_header, 0xFF, sizeof(loradisc_config.glossy_packet_header));
+      loradisc_config.flooding_packet_header[0] = chirp_outl.arrange_task;
     }
 
-    PRINTF("loradisc_config.flooding_state:%d\n", loradisc_config.flooding_state);
+    PRINTF("chirp_outl.arrange_task:%d\n", chirp_outl.arrange_task);
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1306,7 +1388,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     loradisc_config.lbt_channel_primary = sync_channel_id;
     SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
     // no task
-		if (chirp_round(node_id, &chirp_outl) != 2)
+		if (chirp_round(node_id, &chirp_outl) >= CB_GLOSSY_SYNCHRONIZED)
 		{
         sync_channel_id = (sync_channel_id+1) % LBT_CHANNEL_NUM;
         #if ENERGEST_CONF_ON
@@ -1323,17 +1405,17 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           GPS_Wakeup(60);
           #else
           DS3231_GetTime();
-          /* Set alarm */
           ds3231_time = DS3231_ShowTime();
           diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
           sleep_sec = 60 - (time_t)(0 - diff) % 60;
+          // sleep_sec = 5;
           RTC_Waiting_Count(sleep_sec);
           #endif
         }
         else
         {
           // this time glossy no task but sync true
-          if (loradisc_config.flooding_state)
+          if (chirp_outl.arrange_task == CB_GLOSSY_SYNCHRONIZED)
           {
             chirp_outl.glossy_resync = 0;
             // close gps if on
@@ -1346,7 +1428,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
             }
           }
           // long time no glossy, open the gps
-          if (!loradisc_config.flooding_state)
+          if (chirp_outl.arrange_task == CB_GLOSSY)
           {
             chirp_outl.glossy_resync++;
             if ((chirp_outl.glossy_resync >= 5) && (!chirp_outl.glossy_gps_on))
@@ -1374,12 +1456,13 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           }
           else
           {
-            // RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
+            RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
             DS3231_GetTime();
             /* Set alarm */
             ds3231_time = DS3231_ShowTime();
             diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
             sleep_sec = 60 - (time_t)(0 - diff) % 60;
+            // sleep_sec = 5;
             RTC_Waiting_Count(sleep_sec);
           }
         }
@@ -1392,7 +1475,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     // have a task to do
     else
     {
-      PRINTF("flooding_state == PACKET_FLOODING\n");
+      PRINTF("chirp_outl.arrange_task == CB_GLOSSY_ARRANGE\n");
       chirp_outl.glossy_resync = 0;
       if ((chirp_outl.glossy_gps_on) && (node_id))
       {
@@ -1414,16 +1497,16 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       // else
       //   GPS_Wakeup(60);
 
-		/* default mode is MX_ARRANGE (task arrangement) */
-		chirp_outl.task = MX_ARRANGE;
+		/* default mode is CB_GLOSSY_ARRANGE (task arrangement) */
+		chirp_outl.task = CB_GLOSSY_ARRANGE;
     if (node_id)
-      chirp_outl.arrange_task = MX_ARRANGE;
+      chirp_outl.arrange_task = CB_GLOSSY_ARRANGE;
 
       #if ENERGEST_CONF_ON
         energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
         ENERGEST_ON(ENERGEST_TYPE_CPU);
       #endif
-		PRINTF("---------MX_ARRANGE---------\n");
+		PRINTF("---------CB_GLOSSY_ARRANGE---------\n");
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
@@ -1446,15 +1529,15 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     #endif
 		if (!chirp_round(node_id, &chirp_outl))
     {
-      chirp_outl.task = MX_ARRANGE;
-      chirp_outl.arrange_task = MX_ARRANGE;
+      chirp_outl.task = CB_GLOSSY_ARRANGE;
+      chirp_outl.arrange_task = CB_GLOSSY_ARRANGE;
     }
 
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       ENERGEST_OFF(ENERGEST_TYPE_LPM);
       ENERGEST_ON(ENERGEST_TYPE_CPU);
-      if (chirp_outl.arrange_task == MX_DISSEMINATE)
+      if (chirp_outl.arrange_task == CB_DISSEMINATE)
       {
         FLASH_If_Erase_Pages(1, DAEMON_DEBUG_PAGE);
       }
@@ -1468,7 +1551,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     #endif
 
 		Gpi_Fast_Tick_Native deadline;
-    if (chirp_outl.task == MX_DISSEMINATE)
+    if (chirp_outl.task == CB_DISSEMINATE)
       deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(20000);
     else
       deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
@@ -1490,11 +1573,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     gpi_watchdog_periodic();
 		switch (chirp_outl.task)
 		{
-			case CHIRP_START:
+			case CB_START:
 			{
 				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				log_to_flash("---------CHIRP_START---------\n");
+				log_to_flash("---------CB_START---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
 				chirp_outl.payload_len = offsetof(Chirp_Outl, num_nodes) - offsetof(Chirp_Outl, start_year) + DATA_HEADER_LENGTH + 2;
@@ -1571,7 +1654,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				#endif
 				break;
 			}
-			case MX_DISSEMINATE:
+			case CB_DISSEMINATE:
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
@@ -1581,7 +1664,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.disem_file_index_stay = 0;
         chirp_outl.version_hash = 0;
         memset(chirp_outl.firmware_md5, 0, sizeof(chirp_outl.firmware_md5));
-				log_to_flash("---------MX_DISSEMINATE---------\n");
+				log_to_flash("---------CB_DISSEMINATE---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = task_node_num;
 				chirp_outl.generation_size = chirp_outl.default_generate_size;
@@ -1656,13 +1739,13 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         }
 				break;
 			}
-			case MX_COLLECT:
+			case CB_COLLECT:
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
 				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				log_to_flash("---------MX_COLLECT---------\n");
+				log_to_flash("---------CB_COLLECT---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = task_node_num;
 				chirp_outl.generation_size = chirp_outl.num_nodes;
@@ -1711,11 +1794,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         #endif
 				break;
 			}
-			case CHIRP_CONNECTIVITY:
+			case CB_CONNECTIVITY:
 			{
 				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				log_to_flash("---------CHIRP_CONNECTIVITY---------\n");
+				log_to_flash("---------CB_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
 				chirp_outl.payload_len = DATA_HEADER_LENGTH + 7;
@@ -1769,11 +1852,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         #endif
 				break;
 			}
-			case CHIRP_VERSION:
+			case CB_VERSION:
 			{
 				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				log_to_flash("---------CHIRP_VERSION---------\n");
+				log_to_flash("---------CB_VERSION---------\n");
 				// TODO: tune those parameters
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = chirp_outl.num_nodes;

@@ -121,7 +121,7 @@ void Stats_value_debug(uint8_t energy_type, uint32_t value)
     }
 }
 
-void Stats_to_Flash(Mixer_Task task)
+void Stats_to_Flash(ChirpBox_Task task)
 {
     uint16_t stats_len = 2 * ((sizeof(chirp_stats_all) + sizeof(uint64_t) - 1) / sizeof(uint64_t));
     uint32_t stats_array[stats_len];
@@ -133,7 +133,7 @@ void Stats_to_Flash(Mixer_Task task)
     memset((uint32_t *)stats_array, 0, sizeof(stats_array));
     memcpy((uint32_t *)stats_array, (uint32_t *)&chirp_stats_all.slot.stats_sum, sizeof(chirp_stats_all));
 
-    if ((task != MX_ARRANGE) && (task != MX_COLLECT))
+    if ((task != CB_GLOSSY_ARRANGE) && (task != CB_COLLECT))
     {
         FLASH_If_Erase_Pages(1, DAEMON_PAGE);
         FLASH_If_Write(DAEMON_FLASH_ADDRESS, (uint32_t *)stats_array, sizeof(stats_array) / sizeof(uint32_t));
@@ -142,7 +142,7 @@ void Stats_to_Flash(Mixer_Task task)
         FLASH_If_Write(DAEMON_FLASH_ADDRESS + sizeof(stats_array) * 2, (uint32_t *)&loradisc_config.lbt_channel_time_stats_us[0], stats_lbt_len * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
     }
-    else if (task == MX_COLLECT)
+    else if (task == CB_COLLECT)
     {
         uint32_t flash_data = *(__IO uint32_t*)(DAEMON_FLASH_ADDRESS + sizeof(stats_array));
         if (flash_data == 0xFFFFFFFF)

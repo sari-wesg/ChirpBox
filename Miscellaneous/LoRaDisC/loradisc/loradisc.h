@@ -5,17 +5,15 @@
 
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
+// Radio
+#include "gpi/platform.h"
+#include GPI_PLATFORM_PATH(sx1276Regs_Fsk.h)
+#include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)
+// Integers
+#include <stdint.h>
 
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
-typedef enum Flooding_State_tag
-{
-	UN_SYNCHRONIZED = 0,
-	SYNCHRONIZED = 1,
-	PACKET_FLOODING = 2,
-	END_FLOODING = 3
-} Flooding_State;
-
 typedef enum Disc_Primitive_tag
 {
 	FLOODING = 1,
@@ -70,6 +68,8 @@ typedef enum Disc_Primitive_tag
 /************************ packet format config **************************/
 #define LORADISC_HEADER_LEN				8
 
+#define FLOODING_SURPLUS_LENGTH			3
+
 #define ROUND_HEADER_LENGTH 	        4   /* Data section to represent the round number and node id */
 #define DATA_HEADER_LENGTH     	        8   /* Reservation section to transmit commands, real data is written behind that section */
 #define HASH_HEADER            	        2
@@ -94,6 +94,9 @@ typedef enum Disc_Primitive_tag
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
+// loradisc
+void loradisc_packet_write(Disc_Primitive primitive, uint8_t *data);
+// lorawan
 void lorawan_listen_init(uint8_t node_id);
 void lorawan_listen();
 void lorawan_transmission();

@@ -1856,7 +1856,8 @@ PT_THREAD(mixer_maintenance())
 		// NOTE: we test once per slot, and STOP executes gracefully at the next slot boundary
 		// (or both a bit relaxed during RESYNC). Hence, the timing (e.g. when in the slot is
 		// "now"?) is not very critical here.
-		if (((mx.slot_number >= loradisc_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0)) || ((loradisc_config.task == MX_ARRANGE) && (!mx.rank) && (loradisc_config.update_slot >= 6)))
+		// if (((mx.slot_number >= loradisc_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0)) || ((loradisc_config.task == CB_GLOSSY_ARRANGE) && (!mx.rank) && (loradisc_config.update_slot >= 6)))
+		if ((mx.slot_number >= loradisc_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0))
 		{
 			mx.slot_number = loradisc_config.mx_round_length;
 
