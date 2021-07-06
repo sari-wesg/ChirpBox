@@ -40,6 +40,9 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 #define DISSEM_MAX              32
 #define DISSEM_BITMAP_32        ((DISSEM_MAX + 32 - 1) / 32)
 
+/* Round config */
+#define ROUND_SETUP             1
+
 /* TOPO */
 #ifndef TOPO_DEFAULT_SF
 	#define TOPO_DEFAULT_SF			7	// The LoRa default under test spreading factor is 7
@@ -112,7 +115,6 @@ typedef struct Chirpbox_tag
 } Chirpbox_ISR;
 
 //topology ********************************************************************************************
-
 typedef struct Topology_result_tag
 {
 	uint8_t			rx_num;
@@ -179,7 +181,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	uint16_t			round; 				/* current round num */
 	uint16_t			round_max; 			/* desired round num to carriage task */
-	uint8_t				round_setup; 		/* setup round for all nodes synchronization */
 
 	ChirpBox_Task 		arrange_task;
 

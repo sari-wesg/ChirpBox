@@ -295,9 +295,9 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             else if ((chirp_outl->patch_update) && (chirp_outl->patch_bank))
                 flash_addr = FLASH_START_BANK2 + chirp_outl->patch_page * FLASH_PAGE + chirp_outl->file_chunk_len * (chirp_outl->disem_file_index - 1);
         }
-        else if (((chirp_outl->round > chirp_outl->round_setup) && (chirp_outl->round <= chirp_outl->round_max)))
+        else if (((chirp_outl->round > ROUND_SETUP) && (chirp_outl->round <= chirp_outl->round_max)))
         {
-            flash_addr = chirp_outl->collect_addr_start + chirp_outl->file_chunk_len * (chirp_outl->round - chirp_outl->round_setup - 1);
+            flash_addr = chirp_outl->collect_addr_start + chirp_outl->file_chunk_len * (chirp_outl->round - ROUND_SETUP - 1);
         }
 
         uint16_t n;
@@ -397,7 +397,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 }
             }
             /* collect setup: initiator sends start and end collect address in flash */
-            else if ((chirp_outl->arrange_task == CB_COLLECT) && (chirp_outl->round <= chirp_outl->round_setup))
+            else if ((chirp_outl->arrange_task == CB_COLLECT) && (chirp_outl->round <= ROUND_SETUP))
             {
                 data[k++] = chirp_outl->round_max >> 8;
                 data[k++] = chirp_outl->round_max;
@@ -521,14 +521,14 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 }
                 case CB_COLLECT:
                 {
-                    if (chirp_outl->round <= chirp_outl->round_setup)
+                    if (chirp_outl->round <= ROUND_SETUP)
                     {
                         if (chirp_outl->task == CB_COLLECT)
                             mixer_write(i, file_data, chirp_outl->payload_len);
                         else
                             mixer_write(i, data, MIN(sizeof(data), chirp_outl->payload_len));
                     }
-                    else if (chirp_outl->round > chirp_outl->round_setup)
+                    else if (chirp_outl->round > ROUND_SETUP)
                     {
                         gpi_memcpy_dma((uint8_t *)(file_data), data, DATA_HEADER_LENGTH);
                         gpi_memcpy_dma((uint32_t *)(file_data + DATA_HEADER_LENGTH), flash_data, (chirp_outl->payload_len - DATA_HEADER_LENGTH));
@@ -582,7 +582,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     if (!node_id)
     {
         PRINTF("-----column_pending = %d-----\n", mx.request->my_column_pending);
-        if ((chirp_outl->task == CB_COLLECT) && (chirp_outl->round > chirp_outl->round_setup))
+        if ((chirp_outl->task == CB_COLLECT) && (chirp_outl->round > ROUND_SETUP))
             PRINTF("output from initiator (collect):\n");
         else if (chirp_outl->task == CB_VERSION)
             PRINTF("output from initiator (version):\n");
@@ -794,7 +794,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         case CB_COLLECT:
                         {
                             /* reconfig chirp_outl (except the initiator) */
-                            if (chirp_outl->round <= chirp_outl->round_setup)
+                            if (chirp_outl->round <= ROUND_SETUP)
                             {
                                 /* CB_COLLECT */
                                 /* only initiator indicates the file information */
@@ -812,7 +812,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 }
                             }
                             /* round > setup_round */
-                            else if ((chirp_outl->round > chirp_outl->round_setup) && (chirp_outl->round <= chirp_outl->round_max))
+                            else if ((chirp_outl->round > ROUND_SETUP) && (chirp_outl->round <= chirp_outl->round_max))
                             {
                                 if ((chirp_outl->task == CB_COLLECT))
                                 {

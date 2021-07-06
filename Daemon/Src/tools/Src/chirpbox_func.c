@@ -1353,7 +1353,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = 0;
 		chirp_outl.payload_len = 0;
-		chirp_outl.round_setup = 0;
 		chirp_outl.round_max = 0;
 		chirp_outl.file_chunk_len = 0;
 
@@ -1501,7 +1500,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
 		chirp_outl.payload_len = DATA_HEADER_LENGTH + 5 + 4;
-		chirp_outl.round_setup = 1;
 		chirp_outl.round_max = 1;
 		chirp_outl.file_chunk_len = 0;
 
@@ -1571,8 +1569,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
 				chirp_outl.payload_len = offsetof(Chirp_Outl, num_nodes) - offsetof(Chirp_Outl, start_year) + DATA_HEADER_LENGTH + 2;
-				chirp_outl.round_setup = 1;
-				chirp_outl.round_max = chirp_outl.round_setup;
+				chirp_outl.round_max = ROUND_SETUP;
         chirp_outl.version_hash = 0;
 				if (!node_id)
 				{
@@ -1661,7 +1658,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
 				assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 28));
 				assert_reset(!((chirp_outl.payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
-				chirp_outl.round_setup = 1;
 				chirp_outl.round_max = UINT16_MAX;
 				chirp_outl.file_chunk_len = chirp_outl.generation_size * (chirp_outl.payload_len - DATA_HEADER_LENGTH);
         chirp_outl.disem_file_memory = (uint32_t *)malloc(chirp_outl.file_chunk_len);
@@ -1741,7 +1737,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.generation_size = chirp_outl.num_nodes;
 				chirp_outl.payload_len = chirp_outl.default_payload_len;
 				chirp_outl.round_max = UINT16_MAX;
-				chirp_outl.round_setup = 1;
 				chirp_outl.file_chunk_len = chirp_outl.payload_len - DATA_HEADER_LENGTH;
         assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 8));
 				assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
@@ -1749,7 +1744,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				{
 					chirp_controller_read_command(&chirp_outl);
 					chirp_outl.collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
-					chirp_outl.round_max = chirp_outl.round_setup + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
+					chirp_outl.round_max = ROUND_SETUP + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
 					PRINTF("set:%d\n", chirp_outl.round_max);
 				}
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
@@ -1792,8 +1787,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = network_num_nodes;
 				chirp_outl.payload_len = DATA_HEADER_LENGTH + 7;
-				chirp_outl.round_setup = 1;
-				chirp_outl.round_max = chirp_outl.round_setup;
+				chirp_outl.round_max = ROUND_SETUP;
 				if (!node_id)
 					chirp_controller_read_command(&chirp_outl);
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
@@ -1851,8 +1845,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = chirp_outl.num_nodes;
 				chirp_outl.payload_len = DATA_HEADER_LENGTH + 3 + sizeof(uint16_t);
-				chirp_outl.round_setup = 1;
-				chirp_outl.round_max = chirp_outl.round_setup;
+				chirp_outl.round_max = ROUND_SETUP;
 
 				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
         chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
