@@ -1394,11 +1394,14 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           #if GPS_DATA
           GPS_Wakeup(60);
           #else
-          DS3231_GetTime();
-          ds3231_time = DS3231_ShowTime();
-          diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
-          sleep_sec = 60 - (time_t)(0 - diff) % 60;
-          // sleep_sec = 5;
+            #if DS3231_ON
+            DS3231_GetTime();
+            ds3231_time = DS3231_ShowTime();
+            diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
+            sleep_sec = 60 - (time_t)(0 - diff) % 60;
+            #else
+            sleep_sec = 5;
+            #endif
           RTC_Waiting_Count(sleep_sec);
           #endif
         }
@@ -1446,12 +1449,15 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           }
           else
           {
+            #if DS3231_ON
             RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
             DS3231_GetTime();
             ds3231_time = DS3231_ShowTime();
             diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
             sleep_sec = 60 - (time_t)(0 - diff) % 60;
-            // sleep_sec = 5;
+            #else
+            sleep_sec = 5;
+            #endif
             RTC_Waiting_Count(sleep_sec);
           }
         }
