@@ -11,15 +11,9 @@
 #include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)
 // Integers
 #include <stdint.h>
+// ChirpBox's API
+#include "API_ChirpBox.h"
 
-//**************************************************************************************************
-//***** Global Typedefs and Class Declarations *****************************************************
-typedef enum Disc_Primitive_tag
-{
-	FLOODING = 1,
-	DISSEMINATION = 2,
-	COLLECTION = 3
-} Disc_Primitive;
 
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
@@ -88,6 +82,16 @@ typedef enum Disc_Primitive_tag
 #define LBT_CCA_STEP_NUM        10
 
 #define LBT_TX_TIME_S           3600
+
+//**************************************************************************************************
+//***** Global Typedefs and Class Declarations *****************************************************
+typedef enum Disc_Primitive_tag
+{
+	FLOODING = 1,
+	DISSEMINATION = 2,
+	COLLECTION = 3
+} Disc_Primitive;
+
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************

@@ -30,6 +30,7 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 /* chirpbox config */
 #ifndef GPS_DATA
 	#define GPS_DATA								1
+	#define DS3231_ON								1
 #endif
 
 #ifndef BANK_1_RUN
@@ -178,11 +179,10 @@ typedef struct __attribute__((packed)) Chirp_Energy_tag
 typedef struct __attribute__((packed)) Chirp_Outline_tag
 {
 	ChirpBox_Task 		task;
+	ChirpBox_Task 		arrange_task;
 
 	uint16_t			round; 				/* current round num */
 	uint16_t			round_max; 			/* desired round num to carriage task */
-
-	ChirpBox_Task 		arrange_task;
 
 	uint32_t			packet_time;
 	uint16_t			default_slot_num;

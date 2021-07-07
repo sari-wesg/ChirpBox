@@ -1353,7 +1353,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = 0;
 		chirp_outl.payload_len = 0;
-		chirp_outl.round_max = 0;
+		chirp_outl.round_max = ROUND_SETUP;
 		chirp_outl.file_chunk_len = 0;
 
 		chirp_radio_config(12, 1, 14, chirp_outl.default_freq);
@@ -1506,7 +1506,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
 		chirp_outl.payload_len = DATA_HEADER_LENGTH + 5 + 4;
-		chirp_outl.round_max = 1;
+		chirp_outl.round_max = ROUND_SETUP;
 		chirp_outl.file_chunk_len = 0;
 
 		chirp_radio_config(11, 1, 14, chirp_outl.default_freq);
