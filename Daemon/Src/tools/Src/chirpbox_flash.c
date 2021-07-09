@@ -236,7 +236,7 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
     }
     PRINTF("\n");
 
-    if (!MD5_File(newFile, md5_code))
+    if ((newFile.file_size > 0) && (!MD5_File(newFile, md5_code)))
     {
         PRINTF("md5 error\n");
         /*
