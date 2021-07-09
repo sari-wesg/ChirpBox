@@ -183,6 +183,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	uint16_t			round; 				/* current round num */
 	uint16_t			round_max; 			/* desired round num to carriage task */
+	uint8_t				round_setup_to_delete; 		/* setup round for all nodes synchronization */
 
 	uint32_t			packet_time;
 	uint16_t			default_slot_num;
@@ -238,13 +239,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	uint8_t				patch_page;
 	uint32_t			old_firmware_size;
-
-	uint8_t				disem_flag;
-	uint16_t			disem_file_index;
-	uint16_t			disem_file_max;
-	uint16_t			disem_file_index_stay;
-	uint8_t				disem_flag_full_rank;
-	uint32_t			*disem_file_memory;
 
 	/* CB_COLLECT */
 	uint32_t			collect_addr_start;
