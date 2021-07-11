@@ -1586,7 +1586,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_round(node_id, &chirp_outl);
 
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1694,7 +1693,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_round(node_id, &chirp_outl);
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1765,7 +1763,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
-				// chirp_round(node_id, &chirp_outl);
         if (!chirp_round(task_node_id, &chirp_outl))
         {
           free(payload_distribution);
@@ -1809,7 +1806,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
 
-				// chirp_round(node_id, &chirp_outl);
         if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
@@ -1858,7 +1854,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_round(node_id, &chirp_outl);
         if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
