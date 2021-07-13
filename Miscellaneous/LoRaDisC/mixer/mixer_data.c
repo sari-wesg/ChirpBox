@@ -477,12 +477,16 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         case CB_GLOSSY:
         {
             k = 0;
-            flooding_data[k++] = chirp_outl->arrange_task;
+            flooding_data[k++] = chirp_outl->arrange_task << 4 | chirp_outl->default_sf;
+            flooding_data[k++] = chirp_outl->default_tp;
+            flooding_data[k++] = chirp_outl->default_slot_num;
             /* loradisc write: */
-            if (k < FLOODING_SURPLUS_LENGTH)
+            if (k <= FLOODING_SURPLUS_LENGTH)
             {
 				memcpy((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)flooding_data, FLOODING_SURPLUS_LENGTH);
             }
+            printf("loradisc_config.flooding_packet_header:%lu, %lu, %lu\n", loradisc_config.flooding_packet_header[0], loradisc_config.flooding_packet_header[1], loradisc_config.flooding_packet_header[2]);
+
             k = 0;
             break;
         }
@@ -855,10 +859,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                                 chirp_outl->default_slot_num = data[1] << 8 | data[2];
                             /* reconfig chirp_outl (except the initiator) */
                             chirp_outl->default_sf = data[k++];
-                            // chirp_outl->round_max = data[k++];
                             chirp_outl->default_payload_len = data[k++];
-                            // chirp_outl->round_max = (data[k++] << 8) | (data[k++]);
-                            // chirp_outl->arrange_task = data[k++];
                             chirp_outl->default_generate_size = data[ROUND_HEADER_LENGTH - 1];
                             if (node_id)
                             {
@@ -880,8 +881,13 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     }
     else if ((chirp_outl->task == CB_GLOSSY) && (node_id))
     {
+        k = 0;
         memcpy(flooding_data, (uint8_t *)(loradisc_config.flooding_packet_header), FLOODING_SURPLUS_LENGTH);
-        chirp_outl->arrange_task = flooding_data[0];
+        i = flooding_data[k++];
+        chirp_outl->arrange_task = i >> 4;
+        chirp_outl->default_sf = i & 0x0F;
+        chirp_outl->default_tp = flooding_data[k++];
+        chirp_outl->default_slot_num = flooding_data[k++];
     }
 	if (loradisc_config.primitive != FLOODING)
     {

@@ -102,7 +102,10 @@ void lorawan_listen()
 void lorawan_transmission()
 {
 	uint8_t tx_payload_len = 10;
+	uint8_t data[21] = {0x40, 0x2c, 0x00, 0x42, 0x00, 0x00, 0x05, 0x00, 0x02, 0xa2, 0xd0, 0xaf, 0x6d, 0x53, 0xf1, 0x1c, 0xbb, 0x52, 0xe3, 0x04, 0x54};
+	tx_payload_len = sizeof(data);
     memset(Tx_Buffer, 0xff, tx_payload_len);
+	memcpy(Tx_Buffer, data, tx_payload_len);
 	SX1276WriteFIFO(Tx_Buffer, tx_payload_len);
 	SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 										RFLR_IRQFLAGS_RXDONE |
