@@ -1493,6 +1493,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       //   GPS_Wakeup(60);
 
 		/* default mode is CB_GLOSSY_ARRANGE (task arrangement) */
+    if ((chirp_outl.arrange_task == CB_START) || (chirp_outl.arrange_task == CB_CONNECTIVITY) || (chirp_outl.arrange_task == CB_VERSION))
+    {
+      chirp_outl.task = chirp_outl.arrange_task;
+      goto task_;
+    }
 		chirp_outl.task = CB_GLOSSY_ARRANGE;
     if (node_id)
       chirp_outl.arrange_task = CB_GLOSSY_ARRANGE;
@@ -1501,6 +1506,8 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
         ENERGEST_ON(ENERGEST_TYPE_CPU);
       #endif
+    // printf("CB_GLOSSY_ARRANGE:%lu, %lu, %lu\n", chirp_outl.default_sf, chirp_outl.default_tp, chirp_outl.default_freq);
+    // chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 		PRINTF("---------CB_GLOSSY_ARRANGE---------\n");
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
@@ -1509,10 +1516,14 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.round_max = ROUND_SETUP;
 		chirp_outl.file_chunk_len = 0;
 
-		chirp_radio_config(11, 1, 14, chirp_outl.default_freq);
+    chirp_radio_config(11, 1, 14, chirp_outl.default_freq);
+
+		// chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
     chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 3, 1500000);
+    // chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
+
 		chirp_payload_distribution(chirp_outl.task);
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1565,6 +1576,10 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     uint32_t task_node_num = gpi_popcnt_32(chirp_outl.task_bitmap[0]);
     // PRINTF("task_node_id:%lu, %lu\n", task_node_id, task_node_num);
     gpi_watchdog_periodic();
+
+    task_:
+    INFO();
+
 		switch (chirp_outl.task)
 		{
 			case CB_START:
@@ -1586,7 +1601,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_round(node_id, &chirp_outl);
 
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1694,7 +1708,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_round(node_id, &chirp_outl);
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1765,7 +1778,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
-				// chirp_round(node_id, &chirp_outl);
         if (!chirp_round(task_node_id, &chirp_outl))
         {
           free(payload_distribution);
@@ -1809,7 +1821,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
         #endif
 
-				// chirp_round(node_id, &chirp_outl);
         if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
@@ -1858,7 +1869,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-				// chirp_round(node_id, &chirp_outl);
         if (!chirp_round(node_id, &chirp_outl))
         {
           free(payload_distribution);
