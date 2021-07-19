@@ -24,6 +24,7 @@ import json
 import MySQLdb
 from datetime import datetime
 import time
+import base64
 
 """ ------------------------------- MYSQL ------------------------------- """
 def create_table(host, user, password, port, database):
@@ -66,7 +67,7 @@ def application_packets_to_table(utc_time, application_packets):
    #insert into table
    mysql_add_word = ("INSERT INTO {table} "
                      "VALUES (%s,%s,%s,%s)")
-   mysql_data_word = (utc_time, application_packets["txInfo"]["frequency"],application_packets["txInfo"]["loRaModulationInfo"]['spreadingFactor'],application_packets["phyPayload"])
+   mysql_data_word = (utc_time, application_packets["txInfo"]["frequency"],application_packets["txInfo"]["loRaModulationInfo"]['spreadingFactor'],base64.b64decode(application_packets["phyPayload"]).hex())
 
    cursor.execute(mysql_add_word.format(table=MYSQL_TABLE), mysql_data_word)
    db.commit()
