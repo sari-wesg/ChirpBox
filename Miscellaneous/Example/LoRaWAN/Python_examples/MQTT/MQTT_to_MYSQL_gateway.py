@@ -44,7 +44,8 @@ def create_table(host, user, password, port, database):
          (
             `time_utc` VARCHAR(200) NOT NULL,
             `frequency` INT UNSIGNED,
-            `spreadingFactor` INT UNSIGNED
+            `spreadingFactor` INT UNSIGNED,
+            `data` VARCHAR(350) NOT NULL
          )ENGINE=InnoDB DEFAULT CHARSET=utf8;
       """
       % (table_name))
@@ -64,8 +65,8 @@ def application_packets_to_table(utc_time, application_packets):
 
    #insert into table
    mysql_add_word = ("INSERT INTO {table} "
-                     "VALUES (%s,%s,%s)")
-   mysql_data_word = (utc_time, application_packets["txInfo"]["frequency"],application_packets["txInfo"]["loRaModulationInfo"]['spreadingFactor'])
+                     "VALUES (%s,%s,%s,%s)")
+   mysql_data_word = (utc_time, application_packets["txInfo"]["frequency"],application_packets["txInfo"]["loRaModulationInfo"]['spreadingFactor'],application_packets["phyPayload"])
 
    cursor.execute(mysql_add_word.format(table=MYSQL_TABLE), mysql_data_word)
    db.commit()
