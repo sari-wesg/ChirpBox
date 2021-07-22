@@ -1493,36 +1493,35 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       //   GPS_Wakeup(60);
 
 		/* default mode is CB_GLOSSY_ARRANGE (task arrangement) */
-    if ((chirp_outl.arrange_task == CB_START) || (chirp_outl.arrange_task == CB_CONNECTIVITY) || (chirp_outl.arrange_task == CB_VERSION))
+    if ((chirp_outl.arrange_task == CB_CONNECTIVITY) || (chirp_outl.arrange_task == CB_VERSION))
     {
       chirp_outl.task = chirp_outl.arrange_task;
       goto task_;
     }
 		chirp_outl.task = CB_GLOSSY_ARRANGE;
-    if (node_id)
-      chirp_outl.arrange_task = CB_GLOSSY_ARRANGE;
 
       #if ENERGEST_CONF_ON
         energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
         ENERGEST_ON(ENERGEST_TYPE_CPU);
       #endif
-    // printf("CB_GLOSSY_ARRANGE:%lu, %lu, %lu\n", chirp_outl.default_sf, chirp_outl.default_tp, chirp_outl.default_freq);
-    // chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 		PRINTF("---------CB_GLOSSY_ARRANGE---------\n");
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
 		chirp_outl.payload_len = DATA_HEADER_LENGTH + 5 + 4;
+    if (chirp_outl.arrange_task == CB_START)
+      chirp_outl.payload_len = CB_START_LENGTH;
+    else if (chirp_outl.arrange_task == CB_DISSEMINATE)
+      chirp_outl.payload_len = CB_DISSEMINATE_LENGTH;
+    else if (chirp_outl.arrange_task == CB_COLLECT)
+      chirp_outl.payload_len = CB_COLLECT_LENGTH;
 		chirp_outl.round_max = ROUND_SETUP;
 		chirp_outl.file_chunk_len = 0;
 
-    chirp_radio_config(11, 1, 14, chirp_outl.default_freq);
-
-		// chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
+		chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-    chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.num_nodes * 3, 1500000);
-    // chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
+    chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
 
 		chirp_payload_distribution(chirp_outl.task);
     #if ENERGEST_CONF_ON

@@ -172,7 +172,7 @@ static void trace_packet(const Packet *p)
 	// for (i = 0; i < sizeof(p->payload); i++)
 	// 	ps += sprintf(ps, "%02" PRIx16, p->payload[i]);
 
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < MIN(8, loradisc_config.payload.len); i++)
 	{
 		ps += sprintf(ps, "%02" PRIx16, p->packet_chunk[loradisc_config.payload.pos + i]);
 	}

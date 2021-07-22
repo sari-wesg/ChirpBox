@@ -449,29 +449,35 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         case CB_GLOSSY_ARRANGE:
         {
-            data[1] = chirp_outl->default_slot_num >> 8;
-            data[2] = chirp_outl->default_slot_num;
+            /* start: payload_len = 4
+            dissem: payload_len = 8
+            collect: payload_len = 5 */
+            k = 0;
+            if (chirp_outl->arrange_task == CB_START)
+            {
+            	file_data[k++] = chirp_outl->firmware_bitmap[0] >> 24;
+                file_data[k++] = chirp_outl->firmware_bitmap[0] >> 16;
+                file_data[k++] = chirp_outl->firmware_bitmap[0] >> 8;
+                file_data[k++] = chirp_outl->firmware_bitmap[0];
+            }
+            else
+            {
+                file_data[k++] = chirp_outl->task_bitmap[0] >> 24;
+                file_data[k++] = chirp_outl->task_bitmap[0] >> 16;
+                file_data[k++] = chirp_outl->task_bitmap[0] >> 8;
+                file_data[k++] = chirp_outl->task_bitmap[0];
+            }
             if (chirp_outl->arrange_task == CB_DISSEMINATE)
             {
-                data[0] = chirp_outl->dissem_back_sf;
-                data[1] = chirp_outl->dissem_back_slot_num;
+                file_data[k++] = chirp_outl->dissem_back_sf;
+                file_data[k++] = chirp_outl->dissem_back_slot_num;
+                file_data[k++] = chirp_outl->default_payload_len;
+                file_data[k++] = chirp_outl->default_generate_size;
             }
-            data[k++] = chirp_outl->default_sf;
-            data[k++] = chirp_outl->default_payload_len;
-            data[k++] = chirp_outl->arrange_task;
-            data[ROUND_HEADER_LENGTH - 1] = chirp_outl->default_generate_size;
-            memcpy(file_data, data, DATA_HEADER_LENGTH);
-            k = 0;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 24;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 16;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0] >> 8;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_bitmap[0];
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->default_tp;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 24;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 16;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0] >> 8;
-            file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->task_bitmap[0];
-            k = 0;
+            else if (chirp_outl->arrange_task == CB_COLLECT)
+            {
+                file_data[k++] = chirp_outl->default_payload_len;
+            }
             break;
         }
         case CB_GLOSSY:
@@ -494,14 +500,11 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             break;
     }
 
-    assert_reset((k <= DATA_HEADER_LENGTH));
 
     for (i = 0; i < loradisc_config.mx_generation_size; i++)
     {
         if (payload_distribution[i] == node_id)
         {
-            // data[ROUND_HEADER_LENGTH - 1] = i;
-            // file_data[ROUND_HEADER_LENGTH - 1] = i;
             switch (chirp_outl->task)
             {
                 case CB_START:
@@ -519,7 +522,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                         if (loradisc_config.disem_flag)
                             gpi_memcpy_dma((uint32_t *)(file_data + DATA_HEADER_LENGTH), flash_data + i * (chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t), (chirp_outl->payload_len - DATA_HEADER_LENGTH));
                         mixer_write(i, (uint8_t *)file_data, chirp_outl->payload_len);
-                        // PRINT_PACKET(file_data + DATA_HEADER_LENGTH, sizeof(file_data) - 8, 0);
                     }
                     break;
                 }
@@ -548,7 +550,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 case CB_VERSION:
                 {
                     mixer_write(i, file_data, chirp_outl->payload_len);
-                    // mixer_write(i, data, MIN(sizeof(data), chirp_outl->payload_len));
                     break;
                 }
                 case CB_GLOSSY_ARRANGE:
@@ -581,6 +582,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     }
     uint32_t file_data[(chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t)];
     uint8_t task_data[chirp_outl->payload_len - DATA_HEADER_LENGTH];
+    uint8_t real_data[chirp_outl->payload_len];
     uint8_t receive_payload[chirp_outl->payload_len];
 
     if (!node_id)
@@ -661,6 +663,8 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                     else if (chirp_outl->task == CB_DISSEMINATE)
                         packet_correct = 1;
                 }
+                if ((chirp_outl->task == CB_GLOSSY_ARRANGE) && ((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
+                        packet_correct = 1;
                 if (packet_correct)
                 {
                     /* print packet */
@@ -848,25 +852,29 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         }
                         case CB_GLOSSY_ARRANGE:
                         {
-                            chirp_outl->arrange_task = data[6];
-                            if (chirp_outl->arrange_task == CB_DISSEMINATE)
-                            {
-                                chirp_outl->dissem_back_sf = data[0];
-                                chirp_outl->dissem_back_slot_num = data[1];
-                                chirp_outl->default_slot_num = data[2];
-                            }
-                            else
-                                chirp_outl->default_slot_num = data[1] << 8 | data[2];
-                            /* reconfig chirp_outl (except the initiator) */
-                            chirp_outl->default_sf = data[k++];
-                            chirp_outl->default_payload_len = data[k++];
-                            chirp_outl->default_generate_size = data[ROUND_HEADER_LENGTH - 1];
                             if (node_id)
                             {
-                                memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
-                                chirp_outl->firmware_bitmap[0] = (task_data[0] << 24) | (task_data[1] << 16) | (task_data[2] << 8) | (task_data[3]);
-                                chirp_outl->default_tp = task_data[4];
-                                chirp_outl->task_bitmap[0] = (task_data[5] << 24) | (task_data[6] << 16) | (task_data[7] << 8) | (task_data[8]);
+                                k = 0;
+                                memcpy(real_data, (uint8_t *)(p), sizeof(real_data));
+                                if (chirp_outl->arrange_task == CB_START)
+                                {
+                                INFO();
+                                    chirp_outl->firmware_bitmap[0] = (real_data[k++] << 24) | (real_data[k++] << 16) | (real_data[k++] << 8) | (real_data[k++]);
+                                }
+
+                                else
+                                    chirp_outl->task_bitmap[0] = (real_data[k++] << 24) | (real_data[k++] << 16) | (real_data[k++] << 8) | (real_data[k++]);
+                                if (chirp_outl->arrange_task == CB_DISSEMINATE)
+                                {
+                                    chirp_outl->dissem_back_sf = real_data[k++];
+                                    chirp_outl->dissem_back_slot_num = real_data[k++];
+                                    chirp_outl->default_payload_len = real_data[k++];
+                                    chirp_outl->default_generate_size = real_data[k++];
+                                }
+                                else if (chirp_outl->arrange_task == CB_COLLECT)
+                                {
+                                    chirp_outl->default_payload_len = real_data[k++];
+                                }
                             }
                             break;
                         }
@@ -882,13 +890,21 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     else if ((chirp_outl->task == CB_GLOSSY) && (node_id))
     {
         k = 0;
-        memcpy(flooding_data, (uint8_t *)(loradisc_config.flooding_packet_header), FLOODING_SURPLUS_LENGTH);
-        i = flooding_data[k++];
-        chirp_outl->arrange_task = i >> 4;
-        chirp_outl->default_sf = i & 0x0F;
-        chirp_outl->default_tp = flooding_data[k++];
-        chirp_outl->default_slot_num = flooding_data[k++];
+        if (chirp_outl->arrange_task == CB_GLOSSY)
+        {
+            memcpy(flooding_data, (uint8_t *)(loradisc_config.flooding_packet_header), FLOODING_SURPLUS_LENGTH);
+            i = flooding_data[k++];
+            chirp_outl->arrange_task = i >> 4;
+            chirp_outl->default_sf = i & 0x0F;
+            chirp_outl->default_tp = flooding_data[k++];
+            chirp_outl->default_slot_num = flooding_data[k++];
+        }
     }
+    // else if ((chirp_outl->task == CB_GLOSSY_ARRANGE) && (node_id))
+    // {
+
+    // }
+
 	if (loradisc_config.primitive != FLOODING)
     {
     free(mx.matrix[0]);
