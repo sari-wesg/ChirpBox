@@ -322,7 +322,7 @@ class link_quality():
     def processing_link_data_to_csv(self, link_infomation, link_matrix, snr_list, rssi_list, snr_avg, rssi_avg, node_temp, id_list, directory_path, filename):
         """
         convert csv files to csv with columns
-        utc | sf | tp | frequency | payload length | min_SNR | max_SNR | avg_snr | min_RSSI | max_RSSI | avg_rssi | max_hop | max_hop_id | max_degree | min_degree | mean_degree | average_temp | node_degree (list) | node_temp (list) | node id with link (matrix)
+        utc | sf | tp | frequency | payload length | min_SNR | max_SNR | avg_snr | min_RSSI | max_RSSI | avg_rssi | max_hop | max_hop_id | max_degree | min_degree | mean_degree | average_temp | symmetry | node_degree (list) | node_temp (list) | node id with link (matrix)
         """
         node_num = len(node_temp)
 
@@ -365,11 +365,25 @@ class link_quality():
         min_degree = np.amin(node_degree)
         max_degree = np.amax(node_degree)
 
+        # Get the symmetry of links: (https://math.stackexchange.com/questions/2048817/metric-for-how-symmetric-a-matrix-is)
+        c = link_matrix
+        c_t = np.transpose(c)
+        c_sym = 0.5 * (c + c_t)
+        c_anti = 0.5 * (c - c_t)
+        # print(c_sym)
+        # print(c_anti)
+        norm_c_sym = np.linalg.norm(c_sym,ord=2,keepdims=True)
+        norm_c_anti = np.linalg.norm(c_anti,ord=2,keepdims=True)
+        # print(norm_c_sym)
+        # print(norm_c_anti)
+        symmetry = ((norm_c_sym - norm_c_anti) / (norm_c_sym + norm_c_anti))[0][0]
+        # print(symmetry)
+
         link_matrix_list = link_matrix.tolist()
         if ((len(snr_list) > 0) and (len(rssi_list) > 0)):
-            link_infomation.extend((min(snr_list), max(snr_list), snr_avg, min(rssi_list), max(rssi_list), rssi_avg, max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
+            link_infomation.extend((min(snr_list), max(snr_list), snr_avg, min(rssi_list), max(rssi_list), rssi_avg, max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp), symmetry))
         else:
-            link_infomation.extend(('null', 'null', 'null', 'null', max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp)))
+            link_infomation.extend(('null', 'null', 'null', 'null', max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp), symmetry))
         link_infomation.insert(len(link_infomation), node_degree)
         link_infomation.insert(len(link_infomation), node_temp)
         link_infomation.insert(len(link_infomation), link_matrix_list)
@@ -447,7 +461,7 @@ class link_quality():
         # draw plots from the new csv
         df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality_all_sf.csv',
                             sep=',',
-                            names= ["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "avg_snr", "min_rssi", "max_rssi", "avg_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
+                            names= ["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "avg_snr", "min_rssi", "max_rssi", "avg_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "symmetry", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
         if (df_link.empty):
             logger.error("link data is None")
@@ -534,6 +548,103 @@ class link_quality():
 
                 # Change figure title for saving
                 fig_title = "Degree and temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+
+                fig_title = fig_title.replace('<br>', ' ')
+                fig_title = fig_title.replace(':', '-')
+                fig.write_image(directory_path + '\\link_quality\\' + fig_title + self._plot_suffix, engine="kaleido")
+
+        # plot with plotly: symmetry in time:
+        if "symmetry_time_plot" in plot_type:
+            for freq in freq_list:
+                # plot the data
+                fig = make_subplots(specs=[[{"secondary_y": True}]])
+                for sf in sf_list:
+                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+                    dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
+
+                    fig = fig.add_trace(go.Scatter(x = dates, y = df_link_sf['symmetry'], name='Max - SF' +str(sf),
+                    marker=dict(
+                                # size=10,
+                                color=red_colors[sf - 7 + 3],
+                            ),))
+
+                    if (sf == sf_list[-1]):
+                        fig.add_trace(go.Scatter(x=dates, y=df_link_sf['average_temperature'], name='Temperature',
+                        marker=dict(
+                                    # size=10,
+                                    color='black',
+                                ),
+                        line = dict(width=2, dash='dot')
+                        ), secondary_y=True)
+
+                fig.update_layout(
+                    # title = fig_title,
+                    # legend=dict(x=-0.01, y=-0.9, orientation="h")
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    autosize=False,
+                    width=900,
+                    height=500,
+                    )
+
+                fig.update_layout(legend=dict(
+                    yanchor="top",
+                    y=0.99,
+                    xanchor="left",
+                    x=1
+                ))
+
+                # Set x-axis title
+                fig_title = str("{:.1f}".format(freq/1000)) + " MHz" + " collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+
+                fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
+
+                # Set y-axes titles
+                fig.update_yaxes(title_text="Symmetry", title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
+                fig.update_yaxes(title_text="Temperature (°C)", title_font = {"size": 16}, title_standoff = 2, secondary_y=True)
+                fig.show()
+
+                # Change figure title for saving
+                fig_title = "Symmetry and temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+
+                fig_title = fig_title.replace('<br>', ' ')
+                fig_title = fig_title.replace(':', '-')
+                fig.write_image(directory_path + '\\link_quality\\' + fig_title + self._plot_suffix, engine="kaleido")
+
+        # plot with plotly: symmetry with average temperature:
+        if "symmetry_temperature_plot" in plot_type:
+            for freq in freq_list:
+                # plot the data
+                fig = make_subplots(specs=[[{"secondary_y": True}]])
+                for sf in sf_list:
+                    df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
+
+                    fig = fig.add_trace(go.Scatter(x = df_link_sf['average_temperature'], y = df_link_sf['symmetry'], name='Symmetry - SF' +str(sf),
+                    marker=dict(
+                                size=10,
+                                color=red_colors[sf - 7 + 3],
+                                symbol = 'circle',
+                            ),mode='markers'))
+
+                fig_title = "Average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+
+                fig.update_layout(
+                    # title = fig_title,
+                    legend=dict(x=0.95),
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    autosize=False,
+                    width=900,
+                    height=500,
+                    )
+
+                # Set x-axis title
+                fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
+
+                # Set y-axes titles
+                fig.update_yaxes(title_text= "Symmetry", title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
+                fig.show()
+
+                # Change figure title for saving
+                fig_title = "Symmetry with " + "average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
 
                 fig_title = fig_title.replace('<br>', ' ')
                 fig_title = fig_title.replace(':', '-')
@@ -670,16 +781,16 @@ class link_quality():
                     fig_title = fig_title.replace(':', '-')
                     fig.write_image(directory_path + '\\link_quality\\' + fig_title + self._plot_suffix, engine="kaleido")
 
-        # plot with plotly: min/avg/max RSSI/SNR with average temperature:
-        plot_rssi_snr = []
+        # plot with plotly: min/avg/max degree with average temperature:
+        plot_degree = []
         if "MAX_Degree_temperature_plot" in plot_type:
-            plot_rssi_snr.append("max")
+            plot_degree.append("max")
         if "AVG_Degree_temperature_plot" in plot_type:
-            plot_rssi_snr.append("average")
+            plot_degree.append("average")
         if "MIN_Degree_temperature_plot" in plot_type:
-            plot_rssi_snr.append("min")
-        if len(plot_rssi_snr) > 0:
-            for _plot_type in plot_rssi_snr:
+            plot_degree.append("min")
+        if len(plot_degree) > 0:
+            for _plot_type in plot_degree:
                 for freq in freq_list:
                     # plot the data
                     fig = make_subplots(specs=[[{"secondary_y": True}]])

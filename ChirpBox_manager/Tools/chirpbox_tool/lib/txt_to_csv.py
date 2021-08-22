@@ -135,7 +135,7 @@ class chirpbox_txt():
         Path(directory_path + "\\link_quality\\").mkdir(parents=True, exist_ok=True)
         with open(directory_path + '\\link_quality\\' + 'link_quality.csv', 'a', newline='') as csvfile:
             writer= csv.writer(csvfile, delimiter=',')
-            writer.writerow(["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "avg_snr", "min_rssi", "max_rssi", "avg_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
+            writer.writerow(["utc", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "avg_snr", "min_rssi", "max_rssi", "avg_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "symmetry", "node_degree", "node_temperature", "node_link", "temp", "wind_speed", "wind_deg", "pressure", "humidity"])
 
         # 2. loop csv files, and read node id and payload bytes from csv
         node_id_with_value = []
