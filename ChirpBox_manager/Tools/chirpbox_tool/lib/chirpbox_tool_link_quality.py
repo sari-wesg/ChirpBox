@@ -476,6 +476,11 @@ class link_quality():
             df_link.index = pd.to_datetime(df_link.index)
             df_link = df_link.between_time(plot_time_start, plot_time_end)
 
+            # time (hour) of day
+            df_link['timehour'] = [datetime.datetime.fromtimestamp(x).strftime("%H") for x in df_link['utc']]
+            # day of week
+            df_link['day'] = [datetime.datetime.fromtimestamp(x).strftime("%A") for x in df_link['utc']]
+
         # plot with plotly: min/avg/max degree and temperature:
         if "degree_plot" in plot_type:
             for freq in freq_list:
