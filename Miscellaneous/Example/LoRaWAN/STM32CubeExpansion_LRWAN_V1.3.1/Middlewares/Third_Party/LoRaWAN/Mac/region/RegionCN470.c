@@ -374,9 +374,8 @@ void RegionCN470InitDefaults( InitDefaultsParams_t* params )
             // 125 kHz channels
             for( uint8_t i = 0; i < CN470_MAX_NB_CHANNELS; i++ )
             {
-                // NvmCtx.Channels[i].Frequency = 470300000 + i * 200000;
+                // NvmCtx.Channels[i].Frequency = 490300000 + i * 200000;
                 NvmCtx.Channels[i].Frequency = 486300000 + i * 200000;
-                // NvmCtx.Channels[i].Frequency = 470000000 + i * 200000;
                 NvmCtx.Channels[i].DrRange.Value = ( DR_5 << 4 ) | DR_0;
                 NvmCtx.Channels[i].Band = 0;
             }
@@ -390,7 +389,7 @@ void RegionCN470InitDefaults( InitDefaultsParams_t* params )
             NvmCtx.ChannelsDefaultMask[5] = 0xFFFF;
             #ifdef CHIRPBOX_LORAWAN
                 uint32_t UserFreq[8]={486300000, 486500000, 486700000, 486900000, 487100000, 487300000, 487500000, 487700000};
-                // uint32_t UserFreq[8]={470000000, 470200000, 470400000, 470600000, 470800000, 471000000, 471200000, 471400000};
+                // uint32_t UserFreq[8]={490000000, 490200000, 490400000, 490600000, 490800000, 491000000, 491200000, 491400000};
                 NvmCtx.ChannelsDefaultMask[0] = 0x0000;
                 NvmCtx.ChannelsDefaultMask[1] = 0x0000;
                 NvmCtx.ChannelsDefaultMask[2] = 0x0000;
@@ -401,7 +400,7 @@ void RegionCN470InitDefaults( InitDefaultsParams_t* params )
                 for(uint8_t i = 0,j = 0; i < 8; i++)
                 {
                     j=(UserFreq[i]-486300000 )/200000;//channel ID
-                    // j=(UserFreq[i]-470000000 )/200000;//channel ID
+                    // j=(UserFreq[i]-490000000 )/200000;//channel ID
 
                     NvmCtx.Channels[j].Frequency = UserFreq[i] ;
                     NvmCtx.Channels[j].DrRange.Value=( DR_5 << 4 ) | DR_0;
