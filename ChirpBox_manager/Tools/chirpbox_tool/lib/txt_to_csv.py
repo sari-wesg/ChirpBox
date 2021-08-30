@@ -124,6 +124,12 @@ class chirpbox_txt():
             pass
         return check
 
+    def check_list_mean(self, the_list):
+        try:
+            return statistics.mean(the_list)
+        except:
+            return 0
+
     def chirpbox_link_to_csv(self, directory_path, file_start_name, utc_time_zone, id_list):
         self._link_processing = lib.chirpbox_tool_link_quality.link_quality()
 
@@ -260,5 +266,5 @@ class chirpbox_txt():
                         # logger.debug("snr with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, received_snr)
                         # logger.debug("rssi with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, received_rssi)
                         # logger.debug("temp with sf %s \n%s", sf + CHIRPBOX_LINK_SF7, node_temperature)
-                        self._link_processing.processing_link_data_to_csv([utc_value, sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, statistics.mean(received_snr_avg), statistics.mean(received_rssi_avg), node_temperature, id_list, directory_path, filename)
+                        self._link_processing.processing_link_data_to_csv([utc_value, sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, self.check_list_mean(received_snr_avg), self.check_list_mean(received_rssi_avg), node_temperature, id_list, directory_path, filename)
                         # self._link_processing.processing_link_data_to_csv([datetime.fromtimestamp(int(utc_value)).strftime("%Y-%m-%d %H:%M"), sf + CHIRPBOX_LINK_SF7, channel, tx_power, payload_len], link_matrix, received_snr, received_rssi, node_temperature, id_list, directory_path, filename)

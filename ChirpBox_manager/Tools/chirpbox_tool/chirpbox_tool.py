@@ -61,7 +61,7 @@ list of combinations:
     chirpbox_tool.py -id -dir voltage:processing
 
 list of plot type (-plot):
-    1. plotly:degree_plot,MAX_RSSI_SNR_Degree_plot,AVG_RSSI_SNR_Degree_plot,MIN_RSSI_SNR_Degree_plot,RSSI_SF_Freq_plot,SNR_SF_Freq_plot,
+    1. plotly:degree_plot,PRR_plot,symmetry_time_plot,symmetry_temperature_plot,MAX_RSSI_SNR_Degree_plot,AVG_RSSI_SNR_Degree_plot,MIN_RSSI_SNR_Degree_plot,MAX_RSSI_SNR_temperature_plot,AVG_RSSI_SNR_temperature_plot,MIN_RSSI_SNR_temperature_plot,RSSI_SF_Freq_plot,SNR_SF_Freq_plot,
     2. matplotlib:average_degree,MIN_RSSI_SNR_Degree,heatmap,topology(using_pos0/1/2)
 
 format of plot time(-ptime):
