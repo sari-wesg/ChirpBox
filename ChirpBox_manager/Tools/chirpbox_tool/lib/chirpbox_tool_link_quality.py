@@ -403,6 +403,12 @@ class link_quality():
             writer= csv.writer(csvfile, delimiter=',')
             writer.writerow(link_infomation)
 
+    def check_list_stdev(self, the_list):
+        try:
+            return statistics.stdev(the_list)
+        except:
+            return 'null'
+
     """
     link processing
     clean csv data: processing the link_quality.csv to "link_quality_all_sf.csv" and draw plots based on the plot type
@@ -481,8 +487,8 @@ class link_quality():
             # day of week
             df_link['day'] = [datetime.datetime.fromtimestamp(x).strftime("%A") for x in df_link['utc']]
 
-        rx_node = 5
-        tx_node = 7
+        rx_node = 4
+        tx_node = 1
         df_link['rx_temperature'] = [eval(x)[rx_node] for x in df_link['node_temperature']]
         df_link['degree'] = [sum(k > 0 for k in eval(x)[rx_node]) for x in df_link['node_link']]
         df_link['PRR'] = [eval(x)[rx_node][tx_node] for x in df_link['node_link']]
@@ -503,10 +509,11 @@ class link_quality():
                         df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
                         dates=[datetime.datetime.fromtimestamp(ts) for ts in df_link_sf['utc']]
 
-                        fig = fig.add_trace(go.Scatter(x = dates, y = df_link_sf[_plot_type], name='Avg - SF' +str(sf),
+                        fig = fig.add_trace(go.Scatter(x = dates, y = df_link_sf[_plot_type], name=_plot_type[0].upper() + _plot_type[1:],
                         marker=dict(
                                     # size=10,
-                                    color=green_colors[sf - 7 + 3],
+                                    # color=green_colors[sf - 7 + 3],
+                                    color=red_colors[7 - 7 + 3],
                                 ),))
 
                         if (sf == sf_list[-1]):
@@ -531,13 +538,14 @@ class link_quality():
                         yanchor="top",
                         y=0.99,
                         xanchor="left",
-                        x=1
+                        x=0.785
                     ))
+                    # fig.update_layout(showlegend=False)
 
                     # Set x-axis title
-                    fig_title = str("{:.1f}".format(freq/1000)) + " MHz" + " collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                    fig_title = str("{:.1f}".format(freq/1000)) + " MHz" + " collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
-                    fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
+                    # fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
 
                     # Set y-axes titles
                     fig.update_yaxes(title_text=_plot_type[0].upper() + _plot_type[1:], title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
@@ -545,7 +553,7 @@ class link_quality():
                     fig.show()
 
                     # Change figure title for saving
-                    fig_title = _plot_type[0].upper() + _plot_type[1:] + " and temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                    fig_title = _plot_type[0].upper() + _plot_type[1:] + " and temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                     fig_title = fig_title.replace('<br>', ' ')
                     fig_title = fig_title.replace(':', '-')
@@ -592,7 +600,7 @@ class link_quality():
                 ))
 
                 # Set x-axis title
-                fig_title = str("{:.1f}".format(freq/1000)) + " MHz" + " collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                fig_title = str("{:.1f}".format(freq/1000)) + " MHz" + " collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                 fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
 
@@ -602,7 +610,7 @@ class link_quality():
                 fig.show()
 
                 # Change figure title for saving
-                fig_title = "Symmetry and temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                fig_title = "Symmetry and temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "collected from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                 fig_title = fig_title.replace('<br>', ' ')
                 fig_title = fig_title.replace(':', '-')
@@ -623,7 +631,7 @@ class link_quality():
                                 symbol = 'circle',
                             ),mode='markers'))
 
-                fig_title = "Average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                fig_title = "Average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                 fig.update_layout(
                     # title = fig_title,
@@ -642,7 +650,7 @@ class link_quality():
                 fig.show()
 
                 # Change figure title for saving
-                fig_title = "Symmetry with " + "average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                fig_title = "Symmetry with " + "average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                 fig_title = fig_title.replace('<br>', ' ')
                 fig_title = fig_title.replace(':', '-')
@@ -688,7 +696,7 @@ class link_quality():
                         title_string = "Average"
                     elif _plot_type == "min":
                         title_string = "Minimum"
-                    fig_title = "Average degree at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                    fig_title = "Average degree at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                     fig.update_layout(
                         # title = fig_title,
@@ -708,44 +716,49 @@ class link_quality():
                     fig.show()
 
                     # Change figure title for saving
-                    fig_title = title_string + " RSSI and SNR with " + "average degree at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                    fig_title = title_string + " RSSI and SNR with " + "average degree at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                     fig_title = fig_title.replace('<br>', ' ')
                     fig_title = fig_title.replace(':', '-')
                     fig.write_image(directory_path + '\\link_quality\\' + fig_title + self._plot_suffix, engine="kaleido")
 
-        # plot with plotly: min/avg/max RSSI/SNR with average temperature:
+        # plot with plotly: min/avg/max RSSI with rx node temperature:
         plot_rssi_snr = []
-        if "MAX_RSSI_SNR_temperature_plot" in plot_type:
+        if "MAX_RSSI_temperature_plot" in plot_type:
             plot_rssi_snr.append("max")
-        if "AVG_RSSI_SNR_temperature_plot" in plot_type:
+        if "AVG_RSSI_temperature_plot" in plot_type:
             plot_rssi_snr.append("avg")
-        if "MIN_RSSI_SNR_temperature_plot" in plot_type:
+        if "MIN_RSSI_temperature_plot" in plot_type:
             plot_rssi_snr.append("min")
         if len(plot_rssi_snr) > 0:
             for _plot_type in plot_rssi_snr:
                 for freq in freq_list:
                     # plot the data
-                    fig = make_subplots(specs=[[{"secondary_y": True}]])
+                    fig = make_subplots(specs=[[{"secondary_y": False}]])
                     for sf in sf_list:
                         df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
 
-                        fig = fig.add_trace(go.Scatter(x = df_link_sf['average_temperature'], y = df_link_sf[_plot_type + '_rssi'], name='RSSI - SF' +str(sf),
+                        rssi_list = []
+                        rssi_list_std = []
+                        for tmp in list(set(df_link_sf['rx_temperature'].to_list())):
+                            df_tmp = df_link_sf.loc[(df_link_sf['rx_temperature'] == tmp) ]
+                            rssi_list.append(statistics.mean(df_tmp[_plot_type + '_rssi'].to_list()))
+                            rssi_list_std.append(self.check_list_stdev(df_tmp[_plot_type + '_rssi'].to_list()))
+
+                        fig = fig.add_trace(go.Scatter(x = list(set(df_link_sf['rx_temperature'].to_list())), y = rssi_list, name='RSSI - ' +str(sf),
                         marker=dict(
                                     size=10,
-                                    color=red_colors[sf - 7 + 3],
+                                    color=red_colors[8 - 7 + 3],
                                     symbol = 'circle',
-                                ),mode='markers'))
-
-                    for sf in sf_list:
-                        df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
-
-                        fig = fig.add_trace(go.Scatter(x = df_link_sf['average_temperature'], y = df_link_sf[_plot_type + '_snr'], name='SNR - SF' +str(sf),
-                        marker=dict(
-                                    size=10,
-                                    color=red_colors[sf - 7 + 3],
-                                    symbol = 'triangle-up-dot',
-                                ),mode='markers'), secondary_y=True)
+                                ),mode='lines+markers',
+                                    error_y=dict(
+                                    type='data',
+                                    symmetric=True,
+                                    array=rssi_list_std,
+                                    # thickness=10,
+                                    width=5,
+                                    color=red_colors[11 - 7 + 3],
+                                    )))
 
                     title_string = ''
                     if _plot_type == "max":
@@ -754,7 +767,7 @@ class link_quality():
                         title_string = "Average"
                     elif _plot_type == "min":
                         title_string = "Minimum"
-                    fig_title = "Average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                    fig_title = "Temperature (\u00B0C)"
 
                     fig.update_layout(
                         # title = fig_title,
@@ -768,12 +781,11 @@ class link_quality():
                     fig.update_xaxes(title_text=fig_title, title_font = {"size": 16}, title_standoff = 2)
 
                     # Set y-axes titles
-                    fig.update_yaxes(title_text= title_string + " RSSI", title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
-                    fig.update_yaxes(title_text= title_string + " SNR", title_font = {"size": 16}, title_standoff = 2, secondary_y=True)
+                    fig.update_yaxes(title_text= title_string + " RSSI (dBm)", title_font = {"size": 16}, title_standoff = 2, secondary_y=False)
                     fig.show()
 
                     # Change figure title for saving
-                    fig_title = title_string + " RSSI and SNR with " + "average temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                    fig_title = title_string + " RSSI with " + "node temperature at frequency " + str("{:.1f}".format(freq/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                     fig_title = fig_title.replace('<br>', ' ')
                     fig_title = fig_title.replace(':', '-')
@@ -823,7 +835,7 @@ class link_quality():
                                     )
                                 ))
 
-                fig_title = "SF 7 - 12 at frequency " + str("{:.1f}".format(470000/1000)) + "/" + str("{:.1f}".format(480000/1000)) + "/" + str("{:.1f}".format(490000/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                fig_title = "SF 7 - 12 at frequency " + str("{:.1f}".format(470000/1000)) + "/" + str("{:.1f}".format(480000/1000)) + "/" + str("{:.1f}".format(490000/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                 fig.update_layout(legend=dict(
                     yanchor="top",
@@ -849,7 +861,7 @@ class link_quality():
                 fig.show()
 
                 # Change figure title for saving
-                fig_title = "Maximum/average/minimum " + _plot_type + " with SF 7 - 12 at frequency " + str("{:.1f}".format(470000/1000)) + "/" + str("{:.1f}".format(480000/1000)) + "/" + str("{:.1f}".format(490000/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y") + " between " + plot_time_start + " and " + plot_time_end
+                fig_title = "Maximum/average/minimum " + _plot_type + " with SF 7 - 12 at frequency " + str("{:.1f}".format(470000/1000)) + "/" + str("{:.1f}".format(480000/1000)) + "/" + str("{:.1f}".format(490000/1000)) + " MHz" + "<br>" + "from "+ datetime.datetime.fromtimestamp(int(utc_dt_start)).strftime("%m-%d-%Y") + " to " + datetime.datetime.fromtimestamp(int(utc_dt_end)).strftime("%m-%d-%Y")
 
                 fig_title = fig_title.replace('<br>', ' ')
                 fig_title = fig_title.replace(':', '-')
