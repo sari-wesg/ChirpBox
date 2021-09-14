@@ -181,10 +181,10 @@ class link_quality():
                                 alpha_value = 1,
                                 cbarlabel="Packet Reception Rate (%)")
 
-        filename = "Heatmap" + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
+        filename = "Heatmap" + "_SF" + str('{0:02}'.format(link_infomation[2])) + "_CH" + str('{0:06}'.format(link_infomation[3])) + "_TP" + str('{0:02}'.format(link_infomation[4])) + "_PL" + str('{0:03}'.format(link_infomation[5])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
         logger.debug("save heatmap %s", filename)
 
-        legend_text = "SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "\n" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H:%M")
+        legend_text = "SF" + str('{0:02}'.format(link_infomation[2])) + "_CH" + str('{0:06}'.format(link_infomation[3])) + "_TP" + str('{0:02}'.format(link_infomation[4])) + "_PL" + str('{0:03}'.format(link_infomation[5])) + "\n" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H:%M")
 
         ax.set_title(legend_text, fontsize=30)
         fig.tight_layout()
@@ -295,7 +295,7 @@ class link_quality():
         nx.draw_networkx_edges(G_DIR_MAPPING,pos = pos,edgelist=path_edges,edge_color='#ED1F24', width=5,arrowstyle='-|>', arrowsize=50)
         # nx.draw_networkx_edge_labels(G_DIR_MAPPING,pos = pos,edge_labels=labels, label_pos=0.5, font_size=18, font_color='#ED1F24',bbox=dict(boxstyle="round", fc="#FFFFFF",ec="#FFFFFF",alpha=0.5, lw=0))
         # 6. save fig
-        legend_text = "SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "\n" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H:%M")
+        legend_text = "SF" + str('{0:02}'.format(link_infomation[2])) + "_CH" + str('{0:06}'.format(link_infomation[3])) + "_TP" + str('{0:02}'.format(link_infomation[4])) + "_PL" + str('{0:03}'.format(link_infomation[5])) + "\n" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H:%M")
         props = dict(boxstyle="round", facecolor="w", alpha=0.5)
         ax.text(
             0.02,
@@ -306,7 +306,7 @@ class link_quality():
             verticalalignment="top",
             bbox=props,
         )
-        filename = "Networktopology" + "_SF" + str('{0:02}'.format(link_infomation[1])) + "_CH" + str('{0:06}'.format(link_infomation[2])) + "_TP" + str('{0:02}'.format(link_infomation[3])) + "_PL" + str('{0:03}'.format(link_infomation[4])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
+        filename = "Networktopology" + "_SF" + str('{0:02}'.format(link_infomation[2])) + "_CH" + str('{0:06}'.format(link_infomation[3])) + "_TP" + str('{0:02}'.format(link_infomation[4])) + "_PL" + str('{0:03}'.format(link_infomation[5])) + "_UTC" + datetime.datetime.fromtimestamp(int(link_infomation[0])).strftime("%Y-%m-%d %H-%M") + self._plot_suffix
         logger.debug("save topology %s", filename)
 
         fig.canvas.start_event_loop(sys.float_info.min) #workaround for Exception in Tkinter callback
@@ -479,23 +479,6 @@ class link_quality():
         if (freq_list is None):
             freq_list = [470000, 480000, 490000]
 
-        # # find the utc with all sf data
-        # unique_utc = [i[0] for i in list_reader]
-        # unique_utc = [item for item, count in collections.Counter(unique_utc).items() if count > (12 - 7)]
-
-        # # remove rows not in that utc, and write into a new file
-        # try:
-        #     os.remove(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv')
-        # except:
-        #     pass
-        # with open(directory_path + '\\link_quality\\' + 'link_quality_all_sf.csv', 'a', newline='') as csvfile:
-        #     writer= csv.writer(csvfile, delimiter=',')
-        #     for row in list_reader:
-        #         if (row[0] in unique_utc):
-        #             writer.writerow(row)
-
-        # draw plots from the new csv
-        # df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality_all_sf.csv',
         df_link = pd.read_csv(directory_path + '\\link_quality\\link_quality.csv', header=0,
                             sep=',',
                             names= ["utc", "the_time", "sf", "channel", "tx_power", "payload_len", "min_snr", "max_snr", "avg_snr", "min_rssi", "max_rssi", "avg_rssi", "max_hop", "max_hop_id", "max_degree", "min_degree", "average_degree", "average_temperature", "symmetry", "node_degree", "node_temperature", "node_link", "max_rssi_matrix", "avg_rssi_matrix", "min_rssi_matrix", "max_snr_matrix", "avg_snr_matrix", "min_snr_matrix", "symmetry_matrix", "weather_temperature", "wind_speed", "wind_deg", "pressure", "humidity"])
@@ -867,7 +850,7 @@ class link_quality():
 
         # plot with plotly: degree/PRR and receiver node temperature:
         plot_title = []
-        if "tmp_PRR_plot" in plot_type:
+        if "PRR_RSSI_plot" in plot_type:
             plot_title.append("PRR")
         if len(plot_title) > 0:
             for _plot_type in plot_title:
@@ -1163,7 +1146,7 @@ class link_quality():
                 for sf in sf_list:
                     df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
                     for index, row in df_link_sf.iterrows():
-                        link_infomation = row[:5].values.tolist()
+                        link_infomation = row[:6].values.tolist()
                         # get node link matrix
                         index_no = df_link_sf.columns.get_loc('node_link')
                         # convert panda to list
@@ -1197,7 +1180,7 @@ class link_quality():
                 for sf in sf_list:
                     df_link_sf = df_link.loc[(df_link['sf'] == sf) & (df_link['channel'] == int(freq))]
                     for index, row in df_link_sf.iterrows():
-                        link_infomation = row[:5].values.tolist()
+                        link_infomation = row[:6].values.tolist()
                         # get node link matrix
                         index_no = df_link_sf.columns.get_loc('node_link')
                         # convert panda to list
