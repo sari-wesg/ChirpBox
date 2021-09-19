@@ -45,7 +45,7 @@ list of paramters:
     --node_id
     --directory_path
     --plot_type
-    --plot_date
+    --plot_time
     --data_exist
 
 list of available actions:
@@ -56,14 +56,22 @@ list of available actions:
 
 list of combinations:
     chirpbox_tool.py -sf -tp -f -pl link_quality:measurement
-    chirpbox_tool.py (-sf -f -data_exist -pdate) -id -dir -plot link_quality:processing
+    chirpbox_tool.py (-sf -f -ptime) -id -dir -plot -data_exist link_quality:processing
     chirpbox_tool.py voltage:measurement
     chirpbox_tool.py -id -dir voltage:processing
+
+list of plot type (-plot):
+    1. plotly:degree_plot,PRR_plot,symmetry_time_plot,symmetry_temperature_plot,MAX_RSSI_SNR_Degree_plot,AVG_RSSI_SNR_Degree_plot,MIN_RSSI_SNR_Degree_plot,MAX_RSSI_SNR_temperature_plot,AVG_RSSI_SNR_temperature_plot,MIN_RSSI_SNR_temperature_plot,RSSI_SF_Freq_plot,SNR_SF_Freq_plot,
+    2. matplotlib:average_degree,MIN_RSSI_SNR_Degree,heatmap,topology(using_pos0/1/2)
+
+format of plot time(-ptime):
+    1. date:2021-04-23,2021-04-24
+    2. time:00:00:00,23:59:59
 
 examples:
     chirpbox_tool.py -h
     chirpbox_tool.py -sf 7-12 -tp 0-14 -f 470000,480000,490000 -pl 8-10 link_quality:measurement
-    chirpbox_tool.py -sf 7-12 -f 470000,480000,490000 -plot RSSI_SF_Freq_plot,SNR_SF_Freq_plot,average_degree,MIN_RSSI_SNR_Degree,heatmap,topology,using_pos2,pdf -pdate 2021-04-23,2021-04-24 -id 0-20 -dir "tmp" link_quality:processing
+    chirpbox_tool.py -sf 7-12 -f 470000,480000,490000 -plot degree_plot,pdf -ptime 2021-04-23,2021-04-24 -id 0-20 -dir "tmp" link_quality:processing -data False
     chirpbox_tool.py -id 0-20 voltage:measurement
     chirpbox_tool.py -id 0,10,20 -dir "tmp" voltage:processing
 """
@@ -161,7 +169,7 @@ class ChirpBoxTool():
         parser.add_argument('-id', '--node_id', dest='node_id', help='Input the node_id')
         parser.add_argument('-dir', '--directory_path', dest='directory_path', help='Input the directory path for processing')
         parser.add_argument('-plot', '--plot_type', dest='plot_type', help='Input the type of plots after processing')
-        parser.add_argument('-pdate', '--plot_date', dest='plot_date', help='Input the start and end date of processed plot: 2021-04-22,2021-04-23')
+        parser.add_argument('-ptime', '--plot_time', dest='plot_time', help='Input the start and end date/time of processed plot: 2021-04-22,2021-04-23,00:00:00,23:59:59')
         parser.add_argument('-data', '--data_exist', dest='data_exist', help='Input the state of processed data: True/False')
         group_actions = parser.add_argument_group(title='actions')
         group_actions.add_argument('action', nargs='*', help='actions will be processed sequentially')
@@ -176,8 +184,8 @@ class ChirpBoxTool():
             self._plot = [x.strip() for x in args.plot_type.split(',')]
         else:
             self._plot = None
-        if (args.plot_date is not None):
-            self._pdate = [x.strip() for x in args.plot_date.split(',')]
+        if (args.plot_time is not None):
+            self._pdate = [x.strip() for x in args.plot_time.split(',')]
         else:
             self._pdate = None
         self._data = args.data_exist
