@@ -402,7 +402,8 @@ class link_quality():
         avg_snr_matrix = avg_snr_matrix.tolist()
         min_snr_matrix = min_snr_matrix.tolist()
         symmetry_matrix = symmetry_matrix.tolist()
-        if any(x == 0 for x in node_temp) is False:
+        # if any(x == 0 for x in node_temp) is False:
+        if True:
             if ((len(snr_list) > 0) and (len(rssi_list) > 0)):
                 link_infomation.extend((min(snr_list), max(snr_list), snr_avg, min(rssi_list), max(rssi_list), rssi_avg, max_hop, max_hop_id, max_degree, min_degree, mean_degree, statistics.mean(node_temp), symmetry))
             else:
