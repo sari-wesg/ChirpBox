@@ -14,7 +14,7 @@ MYSQL_DATABASE = "LoRaWANChirpBox"
 MYSQL_TABLE = ""
 
 
-MQTT_HOST = "192.168.137.155"
+MQTT_HOST = "192.168.1.103"
 MQTT_PORT = 1883
 
 """ --------------------------------------------------------------------- """
