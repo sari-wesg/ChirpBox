@@ -65,14 +65,19 @@ list of plot type (-plot):
     2. matplotlib:average_degree,MIN_RSSI_SNR_Degree,heatmap,topology(using_pos0/1/2)
 
 format of plot time(-ptime):
-    1. date:2021-04-23,2021-04-24
+    1. date:2021-04-23 00:00:00,2021-04-24 00:00:00
     2. time:00:00:00,23:59:59
 
 examples:
+    1. how to use chipbox tool:
     chirpbox_tool.py -h
-    chirpbox_tool.py -sf 7-12 -tp 0-14 -f 470000,480000,490000 -pl 8-10 link_quality:measurement
+    2. how to start the link quality measurement:
+    chirpbox_tool.py -sf 7-12 -tp 0-14 -f 470000,480000,490000 -pl 8 link_quality:measurement
+    3. how to start the link quality processing (dataset analysis):
     chirpbox_tool.py -sf 7-12 -f 470000,480000,490000 -plot degree_plot,pdf -ptime 2021-04-23,2021-04-24 -id 0-20 -dir "tmp" link_quality:processing -data False
+    4. how to start nodes' voltage measurement:
     chirpbox_tool.py -id 0-20 voltage:measurement
+    5. how to start nodes' voltage processing:
     chirpbox_tool.py -id 0,10,20 -dir "tmp" voltage:processing
 """
 
