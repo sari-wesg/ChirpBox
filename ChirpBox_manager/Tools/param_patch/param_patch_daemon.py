@@ -59,7 +59,7 @@ def chirpbox_param_patch(param_filename, bin_filename):
 
 """
 usage example:
-chirpbox_param_patch('param_patch_daemon.json', 'Daemon.bin')
+chirpbox_param_patch('param_patch_daemon_SARI.json', 'Daemon.bin')
 """
 
-chirpbox_param_patch(os.path.join(os.path.dirname(__file__), 'param_patch_daemon.json'), os.path.join(os.path.dirname(__file__), 'Daemon.bin'))
+chirpbox_param_patch(os.path.join(os.path.dirname(__file__), 'param_patch_daemon_SARI.json'), os.path.join(os.path.dirname(__file__), 'Daemon.bin'))

@@ -1,0 +1,1 @@
+The file `SimpleFIFO.h` should be included in the arduino package folder, e.g., `Arduino15\packages\navspark\hardware\navspark\1.0.4\cores\arduino`
