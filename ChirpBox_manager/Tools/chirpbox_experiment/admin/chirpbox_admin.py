@@ -123,7 +123,7 @@ class ChirpBoxAdmin():
                     time.sleep(int(cbmng_exp_config.myExpConfApproach().experiment_duration) + 60) #waiting for the end of experiment
                 time.sleep(180) #waiting for all nodes have GPS signal
             else:
-                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])
+                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])  #TODO: upgrade: "1" means Flash protection, "0" means no flash protection, only when firmware upgrade can be set as "0"
                 time.sleep(180) #waiting for all nodes have GPS signal
             # collect
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, [cbmng_exp_method.myExpMethodApproach().start_address, cbmng_exp_method.myExpMethodApproach().end_address])
