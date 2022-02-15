@@ -197,6 +197,7 @@ def is_running():
 		end_time_t = datetime.datetime.strptime(running_dict['end_time'], '%Y-%m-%d %H:%M:%S')
 		time_now = datetime.datetime.now()
 		if (time_now >= start_time_t) and (time_now <= end_time_t):
+			print("RUNNING: The latest task is running until", end_time_t)
 			return True
 		else:
 			return False
