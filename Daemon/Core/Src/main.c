@@ -98,8 +98,7 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #endif
 
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={0};
-// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x00350045}, 0x2B10, 500000};
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00350045, 0x001E0037}, 0x2B10, 500000};
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x004A0038, 0x00300047}, 0xe3e9, 433000};
 
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0};
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={470000, 7, 14, 1};
@@ -161,7 +160,9 @@ static uint8_t hardware_init()
 	/* Only when the board is stable (eg, after a long time of getting GPS signal), the flash option bytes can be changed. Otherwise, readout protection will be triggered, when the voltage of the external power supply falls below the power down threshold.
 	*/
 	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+	#if !CP_DEBUG
 	HAL_Delay(5000);
+	#endif
 	/* Disable SysTick Interrupt */
 	HAL_SuspendTick();
 	/* un-write protection */
@@ -170,8 +171,10 @@ static uint8_t hardware_init()
 
 	menu_bank();
 
+	#if !CP_DEBUG
 	/* check voltage */
 	ADC_CheckVoltage();
+	#endif
 
 	gpi_int_enable();
 

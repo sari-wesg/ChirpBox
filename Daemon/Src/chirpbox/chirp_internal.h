@@ -28,9 +28,18 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 
 //**************************************************************************************************
 /* chirpbox config */
+#ifndef CP_DEBUG
+	#define CP_DEBUG								1
+#endif
+
 #ifndef GPS_DATA
-	#define GPS_DATA								1
-	#define DS3231_ON								1
+	#if CP_DEBUG == 0
+		#define GPS_DATA								1
+		#define DS3231_ON								1
+	#else
+		#define GPS_DATA								0
+		#define DS3231_ON								0
+	#endif
 #endif
 
 #ifndef BANK_1_RUN
