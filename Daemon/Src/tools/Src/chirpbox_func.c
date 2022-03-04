@@ -338,7 +338,8 @@ static HAL_StatusTypeDef ReceivePacket(uint8_t *p_data, uint32_t *p_length, uint
 static uint32_t CheckOtherBank( void )
 {
   uint32_t result;
-  result = FLASH_If_Check_old((BankActive == 1) ? FLASH_START_BANK1 : FLASH_START_BANK2);
+  /* Check if the other bank has normal firmware */
+  result = FLASH_If_Check_FUT((BankActive == 1) ? FLASH_START_BANK1 : FLASH_START_BANK2);
   if (result == FLASHIF_OK)
     Serial_PutString((uint8_t *)"Success!\r\n\n");
   else
@@ -404,14 +405,14 @@ void menu_bank(void)
   else
   {
     Serial_PutString((uint8_t *)"\tSystem running from STM32L476 *Bank 2*  \r\n\n");
-    #if BANK_1_RUN
-    uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_1);
-    PRINTF("firmware_size:%lu\n", firmware_size);
-    if ((firmware_size < 0x100000) && (firmware_size))
-      Flash_Bank_Copy_Bank(FLASH_START_BANK1, FLASH_START_BANK2, firmware_size, 1);
-    DS3231_GetTime();
-    DS3231_ShowTime();
-    while(1);
+    #if DAEMON_BANK
+      uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_1);
+      PRINTF("firmware_size:%lu\n", firmware_size);
+      if ((firmware_size < 0x100000) && (firmware_size))
+        Flash_Bank_Copy_Bank(FLASH_START_BANK1, FLASH_START_BANK2, firmware_size, 1);
+      DS3231_GetTime();
+      DS3231_ShowTime();
+      while(1);
     #endif
   }
 
@@ -1292,19 +1293,15 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
   // slot number is related to the hop count
   uint8_t hop_count = network_num_nodes > 10? 6 : 4;
   #if GPS_DATA
-  GPS_Wakeup(60);
-  // gps_time = GPS_Get_Time();
-  // uint8_t gps_time_str[2];
-  // memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
-  // uint32_t channel_seed;
-  // uint8_t sync_channel[LBT_CHANNEL_NUM];
+    // gps_time = GPS_Get_Time();
+    // uint8_t gps_time_str[2];
+    // memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
+    // uint32_t channel_seed;
+    // uint8_t sync_channel[LBT_CHANNEL_NUM];
 
-  // channel_seed = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
-  // srand(channel_seed);
-  // randomPermutation1(sync_channel, LBT_CHANNEL_NUM);
-
-  // gps_time = GPS_Get_Time();
-
+    // channel_seed = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
+    // srand(channel_seed);
+    // randomPermutation1(sync_channel, LBT_CHANNEL_NUM);
   #endif
 
   PRINTF("---------Chirpbox---------\n");
@@ -1319,23 +1316,23 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     if (chirp_outl.arrange_task < CB_GLOSSY_SYNCHRONIZED)
     {
       #if GPS_DATA
-      DS3231_GetTime();
-      /* Set alarm */
-      ds3231_time = DS3231_ShowTime();
-      sync_channel_id = (ds3231_time.chirp_min+1) % LBT_CHANNEL_NUM;
-      if (node_id)
-      {
-        diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
-        sleep_sec = 60 - (time_t)(0 - diff) % 60;
-        #if ENERGEST_CONF_ON
-          ENERGEST_OFF(ENERGEST_TYPE_CPU);
-        #endif
-        RTC_Waiting_Count(sleep_sec);
-      }
-      else
-      {
-          GPS_Wakeup(60);
-      }
+        DS3231_GetTime();
+        /* Set alarm */
+        ds3231_time = DS3231_ShowTime();
+        sync_channel_id = (ds3231_time.chirp_min+1) % LBT_CHANNEL_NUM;
+        if (node_id)
+        {
+          diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
+          sleep_sec = 60 - (time_t)(0 - diff) % 60;
+          #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+          #endif
+          RTC_Waiting_Count(sleep_sec);
+        }
+        else
+        {
+            GPS_Wakeup(60);
+        }
     #endif
     #if ENERGEST_CONF_ON
       ENERGEST_ON(ENERGEST_TYPE_CPU);
@@ -1358,11 +1355,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 
 		chirp_radio_config(12, 1, 14, chirp_outl.default_freq);
 		chirp_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
-    chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, 8);
+    chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
     chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
 
     // initialize glossy
-    memset(loradisc_config.flooding_packet_header, 0, sizeof(loradisc_config.flooding_packet_header));
+    memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
     if (!node_id)
     {
       if (!menu_wait_task(&chirp_outl))
@@ -1392,17 +1389,17 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         if (!node_id)
         {
           #if GPS_DATA
-          GPS_Wakeup(60);
+            GPS_Wakeup(60);
           #else
             #if DS3231_ON
-            DS3231_GetTime();
-            ds3231_time = DS3231_ShowTime();
-            diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
-            sleep_sec = 60 - (time_t)(0 - diff) % 60;
+              DS3231_GetTime();
+              ds3231_time = DS3231_ShowTime();
+              diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
+              sleep_sec = 60 - (time_t)(0 - diff) % 60;
             #else
-            sleep_sec = 5;
+              sleep_sec = 5;
             #endif
-          RTC_Waiting_Count(sleep_sec);
+            RTC_Waiting_Count(sleep_sec);
           #endif
         }
         else
@@ -1450,13 +1447,12 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           else
           {
             #if DS3231_ON
-            RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
-            DS3231_GetTime();
-            ds3231_time = DS3231_ShowTime();
-            diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
-            sleep_sec = 60 - (time_t)(0 - diff) % 60;
+              DS3231_GetTime();
+              ds3231_time = DS3231_ShowTime();
+              diff = GPS_Diff(&ds3231_time, 1970, 1, 1, 0, 0, 0);
+              sleep_sec = 60 - (time_t)(0 - diff) % 60;
             #else
-            sleep_sec = 5;
+              sleep_sec = 5;
             #endif
             RTC_Waiting_Count(sleep_sec);
           }
@@ -1508,22 +1504,25 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = network_num_nodes;
-		chirp_outl.payload_len = DATA_HEADER_LENGTH + 5 + 4;
     if (chirp_outl.arrange_task == CB_START)
-      chirp_outl.payload_len = CB_START_LENGTH;
+      chirp_outl.payload_len = CB_START_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_START_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
     else if (chirp_outl.arrange_task == CB_DISSEMINATE)
-      chirp_outl.payload_len = CB_DISSEMINATE_LENGTH;
+      chirp_outl.payload_len = CB_DISSEMINATE_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_DISSEMINATE_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
     else if (chirp_outl.arrange_task == CB_COLLECT)
-      chirp_outl.payload_len = CB_COLLECT_LENGTH;
+      chirp_outl.payload_len = CB_COLLECT_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_COLLECT_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
 		chirp_outl.round_max = ROUND_SETUP;
 		chirp_outl.file_chunk_len = 0;
 
+    memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
+    memset(loradisc_config.flooding_packet_payload, 0, sizeof(loradisc_config.flooding_packet_payload));
+
 		chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
-		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
-    chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
+		chirp_packet_config(chirp_outl.num_nodes, 0, 0, FLOODING);
+
+    chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN + chirp_outl.payload_len);
+    loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
     chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
 
-		chirp_payload_distribution(chirp_outl.task);
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1554,30 +1553,28 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       memset(&loradisc_config.lbt_channel_time_stats_us, 0, sizeof(loradisc_config.lbt_channel_time_stats_us));
     #endif
 
-		Gpi_Fast_Tick_Native deadline;
-    if (chirp_outl.task == CB_DISSEMINATE)
-      deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(20000);
-    else
-      deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
-
     uint32_t task_bitmap_temp = chirp_outl.task_bitmap[0];
     uint8_t task_node_id = 0;
     uint8_t task_lsb;
     while(task_bitmap_temp)
     {
       task_lsb = gpi_get_lsb_32(task_bitmap_temp);
-      // PRINTF("task_bitmap_temp:%02x, %lu\n", task_bitmap_temp, task_lsb);
       if (task_lsb == node_id)
         break;
       task_bitmap_temp &= ~(1 << task_lsb);
       task_node_id++;
     }
     uint32_t task_node_num = gpi_popcnt_32(chirp_outl.task_bitmap[0]);
-    // PRINTF("task_node_id:%lu, %lu\n", task_node_id, task_node_num);
     gpi_watchdog_periodic();
 
     task_:
     INFO();
+
+		Gpi_Fast_Tick_Native deadline;
+    if (chirp_outl.task == CB_DISSEMINATE)
+      deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(20000);
+    else
+      deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
 
 		switch (chirp_outl.task)
 		{
@@ -1624,40 +1621,37 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
           FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
-
-				#if GPS_DATA
-          // gps_time = GPS_Get_Time();
-          // time_t diff = GPS_Diff(&gps_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-          DS3231_GetTime();
-          ds3231_time = DS3231_ShowTime();
-          diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-          assert_reset((diff > 5));
-          if (((chirp_outl.version_hash == (daemon_config.DAEMON_version))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))) && (CheckOtherBank() == FLASHIF_OK))
-          {
-            /* erase the user flash page */
-            FLASH_If_Erase_Pages(0, 255);
-
+        #if DAEMON_BANK
+          #if GPS_DATA
             DS3231_GetTime();
-            /* Set alarm */
             ds3231_time = DS3231_ShowTime();
-            log_to_flash("date:%d, %d, %d, %d\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
-            DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
-            /* Waiting for bank switch */
-            // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
             diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-            RTC_Waiting_Count(diff);
-            log_to_flash("---------CHIRP_BANK---------\n");
-            #if BANK_1_RUN
-            /* flash protect */
-            if (chirp_outl.flash_protection)
-              Bank1_WRP(0, 255);
-            else
-              Bank1_nWRP();
-            #endif
-            /* switch to bank2 */
-            STMFLASH_BankSwitch();
-          }
-				#endif
+            assert_reset((diff > 5));
+            if (((chirp_outl.version_hash == (daemon_config.DAEMON_version))) && (chirp_outl.firmware_bitmap[node_id / 32] & (1 << (node_id % 32))) && (CheckOtherBank() == FLASHIF_OK))
+            {
+              /* erase the user flash page */
+              FLASH_If_Erase_Pages(0, 255);
+
+              DS3231_GetTime();
+              /* Set alarm */
+              ds3231_time = DS3231_ShowTime();
+              log_to_flash("date:%d, %d, %d, %d\n", chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
+              DS3231_SetAlarm1_Time(chirp_outl.end_date, chirp_outl.end_hour, chirp_outl.end_min, chirp_outl.end_sec);
+              /* Waiting for bank switch */
+              // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+              diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
+              RTC_Waiting_Count(diff);
+              log_to_flash("---------CHIRP_BANK---------\n");
+              /* flash protect */
+              if (chirp_outl.flash_protection)
+                Bank1_WRP(0, 255);
+              else
+                Bank1_nWRP();
+              /* switch to bank2 */
+              STMFLASH_BankSwitch();
+            }
+          #endif
+        #endif
 				break;
 			}
 			case CB_DISSEMINATE:

@@ -111,7 +111,7 @@ enum {
 
 uint32_t FLASH_If_Erase(uint32_t StartSector);
 uint32_t FLASH_If_Erase_Pages(uint32_t bank_active, uint32_t page);
-uint32_t FLASH_If_Check_old(uint32_t start);
+uint32_t FLASH_If_Check_FUT(uint32_t start);
 uint32_t FLASH_If_Write(uint32_t destination, uint32_t *p_source, uint32_t length);
 
 #endif  /* __FLASH_IF_H__ */

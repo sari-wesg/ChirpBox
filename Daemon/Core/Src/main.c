@@ -97,9 +97,19 @@ GPI_TRACE_CONFIG(main, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 #define PRINTF(...)
 #endif
 
+/*
+Daemon firmware configuration:
+You can set the configuration daemon_config (including node device ID and version No.) for local experiments or just set it to blank.
+The parameter tool (param_patch_daemon.py) in "Chirpbox/ChirpBox_manager/Tools/param_patch/" in combination with a custom json file (e.g., param_patch_daemon_SARI.json) can also modify the configuration after the compilation.
+Here is the example of daemon_config with blank and local settings:
+*/
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={0};
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x004A0038, 0x00300047}, 0xe3e9, 433000};
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001E0037, 0x0042002C, 0x004E004A}, 0xe3e9, 433000};
 
+/*
+Firmware under test configuration:
+Similar to the daemon, the FUT configuration can be set with blank or local settings, or reconfigured directly on the BIN file using param_patch_FUT.py and a custom json file.
+*/
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0};
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={470000, 7, 14, 1};
 
@@ -156,24 +166,22 @@ static uint8_t hardware_init()
 	HAL_Init();
 	gpi_platform_init();
 
-	#if BANK_1_RUN
-	/* Only when the board is stable (eg, after a long time of getting GPS signal), the flash option bytes can be changed. Otherwise, readout protection will be triggered, when the voltage of the external power supply falls below the power down threshold.
-	*/
-	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
-	#if !CP_DEBUG
-	HAL_Delay(5000);
-	#endif
-	/* Disable SysTick Interrupt */
-	HAL_SuspendTick();
-	/* un-write protection */
-	Bank_WRT_Check();
+	#if DAEMON_BANK
+		/* Only when the board is stable (eg, after a long time of getting GPS signal), the flash option bytes can be changed. Otherwise, readout protection will be triggered, when the voltage of the external power supply falls below the power down threshold.
+		*/
+		SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
+		HAL_Delay(5000);
+		/* Disable SysTick Interrupt */
+		HAL_SuspendTick();
+		/* un-write protection */
+		Bank_WRT_Check();
 	#endif
 
 	menu_bank();
 
-	#if !CP_DEBUG
-	/* check voltage */
-	ADC_CheckVoltage();
+	#if DAEMON_BANK
+		/* check voltage */
+		ADC_CheckVoltage();
 	#endif
 
 	gpi_int_enable();
@@ -213,10 +221,12 @@ static uint8_t hardware_init()
 	mixer_rand_seed(gpi_mulu_16x16(TOS_NODE_ID, gpi_tick_fast_native()));
 
 #if GPS_DATA
-	DS3231_ClearAlarm1_Time();
+	#if DAEMON_BANK
+		DS3231_ClearAlarm1_Time();
+	#endif
 	GPS_Init();
 	GPS_On();
-	GPS_Waiting_PPS(10);
+	GPS_Waiting_PPS(5);
 	Chirp_Time gps_time;
     memset(&gps_time, 0, sizeof(gps_time));
 	while(!gps_time.chirp_year)
@@ -224,19 +234,19 @@ static uint8_t hardware_init()
 		gps_time = GPS_Get_Time();
 	}
 	RTC_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
-	#if BANK_1_RUN
-	time_t rtc_diff = 0x05;
-	uint8_t count = 0;
-	/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
-	while((rtc_diff < 0) || (rtc_diff >= 0x05))
-	{
-		count++;
-		assert_reset((count < 10));
-		DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
-		DS3231_GetTime();
-		Chirp_Time RTC_Time = DS3231_ShowTime();
-		rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
-	}
+	#if DAEMON_BANK
+		time_t rtc_diff = 0x05;
+		uint8_t count = 0;
+		/* if is in bank1, daemon erase jump1 to ensure keep in bank1 */
+		while((rtc_diff < 0) || (rtc_diff >= 0x05))
+		{
+			count++;
+			assert_reset((count < 10));
+			DS3231_ModifyTime(gps_time.chirp_year - 2000, gps_time.chirp_month, gps_time.chirp_date, gps_time.chirp_day, gps_time.chirp_hour, gps_time.chirp_min, gps_time.chirp_sec);
+			DS3231_GetTime();
+			Chirp_Time RTC_Time = DS3231_ShowTime();
+			rtc_diff = GPS_Diff(&gps_time, RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec);
+		}
 	#endif
     uint32_t reset_time_flash[sizeof(Chirp_Time) / sizeof(uint32_t)];
 	memcpy(reset_time_flash, (uint32_t *)&gps_time, sizeof(reset_time_flash));

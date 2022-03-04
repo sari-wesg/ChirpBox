@@ -28,22 +28,14 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 
 //**************************************************************************************************
 /* chirpbox config */
-#ifndef CP_DEBUG
-	#define CP_DEBUG								1
+/* Only allowed to run in the daemon bank (bank1), e.g. alarm clearing and flash write protection removal. */
+#ifndef DAEMON_BANK
+	#define DAEMON_BANK								1
 #endif
 
 #ifndef GPS_DATA
-	#if CP_DEBUG == 0
-		#define GPS_DATA								1
-		#define DS3231_ON								1
-	#else
-		#define GPS_DATA								0
-		#define DS3231_ON								0
-	#endif
-#endif
-
-#ifndef BANK_1_RUN
-	#define BANK_1_RUN								1
+	#define GPS_DATA								1
+	#define DS3231_ON								1
 #endif
 
 /* DATA config */
@@ -233,7 +225,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	/* CB_DISSEMINATE / CB_COLLECT : mixer config */
 	uint8_t				num_nodes;
 	uint8_t				generation_size;
-	uint8_t				payload_len;
+	uint8_t				payload_len; /* Payload length other than the header of the packet, used for flooding/dissemination/collection, range 0~255-8(header)-2(hash code) */
 	uint16_t 			file_chunk_len;
 
 	/* CB_DISSEMINATE */

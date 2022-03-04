@@ -63,6 +63,8 @@
 #define LORADISC_HEADER_LEN				8
 
 #define FLOODING_SURPLUS_LENGTH			3
+#define FLOODING_LENGTH					(255-LORADISC_HEADER_LEN)
+
 
 #define ROUND_HEADER_LENGTH 	        4   /* Data section to represent the round number and node id */
 #define DATA_HEADER_LENGTH     	        8   /* Reservation section to transmit commands, real data is written behind that section */

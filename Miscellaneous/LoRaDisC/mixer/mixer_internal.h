@@ -311,6 +311,7 @@ typedef struct Packet_Vector_Tag
 	uint8_t len;
 } Packet_Vector;
 
+/* local config */
 typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 {
 	/* mixer packet configuration and node number */
@@ -390,6 +391,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 
 	uint16_t	packet_hash;
 	uint8_t 	flooding_packet_header[FLOODING_SURPLUS_LENGTH];
+	uint8_t 	flooding_packet_payload[FLOODING_LENGTH];
 
 	/* Disc_Primitive */
 	Disc_Primitive primitive;

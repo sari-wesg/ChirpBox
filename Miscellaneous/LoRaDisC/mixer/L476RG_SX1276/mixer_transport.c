@@ -616,17 +616,26 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			// allocate rx queue destination slot
 			Packet	*packet;
 
-			gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, loradisc_config.phy_payload_size);
+			if (loradisc_config.primitive != FLOODING)
+			{
+				gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, loradisc_config.phy_payload_size);
+			}
+			else
+			{
+				gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, LORADISC_HEADER_LEN);
+			}
 			packet = mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
 				#if INFO_VECTOR_QUEUE
 				gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.coding_vector.pos), loradisc_config.coding_vector.len);
 				gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.info_vector.pos), loradisc_config.info_vector.len);
 
+			/* receive */
 			if (loradisc_config.primitive == FLOODING)
 			{
 				gpi_memcpy_dma_inline((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)&(packet->packet_header[0]), FLOODING_SURPLUS_LENGTH - sizeof(packet->flags));
 				gpi_memcpy_dma_inline((uint8_t *)&(loradisc_config.flooding_packet_header[FLOODING_SURPLUS_LENGTH - sizeof(packet->flags)]), (uint8_t *)&(packet->flags.all), sizeof(packet->flags));
-				gpi_memcpy_dma_inline((uint8_t *)(mx.tx_packet->packet_chunk), (uint8_t *)&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
+				/* payload after header */
+				gpi_memcpy_dma_inline((uint8_t *)&(loradisc_config.flooding_packet_payload[0]), (uint8_t *)&(RxPacketBuffer[LORADISC_HEADER_LEN]), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
 			}
 			#else
 			gpi_memcpy_dma_aligned(&mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)].phy_payload_begin, RxPacketBuffer, PHY_PAYLOAD_SIZE);
@@ -1691,6 +1700,13 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 			write_tx_fifo(&(mx.tx_packet->phy_payload_begin),
 			NULL, offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.coding_vector.pos);
+		}
+
+		/* write the payload part of the flooding */
+		if (loradisc_config.primitive == FLOODING)
+		{
+			write_tx_fifo(&(loradisc_config.flooding_packet_payload[0]),
+			NULL, loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
 		}
 
 		if (loradisc_config.primitive != FLOODING)

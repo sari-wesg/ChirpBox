@@ -176,7 +176,7 @@ void RTC_Waiting_Count(uint32_t Count_wait)
 // Sleep mode:
 void RTC_Waiting_Count_Sleep(uint32_t Count_wait)
 {
-    PRINTF("RTC_Waiting_Count:%lu\n", Count_wait);
+    PRINTF("RTC_Waiting_Count_Sleep:%lu\n", Count_wait);
 
     if (Count_wait > 1)
     {
