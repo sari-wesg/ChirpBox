@@ -142,9 +142,9 @@ void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, u
 }
 
 // Stop mode:
-void RTC_Waiting_Count(uint32_t Count_wait)
+void RTC_Waiting_Count_Stop(uint32_t Count_wait)
 {
-    PRINTF("RTC_Waiting_Count:%lu\n", Count_wait);
+    PRINTF("Stop_Count:%lu\n", Count_wait);
 
     if (Count_wait > 1)
     {
@@ -176,7 +176,7 @@ void RTC_Waiting_Count(uint32_t Count_wait)
 // Sleep mode:
 void RTC_Waiting_Count_Sleep(uint32_t Count_wait)
 {
-    PRINTF("RTC_Waiting_Count_Sleep:%lu\n", Count_wait);
+    PRINTF("Sleep_Count:%lu\n", Count_wait);
 
     if (Count_wait > 1)
     {

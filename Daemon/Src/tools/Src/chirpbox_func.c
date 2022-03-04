@@ -1327,7 +1327,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           #if ENERGEST_CONF_ON
             ENERGEST_OFF(ENERGEST_TYPE_CPU);
           #endif
-          RTC_Waiting_Count(sleep_sec);
+          RTC_Waiting_Count_Stop(sleep_sec);
         }
         else
         {
@@ -1399,7 +1399,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
             #else
               sleep_sec = 5;
             #endif
-            RTC_Waiting_Count(sleep_sec);
+            RTC_Waiting_Count_Stop(sleep_sec);
           #endif
         }
         else
@@ -1454,7 +1454,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
             #else
               sleep_sec = 5;
             #endif
-            RTC_Waiting_Count(sleep_sec);
+            RTC_Waiting_Count_Stop(sleep_sec);
           }
         }
         #if ENERGEST_CONF_ON
@@ -1482,11 +1482,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         Stats_value_debug(ENERGEST_TYPE_TRANSMIT, energest_type_time(ENERGEST_TYPE_TRANSMIT));
         Stats_value_debug(ENERGEST_TYPE_LISTEN, energest_type_time(ENERGEST_TYPE_LISTEN));
       #endif
-      // // start at minute
-      // if (node_id)
-      //   RTC_Waiting_Count(60 - loradisc_config.mx_period_time_s - 2);
-      // else
-      //   GPS_Wakeup(60);
 
 		/* default mode is CB_GLOSSY_ARRANGE (task arrangement) */
     if ((chirp_outl.arrange_task == CB_CONNECTIVITY) || (chirp_outl.arrange_task == CB_VERSION))
@@ -1640,7 +1635,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
               /* Waiting for bank switch */
               // GPS_Waiting(chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
               diff = GPS_Diff(&ds3231_time, chirp_outl.start_year, chirp_outl.start_month, chirp_outl.start_date, chirp_outl.start_hour, chirp_outl.start_min, chirp_outl.start_sec);
-              RTC_Waiting_Count(diff);
+              RTC_Waiting_Count_Stop(diff);
               log_to_flash("---------CHIRP_BANK---------\n");
               /* flash protect */
               if (chirp_outl.flash_protection)

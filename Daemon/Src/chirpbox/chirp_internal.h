@@ -303,7 +303,7 @@ void lbt_check_time();
 void RTC_ModifyTime(uint8_t year, uint8_t month, uint8_t date, uint8_t day, uint8_t hour, uint8_t mintue, uint8_t second);
 Chirp_Time RTC_GetTime(void);
 void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
-void RTC_Waiting_Count(uint32_t Count_wait);
+void RTC_Waiting_Count_Stop(uint32_t Count_wait);
 void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 
 //**************************************************************************************************

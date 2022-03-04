@@ -255,7 +255,7 @@ void ADC_CheckVoltage(void)
 		voltage = ADC_GetVoltage();
 		if (!((voltage <= VOLTAGE_LOWER_BOUND) && (voltage > VOLTAGE_MINIMAL)))
 			break;
-		RTC_Waiting_Count(VOLTAGE_INTERVAL);
+		RTC_Waiting_Count_Stop(VOLTAGE_INTERVAL);
 	}
 }
 static uint8_t read_gate()
