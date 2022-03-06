@@ -238,7 +238,6 @@ void chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrate, 
 void chirp_payload_distribution(ChirpBox_Task mx_task)
 {
     uint8_t i;
-    loradisc_config.disem_copy = 0;
     if ((mx_task == CB_DISSEMINATE))
     {
         payload_distribution = (uint8_t *)malloc(loradisc_config.mx_generation_size);
@@ -254,9 +253,6 @@ void chirp_payload_distribution(ChirpBox_Task mx_task)
 
         for (i = 0; i < loradisc_config.mx_num_nodes; i++)
             payload_distribution[i] = i;
-
-        if (mx_task == CB_CONNECTIVITY)
-            loradisc_config.disem_copy = 1;
     }
 }
 
@@ -423,17 +419,21 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         }
         case CB_CONNECTIVITY:
         {
-            /* only initiator writes to the payload */
-            data[k++] = chirp_outl->round_max >> 8;
-            data[k++] = chirp_outl->round_max;
-            memcpy(file_data, data, DATA_HEADER_LENGTH);
-            file_data[DATA_HEADER_LENGTH] = chirp_outl->sf_bitmap;
-            file_data[DATA_HEADER_LENGTH + 1] = chirp_outl->freq >> 24;
-            file_data[DATA_HEADER_LENGTH + 2] = chirp_outl->freq >> 16;
-            file_data[DATA_HEADER_LENGTH + 3] = chirp_outl->freq >> 8;
-            file_data[DATA_HEADER_LENGTH + 4] = chirp_outl->freq;
-            file_data[DATA_HEADER_LENGTH + 5] = chirp_outl->tx_power;
-            file_data[DATA_HEADER_LENGTH + 6] = chirp_outl->topo_payload_len;
+            k = 0;
+            flooding_data[k++] = chirp_outl->sf_bitmap;
+            flooding_data[k++] = chirp_outl->tx_power;
+            flooding_data[k++] = chirp_outl->topo_payload_len;
+            k = 0;
+
+            file_data[k++] = chirp_outl->freq >> 24;
+            file_data[k++] = chirp_outl->freq >> 16;
+            file_data[k++] = chirp_outl->freq >> 8;
+            file_data[k++] = chirp_outl->freq;
+
+            /* Divide the payload into two parts: one part is reused with the packet header and one part is after the packet header. */
+            /* loradisc write: */
+            memcpy((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)flooding_data, FLOODING_SURPLUS_LENGTH);
+            memcpy((uint8_t *)(loradisc_config.flooding_packet_payload), (uint8_t *)file_data, loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
             break;
         }
         case CB_VERSION:
@@ -547,11 +547,6 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                     }
                     break;
                 }
-                case CB_CONNECTIVITY:
-                {
-                    mixer_write(i, file_data, chirp_outl->payload_len);
-                    break;
-                }
                 case CB_VERSION:
                 {
                     mixer_write(i, file_data, chirp_outl->payload_len);
@@ -639,7 +634,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
         free(mx.request);
     }
 
-    if (((loradisc_config.full_rank) && (chirp_outl->task == CB_DISSEMINATE)) || ((chirp_outl->task != CB_DISSEMINATE) && (chirp_outl->task != CB_GLOSSY) && (chirp_outl->task != CB_GLOSSY_ARRANGE)) && (chirp_outl->task != CB_START))
+    if (((loradisc_config.full_rank) && (chirp_outl->task == CB_DISSEMINATE)) || ((chirp_outl->task != CB_DISSEMINATE) && (chirp_outl->task != CB_GLOSSY) && (chirp_outl->task != CB_GLOSSY_ARRANGE)) && (chirp_outl->task != CB_START) && (chirp_outl->task != CB_CONNECTIVITY))
     {
         for (i = 0; i < loradisc_config.mx_generation_size; i++)
         {
@@ -800,20 +795,6 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             }
                             break;
                         }
-                        case CB_CONNECTIVITY:
-                        {
-                            if (node_id)
-                            {
-                                PRINTF("CB_CONNECTIVITY\n");
-
-                                memcpy(task_data, (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(task_data));
-                                chirp_outl->sf_bitmap = task_data[0];
-                                chirp_outl->freq = (task_data[1] << 24) | (task_data[2] << 16) | (task_data[3] << 8) | (task_data[4]);
-                                chirp_outl->tx_power = task_data[5];
-                                chirp_outl->topo_payload_len = task_data[6];
-                            }
-                            break;
-                        }
                         case CB_VERSION:
                         {
                             memcpy(data, p + DATA_HEADER_LENGTH, chirp_outl->payload_len - DATA_HEADER_LENGTH);
@@ -905,6 +886,24 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
         PRINTF("\t receive, START at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, flash_protection:%d, v:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
     }
+    else if (chirp_outl->task == CB_CONNECTIVITY)
+    {
+        /* When flooding is valid, the packet header content is no longer the initial value: 0xFF */
+        if (loradisc_config.flooding_packet_header[0] != 0xFF)
+            round_inc++;
+        memcpy(flooding_data, (uint8_t *)(loradisc_config.flooding_packet_header), FLOODING_SURPLUS_LENGTH);
+        if (loradisc_config.phy_payload_size > LORADISC_HEADER_LEN)
+            memcpy(real_data, (uint8_t *)(loradisc_config.flooding_packet_payload), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
+
+        k = 0;
+        chirp_outl->sf_bitmap = flooding_data[k++];
+        chirp_outl->tx_power = flooding_data[k++];
+        chirp_outl->topo_payload_len = flooding_data[k++];
+        k = 0;
+        chirp_outl->freq = (real_data[k++] << 24) | (real_data[k++] << 16) | (real_data[k++] << 8) | (real_data[k++]);
+
+        PRINTF("chirp_outl->sf_bitmap: %d, %d, %d, %ld\n", chirp_outl->sf_bitmap, chirp_outl->tx_power, chirp_outl->topo_payload_len, chirp_outl->freq);
+    }
 
 	if (loradisc_config.primitive != FLOODING)
     {
@@ -913,7 +912,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
     }
 
     /* have received at least a packet */
-    if (chirp_outl->task == CB_COLLECT)
+    if ((chirp_outl->task == CB_COLLECT) || (chirp_outl->task == CB_VERSION))
     {
         if (round_inc > 1)
         {
@@ -921,9 +920,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             return 1;
         }
         else
-        {
             return 0;
-        }
 
     }
     else
@@ -936,23 +933,15 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 return 1;
             }
             else
-            {
                 return 0;
-            }
         }
         else
         {
             if (round_inc)
-            {
-                // TODO:
-                chirp_outl->round++; /* glossy, arrange, start, colver, connectivity */
                 return 1;
-            }
             /* not received any packet */
             else
-            {
                 return 0;
-            }
         }
     }
 }
@@ -1166,7 +1155,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
                         if (loradisc_config.disem_file_index > rece_dissem_index)
                         {
-                            PRINTF("full disem_copy\n");
+                            PRINTF("full disem copy\n");
                             loradisc_config.disem_flag_full_rank = mx.stat_counter.slot_full_rank;
                         }
                     }

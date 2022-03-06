@@ -1611,10 +1611,8 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         #endif
         if (!chirp_round(node_id, &chirp_outl))
         {
-          free(payload_distribution);
           break;
         }
-				free(payload_distribution);
 
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1801,15 +1799,21 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 
 				log_to_flash("---------CB_CONNECTIVITY---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
-				chirp_outl.generation_size = network_num_nodes;
-				chirp_outl.payload_len = DATA_HEADER_LENGTH + 7;
+				chirp_outl.generation_size = 0;
+				chirp_outl.payload_len = 7 - FLOODING_SURPLUS_LENGTH;
 				chirp_outl.round_max = ROUND_SETUP;
 				if (!node_id)
 					chirp_controller_read_command(&chirp_outl);
-				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, DISSEMINATION);
+
+        memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
+        memset(loradisc_config.flooding_packet_payload, 0, sizeof(loradisc_config.flooding_packet_payload));
+
+				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
+
+        loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
+
         chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-        chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
-				chirp_payload_distribution(chirp_outl.task);
+        chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 
         #if ENERGEST_CONF_ON
@@ -1821,7 +1825,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 
         if (!chirp_round(node_id, &chirp_outl))
         {
-          free(payload_distribution);
           break;
         }
 
@@ -1834,8 +1837,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         // initiate LoRa radio with sf 7 and testing TP and frequency.
         chirp_radio_config(7, 1, chirp_outl.tx_power, chirp_outl.freq);
         topo_manager(chirp_outl.num_nodes, node_id, chirp_outl.sf_bitmap, chirp_outl.topo_payload_len);
-
-				free(payload_distribution);
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));

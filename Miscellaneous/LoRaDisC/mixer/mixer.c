@@ -198,8 +198,6 @@ void mixer_init(uint8_t node_id)
 
 #endif
 
-    loradisc_config.update_slot = 0;
-
 	mx.rx_queue[0] = (Packet *)malloc((sizeof(mx.rx_queue) / sizeof(mx.rx_queue[0])) * (loradisc_config.packet_len));
 	for (i = 1; i < (sizeof(mx.rx_queue) / sizeof(mx.rx_queue[0])); i++)
 		mx.rx_queue[i] = (Packet *)&(mx.rx_queue[i-1]->packet_chunk[loradisc_config.packet_chunk_len]);

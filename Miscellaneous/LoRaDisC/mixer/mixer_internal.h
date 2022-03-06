@@ -366,8 +366,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 	int8_t		lora_tx_pwr;
 	uint32_t	lora_freq;
 
-	/* In the second dissemination mode, which we use to arrange a task or command, as well as to make sure all the nodes have received our commands. Each node that received a packet at first time should copy that packet to their own row. In the end, all nodes share the same packet that is from initiator. */
-	uint8_t		disem_copy;
+	uint8_t		full_rank;
 
 	#if MX_LBT_ACCESS
 		uint8_t		lbt_channel_primary;
@@ -378,16 +377,12 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 
 		uint32_t 	lbt_channel_available;
 		Chirp_Time	lbt_init_time;
+		/* address must be 32-bit */
 		uint32_t 	lbt_channel_time_us[LBT_CHANNEL_NUM];
 		uint32_t 	lbt_channel_time_stats_us[LBT_CHANNEL_NUM];
 	#endif
 
-	uint8_t		full_rank;
 	uint8_t		full_column;
-
-	/* to short arrange session */
-	// ChirpBox_Task	task;
-	uint8_t		update_slot;
 
 	uint16_t	packet_hash;
 	uint8_t 	flooding_packet_header[FLOODING_SURPLUS_LENGTH];
