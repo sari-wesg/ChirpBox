@@ -252,7 +252,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	int8_t				tx_power;
 	uint8_t				topo_payload_len;
 
-	/* debug energy */
+	/* debug energy (address must be 32-bit) */
 	Chirp_Energy		chirp_energy[3];
 	// idle1, arrange1, start, idle2, arrange2, disfut, idle3, arrange3, collre, idle4, arrange4, connect, idle5, arrange5, colltopo
 } Chirp_Outl;
