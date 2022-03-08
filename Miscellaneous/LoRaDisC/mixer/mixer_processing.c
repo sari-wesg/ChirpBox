@@ -1651,6 +1651,7 @@ PT_THREAD(mixer_process_rx_data())
 		else
 		{
 			printf("rx\n");
+			mx.rx_queue_num_read++;
 			PT_YIELD(pt);
 		}
 	}
