@@ -1484,7 +1484,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       #endif
 
 		/* default mode is CB_GLOSSY_ARRANGE (task arrangement) */
-    if ((chirp_outl.arrange_task == CB_CONNECTIVITY) || (chirp_outl.arrange_task == CB_VERSION))
+    if ((chirp_outl.arrange_task == CB_START) || (chirp_outl.arrange_task == CB_CONNECTIVITY) || (chirp_outl.arrange_task == CB_VERSION))
     {
       chirp_outl.task = chirp_outl.arrange_task;
       goto task_;
@@ -1499,9 +1499,9 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = 0;
-    if (chirp_outl.arrange_task == CB_START)
-      chirp_outl.payload_len = CB_START_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_START_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
-    else if (chirp_outl.arrange_task == CB_DISSEMINATE)
+    // if (chirp_outl.arrange_task == CB_START)
+    //   chirp_outl.payload_len = CB_START_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_START_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
+    if (chirp_outl.arrange_task == CB_DISSEMINATE)
       chirp_outl.payload_len = CB_DISSEMINATE_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_DISSEMINATE_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
     else if (chirp_outl.arrange_task == CB_COLLECT)
       chirp_outl.payload_len = CB_COLLECT_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_COLLECT_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
@@ -1582,7 +1582,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				log_to_flash("---------CB_START---------\n");
 				chirp_outl.num_nodes = network_num_nodes;
 				chirp_outl.generation_size = 0;
-				chirp_outl.payload_len = offsetof(Chirp_Outl, num_nodes) - offsetof(Chirp_Outl, start_year) + 2 - FLOODING_SURPLUS_LENGTH;
+				chirp_outl.payload_len = offsetof(Chirp_Outl, num_nodes) - offsetof(Chirp_Outl, start_year) + sizeof(chirp_outl.version_hash) + sizeof(chirp_outl.firmware_bitmap) - FLOODING_SURPLUS_LENGTH;
 
 				chirp_outl.round_max = ROUND_SETUP;
         chirp_outl.version_hash = 0;

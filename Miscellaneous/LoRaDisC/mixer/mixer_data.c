@@ -336,6 +336,11 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             file_data[k++] = chirp_outl->end_min;
             file_data[k++] = chirp_outl->end_sec;
 
+            file_data[k++] = chirp_outl->firmware_bitmap[0] >> 24;
+            file_data[k++] = chirp_outl->firmware_bitmap[0] >> 16;
+            file_data[k++] = chirp_outl->firmware_bitmap[0] >> 8;
+            file_data[k++] = chirp_outl->firmware_bitmap[0];
+
             /* Divide the payload into two parts: one part is reused with the packet header and one part is after the packet header. */
             /* loradisc write: */
             memcpy((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)flooding_data, FLOODING_SURPLUS_LENGTH);
@@ -456,22 +461,11 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             dissem: payload_len = 8
             collect: payload_len = 5 */
             k = 0;
-            if (chirp_outl->arrange_task == CB_START)
-            {
-            	flooding_data[k++] = chirp_outl->firmware_bitmap[0] >> 24;
-                flooding_data[k++] = chirp_outl->firmware_bitmap[0] >> 16;
-                flooding_data[k++] = chirp_outl->firmware_bitmap[0] >> 8;
-                k = 0;
-                file_data[k++] = chirp_outl->firmware_bitmap[0];
-            }
-            else
-            {
-                flooding_data[k++] = chirp_outl->task_bitmap[0] >> 24;
-                flooding_data[k++] = chirp_outl->task_bitmap[0] >> 16;
-                flooding_data[k++] = chirp_outl->task_bitmap[0] >> 8;
-                k = 0;
-                file_data[k++] = chirp_outl->task_bitmap[0];
-            }
+            flooding_data[k++] = chirp_outl->task_bitmap[0] >> 24;
+            flooding_data[k++] = chirp_outl->task_bitmap[0] >> 16;
+            flooding_data[k++] = chirp_outl->task_bitmap[0] >> 8;
+            k = 0;
+            file_data[k++] = chirp_outl->task_bitmap[0];
             if (chirp_outl->arrange_task == CB_DISSEMINATE)
             {
                 file_data[k++] = chirp_outl->dissem_back_sf;
@@ -836,14 +830,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             memcpy(real_data, (uint8_t *)(loradisc_config.flooding_packet_payload), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
 
         k = 0;
-        if (chirp_outl->arrange_task == CB_START)
-        {
-            chirp_outl->firmware_bitmap[0] = (flooding_data[k++] << 24) | (flooding_data[k++] << 16) | (flooding_data[k++] << 8) | (real_data[k++ - FLOODING_SURPLUS_LENGTH]);
-        }
-        else
-        {
-            chirp_outl->task_bitmap[0] = (flooding_data[k++] << 24) | (flooding_data[k++] << 16) | (flooding_data[k++] << 8) | (real_data[k++ - FLOODING_SURPLUS_LENGTH]);
-        }
+        chirp_outl->task_bitmap[0] = (flooding_data[k++] << 24) | (flooding_data[k++] << 16) | (flooding_data[k++] << 8) | (real_data[k++ - FLOODING_SURPLUS_LENGTH]);
         if (chirp_outl->arrange_task == CB_DISSEMINATE)
         {
             chirp_outl->dissem_back_sf = real_data[k++ - FLOODING_SURPLUS_LENGTH];
@@ -884,7 +871,9 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
         chirp_outl->end_min = real_data[k++];
         chirp_outl->end_sec = real_data[k++];
 
-        PRINTF("\t receive, START at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, flash_protection:%d, v:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
+        chirp_outl->firmware_bitmap[0] = (real_data[k++] << 24) | (real_data[k++] << 16) | (real_data[k++] << 8) | (real_data[k++]);
+
+        PRINTF("\t receive, START at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, flash_protection:%d, v:%x, bitmap:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash, chirp_outl->firmware_bitmap[0]);
     }
     else if (chirp_outl->task == CB_CONNECTIVITY)
     {
