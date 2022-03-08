@@ -1207,8 +1207,6 @@ uint32_t chirpbox_packet_data(Chirp_Outl *chirp_outl, uint8_t node_id, uint8_t *
         chirpbox_data = (uint8_t *)malloc(data_size);
         chirpbox_data[i++] = chirp_outl->arrange_task;
         /* An arrange packet is required only when ChirpBox needs to disseminate or collect */
-        // uint8_t is_need_arrange_packet = ((chirp_outl->arrange_task != CB_COLLECT) || (chirp_outl->arrange_task != CB_DISSEMINATE))?1:0;
-        // chirpbox_data[i++] = is_need_arrange_packet;
       }
       break;
     default:
