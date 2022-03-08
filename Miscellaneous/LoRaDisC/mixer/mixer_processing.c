@@ -1286,373 +1286,373 @@ PT_THREAD(mixer_process_rx_data())
 		clear_event(RX_READY);
 		if (loradisc_config.primitive != FLOODING)
 		{
-		while (mx.rx_queue_num_read != mx.rx_queue_num_written)
-		{
-			PROFILE("mixer_process_rx_data() begin");
-
-			// if we yield within the loop, we must declare persistent variables as static
-			static Packet	*p;
-			void			*pp[MEMXOR_BLOCKSIZE];
-			unsigned int	pp_used;
-			int_fast16_t	i;
-
-			p = mx.rx_queue[mx.rx_queue_num_read % NUM_ELEMENTS(mx.rx_queue)];
-
-			if (p->sender_id >= loradisc_config.mx_num_nodes)
+			while (mx.rx_queue_num_read != mx.rx_queue_num_written)
 			{
-				GPI_TRACE_MSG(TRACE_INFO, "Rx: invalid sender_id %u -> drop packet", p->sender_id);
-				goto continue_;
-			}
+				PROFILE("mixer_process_rx_data() begin");
 
-			TRACE_DUMP(1, "Rx packet:", &(p->phy_payload_begin), loradisc_config.phy_payload_size);
+				// if we yield within the loop, we must declare persistent variables as static
+				static Packet	*p;
+				void			*pp[MEMXOR_BLOCKSIZE];
+				unsigned int	pp_used;
+				int_fast16_t	i;
 
-			PRINTF_CHIRP("Rx: ");
+				p = mx.rx_queue[mx.rx_queue_num_read % NUM_ELEMENTS(mx.rx_queue)];
 
-			TRACE_PACKET(p);
-
-			// update full-rank map
-			#if MX_SMART_SHUTDOWN_MAP
-				if (p->flags.is_full_rank)
+				if (p->sender_id >= loradisc_config.mx_num_nodes)
 				{
-					update_full_rank_map(p);
-
-					// if we are not finished: yield
-					// because update_full_rank_map() might have taken a bit of time
-					if (mx.rank < loradisc_config.mx_generation_size)
-					{
-						PT_YIELD(pt);
-					}
+					GPI_TRACE_MSG(TRACE_INFO, "Rx: invalid sender_id %u -> drop packet", p->sender_id);
+					goto continue_;
 				}
-			#endif
 
-			// if we already have full rank: done
-			if (mx.rank >= loradisc_config.mx_generation_size)
-			{
-				goto continue_;
-			}
+				TRACE_DUMP(1, "Rx packet:", &(p->phy_payload_begin), loradisc_config.phy_payload_size);
 
-			PROFILE("mixer_process_rx_data() checkpoint 1");
+				PRINTF_CHIRP("Rx: ");
 
-			// if mx.tx_sideload points to current packet: move mx.tx_sideload away because data in
-			// Rx queue slot will become invalid while processing
-			// NOTE: there is no problem in cases where we simply free the slot by incrementing
-			// mx.rx_queue_num_read (without touching the slot content) because the instance which
-			// overrides the data - Rx ISR processing - updates mx.tx_sideload by itself (and is
-			// never active in parallel to Tx).
-			// ATTENTION: it is important to understand that the slot in progress (-> num_writing)
-			// is vacant, i.e. it may be filled with data without updating mx.tx_sideload afterwards
-			// (e.g. in response to a missed CRC check). This is no problem as long as we never set
-			// mx.tx_sideload back to an older queue entry than it is (if it points into the queue).
-			// If we don't do that, then the ISR ensures that mx.tx_sideload never points to the
-			// vacant slot.
-			if (mx.tx_sideload == &(p->packet_chunk[loradisc_config.coding_vector.pos]))
-			{
+				TRACE_PACKET(p);
 
-				uint8_t	*pr;
+				// update full-rank map
+				#if MX_SMART_SHUTDOWN_MAP
+					if (p->flags.is_full_rank)
+					{
+						update_full_rank_map(p);
 
-				// if there is an empty row available (which is always the case as long as not
-				// full rank): copy the packet to this row and use it as sideload
-				// NOTE: it is important that we don't simply invalidate mx.tx_sideload because
-				// the case that it points to the current packet is standard (except for high load
-				// situations). If we invalidate it, there is a significant probability that fast
-				// tx update doesn't happen (only if rx processing finishes before next tx slot).
-				if (NULL == mx.empty_row)
-					pr = NULL;
-				else
+						// if we are not finished: yield
+						// because update_full_rank_map() might have taken a bit of time
+						if (mx.rank < loradisc_config.mx_generation_size)
+						{
+							PT_YIELD(pt);
+						}
+					}
+				#endif
+
+				// if we already have full rank: done
+				if (mx.rank >= loradisc_config.mx_generation_size)
 				{
-					pr = (uint8_t *)&(mx.empty_row->matrix_chunk_8[loradisc_config.matrix_coding_vector_8.pos + 0]);
+					goto continue_;
+				}
 
-					gpi_memcpy_dma_aligned(pr, &(p->packet_chunk[loradisc_config.coding_vector.pos]),
-						(loradisc_config.matrix_coding_vector.len + loradisc_config.matrix_payload.len) * sizeof(uint_fast_t));
+				PROFILE("mixer_process_rx_data() checkpoint 1");
 
-					#if MX_BENCHMARK_PSEUDO_PAYLOAD
-						#if GPI_ARCH_IS_CORE(MSP430)
-							__delay_cycles(MX_PAYLOAD_SIZE);
-						#else
-							#error MX_BENCHMARK_PSEUDO_PAYLOAD is unsupported on current architecture
-						#endif
-					#else
-
-					unwrap_chunk(pr);
-
-					#endif
-                }
-
-				int ie = gpi_int_lock();
-
+				// if mx.tx_sideload points to current packet: move mx.tx_sideload away because data in
+				// Rx queue slot will become invalid while processing
+				// NOTE: there is no problem in cases where we simply free the slot by incrementing
+				// mx.rx_queue_num_read (without touching the slot content) because the instance which
+				// overrides the data - Rx ISR processing - updates mx.tx_sideload by itself (and is
+				// never active in parallel to Tx).
+				// ATTENTION: it is important to understand that the slot in progress (-> num_writing)
+				// is vacant, i.e. it may be filled with data without updating mx.tx_sideload afterwards
+				// (e.g. in response to a missed CRC check). This is no problem as long as we never set
+				// mx.tx_sideload back to an older queue entry than it is (if it points into the queue).
+				// If we don't do that, then the ISR ensures that mx.tx_sideload never points to the
+				// vacant slot.
 				if (mx.tx_sideload == &(p->packet_chunk[loradisc_config.coding_vector.pos]))
 				{
-					mx.tx_sideload = pr;
+
+					uint8_t	*pr;
+
+					// if there is an empty row available (which is always the case as long as not
+					// full rank): copy the packet to this row and use it as sideload
+					// NOTE: it is important that we don't simply invalidate mx.tx_sideload because
+					// the case that it points to the current packet is standard (except for high load
+					// situations). If we invalidate it, there is a significant probability that fast
+					// tx update doesn't happen (only if rx processing finishes before next tx slot).
+					if (NULL == mx.empty_row)
+						pr = NULL;
+					else
+					{
+						pr = (uint8_t *)&(mx.empty_row->matrix_chunk_8[loradisc_config.matrix_coding_vector_8.pos + 0]);
+
+						gpi_memcpy_dma_aligned(pr, &(p->packet_chunk[loradisc_config.coding_vector.pos]),
+							(loradisc_config.matrix_coding_vector.len + loradisc_config.matrix_payload.len) * sizeof(uint_fast_t));
+
+						#if MX_BENCHMARK_PSEUDO_PAYLOAD
+							#if GPI_ARCH_IS_CORE(MSP430)
+								__delay_cycles(MX_PAYLOAD_SIZE);
+							#else
+								#error MX_BENCHMARK_PSEUDO_PAYLOAD is unsupported on current architecture
+							#endif
+						#else
+
+						unwrap_chunk(pr);
+
+						#endif
+					}
+
+					int ie = gpi_int_lock();
+
+					if (mx.tx_sideload == &(p->packet_chunk[loradisc_config.coding_vector.pos]))
+					{
+						mx.tx_sideload = pr;
+					}
+
+					gpi_int_unlock(ie);
 				}
 
-				gpi_int_unlock(ie);
-            }
+				// align packet elements
+				unwrap_chunk(&(p->packet_chunk[loradisc_config.coding_vector.pos]));
 
-			// align packet elements
-			unwrap_chunk(&(p->packet_chunk[loradisc_config.coding_vector.pos]));
+				PROFILE("mixer_process_rx_data() checkpoint 2");
 
-			PROFILE("mixer_process_rx_data() checkpoint 2");
-
-			// traverse matrix / coding vector
-			pp_used = 0;
-			while (1)
-			{
-				PROFILE("mixer_process_rx_data() matrix iteration begin");
-
-				// get leading coefficient
-				i = mx_get_leading_index(&(p->packet_chunk[loradisc_config.coding_vector.pos]));
-
-				if (i < 0)
+				// traverse matrix / coding vector
+				pp_used = 0;
+				while (1)
 				{
-					// if this is the last received packed: invalidate mx.tx_sideload because the
-					// packet was not innovative -> ensures that the prepared tx packet won't
-					// get hurt
+					PROFILE("mixer_process_rx_data() matrix iteration begin");
+
+					// get leading coefficient
+					i = mx_get_leading_index(&(p->packet_chunk[loradisc_config.coding_vector.pos]));
+
+					if (i < 0)
 					{
-						int ie = gpi_int_lock();
-
-						if (mx.rx_queue_num_written - mx.rx_queue_num_read == 1)
-							mx.tx_sideload = NULL;
-
-						gpi_int_unlock(ie);
-					}
-
-					break;
-                }
-
-				// if corresponding row is empty (i.e. packet is innovative): fill it, rank increase
-				if (UINT16_MAX == mx.matrix[i]->birth_slot)
-				{
-					PROFILE("mixer_process_rx_data() new row begin");
-
-					mx.matrix[i]->birth_slot = p->slot_number;
-
-					mx.recent_innovative_slot = p->slot_number;
-
-					assert_reset((loradisc_config.payload.pos == loradisc_config.coding_vector.pos + loradisc_config.coding_vector.len));
-					assert_reset((loradisc_config.matrix_payload.pos == loradisc_config.matrix_coding_vector.pos + loradisc_config.matrix_coding_vector.len));
-
-					if (pp_used)
-					{
-						memxor_block(&(p->packet_chunk[loradisc_config.payload.pos + PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, pp_used);
-					}
-
-					// if mx.tx_sideload doesn't point into rx queue: set mx.tx_sideload to current
-					// rx queue packet
-					// NOTE: First, if mx.tx_sideload points to current row, it must be changed
-					// because row is inconsistent while copying. Second, we are here because the
-					// rx packet is innovative. So the only reason not to change mx.tx_sideload is
-					// that it points to a newer packet in the rx queue which we didn't process yet.
-					// NOTE: at this point the rx queue packet is valid (again) since processing
-					// has been done (actually, the rx queue packet will be copied into the row)
-					// NOTE: there is no problem if mx.tx_reserve points to current row here
-					// because it is not used on ISR level
-					{
-						int ie = gpi_int_lock();
-
-					// TP TODO:
-						if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= 4 * loradisc_config.packet_len)
-							mx.tx_sideload = &(p->packet_chunk[loradisc_config.coding_vector.pos]);
-
-						gpi_int_unlock(ie);
-					}
-
-					// if mx.request.help_index points to current row: invalidate mx.request.help_index
-					// because row is inconsistent while copying
-					// NOTE: if the program is correct, it is impossible that help_index points to
-					// an empty row, so we use an assertion. Nevertheless we handle the situation
-					// for the case that assertions are inactive (i.e. NDEBUG).
-					// NOTE: assert() sits within the condition body to keep time with interrupts
-					// locked as short as possible in the normal case
-					#if MX_REQUEST
-					{
-						int ie = gpi_int_lock();
-
-						if (ABS(mx.request->help_index) - 1 == i)
+						// if this is the last received packed: invalidate mx.tx_sideload because the
+						// packet was not innovative -> ensures that the prepared tx packet won't
+						// get hurt
 						{
-							{
-								assert_reset((ABS(mx.request->help_index) - 1 != i));
+							int ie = gpi_int_lock();
 
-								GPI_TRACE_MSG_FAST(TRACE_ERROR, "!!! request help index points to empty row -> check program, must not happen !!!");
-							}
-							mx.request->help_index = 0;
-                        }
+							if (mx.rx_queue_num_written - mx.rx_queue_num_read == 1)
+								mx.tx_sideload = NULL;
 
-						gpi_int_unlock(ie);
-					}
-					#endif
-
-					gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_coding_vector.pos]), &(p->packet_chunk[loradisc_config.coding_vector.pos]),
-						(loradisc_config.matrix_coding_vector.len + loradisc_config.matrix_payload.len) * sizeof(uint_fast_t));
-
-					#if MX_BENCHMARK_PSEUDO_PAYLOAD
-						#if GPI_ARCH_IS_CORE(MSP430)
-							__delay_cycles(MX_PAYLOAD_SIZE);
-						#else
-							#error MX_BENCHMARK_PSEUDO_PAYLOAD is unsupported on current architecture
-						#endif
-					#endif
-
-					mx.rank++;
-
-					// update mx.tx_reserve
-					// NOTE: there are two reasons to do so:
-					// 1) init mx.tx_reserve if it is NULL
-					// 2) it may be beneficial if it points to a quite new row
-					#if 0	// activate only for special purposes like evaluating most stupid behavior
-					if (NULL == mx.tx_reserve)
-					#endif
-
-					mx.tx_reserve = (Matrix_Row *)&(mx.matrix[i]->birth_slot);
-
-					// update mx.empty_row if needed
-					// NOTE: mx.empty_row is kept static to avoid expensive search runs everytime
-					// an empty row is needed. starting from its last position is much cheaper.
-					if (mx.empty_row == (Matrix_Row *)&(mx.matrix[i]->birth_slot))
-					{
-						if (loradisc_config.mx_generation_size == mx.rank)
-						{
-							mx.empty_row = NULL;
+							gpi_int_unlock(ie);
 						}
-						else
-						{
-							while (mx.empty_row > (Matrix_Row *)&(mx.matrix[0]->birth_slot))
-							{
-								mx.empty_row -= loradisc_config.matrix_size_32;
 
-								if (UINT16_MAX == mx.empty_row->birth_slot)
-									break;
+						break;
+					}
+
+					// if corresponding row is empty (i.e. packet is innovative): fill it, rank increase
+					if (UINT16_MAX == mx.matrix[i]->birth_slot)
+					{
+						PROFILE("mixer_process_rx_data() new row begin");
+
+						mx.matrix[i]->birth_slot = p->slot_number;
+
+						mx.recent_innovative_slot = p->slot_number;
+
+						assert_reset((loradisc_config.payload.pos == loradisc_config.coding_vector.pos + loradisc_config.coding_vector.len));
+						assert_reset((loradisc_config.matrix_payload.pos == loradisc_config.matrix_coding_vector.pos + loradisc_config.matrix_coding_vector.len));
+
+						if (pp_used)
+						{
+							memxor_block(&(p->packet_chunk[loradisc_config.payload.pos + PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, pp_used);
+						}
+
+						// if mx.tx_sideload doesn't point into rx queue: set mx.tx_sideload to current
+						// rx queue packet
+						// NOTE: First, if mx.tx_sideload points to current row, it must be changed
+						// because row is inconsistent while copying. Second, we are here because the
+						// rx packet is innovative. So the only reason not to change mx.tx_sideload is
+						// that it points to a newer packet in the rx queue which we didn't process yet.
+						// NOTE: at this point the rx queue packet is valid (again) since processing
+						// has been done (actually, the rx queue packet will be copied into the row)
+						// NOTE: there is no problem if mx.tx_reserve points to current row here
+						// because it is not used on ISR level
+						{
+							int ie = gpi_int_lock();
+
+						// TP TODO:
+							if ((uintptr_t)mx.tx_sideload - (uintptr_t)mx.rx_queue[0] >= 4 * loradisc_config.packet_len)
+								mx.tx_sideload = &(p->packet_chunk[loradisc_config.coding_vector.pos]);
+
+							gpi_int_unlock(ie);
+						}
+
+						// if mx.request.help_index points to current row: invalidate mx.request.help_index
+						// because row is inconsistent while copying
+						// NOTE: if the program is correct, it is impossible that help_index points to
+						// an empty row, so we use an assertion. Nevertheless we handle the situation
+						// for the case that assertions are inactive (i.e. NDEBUG).
+						// NOTE: assert() sits within the condition body to keep time with interrupts
+						// locked as short as possible in the normal case
+						#if MX_REQUEST
+						{
+							int ie = gpi_int_lock();
+
+							if (ABS(mx.request->help_index) - 1 == i)
+							{
+								{
+									assert_reset((ABS(mx.request->help_index) - 1 != i));
+
+									GPI_TRACE_MSG_FAST(TRACE_ERROR, "!!! request help index points to empty row -> check program, must not happen !!!");
+								}
+								mx.request->help_index = 0;
 							}
 
-							if (mx.empty_row < (Matrix_Row *)&(mx.matrix[0]->birth_slot))
+							gpi_int_unlock(ie);
+						}
+						#endif
+
+						gpi_memcpy_dma_aligned(&(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_coding_vector.pos]), &(p->packet_chunk[loradisc_config.coding_vector.pos]),
+							(loradisc_config.matrix_coding_vector.len + loradisc_config.matrix_payload.len) * sizeof(uint_fast_t));
+
+						#if MX_BENCHMARK_PSEUDO_PAYLOAD
+							#if GPI_ARCH_IS_CORE(MSP430)
+								__delay_cycles(MX_PAYLOAD_SIZE);
+							#else
+								#error MX_BENCHMARK_PSEUDO_PAYLOAD is unsupported on current architecture
+							#endif
+						#endif
+
+						mx.rank++;
+
+						// update mx.tx_reserve
+						// NOTE: there are two reasons to do so:
+						// 1) init mx.tx_reserve if it is NULL
+						// 2) it may be beneficial if it points to a quite new row
+						#if 0	// activate only for special purposes like evaluating most stupid behavior
+						if (NULL == mx.tx_reserve)
+						#endif
+
+						mx.tx_reserve = (Matrix_Row *)&(mx.matrix[i]->birth_slot);
+
+						// update mx.empty_row if needed
+						// NOTE: mx.empty_row is kept static to avoid expensive search runs everytime
+						// an empty row is needed. starting from its last position is much cheaper.
+						if (mx.empty_row == (Matrix_Row *)&(mx.matrix[i]->birth_slot))
+						{
+							if (loradisc_config.mx_generation_size == mx.rank)
 							{
-								mx.empty_row = (Matrix_Row *)&(mx.matrix[loradisc_config.mx_generation_size - 1]->matrix_chunk[loradisc_config.matrix_chunk_32_len]);
+								mx.empty_row = NULL;
+							}
+							else
+							{
 								while (mx.empty_row > (Matrix_Row *)&(mx.matrix[0]->birth_slot))
 								{
 									mx.empty_row -= loradisc_config.matrix_size_32;
 
 									if (UINT16_MAX == mx.empty_row->birth_slot)
 										break;
-                                }
-                            }
+								}
 
-							assert_reset((mx.empty_row >= (Matrix_Row *)&(mx.matrix[0]->birth_slot)));
-                        }
-                    }
+								if (mx.empty_row < (Matrix_Row *)&(mx.matrix[0]->birth_slot))
+								{
+									mx.empty_row = (Matrix_Row *)&(mx.matrix[loradisc_config.mx_generation_size - 1]->matrix_chunk[loradisc_config.matrix_chunk_32_len]);
+									while (mx.empty_row > (Matrix_Row *)&(mx.matrix[0]->birth_slot))
+									{
+										mx.empty_row -= loradisc_config.matrix_size_32;
 
-					// update request mask
-					#if MX_REQUEST
-						mx.request->mask[loradisc_config.my_row_mask.pos + i / (sizeof(uint_fast_t) * 8)] &=
-							~gpi_slu(1, (i % (sizeof(uint_fast_t) * 8)));
-						mx.request->my_column_pending =
-							mx_request_clear((uint_fast_t *)&(mx.request->mask[loradisc_config.my_column_mask.pos]), &(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_coding_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
-						if (!mx.request->my_column_pending)
-						{
-							loradisc_config.full_column = 0;
-							PRINTF_CHIRP("-----column_pending = 0-----\n");
-						}
+										if (UINT16_MAX == mx.empty_row->birth_slot)
+											break;
+									}
+								}
 
-					#endif
-
-					PROFILE("mixer_process_rx_data() new row done");
-
-					GPI_TRACE_MSG(TRACE_VERBOSE, "new row %u, rank: %u", i, mx.rank);
-					TRACE_MATRIX();
-
-					GPI_TRACE_MSG(TRACE_VERBOSE, "empty row: %d", (NULL == mx.empty_row) ? -1 :  ARRAY_INDEX_SIZE_ADD(mx.empty_row, &(mx.matrix[0]->birth_slot), (1 + loradisc_config.matrix_chunk_32_len) * sizeof(uint_fast_t)));
-
-					// if we reached full rank with current packet: solve (decode)
-					// NOTE: this may take some time. Although it would not be very critical if we
-					// lose some packets meanwhile, we still yield to transmit something from time
-					// to time.
-					if (loradisc_config.mx_generation_size == mx.rank)
-					{
-						PRINTF_CHIRP("------------full_rank------------:%d\n", mx.slot_number);
-
-						static Pt_Context	pt_decode;
-
-						#if MX_VERBOSE_STATISTICS
-							mx.stat_counter.slot_full_rank = p->slot_number;
-						#endif
-
-						// make sure that mx.tx_sideload doesn't point into rx queue anymore
-						// ATTENTION: this is important because Rx ISR doesn't update mx.tx_sideload
-						// anymore after full rank has been reached. If we wouldn't change it here,
-						// then it may point to an invalid entry after queue wrap-around.
-						// NOTE: gpi_int_lock() is only needed if access to pointers is not atomic
-						// (e.g. on 8 bit machines)
-						REORDER_BARRIER();		// make sure that mx.rank is written back
-						int ie = gpi_int_lock();
-						{
-							if ((mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_IS_READY)>> PACKET_IS_READY_POS)
-							{
-								mx.tx_sideload = NULL;
+								assert_reset((mx.empty_row >= (Matrix_Row *)&(mx.matrix[0]->birth_slot)));
 							}
 						}
-						gpi_int_unlock(ie);
 
-						// yield because packet processing may already have taken some time
-						PT_YIELD(pt);
+						// update request mask
+						#if MX_REQUEST
+							mx.request->mask[loradisc_config.my_row_mask.pos + i / (sizeof(uint_fast_t) * 8)] &=
+								~gpi_slu(1, (i % (sizeof(uint_fast_t) * 8)));
+							mx.request->my_column_pending =
+								mx_request_clear((uint_fast_t *)&(mx.request->mask[loradisc_config.my_column_mask.pos]), &(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_coding_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+							if (!mx.request->my_column_pending)
+							{
+								loradisc_config.full_column = 0;
+								PRINTF_CHIRP("-----column_pending = 0-----\n");
+							}
 
-						PROFILE("mixer_process_rx_data() decode begin");
-
-						// start decode thread
-						// ATTENTION: don't use PT_SPAWN() because it returns PT_WAITING if child
-						// thread yields. Here, we have to make sure that we return PT_YIELDED in
-						// this case.
-						// PT_SPAWN(pt, &pt_decode, decode(&pt_decode));
-						PT_INIT(&pt_decode);
-						while (PT_SCHEDULE(mixer_decode(&pt_decode)))
-							PT_YIELD(pt);
-
-						#if MX_SMART_SHUTDOWN_MAP
-							update_full_rank_map(NULL);
 						#endif
 
-						PROFILE("mixer_process_rx_data() decode end");
-                    }
+						PROFILE("mixer_process_rx_data() new row done");
 
-					break;
+						GPI_TRACE_MSG(TRACE_VERBOSE, "new row %u, rank: %u", i, mx.rank);
+						TRACE_MATRIX();
+
+						GPI_TRACE_MSG(TRACE_VERBOSE, "empty row: %d", (NULL == mx.empty_row) ? -1 :  ARRAY_INDEX_SIZE_ADD(mx.empty_row, &(mx.matrix[0]->birth_slot), (1 + loradisc_config.matrix_chunk_32_len) * sizeof(uint_fast_t)));
+
+						// if we reached full rank with current packet: solve (decode)
+						// NOTE: this may take some time. Although it would not be very critical if we
+						// lose some packets meanwhile, we still yield to transmit something from time
+						// to time.
+						if (loradisc_config.mx_generation_size == mx.rank)
+						{
+							PRINTF_CHIRP("------------full_rank------------:%d\n", mx.slot_number);
+
+							static Pt_Context	pt_decode;
+
+							#if MX_VERBOSE_STATISTICS
+								mx.stat_counter.slot_full_rank = p->slot_number;
+							#endif
+
+							// make sure that mx.tx_sideload doesn't point into rx queue anymore
+							// ATTENTION: this is important because Rx ISR doesn't update mx.tx_sideload
+							// anymore after full rank has been reached. If we wouldn't change it here,
+							// then it may point to an invalid entry after queue wrap-around.
+							// NOTE: gpi_int_lock() is only needed if access to pointers is not atomic
+							// (e.g. on 8 bit machines)
+							REORDER_BARRIER();		// make sure that mx.rank is written back
+							int ie = gpi_int_lock();
+							{
+								if ((mx.tx_packet->packet_chunk[loradisc_config.rand.pos] & PACKET_IS_READY)>> PACKET_IS_READY_POS)
+								{
+									mx.tx_sideload = NULL;
+								}
+							}
+							gpi_int_unlock(ie);
+
+							// yield because packet processing may already have taken some time
+							PT_YIELD(pt);
+
+							PROFILE("mixer_process_rx_data() decode begin");
+
+							// start decode thread
+							// ATTENTION: don't use PT_SPAWN() because it returns PT_WAITING if child
+							// thread yields. Here, we have to make sure that we return PT_YIELDED in
+							// this case.
+							// PT_SPAWN(pt, &pt_decode, decode(&pt_decode));
+							PT_INIT(&pt_decode);
+							while (PT_SCHEDULE(mixer_decode(&pt_decode)))
+								PT_YIELD(pt);
+
+							#if MX_SMART_SHUTDOWN_MAP
+								update_full_rank_map(NULL);
+							#endif
+
+							PROFILE("mixer_process_rx_data() decode end");
+						}
+
+						break;
+					}
+
+					PROFILE("mixer_process_rx_data() matrix iteration checkpoint A");
+
+					// else substitute
+					memxor(&(p->packet_chunk[loradisc_config.coding_vector.pos]), &(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_coding_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+
+					pp[pp_used++] = &(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_payload.pos]);
+
+					if (NUM_ELEMENTS(pp) == pp_used)
+					{
+						// NOTE: calling with NUM_ELEMENTS(pp) instead of pp_used leads to a bit
+						// better code because NUM_ELEMENTS(pp) is a constant (msp430-gcc 4.6.3)
+						memxor_block(&(p->packet_chunk[loradisc_config.payload.pos + PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, NUM_ELEMENTS(pp));
+
+						// yield after each block to keep thread-level response time small (enough)
+						PT_YIELD(pt);
+
+						pp_used = 0;
+					}
+
+					PROFILE("mixer_process_rx_data() matrix iteration end");
 				}
 
-				PROFILE("mixer_process_rx_data() matrix iteration checkpoint A");
+				continue_:
 
-				// else substitute
-				memxor(&(p->packet_chunk[loradisc_config.coding_vector.pos]), &(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_coding_vector.pos]), loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t));
+				mx.rx_queue_num_read++;
 
-				pp[pp_used++] = &(mx.matrix[i]->matrix_chunk[loradisc_config.matrix_payload.pos]);
+				#if MX_VERBOSE_STATISTICS
+					mx.stat_counter.num_rx_queue_processed++;
+				#endif
 
-				if (NUM_ELEMENTS(pp) == pp_used)
-				{
-					// NOTE: calling with NUM_ELEMENTS(pp) instead of pp_used leads to a bit
-					// better code because NUM_ELEMENTS(pp) is a constant (msp430-gcc 4.6.3)
-					memxor_block(&(p->packet_chunk[loradisc_config.payload.pos + PAYLOAD_SHIFT]), pp, PAYLOAD_SIZE, NUM_ELEMENTS(pp));
-
-					// yield after each block to keep thread-level response time small (enough)
-					PT_YIELD(pt);
-
-					pp_used = 0;
-                }
-
-				PROFILE("mixer_process_rx_data() matrix iteration end");
+				PROFILE("mixer_process_rx_data() end");
+				PT_YIELD(pt);
 			}
-
-			continue_:
-
-			mx.rx_queue_num_read++;
-
-			#if MX_VERBOSE_STATISTICS
-				mx.stat_counter.num_rx_queue_processed++;
-			#endif
-
-			PROFILE("mixer_process_rx_data() end");
+		}
+		else
+		{
+			printf("rx\n");
 			PT_YIELD(pt);
 		}
-	}
-	else
-	{
-		printf("rx\n");
-		PT_YIELD(pt);
-	}
 	}
 	PT_END(pt);
 }

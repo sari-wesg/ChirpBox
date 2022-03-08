@@ -1518,7 +1518,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
 
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-    chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
+    chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
 
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
