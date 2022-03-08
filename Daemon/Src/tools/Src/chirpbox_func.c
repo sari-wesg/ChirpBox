@@ -1518,7 +1518,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
 
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-    chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
+    chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1599,7 +1599,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
 
         chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-        chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
+        chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 
@@ -1661,82 +1661,81 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
-				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
-        loradisc_config.disem_file_index = 0;
-        loradisc_config.disem_file_max = UINT16_MAX / 2;
-        loradisc_config.disem_file_index_stay = 0;
-        chirp_outl.version_hash = 0;
-        memset(chirp_outl.firmware_md5, 0, sizeof(chirp_outl.firmware_md5));
-				log_to_flash("---------CB_DISSEMINATE---------\n");
-				// TODO: tune those parameters
-				chirp_outl.num_nodes = task_node_num;
-				chirp_outl.generation_size = chirp_outl.default_generate_size;
-				chirp_outl.payload_len = chirp_outl.default_payload_len;
-				assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 28));
-				assert_reset(!((chirp_outl.payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
-				chirp_outl.round_max = UINT16_MAX;
-				chirp_outl.file_chunk_len = chirp_outl.generation_size * (chirp_outl.payload_len - DATA_HEADER_LENGTH);
-        loradisc_config.disem_file_memory = (uint32_t *)malloc(chirp_outl.file_chunk_len);
-        if (!node_id)
-				{
-					chirp_controller_read_command(&chirp_outl);
-					uint32_t flash_length;
-					if (!chirp_outl.patch_update)
-						flash_length = menu_initiator_read_file();
-					else
-					{
-						/* patch bank1, means update self firmware */
-						chirp_outl.patch_page = menu_pre_patch(chirp_outl.patch_bank, chirp_outl.old_firmware_size, chirp_outl.firmware_size);
-						flash_length = menu_serialDownload(chirp_outl.patch_page, chirp_outl.patch_bank);
-					}
-					chirp_outl.firmware_size = flash_length;
-					uint32_t firmware_size[1];
-					firmware_size[0] = chirp_outl.firmware_size;
-          FLASH_If_Erase_Pages(0, 253);
-					FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
+          chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
+          loradisc_config.disem_file_index = 0;
+          loradisc_config.disem_file_max = UINT16_MAX / 2;
+          loradisc_config.disem_file_index_stay = 0;
+          chirp_outl.version_hash = 0;
+          memset(chirp_outl.firmware_md5, 0, sizeof(chirp_outl.firmware_md5));
+          log_to_flash("---------CB_DISSEMINATE---------\n");
+          // TODO: tune those parameters
+          chirp_outl.num_nodes = task_node_num;
+          chirp_outl.generation_size = chirp_outl.default_generate_size;
+          chirp_outl.payload_len = chirp_outl.default_payload_len;
+          assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 28));
+          assert_reset(!((chirp_outl.payload_len - DATA_HEADER_LENGTH) % sizeof(uint64_t)));
+          chirp_outl.round_max = UINT16_MAX;
+          chirp_outl.file_chunk_len = chirp_outl.generation_size * (chirp_outl.payload_len - DATA_HEADER_LENGTH);
+          loradisc_config.disem_file_memory = (uint32_t *)malloc(chirp_outl.file_chunk_len);
+          if (!node_id)
+          {
+            chirp_controller_read_command(&chirp_outl);
+            uint32_t flash_length;
+            if (!chirp_outl.patch_update)
+              flash_length = menu_initiator_read_file();
+            else
+            {
+              /* patch bank1, means update self firmware */
+              chirp_outl.patch_page = menu_pre_patch(chirp_outl.patch_bank, chirp_outl.old_firmware_size, chirp_outl.firmware_size);
+              flash_length = menu_serialDownload(chirp_outl.patch_page, chirp_outl.patch_bank);
+            }
+            chirp_outl.firmware_size = flash_length;
+            uint32_t firmware_size[1];
+            firmware_size[0] = chirp_outl.firmware_size;
+            FLASH_If_Erase_Pages(0, 253);
+            FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
 
-          loradisc_config.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
-					log_to_flash("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
-				}
-        loradisc_config.disem_flag = 1;
-				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
-        chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-        chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
-				chirp_payload_distribution(chirp_outl.task);
-        while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-        #if ENERGEST_CONF_ON
-          ENERGEST_OFF(ENERGEST_TYPE_CPU);
-          Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
-          memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
-          memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
-        #endif
-        if (!chirp_round(task_node_id, &chirp_outl))
-        {
+            loradisc_config.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
+            log_to_flash("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
+          }
+          loradisc_config.disem_flag = 1;
+          chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
+          chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
+          chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
+          chirp_payload_distribution(chirp_outl.task);
+          while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
+          #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+            Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
+            memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
+            memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
+          #endif
+          if (!chirp_round(task_node_id, &chirp_outl))
+          {
+            free(payload_distribution);
+            FLASH_If_Erase(0);
+            break;
+          }
           free(payload_distribution);
-          FLASH_If_Erase(0);
-          break;
-        }
-				free(payload_distribution);
-        free(loradisc_config.disem_file_memory);
-        if(!FirmwareUpgrade(chirp_outl.patch_update, chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5, chirp_outl.file_compression))
-          break;
-        Stats_to_Flash(chirp_outl.task);
+          free(loradisc_config.disem_file_memory);
+          if(!FirmwareUpgrade(chirp_outl.patch_update, chirp_outl.patch_bank, 0, chirp_outl.old_firmware_size, chirp_outl.patch_bank, chirp_outl.patch_page, chirp_outl.firmware_size, chirp_outl.firmware_md5, chirp_outl.file_compression))
+            break;
+          Stats_to_Flash(chirp_outl.task);
 
-        #if ENERGEST_CONF_ON
-          ENERGEST_OFF(ENERGEST_TYPE_CPU);
-          Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
-          Stats_value_debug(ENERGEST_TYPE_FLASH_WRITE_BANK1, energest_type_time(ENERGEST_TYPE_FLASH_WRITE_BANK1));
-          Stats_value_debug(ENERGEST_TYPE_FLASH_WRITE_BANK2, energest_type_time(ENERGEST_TYPE_FLASH_WRITE_BANK2));
-          Stats_value_debug(ENERGEST_TYPE_FLASH_ERASE, energest_type_time(ENERGEST_TYPE_FLASH_ERASE));
-          Stats_value_debug(ENERGEST_TYPE_FLASH_VERIFY, energest_type_time(ENERGEST_TYPE_FLASH_VERIFY));
-          memcpy((uint32_t *)(&chirp_outl.chirp_energy[2]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
-          FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
-          FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
-          FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
-          FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
-          FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
-        #endif
-
+          #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+            Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
+            Stats_value_debug(ENERGEST_TYPE_FLASH_WRITE_BANK1, energest_type_time(ENERGEST_TYPE_FLASH_WRITE_BANK1));
+            Stats_value_debug(ENERGEST_TYPE_FLASH_WRITE_BANK2, energest_type_time(ENERGEST_TYPE_FLASH_WRITE_BANK2));
+            Stats_value_debug(ENERGEST_TYPE_FLASH_ERASE, energest_type_time(ENERGEST_TYPE_FLASH_ERASE));
+            Stats_value_debug(ENERGEST_TYPE_FLASH_VERIFY, energest_type_time(ENERGEST_TYPE_FLASH_VERIFY));
+            memcpy((uint32_t *)(&chirp_outl.chirp_energy[2]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
+            FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192, (uint32_t *)(&chirp_outl.chirp_energy[0]), sizeof(chirp_outl.chirp_energy[0]) / sizeof(uint32_t));
+            FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64, (uint32_t *)(&chirp_outl.chirp_energy[1]), sizeof(chirp_outl.chirp_energy[1]) / sizeof(uint32_t));
+            FLASH_If_Write(DAEMON_DEBUG_FLASH_ADDRESS + chirp_outl.task * DAEMON_DEBUG_ENERGY_LEN_192 + DAEMON_DEBUG_ENERGY_LEN_64 * 2, (uint32_t *)(&chirp_outl.chirp_energy[2]), sizeof(chirp_outl.chirp_energy[2]) / sizeof(uint32_t));
+            FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
+            FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
+          #endif
         }
 				break;
 			}
@@ -1744,42 +1743,42 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 			{
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
-				chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
+          chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
-				log_to_flash("---------CB_COLLECT---------\n");
-				// TODO: tune those parameters
-				chirp_outl.num_nodes = task_node_num;
-				chirp_outl.generation_size = chirp_outl.num_nodes;
-				chirp_outl.payload_len = chirp_outl.default_payload_len;
-				chirp_outl.round_max = UINT16_MAX;
-				chirp_outl.file_chunk_len = chirp_outl.payload_len - DATA_HEADER_LENGTH;
-        assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 8));
-				assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
-				if (!node_id)
-				{
-					chirp_controller_read_command(&chirp_outl);
-					chirp_outl.collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
-					chirp_outl.round_max = ROUND_SETUP + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
-					PRINTF("set:%d\n", chirp_outl.round_max);
-				}
-				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
-        chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-        chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
-				chirp_payload_distribution(chirp_outl.task);
-        while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
+          log_to_flash("---------CB_COLLECT---------\n");
+          // TODO: tune those parameters
+          chirp_outl.num_nodes = task_node_num;
+          chirp_outl.generation_size = chirp_outl.num_nodes;
+          chirp_outl.payload_len = chirp_outl.default_payload_len;
+          chirp_outl.round_max = UINT16_MAX;
+          chirp_outl.file_chunk_len = chirp_outl.payload_len - DATA_HEADER_LENGTH;
+          assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 8));
+          assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
+          if (!node_id)
+          {
+            chirp_controller_read_command(&chirp_outl);
+            chirp_outl.collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
+            chirp_outl.round_max = ROUND_SETUP + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
+            PRINTF("set:%d\n", chirp_outl.round_max);
+          }
+          chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
+          chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
+          chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
+          chirp_payload_distribution(chirp_outl.task);
+          while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 
-        #if ENERGEST_CONF_ON
-          ENERGEST_OFF(ENERGEST_TYPE_CPU);
-          Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
-          memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
-          memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
-        #endif
-        if (!chirp_round(task_node_id, &chirp_outl))
-        {
+          #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+            Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
+            memcpy((uint32_t *)(&chirp_outl.chirp_energy[1]), (uint32_t *)(&chirp_stats_all_debug), sizeof(chirp_stats_all_debug));
+            memset(&chirp_stats_all_debug, 0, sizeof(chirp_stats_all_debug));
+          #endif
+          if (!chirp_round(task_node_id, &chirp_outl))
+          {
+            free(payload_distribution);
+            break;
+          }
           free(payload_distribution);
-          break;
-        }
-				free(payload_distribution);
         }
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -1813,7 +1812,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
 
         chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-        chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
+        chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
         while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 
         #if ENERGEST_CONF_ON
