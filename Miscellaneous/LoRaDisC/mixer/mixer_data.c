@@ -528,10 +528,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 {
                     if (chirp_outl->round <= ROUND_SETUP)
                     {
-                        if (chirp_outl->task == CB_COLLECT)
-                            mixer_write(i, file_data, chirp_outl->payload_len);
-                        else
-                            mixer_write(i, data, MIN(sizeof(data), chirp_outl->payload_len));
+                        mixer_write(i, file_data, chirp_outl->payload_len);
                     }
                     else if (chirp_outl->round > ROUND_SETUP)
                     {
