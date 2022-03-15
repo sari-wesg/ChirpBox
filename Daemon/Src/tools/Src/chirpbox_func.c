@@ -1495,10 +1495,10 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     }
 		chirp_outl.task = CB_GLOSSY_ARRANGE;
 
-      #if ENERGEST_CONF_ON
-        energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
-        ENERGEST_ON(ENERGEST_TYPE_CPU);
-      #endif
+    #if ENERGEST_CONF_ON
+      energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
+      ENERGEST_ON(ENERGEST_TYPE_CPU);
+    #endif
 		PRINTF("---------CB_GLOSSY_ARRANGE---------\n");
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
