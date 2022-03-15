@@ -105,7 +105,7 @@ typedef enum ChirpBox_ArrangeDataLength_tag
 	/* one to all: CB_DISSEMINATE */
 	CB_START_LENGTH = 0x04,
 	CB_DISSEMINATE_LENGTH = 0x08,
-	CB_COLLECT_LENGTH = 0x05,
+	CB_COLLECT_LENGTH = 0x0D,
 	CB_CONNECTIVITY_LENGTH = 0xFF,
 	CB_VERSION_LENGTH = 0xFF,
 	CB_GLOSSY_LENGTH = 1
@@ -244,7 +244,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	/* CB_COLLECT */
 	uint32_t			collect_addr_start;
 	uint32_t			collect_addr_end;
-	uint32_t			collect_length;
 
 	/* CB_CONNECTIVITY */
 	uint8_t				sf_bitmap;

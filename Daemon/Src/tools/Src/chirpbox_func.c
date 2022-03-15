@@ -1362,6 +1362,8 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     {
       if (!menu_wait_task(&chirp_outl))
         chirp_outl.arrange_task = CB_GLOSSY_SYNCHRONIZED;
+      else if (chirp_outl.arrange_task == CB_COLLECT)
+        chirp_controller_read_command(&chirp_outl);
     }
 
     PRINTF("chirp_outl.arrange_task:%d\n", chirp_outl.arrange_task);
@@ -1421,9 +1423,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
             chirp_outl.glossy_resync++;
             if ((chirp_outl.glossy_resync >= 5) && (!chirp_outl.glossy_gps_on))
             {
-              chirp_outl.glossy_gps_on = 1;
-              GPS_On();
-              GPS_Waiting_PPS(10);
+              #if GPS_DATA
+                chirp_outl.glossy_gps_on = 1;
+                GPS_On();
+                GPS_Waiting_PPS(10);
+              #endif
               // GPS_Wakeup(60);
               // gps_time = GPS_Get_Time();
               // sync_channel_id = gps_time.chirp_min % LBT_CHANNEL_NUM;
@@ -1440,7 +1444,9 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           // wait on each 60 seconds
           if (chirp_outl.glossy_gps_on)
           {
-            GPS_Wakeup(60);
+            #if GPS_DATA
+              GPS_Wakeup(60);
+            #endif
           }
           else
           {
@@ -1753,13 +1759,11 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           chirp_outl.file_chunk_len = chirp_outl.payload_len - DATA_HEADER_LENGTH;
           assert_reset((chirp_outl.payload_len > DATA_HEADER_LENGTH + 8));
           assert_reset(!(chirp_outl.file_chunk_len % sizeof(uint64_t)));
-          if (!node_id)
-          {
-            chirp_controller_read_command(&chirp_outl);
-            chirp_outl.collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
-            chirp_outl.round_max = ROUND_SETUP + (chirp_outl.collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
-            PRINTF("set:%d\n", chirp_outl.round_max);
-          }
+
+          uint32_t collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
+          chirp_outl.round_max = (collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
+          PRINTF("set:%d\n", chirp_outl.round_max);
+
           chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
           chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
           chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);

@@ -38,7 +38,7 @@ class cbmng_command():
             elif (command_type == CHIRPBOX_START_COMMAND):
                 upgrade_bitmap = str(command_param[0]) + " "
                 flash_protection = str(command_param[1]) + " "
-                chirpbox_command = "cbmng.py " + CHIRPBOX_START_COMMAND + flash_protection + str(data['daemon_version']) + " " + str(data['all_command_sf']) + " " + data['all_command_comport'] + " " + upgrade_bitmap + str(data['flooding_command_bitmap']) + " " + str(data['all_command_tp'])
+                chirpbox_command = "cbmng.py " + CHIRPBOX_START_COMMAND + flash_protection + str(data['daemon_version']) + " " + str(data['all_command_sf']) + " " + data['all_command_comport'] + " " + upgrade_bitmap + str(data['flooding_command_slot_number']) + " " + str(data['all_command_tp'])
                 logger.info(chirpbox_command.split())
                 cbmng.main(chirpbox_command.split())
 
