@@ -1329,7 +1329,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         }
         else
         {
-            GPS_Wakeup(60);
+          GPS_Wakeup(60);
         }
     #endif
     #if ENERGEST_CONF_ON
@@ -1700,7 +1700,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
             FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
 
             loradisc_config.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
-            log_to_flash("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
+            PRINTF("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
           }
           loradisc_config.disem_flag = 1;
           chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
