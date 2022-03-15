@@ -1711,6 +1711,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           if (!chirp_round(task_node_id, &chirp_outl))
           {
             free(payload_distribution);
+            free(loradisc_config.disem_file_memory);
             FLASH_If_Erase(0);
             break;
           }
@@ -1777,7 +1778,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
             break;
           }
           free(payload_distribution);
-        }
         #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1788,6 +1788,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Erase_Pages(1, DAEMON_LBT_PAGE);
           FLASH_If_Write(DAEMON_DEBUG_LBT_ADDRESS, (uint32_t *)&loradisc_config.lbt_channel_time_us[0], ((LBT_CHANNEL_NUM + 1) / 2) * sizeof(uint64_t) / sizeof(uint32_t));
         #endif
+        }
 				break;
 			}
 			case CB_CONNECTIVITY:

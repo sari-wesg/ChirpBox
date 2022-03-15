@@ -1891,7 +1891,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// DIO0=TxDone
 			SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
 
-			gpi_memcpy_dma_aligned(&(mx.tx_packet->phy_payload_begin), Buffer2, loradisc_config.phy_payload_size);
+			if (loradisc_config.primitive != FLOODING)
+				gpi_memcpy_dma_aligned(&(mx.tx_packet->phy_payload_begin), Buffer2, loradisc_config.phy_payload_size);
 
 			set_event(TX_READY);
 

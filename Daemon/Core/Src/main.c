@@ -104,8 +104,12 @@ The parameter tool (param_patch_daemon.py) in "Chirpbox/ChirpBox_manager/Tools/p
 Here is the example of daemon_config with blank and local settings:
 */
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={0};
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001E0037, 0x0042002C, 0x004E004A}, 0xe3e9, 433000};
-
+// sari:
+// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x001E0037, 0x0042002C, 0x004E004A}, 0xe3e9, 433000};
+// tu graz:
+// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d}, 0xe3e9, 433000};
+// oead:
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x004a0022, 0x00350017}, 0xe3e9, 433000};
 /*
 Firmware under test configuration:
 Similar to the daemon, the FUT configuration can be set with blank or local settings, or reconfigured directly on the BIN file using param_patch_FUT.py and a custom json file.
