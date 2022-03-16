@@ -427,7 +427,7 @@ typedef union __attribute__((packed)) Packet_tag
 			{
 				uint16_t	app_header;
 
-				uint8_t 	packet_header[2]; // only used when flooding packets in glossy
+				uint8_t 	packet_header[2]; // used when flooding packets or for collect and dissem
 			};
         };
 

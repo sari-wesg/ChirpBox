@@ -184,7 +184,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	uint16_t			round; 				/* current round num */
 	uint16_t			round_max; 			/* desired round num to carriage task */
-	uint8_t				round_setup_to_delete; 		/* setup round for all nodes synchronization */
 
 	uint32_t			packet_time;
 	uint16_t			default_slot_num;
@@ -199,8 +198,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	// send back the results in dissem
 	uint8_t				dissem_back_sf;
 	uint8_t				dissem_back_slot_num;
-
-	uint32_t			hash_header;
 
 	uint8_t				glossy_resync;
 	uint8_t				glossy_gps_on;
@@ -233,7 +230,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				firmware_md5[16];
 	uint16_t			version_hash;
 
-	uint32_t			file_compression;
+	uint8_t				file_compression;
 
 	uint8_t				patch_update;
 	uint8_t 			patch_bank;
