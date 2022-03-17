@@ -57,7 +57,6 @@
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
 volatile uint8_t uart_read_done;
-uint8_t gps_time_str[4];
 
 //**************************************************************************************************
 //***** Local (Private) Defines and Consts *********************************************************
@@ -1289,17 +1288,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
   chirp_outl.glossy_gps_on = 1;
   // slot number is related to the hop count
   uint8_t hop_count = network_num_nodes > 10? 6 : 4;
-  #if GPS_DATA
-    // gps_time = GPS_Get_Time();
-    // uint8_t gps_time_str[2];
-    // memcpy(gps_time_str, (uint8_t *)&(gps_time.chirp_year), sizeof(gps_time_str));
-    // uint32_t channel_seed;
-    // uint8_t sync_channel[LBT_CHANNEL_NUM];
-
-    // channel_seed = Chirp_RSHash(gps_time_str, sizeof(gps_time_str));
-    // srand(channel_seed);
-    // randomPermutation1(sync_channel, LBT_CHANNEL_NUM);
-  #endif
 
   PRINTF("---------Chirpbox---------\n");
 	while (1)
