@@ -350,51 +350,15 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         case CB_DISSEMINATE:
         {
             /* initiator in dissemination setup: file size, patch config, and old file size (if patch) */
-            if ((loradisc_config.disem_file_index == 0) && (!node_id))
+            /* in dissemination, only initiator sends packets */
+            if (loradisc_config.disem_flag)
             {
                 data[k++] = loradisc_config.disem_file_index >> 8;
                 data[k++] = loradisc_config.disem_file_index;
-                memcpy(file_data, data, DATA_HEADER_LENGTH);
-                k = 0;
-                if (loradisc_config.disem_flag)
-                {
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_size >> 24;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_size >> 16;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_size >> 8;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->firmware_size;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->patch_update;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->patch_bank;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->version_hash >> 8;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->version_hash;
-                    file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->file_compression;
-                    /* k = 9 */
-                    memcpy(&(file_data[DATA_HEADER_LENGTH + 9]), &(chirp_outl->firmware_md5[0]), 16);
-                    /* k = 25 */
-                    if (chirp_outl->patch_update)
-                    {
-                        k = 28;
-                        file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 24;
-                        file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 16;
-                        file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size >> 8;
-                        file_data[DATA_HEADER_LENGTH + k++] = chirp_outl->old_firmware_size;
-                        /* k = 32 */
-                    }
-                    k = 0;
-                }
             }
-            /* if in dissemination / confirm session */
-            else if (loradisc_config.disem_file_index)
+            else
             {
-                /* in dissemination, only initiator sends packets */
-                if (loradisc_config.disem_flag)
-                {
-                    data[k++] = loradisc_config.disem_file_index >> 8;
-                    data[k++] = loradisc_config.disem_file_index;
-                }
-                else
-                {
-                    data[6] = loradisc_config.disem_flag_full_rank;
-                }
+                data[6] = loradisc_config.disem_flag_full_rank;
             }
             break;
         }
@@ -434,7 +398,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         case CB_GLOSSY_ARRANGE:
         {
             /* start: payload_len = 4
-            dissem: payload_len = 8
+            dissem: payload_len = 35
             collect: payload_len = 13 */
             k = 0;
             flooding_data[k++] = chirp_outl->task_bitmap[0] >> 24;
@@ -448,6 +412,19 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 file_data[k++] = chirp_outl->dissem_back_slot_num;
                 file_data[k++] = chirp_outl->default_payload_len;
                 file_data[k++] = chirp_outl->default_generate_size;
+
+                file_data[k++] = chirp_outl->patch_update;
+                file_data[k++] = chirp_outl->patch_bank;
+                file_data[k++] = chirp_outl->file_compression;
+                file_data[k++] = chirp_outl->old_firmware_size >> 24;
+                file_data[k++] = chirp_outl->old_firmware_size >> 16;
+                file_data[k++] = chirp_outl->old_firmware_size >> 8;
+                file_data[k++] = chirp_outl->old_firmware_size;
+                file_data[k++] = chirp_outl->firmware_size >> 24;
+                file_data[k++] = chirp_outl->firmware_size >> 16;
+                file_data[k++] = chirp_outl->firmware_size >> 8;
+                file_data[k++] = chirp_outl->firmware_size;
+                memcpy(&(file_data[k++]), &(chirp_outl->firmware_md5[0]), 16);
             }
             else if (chirp_outl->arrange_task == CB_COLLECT)
             {
@@ -495,15 +472,10 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
             {
                 case CB_DISSEMINATE:
                 {
-                    if (!loradisc_config.disem_file_index)
-                        mixer_write(i, file_data, chirp_outl->payload_len);
-                    else
-                    {
-                        gpi_memcpy_dma((uint8_t *)(file_data), data, DATA_HEADER_LENGTH);
-                        if (loradisc_config.disem_flag)
-                            gpi_memcpy_dma((uint32_t *)(file_data + DATA_HEADER_LENGTH), flash_data + i * (chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t), (chirp_outl->payload_len - DATA_HEADER_LENGTH));
-                        mixer_write(i, (uint8_t *)file_data, chirp_outl->payload_len);
-                    }
+                    gpi_memcpy_dma((uint8_t *)(file_data), data, DATA_HEADER_LENGTH);
+                    if (loradisc_config.disem_flag)
+                        gpi_memcpy_dma((uint32_t *)(file_data + DATA_HEADER_LENGTH), flash_data + i * (chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t), (chirp_outl->payload_len - DATA_HEADER_LENGTH));
+                    mixer_write(i, (uint8_t *)file_data, chirp_outl->payload_len);
                     break;
                 }
                 case CB_COLLECT:
@@ -645,86 +617,33 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                         case CB_DISSEMINATE:
                         {
                             /* CB_DISSEMINATE */
-                            if (!loradisc_config.disem_file_index)
+                            if (node_id)
                             {
-                                if (node_id)
+                                /* compare / increase the index */
+                                if (loradisc_config.disem_file_index == (data[ROUND_HEADER_LENGTH] << 8 | data[ROUND_HEADER_LENGTH + 1]))
                                 {
-                                    /* compare / increase the index */
-                                    if (loradisc_config.disem_file_index == (data[ROUND_HEADER_LENGTH] << 8 | data[ROUND_HEADER_LENGTH + 1]))
+                                    PRINTF("write\n");
+                                    memcpy(&(loradisc_config.disem_file_memory[i * sizeof(file_data) / sizeof(uint32_t)]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
+
+                                    if (i == chirp_outl->generation_size - 1)
                                     {
-                                        if (i == 0)
+                                        if (!chirp_outl->patch_update)
                                         {
-                                            memcpy(&(loradisc_config.disem_file_memory[0]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
-
-                                            memcpy(data, &(loradisc_config.disem_file_memory[0]), DATA_HEADER_LENGTH + 1);
-                                            chirp_outl->firmware_size = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
-                                            chirp_outl->patch_update = data[4];
-                                            chirp_outl->patch_bank = data[5];
-                                            loradisc_config.disem_file_max = (chirp_outl->firmware_size + chirp_outl->file_chunk_len - 1) / chirp_outl->file_chunk_len  + 1;
-                                            chirp_outl->version_hash = (data[6] << 8) | (data[7]);
-                                            chirp_outl->file_compression = data[8];
-                                            PRINTF("version_hash:%x, %x, %x\n", chirp_outl->version_hash, data[6], data[7]);
-                                            PRINTF("CB_DISSEMINATE: %lu, %d, %d, %d, %lu\n", chirp_outl->firmware_size, chirp_outl->patch_update, loradisc_config.disem_file_max, chirp_outl->file_chunk_len, chirp_outl->file_compression);
-
-                                            memcpy(&(chirp_outl->firmware_md5[0]), (uint8_t *)(p + 17), 16);
-                                            /* update whole firmware */
-                                            if ((!chirp_outl->patch_update) && (i == 0))
+                                            FLASH_If_Write(FLASH_START_BANK2 + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
+                                        }
+                                        else if (chirp_outl->patch_update)
+                                        {
+                                            if (!chirp_outl->patch_bank)
                                             {
-                                                menu_preSend(1);
-                                                file_data[0] = chirp_outl->firmware_size;
-                                                // PRINTF("whole firmware_size:%lu\n", chirp_outl->firmware_size);
-                                                FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)file_data, 2);
+                                                FLASH_If_Write(FLASH_START_BANK1 + chirp_outl->patch_page * FLASH_PAGE + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
                                             }
-                                            /* patch firmware */
-                                            else if ((chirp_outl->patch_update) && (i == 0))
+                                            else
                                             {
-                                                memcpy(data, &(loradisc_config.disem_file_memory[7]), 4);
-                                                k = 0;
-
-                                                chirp_outl->old_firmware_size = (data[k++] << 24) | (data[k++] << 16) | (data[k++] << 8) | (data[k++]);
-                                                k = 0;
-                                                chirp_outl->patch_page = menu_pre_patch(chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size);
-                                                PRINTF("patch:%lu, %d\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
+                                                FLASH_If_Write(FLASH_START_BANK2 + chirp_outl->patch_page * FLASH_PAGE + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
                                             }
                                         }
-                                        if (i == chirp_outl->generation_size - 1)
-                                        {
-                                            loradisc_config.disem_file_index++;
-                                            loradisc_config.disem_file_index_stay = 0;
-                                        }
-                                    }
-                                }
-                            }
-                            else if (loradisc_config.disem_file_index)
-                            {
-                                if (node_id)
-                                {
-                                    /* compare / increase the index */
-                                    if (loradisc_config.disem_file_index == (data[ROUND_HEADER_LENGTH] << 8 | data[ROUND_HEADER_LENGTH + 1]))
-                                    {
-                                        PRINTF("write\n");
-                                        memcpy(&(loradisc_config.disem_file_memory[i * sizeof(file_data) / sizeof(uint32_t)]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
-
-                                        if (i == chirp_outl->generation_size - 1)
-                                        {
-                                            if (!chirp_outl->patch_update)
-                                            {
-                                                FLASH_If_Write(FLASH_START_BANK2 + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
-                                            }
-                                            else if (chirp_outl->patch_update)
-                                            {
-                                                if (!chirp_outl->patch_bank)
-                                                {
-                                                    FLASH_If_Write(FLASH_START_BANK1 + chirp_outl->patch_page * FLASH_PAGE + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
-                                                }
-                                                else
-                                                {
-                                                    FLASH_If_Write(FLASH_START_BANK2 + chirp_outl->patch_page * FLASH_PAGE + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
-                                                }
-                                            }
-                                            loradisc_config.disem_file_index++;
-                                            loradisc_config.disem_file_index_stay = 0;
-                                        }
+                                        loradisc_config.disem_file_index++;
+                                        loradisc_config.disem_file_index_stay = 0;
                                     }
                                 }
                             }
@@ -784,6 +703,37 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             chirp_outl->dissem_back_slot_num = real_data[k++ - FLOODING_SURPLUS_LENGTH];
             chirp_outl->default_payload_len = real_data[k++ - FLOODING_SURPLUS_LENGTH];
             chirp_outl->default_generate_size = real_data[k++ - FLOODING_SURPLUS_LENGTH];
+
+            chirp_outl->patch_update = real_data[k++ - FLOODING_SURPLUS_LENGTH];
+            chirp_outl->patch_bank = real_data[k++ - FLOODING_SURPLUS_LENGTH];
+            chirp_outl->file_compression = real_data[k++ - FLOODING_SURPLUS_LENGTH];
+            chirp_outl->old_firmware_size = (real_data[k++ - FLOODING_SURPLUS_LENGTH] << 24) | (real_data[k++ - FLOODING_SURPLUS_LENGTH] << 16) | (real_data[k++ - FLOODING_SURPLUS_LENGTH] << 8) | (real_data[k++ - FLOODING_SURPLUS_LENGTH]);
+            chirp_outl->firmware_size = (real_data[k++ - FLOODING_SURPLUS_LENGTH] << 24) | (real_data[k++ - FLOODING_SURPLUS_LENGTH] << 16) | (real_data[k++ - FLOODING_SURPLUS_LENGTH] << 8) | (real_data[k++ - FLOODING_SURPLUS_LENGTH]);
+            memcpy(&(chirp_outl->firmware_md5[0]), (uint8_t *)&(real_data[k++ - FLOODING_SURPLUS_LENGTH]), 16);
+
+            PRINTF("CB_DISSEMINATE:%d, %d, %lu, %lu, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->file_compression);
+
+            for (i = 0; i < 16; i++)
+            {
+            PRINTF("%02X", chirp_outl->firmware_md5[i]);
+            }
+
+            if (node_id)
+            {
+                /* update whole firmware */
+                if ((!chirp_outl->patch_update))
+                {
+                    menu_preSend(1);
+                    file_data[0] = chirp_outl->firmware_size;
+                    FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)file_data, 2);
+                }
+                /* patch firmware */
+                else if ((chirp_outl->patch_update))
+                {
+                    chirp_outl->patch_page = menu_pre_patch(chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size);
+                    PRINTF("patch:%lu, %d\n", chirp_outl->old_firmware_size, chirp_outl->patch_page);
+                }
+            }
         }
         else if (chirp_outl->arrange_task == CB_COLLECT)
         {

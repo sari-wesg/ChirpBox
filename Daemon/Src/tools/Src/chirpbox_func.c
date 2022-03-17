@@ -362,8 +362,6 @@ void Flash_Bank_Copy_Bank(uint32_t FLASH_SRC, uint32_t FLASH_DEST, uint32_t firm
   /* erase another bank */
   if (bank)
     menu_preSend(1);
-  // else
-  //   menu_preSend(0);
 
   round = (firmware_size + sizeof(firmware_file_buffer) - 1) / sizeof(firmware_file_buffer);
   PRINTF("copy round:%lu, %lu\n", round, firmware_size);
@@ -1282,6 +1280,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
   Chirp_Time ds3231_time;
   time_t diff;
   time_t sleep_sec;
+  Gpi_Fast_Tick_Native deadline;
 
   Chirp_Time gps_time;
   loradisc_config.lbt_channel_primary = 0;
@@ -1362,8 +1361,6 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     {
       if (!menu_wait_task(&chirp_outl))
         chirp_outl.arrange_task = CB_GLOSSY_SYNCHRONIZED;
-      else if (chirp_outl.arrange_task == CB_COLLECT)
-        chirp_controller_read_command(&chirp_outl);
     }
 
     PRINTF("chirp_outl.arrange_task:%d\n", chirp_outl.arrange_task);
@@ -1470,7 +1467,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     // have a task to do
     else
     {
-      PRINTF("chirp_outl.arrange_task == CB_GLOSSY_ARRANGE\n");
+      PRINTF("chirp_outl.arrange_task = %d\n", chirp_outl.arrange_task);
       chirp_outl.glossy_resync = 0;
       if ((chirp_outl.glossy_gps_on) && (node_id))
       {
@@ -1495,6 +1492,45 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     }
 		chirp_outl.task = CB_GLOSSY_ARRANGE;
 
+    if ((chirp_outl.arrange_task == CB_COLLECT) || (chirp_outl.arrange_task == CB_DISSEMINATE))
+    // if ((chirp_outl.arrange_task == CB_COLLECT))
+    {
+      if (chirp_outl.arrange_task == CB_DISSEMINATE)
+        deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(10000);
+      else
+        deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
+
+      if (!node_id)
+      {
+        if (chirp_outl.arrange_task == CB_DISSEMINATE)
+        {
+          chirp_outl.file_chunk_len = chirp_outl.default_generate_size * (chirp_outl.default_payload_len - DATA_HEADER_LENGTH);
+
+          chirp_controller_read_command(&chirp_outl);
+          uint32_t flash_length;
+          if (!chirp_outl.patch_update)
+            flash_length = menu_initiator_read_file();
+          else
+          {
+            /* patch bank1, means update self firmware */
+            chirp_outl.patch_page = menu_pre_patch(chirp_outl.patch_bank, chirp_outl.old_firmware_size, chirp_outl.firmware_size);
+            flash_length = menu_serialDownload(chirp_outl.patch_page, chirp_outl.patch_bank);
+          }
+          chirp_outl.firmware_size = flash_length;
+          uint32_t firmware_size[1];
+          firmware_size[0] = chirp_outl.firmware_size;
+          FLASH_If_Erase_Pages(0, 253);
+          FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
+
+          loradisc_config.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
+          PRINTF("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
+        }
+        else
+          chirp_controller_read_command(&chirp_outl);
+      }
+      while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
+    }
+
     #if ENERGEST_CONF_ON
       energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
       ENERGEST_ON(ENERGEST_TYPE_CPU);
@@ -1503,8 +1539,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = 0;
-    // if (chirp_outl.arrange_task == CB_START)
-    //   chirp_outl.payload_len = CB_START_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_START_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
+
     if (chirp_outl.arrange_task == CB_DISSEMINATE)
       chirp_outl.payload_len = CB_DISSEMINATE_LENGTH > FLOODING_SURPLUS_LENGTH ? CB_DISSEMINATE_LENGTH - FLOODING_SURPLUS_LENGTH : 0;
     else if (chirp_outl.arrange_task == CB_COLLECT)
@@ -1571,11 +1606,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     task_:
     INFO();
 
-		Gpi_Fast_Tick_Native deadline;
-    if (chirp_outl.task == CB_DISSEMINATE)
-      deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(20000);
-    else
-      deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
+    deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(2000);
 
 		switch (chirp_outl.task)
 		{
@@ -1666,11 +1697,8 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         if ((chirp_outl.task_bitmap[node_id / 32] & (1 << (node_id % 32))))
         {
           chirp_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
-          loradisc_config.disem_file_index = 0;
-          loradisc_config.disem_file_max = UINT16_MAX / 2;
+          loradisc_config.disem_file_index = 1;
           loradisc_config.disem_file_index_stay = 0;
-          chirp_outl.version_hash = 0;
-          memset(chirp_outl.firmware_md5, 0, sizeof(chirp_outl.firmware_md5));
           log_to_flash("---------CB_DISSEMINATE---------\n");
           // TODO: tune those parameters
           chirp_outl.num_nodes = task_node_num;
@@ -1681,27 +1709,9 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           chirp_outl.round_max = UINT16_MAX;
           chirp_outl.file_chunk_len = chirp_outl.generation_size * (chirp_outl.payload_len - DATA_HEADER_LENGTH);
           loradisc_config.disem_file_memory = (uint32_t *)malloc(chirp_outl.file_chunk_len);
-          if (!node_id)
-          {
-            chirp_controller_read_command(&chirp_outl);
-            uint32_t flash_length;
-            if (!chirp_outl.patch_update)
-              flash_length = menu_initiator_read_file();
-            else
-            {
-              /* patch bank1, means update self firmware */
-              chirp_outl.patch_page = menu_pre_patch(chirp_outl.patch_bank, chirp_outl.old_firmware_size, chirp_outl.firmware_size);
-              flash_length = menu_serialDownload(chirp_outl.patch_page, chirp_outl.patch_bank);
-            }
-            chirp_outl.firmware_size = flash_length;
-            uint32_t firmware_size[1];
-            firmware_size[0] = chirp_outl.firmware_size;
-            FLASH_If_Erase_Pages(0, 253);
-            FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
 
-            loradisc_config.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
-            PRINTF("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
-          }
+          loradisc_config.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
+
           loradisc_config.disem_flag = 1;
           chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
           chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
