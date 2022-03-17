@@ -3,12 +3,11 @@
 // mixer configuration file
 // Adapt the settings to the needs of your application.
 
-#define DEBUG_CHIRPBOX 1
-#if DEBUG_CHIRPBOX
-
-#define PRINTF_CHIRP(...) printf(__VA_ARGS__)
+#define DEBUG_MIXER 1
+#if DEBUG_MIXER
+#define PRINTF_MIXER(...) printf(__VA_ARGS__)
 #else
-#define PRINTF_CHIRP(...)
+#define PRINTF_MIXER(...)
 #endif
 
 /*********************************************************/

@@ -10,14 +10,6 @@
 #endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#if DEBUG_CHIRPBOX
-#include <stdio.h>
-#include <stdlib.h>
-
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
@@ -103,7 +95,7 @@ Chirp_Time RTC_GetTime(void)
     RTC_Time.chirp_hour = nTime.Hours;
     RTC_Time.chirp_min = nTime.Minutes;
     RTC_Time.chirp_sec = nTime.Seconds;
-	PRINTF("RTC_GetTime: %d-%d-%d %d:%d:%d week: %d\n", RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec, RTC_Time.chirp_day);
+	PRINTF_CHIRP("RTC_GetTime: %d-%d-%d %d:%d:%d week: %d\n", RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec, RTC_Time.chirp_day);
 
     return RTC_Time;
 }
@@ -120,7 +112,7 @@ void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, u
         rtc_count = 0;
         while (rtc_count <= diff)
         {
-            PRINTF("rtc:%lu\n", rtc_count);
+            PRINTF_CHIRP("rtc:%lu\n", rtc_count);
             // enter low-power mode
             gpi_int_disable();
 
@@ -144,7 +136,7 @@ void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, u
 // Stop mode:
 void RTC_Waiting_Count_Stop(uint32_t Count_wait)
 {
-    PRINTF("Stop_Count:%lu\n", Count_wait);
+    PRINTF_CHIRP("Stop_Count:%lu\n", Count_wait);
 
     if (Count_wait > 1)
     {
@@ -154,7 +146,7 @@ void RTC_Waiting_Count_Stop(uint32_t Count_wait)
             rtc_count = 0;
             while (rtc_count <= Count_wait)
             {
-                PRINTF("rtc:%lu\n", rtc_count);
+                PRINTF_CHIRP("rtc:%lu\n", rtc_count);
                 // enter low-power mode
                 gpi_int_disable();
 
@@ -176,7 +168,7 @@ void RTC_Waiting_Count_Stop(uint32_t Count_wait)
 // Sleep mode:
 void RTC_Waiting_Count_Sleep(uint32_t Count_wait)
 {
-    PRINTF("Sleep_Count:%lu\n", Count_wait);
+    PRINTF_CHIRP("Sleep_Count:%lu\n", Count_wait);
 
     if (Count_wait > 1)
     {
@@ -186,7 +178,7 @@ void RTC_Waiting_Count_Sleep(uint32_t Count_wait)
             rtc_count = 0;
             while (rtc_count <= Count_wait)
             {
-                PRINTF("rtc:%lu\n", rtc_count);
+                PRINTF_CHIRP("rtc:%lu\n", rtc_count);
                 // enter low-power mode
                 gpi_int_disable();
 

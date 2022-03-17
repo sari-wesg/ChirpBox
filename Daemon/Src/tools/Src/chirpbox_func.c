@@ -49,24 +49,20 @@
 //***** Includes ***********************************************************************************
 
 #include "string.h"
+#include "chirp_internal.h"
 #include "mixer/mixer_internal.h"
 #include "md5.h"
 #include "chirpbox_func.h"
 #include "loradisc.h"
 #include <math.h>
+#include "gpi/olf.h"
+
 //**************************************************************************************************
 //***** Global Variables ****************************************************************************
 volatile uint8_t uart_read_done;
 
 //**************************************************************************************************
 //***** Local (Private) Defines and Consts *********************************************************
-#if DEBUG_CHIRPBOX
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-#include "gpi/olf.h"
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
@@ -363,15 +359,15 @@ void Flash_Bank_Copy_Bank(uint32_t FLASH_SRC, uint32_t FLASH_DEST, uint32_t firm
     menu_preSend(1);
 
   round = (firmware_size + sizeof(firmware_file_buffer) - 1) / sizeof(firmware_file_buffer);
-  PRINTF("copy round:%lu, %lu\n", round, firmware_size);
+  PRINTF_CHIRP("copy round:%lu, %lu\n", round, firmware_size);
   for (n = round; n > 0; n--)
   {
-    PRINTF("%lu, ", (n - 1));
+    PRINTF_CHIRP("%lu, ", (n - 1));
     memcpy(firmware_file_buffer, (__IO uint32_t*)(FLASH_SRC + (n - 1) * sizeof(firmware_file_buffer)), sizeof(firmware_file_buffer));
 
     FLASH_If_Write(FLASH_DEST + (n - 1) * sizeof(firmware_file_buffer), (uint32_t *)(firmware_file_buffer), sizeof(firmware_file_buffer) / sizeof(uint32_t));
   }
-  PRINTF("\n");
+  PRINTF_CHIRP("\n");
 
   if (bank)
   {
@@ -404,7 +400,7 @@ void menu_bank(void)
     Serial_PutString((uint8_t *)"\tSystem running from STM32L476 *Bank 2*  \r\n\n");
     #if DAEMON_BANK
       uint32_t firmware_size = *(__IO uint32_t*)(FIRMWARE_FLASH_ADDRESS_1);
-      PRINTF("firmware_size:%lu\n", firmware_size);
+      PRINTF_CHIRP("firmware_size:%lu\n", firmware_size);
       if ((firmware_size < 0x100000) && (firmware_size))
         Flash_Bank_Copy_Bank(FLASH_START_BANK1, FLASH_START_BANK2, firmware_size, 1);
       DS3231_GetTime();
@@ -719,7 +715,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   uint8_t task_wait = 0;
 
   uint8_t task[28 + DISSEM_BITMAP_32 * 8 + DISSEM_BITMAP_32 * 8 + 1];
-  PRINTF("\nTask list:\n%d: CB_START\n%d: CB_DISSEMINATE\n%d: CB_COLLECT\n%d: CB_CONNECTIVITY\n%d: CB_VERSION\n", CB_START, CB_DISSEMINATE, CB_COLLECT, CB_CONNECTIVITY, CB_VERSION);
+  PRINTF_CHIRP("\nTask list:\n%d: CB_START\n%d: CB_DISSEMINATE\n%d: CB_COLLECT\n%d: CB_CONNECTIVITY\n%d: CB_VERSION\n", CB_START, CB_DISSEMINATE, CB_COLLECT, CB_CONNECTIVITY, CB_VERSION);
 
   HAL_StatusTypeDef status;
 
@@ -741,7 +737,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
         __HAL_UART_ENABLE(&huart2);
         return 0;
       }
-      PRINTF("Input initiator task:\n");
+      PRINTF_CHIRP("Input initiator task:\n");
       // 0,07,100
       status = HAL_UART_Receive(&UART_Handle, &task, sizeof(task), DOWNLOAD_TIMEOUT);
       while (UART_Handle.RxState == HAL_UART_STATE_BUSY_RX);
@@ -779,7 +775,7 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
 
   SysTick->CTRL &= ~SysTick_CTRL_TICKINT_Msk;
 
-  PRINTF("Select: ");
+  PRINTF_CHIRP("Select: ");
 
   chirp_outl->arrange_task = (ChirpBox_Task )mx_task;
   chirp_outl->default_sf = default_sf;
@@ -789,36 +785,36 @@ uint8_t menu_wait_task(Chirp_Outl *chirp_outl)
   chirp_outl->default_slot_num = default_slot_num;
   chirp_outl->dissem_back_sf = dissem_back_sf;
   chirp_outl->dissem_back_slot_num = dissem_back_slot_num;
-  PRINTF("default sf:%lu, %d, %d, %d, %d, %d, %d, %02x, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0], chirp_outl->task_bitmap[0]);
+  PRINTF_CHIRP("default sf:%lu, %d, %d, %d, %d, %d, %d, %02x, %02x\n", chirp_outl->default_sf, chirp_outl->default_tp, chirp_outl->default_payload_len, chirp_outl->default_generate_size, chirp_outl->default_slot_num, chirp_outl->dissem_back_sf, chirp_outl->dissem_back_slot_num, chirp_outl->firmware_bitmap[0], chirp_outl->task_bitmap[0]);
   switch (mx_task)
   {
     case CB_START:
     {
-      PRINTF("CB_START\n");
+      PRINTF_CHIRP("CB_START\n");
       break;
     }
     case CB_DISSEMINATE:
     {
-      PRINTF("CB_DISSEMINATE\n");
+      PRINTF_CHIRP("CB_DISSEMINATE\n");
       break;
     }
     case CB_COLLECT:
     {
-      PRINTF("CB_COLLECT\n");
+      PRINTF_CHIRP("CB_COLLECT\n");
       break;
     }
     case CB_CONNECTIVITY:
     {
-      PRINTF("CB_CONNECTIVITY\n");
+      PRINTF_CHIRP("CB_CONNECTIVITY\n");
       break;
     }
     case CB_VERSION:
     {
-      PRINTF("CB_VERSION\n");
+      PRINTF_CHIRP("CB_VERSION\n");
       break;
     }
     default:
-      PRINTF("WRONG TASK\n");
+      PRINTF_CHIRP("WRONG TASK\n");
       break;
   }
   return 1;
@@ -863,7 +859,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
   }
 
   uart_read_data(0, rxbuffer_len);
-  PRINTF("\nWaiting for parameter(s)...\n");
+  PRINTF_CHIRP("\nWaiting for parameter(s)...\n");
 
   while(!uart_read_done);
 
@@ -972,7 +968,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
           }
         }
 
-        PRINTF("\tSTART at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, start user:%d, ver:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
+        PRINTF_CHIRP("\tSTART at %d-%d-%d, %d:%d:%d\n\tEnd at %d-%d-%d, %d:%d:%d\n, start user:%d, ver:%x\n", chirp_outl->start_year, chirp_outl->start_month, chirp_outl->start_date, chirp_outl->start_hour, chirp_outl->start_min, chirp_outl->start_sec, chirp_outl->end_year, chirp_outl->end_month, chirp_outl->end_date, chirp_outl->end_hour, chirp_outl->end_min, chirp_outl->end_sec, chirp_outl->flash_protection, chirp_outl->version_hash);
         break;
       }
       case CB_DISSEMINATE:
@@ -1041,12 +1037,12 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
             }
           }
         }
-        PRINTF("CB_DISSEMINATE:%d, %d, %lu, %lu, %d, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash, chirp_outl->file_compression);
+        PRINTF_CHIRP("CB_DISSEMINATE:%d, %d, %lu, %lu, %d, %lu\n", chirp_outl->patch_update, chirp_outl->patch_bank, chirp_outl->old_firmware_size, chirp_outl->firmware_size, chirp_outl->version_hash, chirp_outl->file_compression);
         for (i = 0; i < 16; i++)
         {
-          PRINTF("%02X", chirp_outl->firmware_md5[i]);
+          PRINTF_CHIRP("%02X", chirp_outl->firmware_md5[i]);
         }
-        PRINTF("\n");
+        PRINTF_CHIRP("\n");
         if (!chirp_outl->patch_update)
         {
           menu_preSend(1);
@@ -1083,7 +1079,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
           }
         }
 
-        PRINTF("Start address: 0x%x, End address: 0x%x\n", chirp_outl->collect_addr_start, chirp_outl->collect_addr_end);
+        PRINTF_CHIRP("Start address: 0x%x, End address: 0x%x\n", chirp_outl->collect_addr_start, chirp_outl->collect_addr_end);
         break;
       }
       case CB_CONNECTIVITY:
@@ -1130,7 +1126,7 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
         if (!tx_sign)
           chirp_outl->tx_power = 0 - chirp_outl->tx_power;
 
-        PRINTF("Spreading factor bitmap: %d, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf_bitmap, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
+        PRINTF_CHIRP("Spreading factor bitmap: %d, Frequency at: %lu kHz, Tx power: %d, topo_payload_len: %d\n", chirp_outl->sf_bitmap, chirp_outl->freq, chirp_outl->tx_power, chirp_outl->topo_payload_len);
         break;
       }
       default:
@@ -1289,7 +1285,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
   // slot number is related to the hop count
   uint8_t hop_count = network_num_nodes > 10? 6 : 4;
 
-  PRINTF("---------Chirpbox---------\n");
+  PRINTF_CHIRP("---------Chirpbox---------\n");
 	while (1)
 	{
     #if ENERGEST_CONF_ON
@@ -1330,7 +1326,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.task = CB_GLOSSY;
 		chirp_outl.arrange_task = CB_GLOSSY;
 
-		PRINTF("---------MX_GLOSSY---------\n");
+		PRINTF_CHIRP("---------MX_GLOSSY---------\n");
 		// TODO: glossy without mixer payload
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = 0;
@@ -1351,7 +1347,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         chirp_outl.arrange_task = CB_GLOSSY_SYNCHRONIZED;
     }
 
-    PRINTF("chirp_outl.arrange_task:%d\n", chirp_outl.arrange_task);
+    PRINTF_CHIRP("chirp_outl.arrange_task:%d\n", chirp_outl.arrange_task);
     #if ENERGEST_CONF_ON
       ENERGEST_OFF(ENERGEST_TYPE_CPU);
       Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
@@ -1455,7 +1451,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     // have a task to do
     else
     {
-      PRINTF("chirp_outl.arrange_task = %d\n", chirp_outl.arrange_task);
+      PRINTF_CHIRP("chirp_outl.arrange_task = %d\n", chirp_outl.arrange_task);
       chirp_outl.glossy_resync = 0;
       if ((chirp_outl.glossy_gps_on) && (node_id))
       {
@@ -1511,7 +1507,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           FLASH_If_Write(FIRMWARE_FLASH_ADDRESS_2, (uint32_t *)firmware_size, 2);
 
           loradisc_config.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
-          PRINTF("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
+          PRINTF_CHIRP("file size:%lu, %d, %d, %lu\n", flash_length, loradisc_config.disem_file_max, chirp_outl.file_chunk_len, chirp_outl.payload_len - DATA_HEADER_LENGTH );
         }
         else
           chirp_controller_read_command(&chirp_outl);
@@ -1523,7 +1519,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
       energest_type_set(ENERGEST_TYPE_STOP, energest_type_time(ENERGEST_TYPE_STOP) + GPI_TICK_S_TO_FAST(60 - loradisc_config.mx_period_time_s - 2));
       ENERGEST_ON(ENERGEST_TYPE_CPU);
     #endif
-		PRINTF("---------CB_GLOSSY_ARRANGE---------\n");
+		PRINTF_CHIRP("---------CB_GLOSSY_ARRANGE---------\n");
 		// TODO: tune those parameters
 		chirp_outl.num_nodes = network_num_nodes;
 		chirp_outl.generation_size = 0;
@@ -1760,7 +1756,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 
           uint32_t collect_length = ((chirp_outl.collect_addr_end - chirp_outl.collect_addr_start + sizeof(uint64_t) - 1) / sizeof(uint64_t)) * sizeof(uint64_t);
           chirp_outl.round_max = (collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
-          PRINTF("set:%d\n", chirp_outl.round_max);
+          PRINTF_CHIRP("set:%d\n", chirp_outl.round_max);
 
           chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
           chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);

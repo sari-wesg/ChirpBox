@@ -20,14 +20,6 @@
 #include "flash_if.h"
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#if DEBUG_CHIRPBOX
-#include <stdio.h>
-#include <stdlib.h>
-
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 #define BUFFER_SIZE                 255
 
@@ -117,7 +109,7 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
     round_id = i;
     if (i != node_id)
     {
-        PRINTF("Topology---Rx:%d\n", i);
+        PRINTF_CHIRP("Topology---Rx:%d\n", i);
 		SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 											//RFLR_IRQFLAGS_RXDONE |
 											//RFLR_IRQFLAGS_PAYLOADCRCERROR |
@@ -185,7 +177,7 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
 		SX1276Write( REG_LR_FIFOADDRPTR, 0 );
 
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-        PRINTF("Topology---Tx\n");
+        PRINTF_CHIRP("Topology---Tx\n");
         SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
         #if ENERGEST_CONF_ON
             ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -218,7 +210,7 @@ void topo_result(uint8_t nodes_num, uint8_t topo_test_id)
     for ( i = 0; i < nodes_num; i++)
     {
         node_topology_link[i].reliability = (uint16_t)(((uint32_t)node_topology[i].rx_num * 1e4) / (uint32_t)(tx_num_max));
-        PRINTF("r:%d, %d\n", i, node_topology_link[i].reliability);
+        PRINTF_CHIRP("r:%d, %d\n", i, node_topology_link[i].reliability);
     }
 
     uint8_t temp_raw = SX1276GetRawTemp();
@@ -301,13 +293,13 @@ void topo_dio0_isr()
                 }
                     node_topology_link[Rx_Buffer[0]-1].snr_total += SnrValue;
                     node_topology_link[Rx_Buffer[0]-1].rssi_total += RssiValue_link;
-                PRINTF("RX: %d\n", rx_receive_num);
+                PRINTF_CHIRP("RX: %d\n", rx_receive_num);
             }
         }
         else
         {
 			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
-            PRINTF("RX wrong: %d\n", rx_receive_num);
+            PRINTF_CHIRP("RX wrong: %d\n", rx_receive_num);
         }
         SX1276SetOpMode( RFLR_OPMODE_SLEEP );
         SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
@@ -316,7 +308,7 @@ void topo_dio0_isr()
     }
     else if (topology_state == TX_RUNNING)
     {
-        PRINTF("TXDONE\n");
+        PRINTF_CHIRP("TXDONE\n");
         gpi_led_on(GPI_LED_2);
         SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
         topology_state = 0;
@@ -355,7 +347,7 @@ void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t
         sf_lsb = gpi_get_lsb(sf_bitmap);
         sf_bitmap &= sf_bitmap - 1;
         sf = TOPO_DEFAULT_SF + sf_lsb;
-        PRINTF("Test SF:%u\n", sf);
+        PRINTF_CHIRP("Test SF:%u\n", sf);
 
         gpi_radio_set_spreading_factor(sf);
         topo_init(nodes_num, node_id, sf, payload_len);

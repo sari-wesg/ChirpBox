@@ -89,12 +89,6 @@ GPI_TRACE_CONFIG(mixer_processing, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-// #define DEBUG 1
-#if PRINTF_CHIRP
-#define PRINTF_decode(...) printf(__VA_ARGS__)
-#else
-#define PRINTF_decode(...)
-#endif
 
 
 //**************************************************************************************************

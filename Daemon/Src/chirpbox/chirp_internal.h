@@ -33,9 +33,18 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 	#define DAEMON_BANK								1
 #endif
 
+/* Turn on gps or rtc for synchronization */
 #ifndef GPS_DATA
 	#define GPS_DATA								1
 	#define DS3231_ON								1
+#endif
+
+/* Whether to print logs */
+#define DEBUG_CHIRPBOX 1
+#if DEBUG_CHIRPBOX
+#define PRINTF_CHIRP(...) printf(__VA_ARGS__)
+#else
+#define PRINTF_CHIRP(...)
 #endif
 
 /* DATA config */
