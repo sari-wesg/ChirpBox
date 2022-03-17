@@ -5,10 +5,7 @@
 #include "stm32l4xx_hal.h"
 #include <stdlib.h>
 #include "gpi/olf.h"
-
-#ifdef MX_CONFIG_FILE
-#include STRINGIFY(MX_CONFIG_FILE)
-#endif
+#include "mixer_config.h"
 
 #if MX_LBT_ACCESS
 

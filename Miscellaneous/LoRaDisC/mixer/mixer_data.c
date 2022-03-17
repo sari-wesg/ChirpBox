@@ -3,10 +3,7 @@
 
 #include "mixer_internal.h"
 #include "chirp_internal.h"
-
-#ifdef MX_CONFIG_FILE
-	#include STRINGIFY(MX_CONFIG_FILE)
-#endif
+#include "mixer_config.h"
 
 #include "gpi/olf.h"
 #include GPI_PLATFORM_PATH(radio.h)

@@ -7,9 +7,7 @@
 
 #include "gpi/tools.h" /* STRINGIFY(), LSB(), ASSERT_CT() */
 #include "gpi/olf.h"
-#ifdef MX_CONFIG_FILE
-#include STRINGIFY(MX_CONFIG_FILE)
-#endif
+#include "mixer_config.h"
 #include "gpi/platform_spec.h"
 #include "gpi/platform.h"
 #include "gpi/clocks.h"

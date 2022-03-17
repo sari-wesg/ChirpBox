@@ -53,10 +53,8 @@
 
 #include "gpi/tools.h"		// STRINGIFY
 #include "gpi/clocks.h"
+#include "mixer_config.h"
 
-#ifdef MX_CONFIG_FILE
-	#include STRINGIFY(MX_CONFIG_FILE)
-#endif
 
 #include <stdint.h>
 #include <stddef.h>			// size_t
