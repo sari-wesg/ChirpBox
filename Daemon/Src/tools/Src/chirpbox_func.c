@@ -1229,7 +1229,7 @@ void chirpbox_packet_write(Chirp_Outl *chirp_outl, uint8_t node_id)
     if (!node_id)
     {
       /* Write the flooding packet in LoRaDisC */
-      loradisc_write(FLOODING, chirpbox_data);
+      // loradisc_write(FLOODING, chirpbox_data);
     }
   }
 
