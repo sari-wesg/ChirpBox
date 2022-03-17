@@ -33,7 +33,7 @@
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-void loradisc_packet_write(Disc_Primitive primitive, uint8_t *data)
+void loradisc_write(Disc_Primitive primitive, uint8_t *data)
 {
 
 }

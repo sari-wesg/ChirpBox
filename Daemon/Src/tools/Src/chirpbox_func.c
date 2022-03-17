@@ -1229,20 +1229,20 @@ void chirpbox_packet_write(Chirp_Outl *chirp_outl, uint8_t node_id)
     if (!node_id)
     {
       /* Write the flooding packet in LoRaDisC */
-      loradisc_packet_write(FLOODING, chirpbox_data);
+      loradisc_write(FLOODING, chirpbox_data);
     }
   }
 
   /* Dissemination in LoRaDisC */
   else if (chirp_outl->task == CB_DISSEMINATE)
   {
-      // loradisc_packet_write(DISSEMINATION, data)
+      // loradisc_write(DISSEMINATION, data)
   }
 
   /* Collection in LoRaDisC */
   else if ((chirp_outl->task == CB_COLLECT) || (chirp_outl->task == CB_VERSION))
   {
-      // loradisc_packet_write(COLLECTION, data)
+      // loradisc_write(COLLECTION, data)
   }
   /* Step3: free packets */
   if (data_size > 0)
