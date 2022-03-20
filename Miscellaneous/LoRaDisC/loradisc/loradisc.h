@@ -15,9 +15,25 @@
 #include "API_ChirpBox.h"
 
 
+#ifndef DEBUG_DISC
+	#define DEBUG_DISC								1
+#endif
+
+#if DEBUG_DISC
+#include <stdio.h>
+#include <stdlib.h>
+
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 /***************************** function config ****************************/
+#ifndef LORADISC
+	#define LORADISC								1
+#endif
+
 #ifndef MX_HEADER_CHECK
 	#define MX_HEADER_CHECK							1
 #endif
@@ -101,7 +117,8 @@ typedef enum Disc_Primitive_tag
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
 // loradisc
-void loradisc_write(Disc_Primitive primitive, uint8_t *data);
+void loradisc_write(uint8_t *data);
+void loradisc_read(uint8_t *data);
 // lorawan
 void lorawan_listen_init(uint8_t node_id);
 void lorawan_listen();

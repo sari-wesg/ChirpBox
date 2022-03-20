@@ -1480,7 +1480,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     // if ((chirp_outl.arrange_task == CB_COLLECT))
     {
       if (chirp_outl.arrange_task == CB_DISSEMINATE)
-        deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(10000);
+        deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(15000);
       else
         deadline = gpi_tick_fast_native() + GPI_TICK_MS_TO_FAST(5000);
 
