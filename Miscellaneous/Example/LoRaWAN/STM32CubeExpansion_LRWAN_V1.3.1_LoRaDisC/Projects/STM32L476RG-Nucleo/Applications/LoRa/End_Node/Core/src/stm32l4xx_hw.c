@@ -101,7 +101,7 @@ void HW_Init(void)
 
     Radio.IoInit();
 
-    HW_SPI_Init();
+    spi_init();
 
     HW_RTC_Init();
 

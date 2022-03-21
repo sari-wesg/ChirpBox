@@ -91,6 +91,9 @@
     }													\
 })
 
+#define INFO() \
+    printf("info: %s:%d: \n", __FILE__, __LINE__);
+
 #define assert_reset(arg) 								\
 	do{													\
 		if (!(arg)) { 				     				\
