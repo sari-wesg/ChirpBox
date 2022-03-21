@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "Miscellaneous\\Example\\LoRaWAN\\STM32CubeExpansion_LRWAN_V1.3.1_LoRaDisC"
+		},
+		{
+			"path": "Miscellaneous\\API"
+		},
+		{
+			"path": "Miscellaneous\\LoRaDisC"
+		}
+	],
+	"settings": {}
+}
