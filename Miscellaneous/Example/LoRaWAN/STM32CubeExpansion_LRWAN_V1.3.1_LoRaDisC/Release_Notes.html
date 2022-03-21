@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Release Notes for LoRa software expansion for STM32Cube</title>
+  <style>
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+  <link rel="stylesheet" href="_htmresc/mini-st.css" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<div class="row">
+<div class="col-sm-12 col-lg-4">
+<div class="card fluid">
+<div class="sectione dark">
+<center>
+<h1 id="release-notes-for-lora-software-expansion-for-stm32cube"><small>Release Notes for</small> LoRa software expansion for STM32Cube</h1>
+<p>Copyright © 2019 STMicroelectronics<br />
+</p>
+<a href="https://www.st.com" class="logo"><img src="_htmresc/st_logo.png" alt="ST logo" /></a>
+</center>
+</div>
+</div>
+<h1 id="license">License</h1>
+<p>This software package is licensed by ST under ST license SLA0048, the “License”; You may not use this package except in compliance with the License. You may obtain a copy of the License at:</p>
+<p><a href="http://www.st.com/SLA0048">http://www.st.com/SLA0048</a></p>
+<h1 id="purpose">Purpose</h1>
+<p><strong>LoRa® is a long range wireless area network allowing low-power sensors to report over ranges of up to a dozen kilometers. </mark></strong></p>
+<p><img src="_htmresc/en_i-cube-lrwan.jpg" /></p>
+<p>The I-CUBE-LRWAN Expansion Package consists of a set of libraries and application examples for STM32L0, STM32L1 and STM32L4 Series microcontrollers acting as end-devices. This package supports the SX1276MB1MAS, SX1276MB1LAS, SX1272MB2DAS, and the new radio generation sx126x mounted on SX1262DVK1DAS, SX1262DVK1CAS and SX1262DVK1BAS LoRa® radio expansion boards, provided by SEMTECH. This package includes an application running on NUCLEO-L053R8, NUCLEO-L152RE, NUCLEO-L476RG and B-L072Z-LRWAN1 Discovery kits embedding the CMWX1ZZABZ-091 LoRa® module from Murata. It also supports a USI® LoRaWAN® technology module through the I-NUCLEO-LRWAN1 expansion board and the RiSiNGHF® modem RHF0M003 mounted on LRWAN-NS1 expansion board available in P-NUCLEO-LRWAN3 (coming soon). The application reads sensor data from the X-NUCLEO-IKS01A2 expansion board and sends the sensor data to the LoRa® network in class A. For further details about the components of the LoRa® middleware library, refer to the STM32 LoRa® software expansion for STM32Cube User manual (UM2073).</p>
+<center>
+<strong>Key Features </mark></strong>
+</center>
+<ul>
+<li><p>Compliant with the LoRa Alliance® specification protocol, named LoRaWAN® version V1.0.3 March 2018</p></li>
+<li><p>Bidirectional end-devices with class A, class B and class C protocol support</p></li>
+<li><p>EU 868 MHz ISM band ETSI (European telecommunications standards institute) compliant</p></li>
+<li><p>EU 433 MHz ISM band ETSI compliant</p></li>
+<li><p>US 915 MHz ISM band FCC (federal communications commission) compliant</p></li>
+<li><p>End-device activation either through OTAA (over-the-air activation) or ABP (activation-by-personalization)</p></li>
+<li><p>Adaptive data rate support</p></li>
+<li><p>LoRaWAN® test application for certification tests included</p></li>
+<li><p>Low-power optimized</p></li>
+<li><p>Full STM32 portfolio compatibility</p></li>
+<li><p>Compliant with the CMWX1ZZABZ-091 LoRa® module from Murata</p></li>
+<li><p>Compliant with the WM-SG-SM-42 LoRa®module from USI</p></li>
+<li><p>Compliant with the RHF0M003 modem from RiSiNGHF®</p></li>
+<li><p>Easy secure element integration</p></li>
+</ul>
+<p>Here is the list of references to user documents:</p>
+<ul>
+<li><a href="http://www.st.com/st-web-ui/static/active/en/resource/technical/document/user_manual/DM00300436.pdf">UM2073</a> : STM32 LoRa® software expansion for STM32Cube™</li>
+<li><a href="http://www.st.com/st-web-ui/static/active/en/resource/technical/document/user_manual/DM00432311.pdf">UM2285</a> : Development guidelines for STM32Cube Expansion Packages</li>
+<li><a href="http://www.st.com/st-web-ui/static/active/en/resource/technical/document/user_manual/DM00447523.pdf">UM2312</a> : Development checklist for STM32Cube Expansion Packages</li>
+<li><a href="http://www.st.com/st-web-ui/static/active/en/resource/technical/document/application_note/DM00346311.pdf">AN4967</a> : Examples of AT commands on I-CUBE-LRWAN</li>
+</ul>
+</div>
+<div class="col-sm-12 col-lg-8">
+<h1 id="update-history">Update History</h1>
+<div class="collapse">
+<input type="checkbox" id="collapse-section15" checked aria-hidden="true"> <label for="collapse-section15" aria-hidden="true">V1.3.0 / 04-November-2019</label>
+<div>
+<h2 id="main-changes">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-4.4.2-release-from-semtechstackforce">Implementation of LoRa Mac 4.4.2 release from Semtech/StackForce</h3>
+<h3 id="fuota-example-for-nucleo-stm32l476rg">Fuota example for NUCLEO-STM32L476RG</h3>
+<h3 id="battery-level-conversion-from-mv-to-0-254-range-moved-into-application-layer">Battery level conversion from mV to 0-254 range moved into application layer</h3>
+<h3 id="modification-of-at_slave-commands-attconf-to-handle-frequency-in-hz">Modification of AT_Slave commands AT+TCONF to handle frequency in Hz</h3>
+<h3 id="version-format-and-display-modified">Version format and display modified</h3>
+<h3 id="new-folder-architecture-in-lorawan-middleware-including-semtechs-lmhandler">New folder architecture in LoRaWAN Middleware including Semtech’s LmHandler</h3>
+<h3 id="various-bug-fixes-wrong-buffer-sizes">Various bug fixes (wrong buffer sizes)</h3>
+<h2 id="contents">Contents</h2>
+<h3 id="components">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.10.2</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.4.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.10.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.5</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.5</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1261DVK1BAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1261DVK1BAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SX1262DVK1CAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1262DVK1CAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1262DVK1DAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1262DVK1DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CMWX1ZZABZ-078</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/CMWX1ZZABZ-0xx/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.3.1</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations">Known Limitations</h2>
+<ul>
+<li>LoRa Class B Multicast is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.27.1.0 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.32.3 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.3.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section14" aria-hidden="true"> <label for="collapse-section14" aria-hidden="true">V1.2.3 / 26-September-2019</label>
+<div>
+<h2 id="main-changes-1">Main Changes</h2>
+<h3 id="update-of-at_master-project-to-prevent-fw-from-freezing-after-entering-low-power-mode">Update of AT_Master project to prevent FW from freezing after entering low power mode</h3>
+<h2 id="contents-1">Contents</h2>
+<h3 id="components-1">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.10.2</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.4.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.10.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.5</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.5</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1261DVK1BAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1261DVK1BAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SX1262DVK1CAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1262DVK1CAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1262DVK1DAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1262DVK1DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CMWX1ZZABZ-078</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/CMWX1ZZABZ-0xx/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.3.0</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-1">Known Limitations</h2>
+<ul>
+<li>LoRa Class B Multicast is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-1">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.27.1.0 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.32.3 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.3.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-1">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section13" aria-hidden="true"> <label for="collapse-section13" aria-hidden="true">V1.2.2 / 10-July-2019</label>
+<div>
+<h2 id="main-changes-2">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-from-semtechstackforce-develop-branch-17-jun-2019-commits">Implementation of LoRa Mac from Semtech/StackForce develop branch (17-Jun-2019 commits)</h3>
+<h3 id="fix-for-issue-of-increasing-power-consumption-over-time">Fix for issue of increasing power consumption over time</h3>
+<h3 id="fix-for-rtc-bugs-about-rollover-after-48-days-and-wrong-calculation-of-rtc-alarm">Fix for RTC bugs about rollover after 48 days and wrong calculation of RTC alarm</h3>
+<h3 id="modification-of-at_slave-commands-atttlra-and-attrlra">Modification of AT_Slave commands AT+TTLRA and AT+TRLRA</h3>
+<h3 id="fix-for-at_slave-endianness-issues-in-displayed-values-of-device-address-and-network-id">Fix for AT_Slave endianness issues in displayed values of device address and network ID</h3>
+<h3 id="fix-for-at_slave-issue-with-crlf-handling">Fix for AT_Slave issue with &lt;CR&gt;&lt;LF&gt; handling</h3>
+<h3 id="device-eui-stored-in-eeprom-for-at_master">Device EUI stored in EEPROM for AT_Master</h3>
+<h2 id="contents-2">Contents</h2>
+<h3 id="components-2">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.10.2</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.4.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.10.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.5</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.5</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1261DVK1BAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1261DVK1BAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SX1262DVK1CAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1262DVK1CAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1262DVK1DAS</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1262DVK1DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.2</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CMWX1ZZABZ-078</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/CMWX1ZZABZ-0xx/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.3.0</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-2">Known Limitations</h2>
+<ul>
+<li>LoRa Class B Multicast is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-2">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.27.1.0 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.32.3 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.3.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-2">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section12" aria-hidden="true"> <label for="collapse-section12" aria-hidden="true">V1.2.1 / 13-December-2018</label>
+<div>
+<h2 id="main-changes-3">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-4.4.2-rc.5-from-semtechstackforce-develop-branch">Implementation of LoRa Mac 4.4.2-rc.5 from Semtech/StackForce develop branch</h3>
+<h3 id="class-b-support-extended-to-at_slave-example">Class B support extended to AT_Slave example</h3>
+<h3 id="new-notification-mechanism-for-lora-mac-layer-processing">New notification mechanism for LoRa Mac layer processing</h3>
+<h3 id="update-of-radio-drivers">Update of radio drivers</h3>
+<h3 id="various-bug-fixes">Various bug fixes</h3>
+<h3 id="hybrid-mode-for-us915-region-for-test-purpose-only-not-compliant-with-certification-requirements">Hybrid mode for US915 region (for test purpose only, not compliant with certification requirements)</h3>
+<h2 id="contents-3">Contents</h2>
+<h3 id="components-3">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.9.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.3.1</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.8.3</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1261DVK1BAS</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1261DVK1BAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SX1262DVK1CAS</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1262DVK1CAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1262DVK1DAS</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1262DVK1DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CMWX1ZZABZ-078</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/CMWX1ZZABZ-0xx/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.2.1</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-3">Known Limitations</h2>
+<ul>
+<li>LoRa Class B Multicast is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-3">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.25 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.30.1 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.3.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-3">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section11" aria-hidden="true"> <label for="collapse-section11" aria-hidden="true">V1.2.0 / 10-July-2018</label>
+<div>
+<h2 id="main-changes-4">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-4.4.2-rc.1-from-semtechstackforce-develop-branch">Implementation of LoRa Mac 4.4.2-rc.1 from Semtech/StackForce develop branch</h3>
+<h3 id="class-b-support">Class B support</h3>
+<h3 id="secure-element-api-added">Secure Element API added</h3>
+<h3 id="new-ru864-region">New RU864 region</h3>
+<h3 id="driver-for-new-sx126x-radio-and-support-for-sx1261dvk1bas-sx1262dvk1cas-and-sx1262dvk1das-shields">Driver for new sx126x radio and support for sx1261dvk1bas, sx1262dvk1cas and sx1262dvk1das shields</h3>
+<h3 id="fw-package-architecture-rework">FW package architecture rework</h3>
+<h2 id="contents-4">Contents</h2>
+<h3 id="components-4">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.1</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.3.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.8.2</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1261DVK1BAS</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1261DVK1BAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SX1262DVK1CAS</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1262DVK1CAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SX1262DVK1DAS</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1262DVK1DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CMWX1ZZABZ-078</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/CMWX1ZZABZ-0xx/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.2.0</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-4">Known Limitations</h2>
+<ul>
+<li>LoRa Class B Multicast is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-4">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.25 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.11.3 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.1.4 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-4">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section10" aria-hidden="true"> <label for="collapse-section10" aria-hidden="true">V1.1.5 / 30-March-2018</label>
+<div>
+<h2 id="main-changes-5">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-4.4.1-release-from-semtechstackforce">Implementation of LoRa Mac 4.4.1 release from Semtech/StackForce</h3>
+<h2 id="contents-5">Contents</h2>
+<h3 id="components-5">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.1</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.3.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.7.2</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MLM32L07X01</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/MLM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.1.5</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-5">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-5">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.22 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.11.2 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.0.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-5">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section9" aria-hidden="true"> <label for="collapse-section9" aria-hidden="true">V1.1.4 / 08-January-2018</label>
+<div>
+<h2 id="main-changes-6">Main Changes</h2>
+<h3 id="bug-fix-concerning-downlink-application-data-buffer">Bug fix concerning downlink Application data buffer</h3>
+<h2 id="contents-6">Contents</h2>
+<h3 id="components-6">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.1</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.3.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.7.2</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MLM32L07X01</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/MLM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.1.4</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-6">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-6">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.22 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.11.2 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.0.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-6">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section8" aria-hidden="true"> <label for="collapse-section8" aria-hidden="true">V1.1.3 / 20-December-2017</label>
+<div>
+<h2 id="main-changes-7">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-from-semtechstackforce-develop-branch-10-october-2017-commits">Implementation of LoRa Mac from Semtech/StackForce develop branch (10-October-2017 commits)</h3>
+<h3 id="new-event-driven-middleware-architecture-replaces-former-finite-state-machine-mechanism">New event-driven Middleware architecture replaces former finite state machine mechanism</h3>
+<h3 id="supports-lrwan_ns1-at-command-driven-modem">Supports LRWAN_NS1 AT-Command driven modem</h3>
+<h3 id="improved-at_slave-serial-communication-with-dma-usage">Improved AT_Slave serial communication with DMA usage</h3>
+<h2 id="contents-7">Contents</h2>
+<h3 id="components-7">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.1</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.3.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.7.2</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LRWAN_NS1</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/LRWAN_NS1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MLM32L07X01</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/MLM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.1.3</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-7">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-7">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.22 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.11.2 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.0.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-7">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section7" aria-hidden="true"> <label for="collapse-section7" aria-hidden="true">V1.1.2 / 08-September-2017</label>
+<div>
+<h2 id="main-changes-8">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-4.4.0-release-from-semtechstackforce">Implementation of LoRa Mac 4.4.0 release from Semtech/StackForce</h3>
+<h3 id="radio-drivers-update">Radio drivers update</h3>
+<h3 id="at-master-architecture-rework-for-consistency-across-projects">AT-Master architecture rework for consistency across projects</h3>
+<h2 id="contents-8">Contents</h2>
+<h3 id="components-8">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.2.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.6.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.4</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MLM32L07X01</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/MLM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.1.2</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-8">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-8">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.22 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V8.11.2 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V2.0.1 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-8">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section6" aria-hidden="true"> <label for="collapse-section6" aria-hidden="true">V1.1.1 / 01-June-2017</label>
+<div>
+<h2 id="main-changes-9">Main Changes</h2>
+<h3 id="implementation-of-lora-mac-from-semtechstackforce-develop-branch-30-may-2017-commits">Implementation of LoRa Mac from Semtech/StackForce develop branch (30-May-2017 commits)</h3>
+<h3 id="externalized-radio-drivers-as-components">Externalized radio drivers as components</h3>
+<h3 id="sensors-drivers-update-and-support-for-x_nucleo_iks01a2">Sensors drivers update and support for X_NUCLEO_IKS01A2</h3>
+<h2 id="contents-9">Contents</h2>
+<h3 id="components-9">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.2.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.6.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">X-NUCLEO-IKS01A2</td>
+<td>V3.0.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A2/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.3</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MLM32L07X01</td>
+<td>V1.0.2</td>
+<td><a href="Drivers/BSP/MLM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.1.1</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-9">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-9">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.22 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V7.80.2 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V1.12 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-9">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section5" aria-hidden="true"> <label for="collapse-section5" aria-hidden="true">V1.1.0 / 27-February-2017</label>
+<div>
+<h2 id="main-changes-10">Main Changes</h2>
+<h3 id="new-at-master-example">New AT-Master Example</h3>
+<h3 id="lora-stack-implemenatation">1.0.2 Lora stack implemenatation</h3>
+<h2 id="contents-10">Contents</h2>
+<h3 id="components-10">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.2.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.6.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V2.1.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.2</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.2</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.2</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">B-L072Z-LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/B-L072Z-LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">I_NUCLEO_LRWAN1</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/I_NUCLEO_LRWAN1/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MLM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MLM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MDM32L07X01</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/MDM32L07X01/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.1.0</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-10">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-10">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.22 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V7.80.2 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V1.12 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-10">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section4" aria-hidden="true"> <label for="collapse-section4" aria-hidden="true">V1.0.3 / 01-January-2017</label>
+<div>
+<h2 id="main-changes-11">Main Changes</h2>
+<h3 id="new-at-slave-example">New AT-Slave Example</h3>
+<h3 id="upgraded-to-latest-x-nucleo-iks01a1-driver-version.">Upgraded to latest X-NUCLEO-IKS01A1 driver version.</h3>
+<h3 id="upgraded-to-latest-hal-driver-version.">Upgraded to latest HAL driver version.</h3>
+<h2 id="contents-11">Contents</h2>
+<h3 id="components-11">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.8.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.2.0</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.6.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V2.1.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.0.3</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-11">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-11">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.22 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V7.80.2 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V1.12 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-11">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section3" aria-hidden="true"> <label for="collapse-section3" aria-hidden="true">V1.0.2 / 15-November-2016</label>
+<div>
+<h2 id="main-changes-12">Main Changes</h2>
+<h3 id="supports-lora-module-discovery-board-b-l072z-lrwan1-revc.">Supports LoRa Module Discovery board B-L072Z-LRWAN1 RevC.</h3>
+<h3 id="supports-latest-driver-x-nucleo-iks01a1-v2.1.0.">Supports latest driver X-NUCLEO-IKS01A1 V2.1.0.</h3>
+<h2 id="contents-12">Contents</h2>
+<h3 id="components-12">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.6.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.1.1</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.3.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V2.1.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.0.2</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-12">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-12">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.21a + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V7.80.1 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V1.11 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-12">Supported Devices and boards</h2>
+<ul>
+<li>B-L072Z-LRWAN1 Board RevC</li>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section2" aria-hidden="true"> <label for="collapse-section2" aria-hidden="true">V1.0.1 / 15-September-2016</label>
+<div>
+<h2 id="main-changes-13">Main Changes</h2>
+<h3 id="integrated-lora-middleware-1.0.1.">Integrated LoRa Middleware 1.0.1.</h3>
+<h3 id="added-support-for-nucleo-l073rz-board-revc.">Added support for NUCLEO-L073RZ Board RevC.</h3>
+<h3 id="upgraded-ewarm-project-to-v7.70.1.">Upgraded EWARM project to V7.70.1.</h3>
+<h2 id="contents-13">Contents</h2>
+<h3 id="components-13">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.6.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.1.1</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.3.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V1.4.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.1</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.0.1</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-13">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-13">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.17 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V7.70.1 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V1.8 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-13">Supported Devices and boards</h2>
+<ul>
+<li>STM32L053R8, STM32L073RZ, STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L073RZ Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+<div class="collapse">
+<input type="checkbox" id="collapse-section1" aria-hidden="true"> <label for="collapse-section1" aria-hidden="true">V1.0.0 / 01-July-2016</label>
+<div>
+<h2 id="main-changes-14">Main Changes</h2>
+<h3 id="first-release">First release</h3>
+<h2 id="contents-14">Contents</h2>
+<h3 id="components-14">Components</h3>
+<table>
+<caption>Drivers</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th>Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">STM32L0xx HAL Driver</td>
+<td>V1.6.0</td>
+<td><a href="Drivers/STM32L0xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STM32L1xx HAL Driver</td>
+<td>V1.1.1</td>
+<td><a href="Drivers/STM32L1xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STM32L4xx HAL Driver</td>
+<td>V1.3.0</td>
+<td><a href="Drivers/STM32L4xx_HAL_Driver/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">X-NUCLEO-IKS01A1</td>
+<td>V1.4.0</td>
+<td><a href="Drivers/BSP/X_NUCLEO_IKS01A1/Release_Notes.html">release notes</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1276mb1mas</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1276MB1MAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sx1276mb1las</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1276MB1LAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sx1272mb2das</td>
+<td>V1.0.0</td>
+<td><a href="Drivers/BSP/SX1272MB2DAS/Release_Notes.html">release notes</a></td>
+<td><a href="https://opensource.org/licenses/BSD-3-Clause">BSD 3-Clause</a></td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption>Middleware</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Name</th>
+<th style="text-align: left;">Version</th>
+<th>Release note</th>
+<th>License</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">LoRa Middleware</td>
+<td style="text-align: left;">V1.0.0</td>
+<td><a href="Middlewares/Third_Party/LoRaWAN/st_readme.txt">release notes ST</a></td>
+<td><a href="http://www.st.com/SLA0044">SLA0044</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-14">Known Limitations</h2>
+<ul>
+<li>LoRa Class B is not supported</li>
+</ul>
+<h2 id="development-toolchains-and-compilers-14">Development Toolchains and Compilers</h2>
+<ul>
+<li>RealView Microcontroller Development Kit (MDK-ARM) toolchain V5.17 + ST- Link<br />
+</li>
+<li>IAR Embedded Workbench for ARM (EWARM) toolchain V7.60.1 + ST-Link<br />
+</li>
+<li>System Workbench for STM32 (SW4STM32) toolchain V1.8 + ST-Link</li>
+</ul>
+<h2 id="supported-devices-and-boards-14">Supported Devices and boards</h2>
+<ul>
+<li>STM32L053R8,STM32L152RE and STM32L476RG</li>
+<li>NUCLEO-L053R8 Board RevC</li>
+<li>NUCLEO-L152RE Board RevC</li>
+<li>NUCLEO-L476RG Board RevC</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<footer class="sticky">
+<p>For complete documentation on I-CUBE-LRWAN, visit: [<a href="http://www.st.com/i-cube-lrwan">www.st.com/i-cube-lrwan</a>]</p>
+<em>This release note uses up to date web standards and, for this reason, should not be opened with Internet Explorer but preferably with popular browsers such as Google Chrome, Mozilla Firefox, Opera or Microsoft Edge.</em>
+</footer>
+</body>
+</html>
