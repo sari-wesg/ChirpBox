@@ -47,7 +47,6 @@ extern "C" {
 //#define RADIO_DIO_5
 
 /* LORA I/O definition */
-
 #define RADIO_RESET_PORT                          GPIOA
 #define RADIO_RESET_PIN                           GPIO_PIN_0
 
@@ -85,8 +84,6 @@ extern "C" {
 #define RADIO_DIO_5_PIN                           GPIO_PIN_7
 #endif
 
-
-
 #define RADIO_ANT_SWITCH_PORT                     GPIOC
 #define RADIO_ANT_SWITCH_PIN                      GPIO_PIN_1
 
@@ -96,61 +93,61 @@ extern "C" {
 
 #define SPI1_AF                          GPIO_AF5_SPI1
 
-/* ADC MACRO redefinition */
+// /* ADC MACRO redefinition */
 
-#define ADC_READ_CHANNEL                 ADC_CHANNEL_4
-#define ADCCLK_ENABLE()                 __HAL_RCC_ADC_CLK_ENABLE() ;
-#define ADCCLK_DISABLE()                __HAL_RCC_ADC_CLK_DISABLE() ;
+// #define ADC_READ_CHANNEL                 ADC_CHANNEL_4
+// #define ADCCLK_ENABLE()                 __HAL_RCC_ADC_CLK_ENABLE() ;
+// #define ADCCLK_DISABLE()                __HAL_RCC_ADC_CLK_DISABLE() ;
 
-/* --------------------------- RTC HW definition -------------------------------- */
+// /* --------------------------- RTC HW definition -------------------------------- */
 
-#define RTC_OUTPUT       DBG_RTC_OUTPUT
+// #define RTC_OUTPUT       DBG_RTC_OUTPUT
 
-/* --------------------------- USART HW definition -------------------------------*/
-
-
-#define USARTx                           USART2
-#define USARTx_CLK_ENABLE()              __USART2_CLK_ENABLE();
-#define USARTx_RX_GPIO_CLK_ENABLE()      __GPIOA_CLK_ENABLE()
-#define USARTx_TX_GPIO_CLK_ENABLE()      __GPIOA_CLK_ENABLE()
-#define DMAx_CLK_ENABLE()                __HAL_RCC_DMA1_CLK_ENABLE()
-
-#define USARTx_FORCE_RESET()             __USART2_FORCE_RESET()
-#define USARTx_RELEASE_RESET()           __USART2_RELEASE_RESET()
+// /* --------------------------- USART HW definition -------------------------------*/
 
 
-#define USARTx_TX_PIN                  GPIO_PIN_2
-#define USARTx_TX_GPIO_PORT            GPIOA
-#define USARTx_TX_AF                   GPIO_AF7_USART2
-#define USARTx_RX_PIN                  GPIO_PIN_3
-#define USARTx_RX_GPIO_PORT            GPIOA
-#define USARTx_RX_AF                   GPIO_AF7_USART2
+// #define USARTx                           USART2
+// #define USARTx_CLK_ENABLE()              __USART2_CLK_ENABLE();
+// #define USARTx_RX_GPIO_CLK_ENABLE()      __GPIOA_CLK_ENABLE()
+// #define USARTx_TX_GPIO_CLK_ENABLE()      __GPIOA_CLK_ENABLE()
+// #define DMAx_CLK_ENABLE()                __HAL_RCC_DMA1_CLK_ENABLE()
 
-/* Definition for USARTx's NVIC */
-#define USARTx_IRQn                      USART2_IRQn
-#define USARTx_IRQHandler                USART2_IRQHandler
+// #define USARTx_FORCE_RESET()             __USART2_FORCE_RESET()
+// #define USARTx_RELEASE_RESET()           __USART2_RELEASE_RESET()
 
-/* Definition for USARTx's DMA */
-#define USARTx_TX_DMA_CHANNEL             DMA1_Channel7
 
-/* Definition for USARTx's DMA Request */
-#define USARTx_TX_DMA_REQUEST             DMA_REQUEST_2
+// #define USARTx_TX_PIN                  GPIO_PIN_2
+// #define USARTx_TX_GPIO_PORT            GPIOA
+// #define USARTx_TX_AF                   GPIO_AF7_USART2
+// #define USARTx_RX_PIN                  GPIO_PIN_3
+// #define USARTx_RX_GPIO_PORT            GPIOA
+// #define USARTx_RX_AF                   GPIO_AF7_USART2
 
-/* Definition for USARTx's NVIC */
-#define USARTx_DMA_TX_IRQn                DMA1_Channel7_IRQn
-#define USARTx_DMA_TX_IRQHandler          DMA1_Channel7_IRQHandler
+// /* Definition for USARTx's NVIC */
+// #define USARTx_IRQn                      USART2_IRQn
+// #define USARTx_IRQHandler                USART2_IRQHandler
 
-#define USARTx_Priority 0
-#define USARTx_DMA_Priority 0
+// /* Definition for USARTx's DMA */
+// #define USARTx_TX_DMA_CHANNEL             DMA1_Channel7
+
+// /* Definition for USARTx's DMA Request */
+// #define USARTx_TX_DMA_REQUEST             DMA_REQUEST_2
+
+// /* Definition for USARTx's NVIC */
+// #define USARTx_DMA_TX_IRQn                DMA1_Channel7_IRQn
+// #define USARTx_DMA_TX_IRQHandler          DMA1_Channel7_IRQHandler
+
+// #define USARTx_Priority 0
+// #define USARTx_DMA_Priority 0
 
 /* --------------------------- DEBUG redefinition -------------------------------*/
 
-#define __HAL_RCC_DBGMCU_CLK_ENABLE()
-#define __HAL_RCC_DBGMCU_CLK_DISABLE()
+// #define __HAL_RCC_DBGMCU_CLK_ENABLE()
+// #define __HAL_RCC_DBGMCU_CLK_DISABLE()
 
-#define LED_Toggle( x )
-#define LED_On( x )
-#define LED_Off( x )
+// #define LED_Toggle( x )
+// #define LED_On( x )
+// #define LED_Off( x )
 
 #ifdef __cplusplus
 }

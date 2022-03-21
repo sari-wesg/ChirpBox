@@ -44,7 +44,6 @@ extern "C" {
 #include <stdint.h>
 #include "hw_conf.h"
 // #include "hw_gpio.h"
-#include "hw_spi.h"
 #include "hw_rtc.h"
 #include "hw_msp.h"
 #include "util_console.h"
@@ -52,6 +51,7 @@ extern "C" {
 #include <stdio.h>
 
 #include "gpi/tools.h"
+#include GPI_PLATFORM_PATH(spi.h)
 
 #ifdef MX_CONFIG_FILE
 #include STRINGIFY(MX_CONFIG_FILE)

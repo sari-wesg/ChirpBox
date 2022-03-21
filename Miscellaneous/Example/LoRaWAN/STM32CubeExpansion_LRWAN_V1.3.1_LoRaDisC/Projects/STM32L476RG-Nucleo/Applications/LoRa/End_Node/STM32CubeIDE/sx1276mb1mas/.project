@@ -42,6 +42,11 @@
 			<locationURI>$%7BPARENT-7-PROJECT_LOC%7D/Drivers</locationURI>
 		</link>
 		<link>
+			<name>LoRaDisC</name>
+			<type>2</type>
+			<locationURI>$%7BPARENT-10-PROJECT_LOC%7D/LoRaDisC</locationURI>
+		</link>
+		<link>
 			<name>LoRaWAN</name>
 			<type>2</type>
 			<locationURI>$%7BPARENT-7-PROJECT_LOC%7D/Projects/STM32L476RG-Nucleo/Applications/LoRa/End_Node/LoRaWAN</locationURI>
