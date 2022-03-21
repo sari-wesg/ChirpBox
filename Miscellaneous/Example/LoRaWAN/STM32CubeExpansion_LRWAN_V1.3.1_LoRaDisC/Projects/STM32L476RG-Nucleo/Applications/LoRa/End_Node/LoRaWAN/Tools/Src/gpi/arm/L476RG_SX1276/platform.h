@@ -53,7 +53,6 @@
 #include <stdio.h>
 
 #include "stm32l4xx_hal.h"
-#include "stm32l4xx_hw_conf.h"
 
 /*-------------------*/
 #define USART_TX_Pin GPIO_PIN_2
@@ -65,39 +64,30 @@
 #define USART3_TX_GPIO_Port GPIOC
 #define USART3_RX_Pin GPIO_PIN_5
 #define USART3_RX_GPIO_Port GPIOC
-/*gps-------------------*/
-#define GPS_TRIGGER_Pin GPIO_PIN_2
-#define GPS_TRIGGER_Port GPIOC
-#define GPS_PPS_Pin GPIO_PIN_0
-#define GPS_PPS_Port GPIOC
 /*-------------------*/
 #define LED_GPIO_Port GPIOC
 #define LED1 GPIO_PIN_8
 #define LED2 GPIO_PIN_6
-#define LED3 GPIO_PIN_3
+#define LED3 GPIO_PIN_9
 #define LED4 GPIO_PIN_10
 #define LED5 GPIO_PIN_12
-#define LED6 GPIO_PIN_11
-
 
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 
-#define GPI_LED_NONE	0
-#define GPI_LED_1		LED1
-#define GPI_LED_2		LED2
-#define GPI_LED_3		LED3
-#define GPI_LED_4		LED4
-#define GPI_LED_5		LED5
-#define GPI_LED_6		LED6
-
 // #define GPI_LED_NONE	0
-// #define GPI_LED_1		GPI_LED_NONE
-// #define GPI_LED_2		GPI_LED_NONE
-// #define GPI_LED_3		GPI_LED_NONE
-// #define GPI_LED_4		GPI_LED_NONE
-// #define GPI_LED_5		GPI_LED_NONE
-// #define GPI_LED_6		GPI_LED_NONE
+// #define GPI_LED_1		LED1
+// #define GPI_LED_2		LED2
+// #define GPI_LED_3		LED3
+// #define GPI_LED_4		LED4
+// #define GPI_LED_5		LED5
+
+#define GPI_LED_NONE	0
+#define GPI_LED_1		GPI_LED_NONE
+#define GPI_LED_2		GPI_LED_NONE
+#define GPI_LED_3		GPI_LED_NONE
+#define GPI_LED_4		GPI_LED_NONE
+#define GPI_LED_5		GPI_LED_NONE
 
 #define GPI_BUTTON(x)	x
 /*

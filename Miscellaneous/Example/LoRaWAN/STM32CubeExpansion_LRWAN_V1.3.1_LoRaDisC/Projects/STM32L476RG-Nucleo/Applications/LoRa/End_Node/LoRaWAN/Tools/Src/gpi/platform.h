@@ -54,7 +54,7 @@
 #include "gpi/platform_spec.h"
 #include GPI_PLATFORM_PATH(platform.h)
 #include GPI_PLATFORM_PATH(hw_gpio.h)
-// #include GPI_PLATFORM_PATH(spi.h)
+#include GPI_PLATFORM_PATH(spi.h)
 
 #include <stdint.h>
 #include "stm32l4xx_hal.h"
