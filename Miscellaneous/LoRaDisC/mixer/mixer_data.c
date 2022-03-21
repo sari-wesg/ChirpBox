@@ -440,7 +440,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     #if LORADISC
         if (loradisc_config.primitive == FLOODING)
-            loradisc_write(loradisc_data);
+            loradisc_write(k, loradisc_data);
     #endif
 
     for (i = 0; i < loradisc_config.mx_generation_size; i++)
@@ -454,19 +454,19 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                     gpi_memcpy_dma((uint8_t *)(loradisc_data), data, DATA_HEADER_LENGTH);
                     if (loradisc_config.disem_flag)
                         gpi_memcpy_dma((uint32_t *)&(loradisc_data[DATA_HEADER_LENGTH]), flash_data + i * (chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t), (chirp_outl->payload_len - DATA_HEADER_LENGTH));
-                    mixer_write(i, (uint8_t *)loradisc_data, chirp_outl->payload_len);
+                    loradisc_write(i, (uint8_t *)loradisc_data);
                     break;
                 }
                 case CB_COLLECT:
                 {
                     gpi_memcpy_dma((uint8_t *)(loradisc_data), data, DATA_HEADER_LENGTH);
                     gpi_memcpy_dma((uint32_t *)&(loradisc_data[DATA_HEADER_LENGTH]), flash_data, (chirp_outl->payload_len - DATA_HEADER_LENGTH));
-                    mixer_write(i, (uint8_t *)loradisc_data, chirp_outl->payload_len);
+                    loradisc_write(i, (uint8_t *)loradisc_data);
                     break;
                 }
                 case CB_VERSION:
                 {
-                    mixer_write(i, loradisc_data, chirp_outl->payload_len);
+                    loradisc_write(i, (uint8_t *)loradisc_data);
                     break;
                 }
                 default:
@@ -569,8 +569,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             loradisc_read(loradisc_data);
     #endif
 
-    // if (((loradisc_config.full_rank) && (chirp_outl->task == CB_DISSEMINATE)) || ((chirp_outl->task != CB_DISSEMINATE) && (chirp_outl->task != CB_GLOSSY) && (chirp_outl->task != CB_GLOSSY_ARRANGE)) && (chirp_outl->task != CB_START) && (chirp_outl->task != CB_CONNECTIVITY))
-    if (((loradisc_config.full_rank) && (chirp_outl->task == CB_DISSEMINATE)) || ((chirp_outl->task != CB_DISSEMINATE) && (loradisc_config.primitive != FLOODING)))
+    if (((loradisc_config.full_rank) && (loradisc_config.primitive == DISSEMINATION)) || (loradisc_config.primitive == COLLECTION))
     {
         for (i = 0; i < loradisc_config.mx_generation_size; i++)
         {
@@ -578,22 +577,17 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
             if (NULL != p)
             {
                 memcpy(data, p, sizeof(data));
-                if (chirp_outl->task != CB_DISSEMINATE)
+                packet_correct = 0;
+                if (loradisc_config.primitive == COLLECTION)
                 {
                     memcpy(receive_payload, p, loradisc_config.matrix_payload_8.len);
                     calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, loradisc_config.matrix_payload_8.len - 2);
                     rece_hash = receive_payload[loradisc_config.matrix_payload_8.len - 2] << 8 | receive_payload[loradisc_config.matrix_payload_8.len - 1];
+                    if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
+                        packet_correct++;
                     PRINTF("rece_hash:%d, %x, %x, %d\n", i, rece_hash, (uint16_t)calu_payload_hash, loradisc_config.matrix_payload_8.len);
                 }
-                packet_correct = 0;
-                if ((data[DATA_HEADER_LENGTH - 1] == chirp_outl->task))
-                {
-                    if ((chirp_outl->task != CB_DISSEMINATE) && ((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
-                        packet_correct = 1;
-                    else if (chirp_outl->task == CB_DISSEMINATE)
-                        packet_correct = 1;
-                }
-                if (packet_correct)
+                if ((packet_correct) || ((chirp_outl->task == CB_DISSEMINATE) && (loradisc_config.full_rank)))
                 {
                     /* print packet */
                     PRINT_PACKET(data, DATA_HEADER_LENGTH, 1);

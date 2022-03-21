@@ -30,7 +30,7 @@ extern LoRaDisC_Config loradisc_config;
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-void loradisc_write(uint8_t *data)
+void loradisc_write(uint8_t i, uint8_t *data)
 {
     if (loradisc_config.primitive == FLOODING)
     {
@@ -38,6 +38,10 @@ void loradisc_write(uint8_t *data)
         memcpy((uint8_t *)(loradisc_config.flooding_packet_header), (uint8_t *)data, FLOODING_SURPLUS_LENGTH);
         if (loradisc_config.phy_payload_size > LORADISC_HEADER_LEN)
             memcpy((uint8_t *)(loradisc_config.flooding_packet_payload), (uint8_t *)&(data[FLOODING_SURPLUS_LENGTH]), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
+    }
+    else
+    {
+        mixer_write(i, (uint8_t *)data, loradisc_config.mx_payload_size - HASH_TAIL);
     }
 }
 

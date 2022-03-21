@@ -117,7 +117,7 @@ typedef enum Disc_Primitive_tag
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
 // loradisc
-void loradisc_write(uint8_t *data);
+void loradisc_write(uint8_t i, uint8_t *data);
 void loradisc_read(uint8_t *data);
 // lorawan
 void lorawan_listen_init(uint8_t node_id);
