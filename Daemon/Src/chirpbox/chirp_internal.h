@@ -257,6 +257,14 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	int8_t				tx_power;
 	uint8_t				topo_payload_len;
 
+	/* CB_DISSEMINATE */
+	uint8_t				disem_flag;
+	uint16_t			disem_file_index;
+	uint16_t			disem_file_max;
+	uint16_t			disem_file_index_stay;
+	uint8_t				disem_flag_full_rank;
+	uint32_t			*disem_file_memory;
+
 	/* debug energy (address must be 32-bit) */
 	Chirp_Energy		chirp_energy[3];
 	// idle1, arrange1, start, idle2, arrange2, disfut, idle3, arrange3, collre, idle4, arrange4, connect, idle5, arrange5, colltopo

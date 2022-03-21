@@ -390,13 +390,6 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 
 	/* Disc_Primitive */
 	Disc_Primitive primitive;
-	uint8_t				disem_flag;
-	uint16_t			disem_file_index;
-	uint16_t			disem_file_max;
-	uint16_t			disem_file_index_stay;
-	uint8_t				disem_flag_full_rank;
-	uint32_t			*disem_file_memory;
-
 } LoRaDisC_Config;
 
 #if INFO_VECTOR_QUEUE

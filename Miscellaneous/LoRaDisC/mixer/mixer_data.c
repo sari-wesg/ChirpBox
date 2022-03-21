@@ -284,14 +284,14 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
     if (((chirp_outl->task == CB_DISSEMINATE) || (chirp_outl->task == CB_COLLECT)))
     {
         memset(flash_data, 0, sizeof(flash_data));
-        if ((loradisc_config.disem_file_index) && (chirp_outl->task == CB_DISSEMINATE))
+        if ((chirp_outl->disem_file_index) && (chirp_outl->task == CB_DISSEMINATE))
         {
             if ((!chirp_outl->patch_update))
-                flash_addr = FLASH_START_BANK2 + chirp_outl->file_chunk_len * (loradisc_config.disem_file_index - 1);
+                flash_addr = FLASH_START_BANK2 + chirp_outl->file_chunk_len * (chirp_outl->disem_file_index - 1);
             else if ((chirp_outl->patch_update) && (!chirp_outl->patch_bank))
-                flash_addr = FLASH_START_BANK1 + chirp_outl->patch_page * FLASH_PAGE + chirp_outl->file_chunk_len * (loradisc_config.disem_file_index - 1);
+                flash_addr = FLASH_START_BANK1 + chirp_outl->patch_page * FLASH_PAGE + chirp_outl->file_chunk_len * (chirp_outl->disem_file_index - 1);
             else if ((chirp_outl->patch_update) && (chirp_outl->patch_bank))
-                flash_addr = FLASH_START_BANK2 + chirp_outl->patch_page * FLASH_PAGE + chirp_outl->file_chunk_len * (loradisc_config.disem_file_index - 1);
+                flash_addr = FLASH_START_BANK2 + chirp_outl->patch_page * FLASH_PAGE + chirp_outl->file_chunk_len * (chirp_outl->disem_file_index - 1);
         }
         else if (((chirp_outl->task == CB_COLLECT) && (chirp_outl->round <= chirp_outl->round_max)))
         {
@@ -347,14 +347,14 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
         {
             /* initiator in dissemination setup: file size, patch config, and old file size (if patch) */
             /* in dissemination, only initiator sends packets */
-            if (loradisc_config.disem_flag)
+            if (chirp_outl->disem_flag)
             {
-                data[k++] = loradisc_config.disem_file_index >> 8;
-                data[k++] = loradisc_config.disem_file_index;
+                data[k++] = chirp_outl->disem_file_index >> 8;
+                data[k++] = chirp_outl->disem_file_index;
             }
             else
             {
-                data[6] = loradisc_config.disem_flag_full_rank;
+                data[6] = chirp_outl->disem_flag_full_rank;
             }
             break;
         }
@@ -452,7 +452,7 @@ void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
                 case CB_DISSEMINATE:
                 {
                     gpi_memcpy_dma((uint8_t *)(loradisc_data), data, DATA_HEADER_LENGTH);
-                    if (loradisc_config.disem_flag)
+                    if (chirp_outl->disem_flag)
                         gpi_memcpy_dma((uint32_t *)&(loradisc_data[DATA_HEADER_LENGTH]), flash_data + i * (chirp_outl->payload_len - DATA_HEADER_LENGTH) / sizeof(uint32_t), (chirp_outl->payload_len - DATA_HEADER_LENGTH));
                     loradisc_write(i, (uint8_t *)loradisc_data);
                     break;
@@ -521,7 +521,7 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     if  (chirp_outl->task == CB_DISSEMINATE)
     {
-        if ((!node_id) && (!loradisc_config.disem_flag))
+        if ((!node_id) && (!chirp_outl->disem_flag))
         {
             memcpy((uint32_t *)&(firmware_bitmap_temp[0]), (uint32_t *)&(chirp_outl->firmware_bitmap[0]), DISSEM_BITMAP_32 * sizeof(uint32_t));
             for (i = 0; i < loradisc_config.my_column_mask.len; i++)
@@ -543,9 +543,9 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                 if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                 {
                     rece_dissem_index = (receive_payload[ROUND_HEADER_LENGTH] << 8 | receive_payload[ROUND_HEADER_LENGTH + 1]);
-                    if (rece_dissem_index >= loradisc_config.disem_file_max + 1)
-                        loradisc_config.disem_file_index++;
-                    PRINTF("dissem_index:%d, %d\n", rece_dissem_index, loradisc_config.disem_file_index);
+                    if (rece_dissem_index >= chirp_outl->disem_file_max + 1)
+                        chirp_outl->disem_file_index++;
+                    PRINTF("dissem_index:%d, %d\n", rece_dissem_index, chirp_outl->disem_file_index);
                     round_hash++;
                     PRINT_PACKET(p, DATA_HEADER_LENGTH, 1);
                 }
@@ -612,30 +612,30 @@ uint8_t chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl)
                             if (node_id)
                             {
                                 /* compare / increase the index */
-                                if (loradisc_config.disem_file_index == (data[ROUND_HEADER_LENGTH] << 8 | data[ROUND_HEADER_LENGTH + 1]))
+                                if (chirp_outl->disem_file_index == (data[ROUND_HEADER_LENGTH] << 8 | data[ROUND_HEADER_LENGTH + 1]))
                                 {
                                     PRINTF("write\n");
-                                    memcpy(&(loradisc_config.disem_file_memory[i * sizeof(file_data) / sizeof(uint32_t)]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
+                                    memcpy(&(chirp_outl->disem_file_memory[i * sizeof(file_data) / sizeof(uint32_t)]), (uint8_t *)(p + DATA_HEADER_LENGTH), sizeof(file_data));
 
                                     if (i == chirp_outl->generation_size - 1)
                                     {
                                         if (!chirp_outl->patch_update)
                                         {
-                                            FLASH_If_Write(FLASH_START_BANK2 + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
+                                            FLASH_If_Write(FLASH_START_BANK2 + (chirp_outl->disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(chirp_outl->disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
                                         }
                                         else if (chirp_outl->patch_update)
                                         {
                                             if (!chirp_outl->patch_bank)
                                             {
-                                                FLASH_If_Write(FLASH_START_BANK1 + chirp_outl->patch_page * FLASH_PAGE + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
+                                                FLASH_If_Write(FLASH_START_BANK1 + chirp_outl->patch_page * FLASH_PAGE + (chirp_outl->disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(chirp_outl->disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
                                             }
                                             else
                                             {
-                                                FLASH_If_Write(FLASH_START_BANK2 + chirp_outl->patch_page * FLASH_PAGE + (loradisc_config.disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(loradisc_config.disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
+                                                FLASH_If_Write(FLASH_START_BANK2 + chirp_outl->patch_page * FLASH_PAGE + (chirp_outl->disem_file_index - 1) * chirp_outl->file_chunk_len, (uint32_t *)(chirp_outl->disem_file_memory), chirp_outl->file_chunk_len / sizeof(uint32_t));
                                             }
                                         }
-                                        loradisc_config.disem_file_index++;
-                                        loradisc_config.disem_file_index_stay = 0;
+                                        chirp_outl->disem_file_index++;
+                                        chirp_outl->disem_file_index_stay = 0;
                                     }
                                 }
                             }
@@ -892,7 +892,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             if (loradisc_config.primitive != FLOODING)
             {
             loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
-            if ((!loradisc_config.disem_flag) && (chirp_outl->task == CB_DISSEMINATE) && (chirp_outl->round >= 2))
+            if ((!chirp_outl->disem_flag) && (chirp_outl->task == CB_DISSEMINATE) && (chirp_outl->round >= 2))
             {
                 loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
             }
@@ -934,7 +934,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     {
                         Stats_value(SLOT_STATS, mx.stat_counter.slot_decoded);
                         Stats_to_Flash(chirp_outl->task);
-                        if (((node_id) && (loradisc_config.disem_file_index >= loradisc_config.disem_file_max)) || ((!node_id) && (loradisc_config.disem_file_index >= loradisc_config.disem_file_max + 1)))
+                        if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
                             return 1;
                         else
                         {
@@ -960,11 +960,11 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
             /* in dissemination, nodes have to send back the results, so switch the configuration between rounds */
             if (chirp_outl->task == CB_DISSEMINATE)
             {
-                    loradisc_config.disem_file_index_stay++;
-                    PRINTF("disem_file_index_stay:%d\n", loradisc_config.disem_file_index_stay);
-                    // if (loradisc_config.disem_file_index_stay > 5 * 2)
+                    chirp_outl->disem_file_index_stay++;
+                    PRINTF("disem_file_index_stay:%d\n", chirp_outl->disem_file_index_stay);
+                    // if (chirp_outl->disem_file_index_stay > 5 * 2)
                     // {
-                    //     if (((node_id) && (loradisc_config.disem_file_index >= loradisc_config.disem_file_max)) || ((!node_id) && (loradisc_config.disem_file_index >= loradisc_config.disem_file_max + 1)))
+                    //     if (((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max)) || ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1)))
                     //     {
                     //         PRINTF("full\n");
                     //         return 1;
@@ -975,7 +975,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                     //     }
                     // }
                     /* next is dissemination session: disseminate files to all nodes */
-                    if (!loradisc_config.disem_flag)
+                    if (!chirp_outl->disem_flag)
                     {
                         Stats_value_debug(ENERGEST_TYPE_CPU, energest_type_time(ENERGEST_TYPE_CPU));
                         Stats_value_debug(ENERGEST_TYPE_LPM, energest_type_time(ENERGEST_TYPE_LPM) - energest_type_time(ENERGEST_TYPE_TRANSMIT) - energest_type_time(ENERGEST_TYPE_LISTEN));
@@ -986,16 +986,16 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         /* If now is confirm, the initiator collect all nodes information about whether they are full rank last round, if so, then send the next file chunk, file index++, else do not increase file index */
                         if ((!node_id) && (loradisc_config.full_column == 0))
                         {
-                            loradisc_config.disem_file_index++;
-                            loradisc_config.disem_file_index_stay = 0;
+                            chirp_outl->disem_file_index++;
+                            chirp_outl->disem_file_index_stay = 0;
                             PRINTF("full receive\n");
                         }
-                        PRINTF("next: disem_flag: %d, %d\n", loradisc_config.disem_file_index, loradisc_config.disem_file_max);
+                        PRINTF("next: disem_flag: %d, %d\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                         chirp_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
                         chirp_outl->packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
                         chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
                         chirp_payload_distribution(chirp_outl->task);
-                        loradisc_config.disem_flag = 1;
+                        chirp_outl->disem_flag = 1;
                     }
                     /* next is confirm session: collect all nodes condition (if full rank in last mixer round) */
                     else
@@ -1013,7 +1013,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         free(payload_distribution);
                         if (chirp_outl->dissem_back_sf)
                             chirp_radio_config(chirp_outl->dissem_back_sf, 1, 14, chirp_outl->default_freq);
-                        PRINTF("next: collect disem_flag: %d, %d\n", loradisc_config.disem_file_index, loradisc_config.disem_file_max);
+                        PRINTF("next: collect disem_flag: %d, %d\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                         // chirp_outl->payload_len = DATA_HEADER_LENGTH;
                         chirp_packet_config(chirp_outl->num_nodes, chirp_outl->num_nodes, DATA_HEADER_LENGTH + HASH_TAIL, COLLECTION);
                         chirp_outl->packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
@@ -1021,14 +1021,14 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                             chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
                         chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
                         chirp_payload_distribution(CB_COLLECT);
-                        loradisc_config.disem_flag = 0;
+                        chirp_outl->disem_flag = 0;
                         /* in confirm, all nodes sends packets */
                         PRINTF("rece_dissem_index:%x\n", rece_dissem_index);
 
-                        if (loradisc_config.disem_file_index > rece_dissem_index)
+                        if (chirp_outl->disem_file_index > rece_dissem_index)
                         {
                             PRINTF("full disem copy\n");
-                            loradisc_config.disem_flag_full_rank = mx.stat_counter.slot_full_rank;
+                            chirp_outl->disem_flag_full_rank = mx.stat_counter.slot_full_rank;
                         }
                     }
             }
@@ -1040,11 +1040,11 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 return 1;
             }
             /* During the collection status that belongs to the dissemination, the dissemination is interrupted when the file is completed */
-            else if ((chirp_outl->task == CB_DISSEMINATE) && (!loradisc_config.disem_flag))
+            else if ((chirp_outl->task == CB_DISSEMINATE) && (!chirp_outl->disem_flag))
             {
-                if ((node_id) && (loradisc_config.disem_file_index >= loradisc_config.disem_file_max + 2))
+                if ((node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 2))
                     return 1;
-                else if ((!node_id) && (loradisc_config.disem_file_index >= loradisc_config.disem_file_max + 1))
+                else if ((!node_id) && (chirp_outl->disem_file_index >= chirp_outl->disem_file_max + 1))
                     return 1;
             }
 
