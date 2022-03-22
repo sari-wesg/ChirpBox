@@ -227,6 +227,8 @@ int main(void)
   MX_GPIO_Init();
 #endif
 
+  lorawan_start();
+
   lora_rx_count_rece = 0;
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */
