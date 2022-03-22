@@ -165,9 +165,9 @@ void lorawan_start()
          * and cortex will not enter low power anyway  */
         if ((LoraMacProcessRequest != LORA_SET) && (AppProcessRequest != LORA_SET))
         {
-#ifndef LOW_POWER_DISABLE
-            LPM_EnterLowPower();
-#endif
+            #ifndef LOW_POWER_DISABLE
+                LPM_EnterLowPower();
+            #endif
         }
         ENABLE_IRQ();
     }
@@ -175,12 +175,6 @@ void lorawan_start()
 
 void node_id_restore(uint8_t *id)
 {
-    // device_id[0] = DEVICE_ID_REG0;
-    // device_id[1] = DEVICE_ID_REG1;
-    // device_id[2] = DEVICE_ID_REG2;
-
-    // (*(uint32_t *)node_mac) = DEVICE_ID_REG1;
-    // (*(((uint32_t *)node_mac) + 1)) = DEVICE_ID_REG2 + DEVICE_ID_REG0;
     stm_node_id = (uint32_t)(DEVICE_ID_REG0);
     id[7] = DEVICE_ID_REG0;
     id[6] = DEVICE_ID_REG0 >> 8;
