@@ -27,7 +27,6 @@
 #include "version.h"
 #include <stdlib.h>
 #include "ll_flash.h"
-#include "flash_if.h"
 #include "lorawan.h"
 // #include <stdint.h>
 

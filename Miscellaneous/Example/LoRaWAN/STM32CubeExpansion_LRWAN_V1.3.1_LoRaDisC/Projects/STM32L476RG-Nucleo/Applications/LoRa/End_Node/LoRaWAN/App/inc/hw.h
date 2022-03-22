@@ -53,10 +53,6 @@ extern "C" {
 #include "gpi/tools.h"
 #include GPI_PLATFORM_PATH(spi.h)
 
-#ifdef MX_CONFIG_FILE
-#include STRINGIFY(MX_CONFIG_FILE)
-#endif
-
 #include "API_ChirpBox.h"
 
 #ifdef __cplusplus
