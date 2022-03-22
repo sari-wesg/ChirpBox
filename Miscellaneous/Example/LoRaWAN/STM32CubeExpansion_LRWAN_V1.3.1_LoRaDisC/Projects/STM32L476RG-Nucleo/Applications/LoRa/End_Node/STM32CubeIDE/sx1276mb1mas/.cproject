@@ -74,9 +74,6 @@
 									<listOptionValue builtIn="false" value="&quot;../..\../../../../../../Drivers/BSP/Components/sx1276&quot;"/>
 									<listOptionValue builtIn="false" value="../../../../../../../../Middlewares/Third_Party/LoRaWAN/Patterns/Basic"/>
 									<listOptionValue builtIn="false" value="../../../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc"/>
-									<listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/Src"/>
-									<listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/Inc"/>
-									<listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/ChirpBox_APIs/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../../../../../../API"/>
 									<listOptionValue builtIn="false" value="../../../LoRaWAN/Tools/API_Core"/>
 									<listOptionValue builtIn="false" value="../../../../../../../../../../../LoRaDisC"/>
