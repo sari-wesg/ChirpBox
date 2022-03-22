@@ -29,13 +29,13 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 /* chirpbox config */
 /* Only allowed to run in the daemon bank (bank1), e.g. alarm clearing and flash write protection removal. */
 #ifndef DAEMON_BANK
-	#define DAEMON_BANK								1
+	#define DAEMON_BANK								0
 #endif
 
 /* Turn on gps or rtc for synchronization */
 #ifndef GPS_DATA
-	#define GPS_DATA								1
-	#define DS3231_ON								1
+	#define GPS_DATA								0
+	#define DS3231_ON								0
 #endif
 
 /* Whether to print logs */

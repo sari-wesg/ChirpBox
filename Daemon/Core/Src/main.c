@@ -230,7 +230,7 @@ static uint8_t hardware_init()
 	#endif
 	GPS_Init();
 	GPS_On();
-	GPS_Waiting_PPS(5);
+	GPS_Waiting_PPS(10);
 	Chirp_Time gps_time;
     memset(&gps_time, 0, sizeof(gps_time));
 	while(!gps_time.chirp_year)

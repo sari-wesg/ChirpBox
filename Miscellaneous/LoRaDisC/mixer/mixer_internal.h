@@ -61,7 +61,12 @@
 #endif
 
 #include <stdint.h>
-#include "chirp_internal.h"
+#if USE_FOR_CHIRPBOX
+	#include "chirp_internal.h"
+#endif
+#if USE_FOR_LORAWAN
+	#include "lorawan_internal.h"
+#endif
 
 // TODO:
 #include "mixer_config.h"

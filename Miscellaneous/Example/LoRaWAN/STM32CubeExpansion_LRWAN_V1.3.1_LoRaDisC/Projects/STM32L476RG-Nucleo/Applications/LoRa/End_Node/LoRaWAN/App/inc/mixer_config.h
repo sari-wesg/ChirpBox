@@ -6,21 +6,6 @@
 #include "gpi/platform_spec.h"		// GPI_ARCH_IS_...
 #include "gpi/tools.h"				// NUM_ELEMENTS()
 
-#define DEBUG_CHIRPBOX 1
-#if DEBUG_CHIRPBOX
-
-#define PRINTF_CHIRP(...) printf(__VA_ARGS__)
-#else
-#define PRINTF_CHIRP(...)
-#endif
-
-// GPS
-#if CHIRPBOX_LORAWAN
-#ifndef GPS_DATA
-	#define GPS_DATA								0
-#endif
-#endif
-
 /*radio---------------------------------------------------------------------------*/
 #define REGION_CN470				// Frequency by country
 #define USE_MODEM_LORA				// Radio modem

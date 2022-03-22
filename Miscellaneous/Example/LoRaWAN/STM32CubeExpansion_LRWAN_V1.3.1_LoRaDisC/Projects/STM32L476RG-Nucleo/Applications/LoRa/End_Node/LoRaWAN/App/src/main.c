@@ -32,7 +32,7 @@
 // #include <stdint.h>
 
 #include "Commissioning.h"
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 0, DR_5, 0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={2, 5, 0, DR_5, 0};
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
@@ -225,12 +225,6 @@ int main(void)
   HW_Init();
 #if !CHIRPBOX_LORAWAN
   MX_GPIO_Init();
-#endif
-
-#if GPS_DATA
-	GPS_Init();
-	GPS_On();
-	GPS_Waiting_PPS(10);
 #endif
 
   lora_rx_count_rece = 0;

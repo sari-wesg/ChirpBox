@@ -2,7 +2,12 @@
 //**** Includes ************************************************************************************
 
 #include "mixer_internal.h"
-#include "chirp_internal.h"
+#if USE_FOR_CHIRPBOX
+	#include "chirp_internal.h"
+#endif
+#if USE_FOR_LORAWAN
+	#include "lorawan_internal.h"
+#endif
 #include "mixer_config.h"
 
 #include "gpi/olf.h"
@@ -897,7 +902,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                 loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
             }
             }
-            SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+            LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
             PRINTF("-------lbt_channel_primary:%d\n", loradisc_config.lbt_channel_primary);
         #endif
 		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);

@@ -27,13 +27,13 @@
  */
 typedef void ( DioIrqHandler )();
 /*sx1276mb1mas functions-------------------------------------------------------------------*/
-void SX1276IoInit( void );
-void SX1276IoIrqInit( DioIrqHandler **irqHandlers );
-void SX1276IoDeInit( void );
-void SX1276SetRfTxPower( int8_t power );
-uint8_t SX1276GetPaSelect( uint32_t channel );
-void SX1276SetAntSwLowPower( bool status );
-void SX1276SetAntSw( uint8_t opMode );
+void LoRaDS_SX1276IoInit( void );
+void LoRaDS_SX1276IoIrqInit( DioIrqHandler **irqHandlers );
+void LoRaDS_SX1276IoDeInit( void );
+void LoRaDS_SX1276SetRfTxPower( int8_t power );
+uint8_t LoRaDS_SX1276GetPaSelect( uint32_t channel );
+void LoRaDS_SX1276SetAntSwLowPower( bool status );
+void LoRaDS_SX1276SetAntSw( uint8_t opMode );
 /*radio config---------------------------------------------------------------------------*/
 #define RADIO_RESET_PORT                          GPIOA
 #define RADIO_RESET_PIN                           GPIO_PIN_0
@@ -265,57 +265,57 @@ extern SX1276_t SX1276;
 /*!
  * \brief Sets the SX1276
  */
-void SX1276SetTx( uint32_t timeout );
-void SX1276WriteFifo( uint8_t *buffer, uint8_t size );
-void SX1276ReadFifo( uint8_t *buffer, uint8_t size );
-void SX1276SetOpMode( uint8_t opMode );
+void LoRaDS_SX1276SetTx( uint32_t timeout );
+void LoRaDS_SX1276WriteFifo( uint8_t *buffer, uint8_t size );
+void LoRaDS_SX1276ReadFifo( uint8_t *buffer, uint8_t size );
+void LoRaDS_SX1276SetOpMode( uint8_t opMode );
 // void SX1276OnDio0Irq();
-void SX1276OnDio1Irq();
-void SX1276OnDio2Irq();
+void LoRaDS_SX1276OnDio1Irq();
+void LoRaDS_SX1276OnDio2Irq();
 // void SX1276OnDio3Irq();
-void SX1276OnDio4Irq();
-void SX1276OnDio5Irq();
+void LoRaDS_SX1276OnDio4Irq();
+void LoRaDS_SX1276OnDio5Irq();
 // void SX1276OnTimeoutIrq();
 /*----------------------------------------*/
-void SX1276Reset( void );
-uint32_t SX1276Init();
-void SX1276SetOpMode( uint8_t opMode );
-RadioState_t SX1276GetStatus( void );
-void SX1276SetModem( RadioModems_t modem );
-void SX1276SetChannel( uint32_t freq );
-bool SX1276IsChannelFree( RadioModems_t modem, uint32_t freq, int16_t rssiThresh, uint32_t maxCarrierSenseTime );
+void LoRaDS_SX1276Reset( void );
+uint32_t LoRaDS_SX1276Init();
+void LoRaDS_SX1276SetOpMode( uint8_t opMode );
+RadioState_t LoRaDS_SX1276GetStatus( void );
+void LoRaDS_SX1276SetModem( RadioModems_t modem );
+void LoRaDS_SX1276SetChannel( uint32_t freq );
+bool LoRaDS_SX1276IsChannelFree( RadioModems_t modem, uint32_t freq, int16_t rssiThresh, uint32_t maxCarrierSenseTime );
 // uint32_t SX1276Random( void );
-void SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
+void LoRaDS_SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
                          uint32_t datarate, uint8_t coderate,
                          uint32_t bandwidthAfc, uint16_t preambleLen,
                          uint16_t symbTimeout, bool fixLen,
                          uint8_t payloadLen,
                          bool crcOn, bool freqHopOn, uint8_t hopPeriod,
                          bool iqInverted, bool rxContinuous );
-void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
+void LoRaDS_SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
                         uint32_t bandwidth, uint32_t datarate,
                         uint8_t coderate, uint16_t preambleLen,
                         bool fixLen, bool crcOn, bool freqHopOn,
                         uint8_t hopPeriod, bool iqInverted, uint32_t timeout );
-double SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen );
-void SX1276Send( uint8_t *buffer, uint8_t size );
-void SX1276SetSleep( void );
-void SX1276SetStby( void );
-void SX1276SetRx( uint32_t timeout );
-void SX1276StartCad( void );
-void SX1276SetTxContinuousWave( uint32_t freq, int8_t power, uint16_t time );
-int16_t SX1276ReadRssi( RadioModems_t modem );
-void RxChainCalibration( void );
+double LoRaDS_SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen );
+void LoRaDS_SX1276Send( uint8_t *buffer, uint8_t size );
+void LoRaDS_SX1276SetSleep( void );
+void LoRaDS_SX1276SetStby( void );
+void LoRaDS_SX1276SetRx( uint32_t timeout );
+void LoRaDS_SX1276StartCad( void );
+void LoRaDS_SX1276SetTxContinuousWave( uint32_t freq, int8_t power, uint16_t time );
+int16_t LoRaDS_SX1276ReadRssi( RadioModems_t modem );
+void LoRaDS_RxChainCalibration( void );
 void SX1276SetSyncWord( uint8_t data );
-void SX1276Write( uint16_t addr, uint8_t data );
-uint8_t SX1276Read( uint16_t addr );
-void SX1276WriteBuffer( uint16_t addr, uint8_t *buffer, uint8_t size );
-void SX1276ReadBuffer( uint16_t addr, uint8_t *buffer, uint8_t size );
-void SX1276SetMaxPayloadLength( RadioModems_t modem, uint8_t max );
-void SX1276SetPublicNetwork( bool enable );
+void LoRaDS_SX1276Write( uint16_t addr, uint8_t data );
+uint8_t LoRaDS_SX1276Read( uint16_t addr );
+void LoRaDS_SX1276WriteBuffer( uint16_t addr, uint8_t *buffer, uint8_t size );
+void LoRaDS_SX1276ReadBuffer( uint16_t addr, uint8_t *buffer, uint8_t size );
+void LoRaDS_SX1276SetMaxPayloadLength( RadioModems_t modem, uint8_t max );
+void LoRaDS_SX1276SetPublicNetwork( bool enable );
 // uint32_t SX1276GetWakeupTime( void );
 /*sx1276 functions---------------------------------------------------------------------------*/
-void SX1276WriteFIFO( uint8_t *buffer, uint8_t size );
+void LoRaDS_SX1276WriteFIFO( uint8_t *buffer, uint8_t size );
 uint16_t SX1276GetSymbolNum( uint8_t pktLen );
 void SX1276SetSymbolTimeout( uint16_t symbol_num );
 void SX1276SetRxLoraContinuous( bool rxContinuous );

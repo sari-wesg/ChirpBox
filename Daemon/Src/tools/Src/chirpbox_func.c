@@ -1354,7 +1354,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
     #endif
     sync_channel_id = 0;
     loradisc_config.lbt_channel_primary = sync_channel_id;
-    SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+    LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
     // no task
 		if (chirp_round(node_id, &chirp_outl) >= CB_GLOSSY_SYNCHRONIZED)
 		{

@@ -392,7 +392,9 @@ void gpi_platform_init(void)
 
     MX_ADC1_Init();
 
-    MX_IWDG_Init();
+    #if DAEMON_BANK
+      MX_IWDG_Init();
+    #endif
 }
 
 void gpi_sleep()
