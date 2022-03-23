@@ -981,7 +981,8 @@ void LED_ISR(mixer_dio3_isr, LED_DIO3_ISR)
 
 //**************************************************************************************************
 // helper ISR for grid timer, see start_grid_timer() for details
-void LED_ISR(LP_TIMER_ISR_NAME, GPI_LED_5)
+// void LED_ISR(LP_TIMER_ISR_NAME, GPI_LED_5)
+void LED_ISR(mixer_lp_timer_isr, GPI_LED_5)
 {
 	// start_grid_timer();
 	mask_slow_timer();
