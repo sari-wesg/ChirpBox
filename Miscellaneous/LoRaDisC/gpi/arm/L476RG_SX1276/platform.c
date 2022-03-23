@@ -392,7 +392,7 @@ void gpi_platform_init(void)
 
     MX_ADC1_Init();
 
-    #if DAEMON_BANK
+    #if USE_FOR_CHIRPBOX
       MX_IWDG_Init();
     #endif
 }
@@ -422,9 +422,11 @@ void gpi_sleep()
 
 void gpi_watchdog_periodic()
 {
+  #if USE_FOR_CHIRPBOX
   /* This function is called periodically to restart the watchdog
      timer. */
 	HAL_IWDG_Refresh(&hiwdg);
+  #endif
 }
 //**************************************************************************************************
 //**************************************************************************************************
