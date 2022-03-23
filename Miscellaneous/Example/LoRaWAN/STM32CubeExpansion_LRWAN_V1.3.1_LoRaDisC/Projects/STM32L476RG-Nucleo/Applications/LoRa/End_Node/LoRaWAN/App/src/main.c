@@ -60,7 +60,9 @@ int main(void)
   MX_GPIO_Init();
 #endif
 
-  lorawan_start();
+  // lorawan_start();
+
+  loradisc_start();
 
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */

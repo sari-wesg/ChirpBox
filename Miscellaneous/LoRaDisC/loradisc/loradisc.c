@@ -54,3 +54,18 @@ void loradisc_read(uint8_t *data)
             memcpy((uint8_t *)&(data[FLOODING_SURPLUS_LENGTH]), (uint8_t *)(loradisc_config.flooding_packet_payload), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
     }
 }
+
+void loradisc_start()
+{
+
+    // #if MX_LBT_ACCESS
+    //     memset(&loradisc_config.lbt_init_time, 0, sizeof(loradisc_config.lbt_init_time));
+    //     loradisc_config.lbt_channel_total = LBT_CHANNEL_NUM;
+    //     int32_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
+    //     uint32_t m;
+    //     for (m = sizeof(uint32_t) * 8; m-- > loradisc_config.lbt_channel_total;)
+    //         mask >>= 1;
+    //     loradisc_config.lbt_channel_mask = ~(mask << 1);
+    // #endif
+
+}
