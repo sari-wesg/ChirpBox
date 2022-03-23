@@ -72,8 +72,6 @@ static LoRaMainCallback_t LoRaMainCallbacks = {LORA_GetBatteryLevel,
 LoraFlagStatus LoraMacProcessRequest = LORA_RESET;
 LoraFlagStatus AppProcessRequest = LORA_RESET;
 
-uint32_t stm_node_id = 0;
-
 /*!
  * Specifies the state of the application LED
  */
@@ -111,7 +109,7 @@ volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_c
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-void lorawan_start()
+void lorawan_start(uint32_t dev_id)
 {
     lora_rx_count_rece = 0;
 
@@ -120,13 +118,9 @@ void lorawan_start()
 
     PRINTF("LoRaWAN System started\n");
 
-    uint8_t node_id_buffer[8];
-    node_id_restore(node_id_buffer);
-
-    TOS_NODE_ID = (uint32_t)stm_node_id;
-    log_to_flash("starting node %x ...\n", TOS_NODE_ID);
+    log_to_flash("starting node %x ...\n", dev_id);
     log_flush();
-    srand(TOS_NODE_ID);
+    srand(dev_id);
     rand();
 
     PRINTF("APP_VERSION= %02X.%02X.%02X.%02X\r\n", (uint8_t)(__APP_VERSION >> 24), (uint8_t)(__APP_VERSION >> 16), (uint8_t)(__APP_VERSION >> 8), (uint8_t)__APP_VERSION);
@@ -175,7 +169,6 @@ void lorawan_start()
 
 void node_id_restore(uint8_t *id)
 {
-    stm_node_id = (uint32_t)(DEVICE_ID_REG0);
     id[7] = DEVICE_ID_REG0;
     id[6] = DEVICE_ID_REG0 >> 8;
     id[5] = DEVICE_ID_REG0 >> 16;
@@ -184,6 +177,7 @@ void node_id_restore(uint8_t *id)
     id[2] = 0;
     id[1] = 0;
     id[0] = 0;
+	TOS_NODE_ID = (uint32_t)(DEVICE_ID_REG0);
 }
 
 static void LORA_RxData(lora_AppData_t *AppData)

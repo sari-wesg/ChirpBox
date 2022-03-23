@@ -27,6 +27,7 @@
 
 // #include "Commissioning.h"
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={2, 5, 0, DR_5, 0};
+extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
@@ -60,9 +61,12 @@ int main(void)
   MX_GPIO_Init();
 #endif
 
-  // lorawan_start();
+  uint8_t node_id_buffer[8];
+  node_id_restore(node_id_buffer);
 
-  loradisc_start();
+  lorawan_start(TOS_NODE_ID);
+
+  loradisc_start(TOS_NODE_ID);
 
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */

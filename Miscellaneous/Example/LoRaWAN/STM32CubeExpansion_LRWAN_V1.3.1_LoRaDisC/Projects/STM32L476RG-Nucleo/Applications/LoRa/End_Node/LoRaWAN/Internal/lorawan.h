@@ -60,7 +60,7 @@
 
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
-void lorawan_start();
+void lorawan_start(uint32_t dev_id);
 void node_id_restore(uint8_t *id);
 
 
