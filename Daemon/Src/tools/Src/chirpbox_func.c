@@ -1335,7 +1335,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 		chirp_outl.file_chunk_len = 0;
 
 		loradisc_radio_config(12, 1, 14, chirp_outl.default_freq);
-		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
+		loradisc_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
     chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
     chirp_slot_config(chirp_outl.packet_time + 100000, hop_count * 2, 1500000);
 
@@ -1536,7 +1536,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 
 		loradisc_radio_config(chirp_outl.default_sf, 1, chirp_outl.default_tp, chirp_outl.default_freq);
 
-		chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
+		loradisc_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
 
     loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
 
@@ -1613,7 +1613,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
         memset(loradisc_config.flooding_packet_payload, 0, sizeof(loradisc_config.flooding_packet_payload));
 
-				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
+				loradisc_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
 
         loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
 
@@ -1697,7 +1697,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           chirp_outl.disem_file_max = (chirp_outl.firmware_size + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len + 1;
 
           chirp_outl.disem_flag = 1;
-          chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
+          loradisc_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len + HASH_TAIL, DISSEMINATION);
           chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
           chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 2000000);
           chirp_payload_distribution(chirp_outl.task);
@@ -1758,7 +1758,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
           chirp_outl.round_max = (collect_length + chirp_outl.file_chunk_len - 1) / chirp_outl.file_chunk_len;
           PRINTF_CHIRP("set:%d\n", chirp_outl.round_max);
 
-          chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
+          loradisc_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
           chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
           chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
           chirp_payload_distribution(chirp_outl.task);
@@ -1804,7 +1804,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
         memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
         memset(loradisc_config.flooding_packet_payload, 0, sizeof(loradisc_config.flooding_packet_payload));
 
-				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
+				loradisc_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, 0, FLOODING);
 
         loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + chirp_outl.payload_len;
 
@@ -1859,7 +1859,7 @@ void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes)
 				chirp_outl.payload_len = DATA_HEADER_LENGTH + 3 + sizeof(uint16_t);
 				chirp_outl.round_max = ROUND_SETUP;
 
-				chirp_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
+				loradisc_packet_config(chirp_outl.num_nodes, chirp_outl.generation_size, chirp_outl.payload_len+ HASH_TAIL, COLLECTION);
         chirp_outl.packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
         chirp_slot_config(chirp_outl.packet_time + 100000, chirp_outl.default_slot_num, 1500000);
 				chirp_payload_distribution(chirp_outl.task);

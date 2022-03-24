@@ -110,7 +110,10 @@ void loradisc_start(uint32_t dev_id)
     uint8_t hop_count = network_num_nodes > 10? 6 : 4;
 
     // radio config
-    // loradisc_radio_config(12, 1, 14, chirp_outl.default_freq);
+    loradisc_radio_config(12, 1, 14, CN470_FREQUENCY);
+    // packet config
+    loradisc_packet_config(MX_NUM_NODES_CONF, 0, 0, FLOODING);
+
 
 }
 
@@ -132,4 +135,98 @@ void loradisc_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrat
         uint32_t symbol_time_us = SX1276GetSymbolTime(loradisc_config.lora_sf, loradisc_config.lora_bw);
         loradisc_config.lbt_detect_duration_us = (6 * symbol_time_us >= LBT_DELAY_IN_US) ? 6 * symbol_time_us : LBT_DELAY_IN_US;
     #endif
+}
+
+/**
+ * @description: mixer configurations
+ * @param mx_num_nodes: number of nodes in the mixer network (NUM_ELEMENTS(nodes))
+ * @param mx_generation_size: number of packets (NUM_ELEMENTS(payload_distribution))
+ * @param mx_payload_size: length of payload (MX_PAYLOAD_CONF_SIZE)
+ * @return: None
+ */
+void loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive)
+{
+    memset(&loradisc_config, 0, offsetof(LoRaDisC_Config, mx_slot_length_in_us));
+    loradisc_config.primitive = primitive;
+    // loradisc_config
+    loradisc_config.mx_num_nodes = mx_num_nodes;
+    loradisc_config.mx_generation_size = mx_generation_size;
+    loradisc_config.mx_payload_size = mx_payload_size;
+
+    loradisc_config.coding_vector.pos = 0;
+    loradisc_config.coding_vector.len = (loradisc_config.mx_generation_size + 7) / 8;
+    loradisc_config.payload.pos = loradisc_config.coding_vector.pos + loradisc_config.coding_vector.len;
+    loradisc_config.payload.len = loradisc_config.mx_payload_size;
+    loradisc_config.info_vector.pos = loradisc_config.payload.pos + loradisc_config.payload.len;
+    loradisc_config.info_vector.len = (loradisc_config.mx_generation_size + 7) / 8;
+    loradisc_config._padding_2.pos = loradisc_config.info_vector.pos + loradisc_config.info_vector.len;
+    loradisc_config._padding_2.len = PADDING_MAX(0,
+                            PADDING_SIZE((loradisc_config.mx_generation_size + 7) / 8)
+                            + PADDING_SIZE(loradisc_config.mx_payload_size)
+            #if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
+                            - ((loradisc_config.mx_generation_size + 7) / 8)
+            #endif
+                            );
+    loradisc_config.rand.pos = loradisc_config._padding_2.pos + loradisc_config._padding_2.len;
+    loradisc_config.rand.len = 1;
+    loradisc_config._padding_3.pos = loradisc_config.rand.pos + loradisc_config.rand.len;
+    loradisc_config._padding_3.len = PADDING_SIZE(
+                                ((loradisc_config.mx_generation_size + 7) / 8) +	// coding_vector
+                                loradisc_config.mx_payload_size +					// payload
+#if (MX_REQUEST || MX_SMART_SHUTDOWN_MAP)
+                                ((loradisc_config.mx_generation_size + 7) / 8) +	// info_vector
+    #if !GPI_ARCH_IS_BOARD(TMOTE)
+                                PADDING_MAX(0,						// _padding_2
+                                    PADDING_SIZE((loradisc_config.mx_generation_size + 7) / 8)
+                                    + PADDING_SIZE(loradisc_config.mx_payload_size)
+                                    - ((loradisc_config.mx_generation_size + 7) / 8)
+                                    ) +
+    #endif
+#else
+    #if !GPI_ARCH_IS_BOARD(TMOTE)
+                                PADDING_MAX(0,						// _padding_2
+                                    PADDING_SIZE((loradisc_config.mx_generation_size + 7) / 8)
+                                    + PADDING_SIZE(loradisc_config.mx_payload_size)) +
+    #endif
+#endif
+                                1);
+    loradisc_config.packet_chunk_len = loradisc_config.coding_vector.len + loradisc_config.payload.len + loradisc_config.info_vector.len + loradisc_config._padding_2.len + loradisc_config.rand.len + loradisc_config._padding_3.len;
+    loradisc_config.phy_payload_size = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.coding_vector.len + loradisc_config.payload.len + loradisc_config.info_vector.len;
+    loradisc_config.packet_len = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.packet_chunk_len;
+    assert_reset(!(loradisc_config.packet_len % sizeof(uint_fast_t)));
+
+    loradisc_config.matrix_coding_vector_8.pos = 0;
+    loradisc_config.matrix_coding_vector_8.len = loradisc_config.coding_vector.len;
+    loradisc_config.matrix_payload_8.pos = loradisc_config.matrix_coding_vector_8.pos + loradisc_config.matrix_coding_vector_8.len;
+    loradisc_config.matrix_payload_8.len = loradisc_config.payload.len;
+
+    loradisc_config.matrix_coding_vector.pos = 0;
+    loradisc_config.matrix_coding_vector.len = (loradisc_config.mx_generation_size + (sizeof(uint_fast_t) * 8) - 1) / (sizeof(uint_fast_t) * 8);
+    loradisc_config.matrix_payload.pos = loradisc_config.matrix_coding_vector.pos + loradisc_config.matrix_coding_vector.len;
+    loradisc_config.matrix_payload.len = (loradisc_config.mx_payload_size + sizeof(uint_fast_t) - 1) / sizeof(uint_fast_t);
+
+    loradisc_config.matrix_chunk_8_len = loradisc_config.matrix_coding_vector_8.len + loradisc_config.matrix_payload_8.len;
+    loradisc_config.matrix_chunk_32_len = loradisc_config.matrix_coding_vector.len + loradisc_config.matrix_payload.len;
+    loradisc_config.matrix_size_32 = loradisc_config.matrix_chunk_32_len + 1;
+
+    loradisc_config.history_len_8 = offsetof(Node, row_map_chunk) + loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t);
+
+    uint8_t hash_factor = (((loradisc_config.mx_num_nodes + 7) / 8 + loradisc_config.info_vector.len - 1) / loradisc_config.info_vector.len);
+    loradisc_config.map.pos = 0;
+    loradisc_config.map.len = hash_factor * loradisc_config.info_vector.len;
+    loradisc_config.hash.pos = loradisc_config.map.pos + loradisc_config.map.len;
+    loradisc_config.hash.len = loradisc_config.info_vector.len;
+
+    loradisc_config.row_all_mask.pos = 0;
+    loradisc_config.row_all_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.row_any_mask.pos = loradisc_config.row_all_mask.pos + loradisc_config.row_all_mask.len;
+    loradisc_config.row_any_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.column_all_mask.pos = loradisc_config.row_any_mask.pos + loradisc_config.row_any_mask.len;
+    loradisc_config.column_all_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.column_any_mask.pos = loradisc_config.column_all_mask.pos + loradisc_config.column_all_mask.len;
+    loradisc_config.column_any_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.my_row_mask.pos = loradisc_config.column_any_mask.pos + loradisc_config.column_any_mask.len;
+    loradisc_config.my_row_mask.len = loradisc_config.matrix_coding_vector.len;
+    loradisc_config.my_column_mask.pos = loradisc_config.my_row_mask.pos + loradisc_config.my_row_mask.len;
+    loradisc_config.my_column_mask.len = loradisc_config.matrix_coding_vector.len;
 }
