@@ -678,6 +678,9 @@ void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 	void 		loradisc_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrate, int8_t tx_output_power, uint32_t lora_frequency);
 	void 		chirp_payload_distribution(ChirpBox_Task mx_task);
 
+/* loradisc tools */
+	uint32_t Chirp_RSHash(uint8_t* str, uint32_t len);
+
 #ifdef __cplusplus
 	}
 #endif

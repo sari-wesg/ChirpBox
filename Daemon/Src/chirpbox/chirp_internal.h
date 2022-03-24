@@ -29,13 +29,13 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 /* chirpbox config */
 /* Only allowed to run in the daemon bank (bank1), e.g. alarm clearing and flash write protection removal. */
 #ifndef DAEMON_BANK
-	#define DAEMON_BANK								1
+	#define DAEMON_BANK								0
 #endif
 
 /* Turn on gps or rtc for synchronization */
 #ifndef GPS_DATA
-	#define GPS_DATA								1
-	#define DS3231_ON								1
+	#define GPS_DATA								0
+	#define DS3231_ON								0
 #endif
 
 /* Whether to print logs */
@@ -305,18 +305,6 @@ void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t
 void Stats_value(uint8_t stats_type, uint32_t value);
 void Stats_value_debug(uint8_t energy_type, uint32_t value);
 void Stats_to_Flash(ChirpBox_Task task);
-
-/* LBT */
-uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available);
-uint32_t lbt_update_channel(uint32_t tx_us, uint8_t tx_channel);
-void lbt_check_time();
-
-/* RTC */
-void RTC_ModifyTime(uint8_t year, uint8_t month, uint8_t date, uint8_t day, uint8_t hour, uint8_t mintue, uint8_t second);
-Chirp_Time RTC_GetTime(void);
-void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
-void RTC_Waiting_Count_Stop(uint32_t Count_wait);
-void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 
 //**************************************************************************************************
 /* Topology */

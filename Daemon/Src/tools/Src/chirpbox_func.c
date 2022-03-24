@@ -1135,50 +1135,6 @@ void chirp_controller_read_command(Chirp_Outl *chirp_outl)
   free(command_buffer);
 }
 
-uint32_t Chirp_RSHash(uint8_t* str, uint32_t len)
-{
-    uint32_t b    = 378551;
-    uint32_t a    = 63689;
-    uint32_t hash = 0;
-    uint32_t i    = 0;
-
-    for(i = 0; i < len; str++, i++)
-    {
-      hash = hash * a + (*str);
-      a    = a * b;
-    }
-
-    return hash;
-}
-
-uint8_t randInt(uint8_t begin, uint8_t end)
-{
-	uint8_t temp;
-	temp = begin + (rand() % (end - begin + 1));
-	return temp;
-}
-
-void randomPermutation1(uint8_t channel_sync, uint8_t n)
-{
-  bool boollist[n];
-  uint8_t *a = channel_sync;
-  bool *used = boollist;
-  for (uint8_t i = 0; i < n; i++)
-    used[i] = true;
-  uint8_t k = 0;
-  for (uint8_t i = 0; i < n; ++i)
-  {
-    k = randInt(1, n);
-    while (used[k] == false) {
-      k = randInt(1, n);
-    }
-
-    used[k] = false;
-    a[i] = k;
-    // printf("a[i]:%lu, %lu\n", a[i], i);
-  }
-}
-
 /**
   * @brief  generate packets for transmission in ChirpBox
   * @param  chirp_outl: ChirpBox handle
