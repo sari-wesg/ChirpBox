@@ -42,6 +42,10 @@
 	#define MX_LBT_ACCESS							1
 #endif
 
+#ifndef NODE_LENGTH
+    #define NODE_LENGTH 							0xFF
+#endif
+
 /***************************** radio config ****************************/
 #define REGION_CN470							   // Frequency by country
 #define USE_MODEM_LORA							   // Radio modem

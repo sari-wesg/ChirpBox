@@ -59,7 +59,7 @@ LoRaWAN_State lorawan_state;
 void lorawan_listen_init(uint8_t node_id)
 {
     LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
-	chirp_radio_config(7, 1, 14, 486300);
+	loradisc_radio_config(7, 1, 14, 486300);
 	chirp_isr.state = ISR_LORAWAN;
 	lorawan_state = IDLE;
 	LoRaDS_SX1276SetPublicNetwork(true);
