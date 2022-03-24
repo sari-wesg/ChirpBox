@@ -21,7 +21,7 @@
 typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 {
 	ISR_MIXER = 0,
-	ISR_TOPO  = 4,
+	ISR_LPWAN  = 4,
 	ISR_LORAWAN  = 8,
 } Chirp_ISR;
 
