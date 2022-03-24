@@ -38,13 +38,6 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 	#define DS3231_ON								0
 #endif
 
-/* Whether to print logs */
-#define DEBUG_CHIRPBOX 1
-#if DEBUG_CHIRPBOX
-#define PRINTF_CHIRP(...) printf(__VA_ARGS__)
-#else
-#define PRINTF_CHIRP(...)
-#endif
 
 /* DATA config */
 #define DISSEM_MAX              32

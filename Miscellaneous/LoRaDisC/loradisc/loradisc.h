@@ -27,6 +27,14 @@
 #else
 #define PRINTF(...)
 #endif
+
+/* Whether to print logs */
+#define DEBUG_DISC 1
+#if DEBUG_DISC
+#define PRINTF_DISC(...) printf(__VA_ARGS__)
+#else
+#define PRINTF_DISC(...)
+#endif
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 /***************************** function config ****************************/

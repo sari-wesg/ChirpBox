@@ -603,7 +603,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		{
 			if (loradisc_config.primitive == FLOODING)
 			{
-				PRINTF_CHIRP("ok\n");
+				PRINTF_MIXER("ok\n");
 			}
 
 			uint8_t RxPacketBuffer[packet_len];
