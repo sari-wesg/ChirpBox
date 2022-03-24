@@ -109,6 +109,9 @@ void loradisc_start(uint32_t dev_id)
 
     uint8_t hop_count = network_num_nodes > 10? 6 : 4;
 
+    // radio config
+    // loradisc_radio_config(12, 1, 14, chirp_outl.default_freq);
+
 }
 
 

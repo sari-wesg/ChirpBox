@@ -35,6 +35,7 @@
 #include "util_console.h"
 #if CHIRPBOX_LORAWAN
     #include "Commissioning.h"
+    #include "loradisc.h"
 #endif
 // Definitions
 #define CHANNELS_MASK_SIZE              6
@@ -375,7 +376,7 @@ void RegionCN470InitDefaults( InitDefaultsParams_t* params )
             for( uint8_t i = 0; i < CN470_MAX_NB_CHANNELS; i++ )
             {
                 // NvmCtx.Channels[i].Frequency = 490300000 + i * 200000;
-                NvmCtx.Channels[i].Frequency = 486300000 + i * 200000;
+                NvmCtx.Channels[i].Frequency = CN470_FREQUENCY + i * CHANNEL_STEP;
                 NvmCtx.Channels[i].DrRange.Value = ( DR_5 << 4 ) | DR_0;
                 NvmCtx.Channels[i].Band = 0;
             }
@@ -388,7 +389,7 @@ void RegionCN470InitDefaults( InitDefaultsParams_t* params )
             NvmCtx.ChannelsDefaultMask[4] = 0xFFFF;
             NvmCtx.ChannelsDefaultMask[5] = 0xFFFF;
             #ifdef CHIRPBOX_LORAWAN
-                uint32_t UserFreq[8]={486300000, 486500000, 486700000, 486900000, 487100000, 487300000, 487500000, 487700000};
+                uint32_t UserFreq[8]={CN470_FREQUENCY, CN470_FREQUENCY + CHANNEL_STEP, CN470_FREQUENCY + 2 * CHANNEL_STEP, CN470_FREQUENCY + 3 * CHANNEL_STEP, CN470_FREQUENCY + 4 * CHANNEL_STEP, CN470_FREQUENCY + 5 * CHANNEL_STEP, CN470_FREQUENCY + 6 * CHANNEL_STEP, CN470_FREQUENCY + 7 * CHANNEL_STEP};
                 // uint32_t UserFreq[8]={490000000, 490200000, 490400000, 490600000, 490800000, 491000000, 491200000, 491400000};
                 NvmCtx.ChannelsDefaultMask[0] = 0x0000;
                 NvmCtx.ChannelsDefaultMask[1] = 0x0000;
@@ -399,7 +400,7 @@ void RegionCN470InitDefaults( InitDefaultsParams_t* params )
 
                 for(uint8_t i = 0,j = 0; i < 8; i++)
                 {
-                    j=(UserFreq[i]-486300000 )/200000;//channel ID
+                    j=(UserFreq[i]-CN470_FREQUENCY )/CHANNEL_STEP;//channel ID
                     // j=(UserFreq[i]-490000000 )/200000;//channel ID
 
                     NvmCtx.Channels[j].Frequency = UserFreq[i] ;

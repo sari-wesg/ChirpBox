@@ -52,6 +52,7 @@
 #define CHANNEL_MAX                                9
 #define CHANNEL_MIN                                0
 #define CHANNEL_STEP                               200000
+#define CN470_FREQUENCY							   486300000
 
 #if defined( USE_MODEM_LORA )
 
