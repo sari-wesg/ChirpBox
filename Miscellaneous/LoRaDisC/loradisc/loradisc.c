@@ -123,11 +123,8 @@ void loradisc_start(uint32_t dev_id)
 
     // radio config
     loradisc_radio_config(12, 1, 14, CN470_FREQUENCY);
-    // packet config
-    if (loradisc_config.primitive == FLOODING)
-        loradisc_packet_config(MX_NUM_NODES_CONF, 0, 0, FLOODING);
-    // else
-    //     loradisc_packet_config(MX_NUM_NODES_CONF, 0, the_data_length, FLOODING);
+    // packet config, if flooding
+    loradisc_packet_config(MX_NUM_NODES_CONF, 0, 0, FLOODING);
 
     // if flooding:
     if (loradisc_config.primitive == FLOODING)
@@ -150,6 +147,7 @@ void loradisc_start(uint32_t dev_id)
     chirp_isr.state = ISR_MIXER;
 
     deadline = gpi_tick_fast_extended();
+    PRINTF_DISC("deadline:%lu\n", deadline);
 
     if (loradisc_config.primitive != FLOODING)
         loradisc_config.packet_hash = DISC_HEADER;
