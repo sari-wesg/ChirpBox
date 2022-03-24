@@ -113,7 +113,7 @@ void loradisc_start(uint32_t dev_id)
     loradisc_radio_config(12, 1, 14, CN470_FREQUENCY);
     // packet config
     loradisc_packet_config(MX_NUM_NODES_CONF, 0, 0, FLOODING);
-
+    uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
 
 }
 
@@ -229,4 +229,21 @@ void loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
     loradisc_config.my_row_mask.len = loradisc_config.matrix_coding_vector.len;
     loradisc_config.my_column_mask.pos = loradisc_config.my_row_mask.pos + loradisc_config.my_row_mask.len;
     loradisc_config.my_column_mask.len = loradisc_config.matrix_coding_vector.len;
+}
+
+/* slot length is mx_slot_length_in_us microseconds,
+needed slot number is mx_round_length,
+round is last for mx_period_time_us seconds */
+void loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus)
+{
+    uint32_t mx_period_time_us;
+    memset(&loradisc_config + offsetof(LoRaDisC_Config, mx_slot_length_in_us), 0, offsetof(LoRaDisC_Config, lora_sf) - offsetof(LoRaDisC_Config, mx_slot_length_in_us));
+    loradisc_config.mx_slot_length_in_us = mx_slot_length_in_us;
+    #if MX_LBT_ACCESS
+    loradisc_config.mx_slot_length_in_us += loradisc_config.lbt_detect_duration_us * CHANNEL_ALTER;
+    #endif
+    loradisc_config.mx_slot_length = GPI_TICK_US_TO_FAST2(loradisc_config.mx_slot_length_in_us);
+    loradisc_config.mx_round_length = mx_round_length;
+    mx_period_time_us =  loradisc_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
+    loradisc_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
 }

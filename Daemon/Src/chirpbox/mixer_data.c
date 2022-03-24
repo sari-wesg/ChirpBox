@@ -103,23 +103,6 @@ void uart_read_command(uint8_t *p, uint8_t rxbuffer_len)
 
 //**************************************************************************************************
 
-/* slot length is mx_slot_length_in_us microseconds,
-needed slot number is mx_round_length,
-round is last for mx_period_time_us seconds */
-void chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus)
-{
-    uint32_t mx_period_time_us;
-    memset(&loradisc_config + offsetof(LoRaDisC_Config, mx_slot_length_in_us), 0, offsetof(LoRaDisC_Config, lora_sf) - offsetof(LoRaDisC_Config, mx_slot_length_in_us));
-    loradisc_config.mx_slot_length_in_us = mx_slot_length_in_us;
-    #if MX_LBT_ACCESS
-    loradisc_config.mx_slot_length_in_us += loradisc_config.lbt_detect_duration_us * CHANNEL_ALTER;
-    #endif
-    loradisc_config.mx_slot_length = GPI_TICK_US_TO_FAST2(loradisc_config.mx_slot_length_in_us);
-    loradisc_config.mx_round_length = mx_round_length;
-    mx_period_time_us =  loradisc_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
-    loradisc_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
-}
-
 /**
  * @description: To allocate payload among nodes according to the type of mixer (dissemination / collection)
  * @param mx_task: CB_DISSEMINATE / CB_COLLECT
@@ -886,7 +869,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         PRINTF("next: disem_flag: %d, %d\n", chirp_outl->disem_file_index, chirp_outl->disem_file_max);
                         loradisc_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
                         chirp_outl->packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
-                        chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
+                        loradisc_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
                         chirp_payload_distribution(chirp_outl->task);
                         chirp_outl->disem_flag = 1;
                     }
@@ -912,7 +895,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         chirp_outl->packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
                         if (chirp_outl->dissem_back_slot_num == 0)
                             chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
-                        chirp_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
+                        loradisc_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
                         chirp_payload_distribution(CB_COLLECT);
                         chirp_outl->disem_flag = 0;
                         /* in confirm, all nodes sends packets */
