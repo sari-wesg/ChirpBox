@@ -7,6 +7,8 @@
 #include "mixer_internal.h"
 // DEBUG
 #include "gpi/tools.h"
+#include "gpi/olf.h"
+
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -114,6 +116,27 @@ void loradisc_start(uint32_t dev_id)
     // packet config
     loradisc_packet_config(MX_NUM_NODES_CONF, 0, 0, FLOODING);
     uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
+    loradisc_slot_config(packet_time + 100000, hop_count * 2, 1500000);
+    // initialize glossy
+    memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
+    // lbt channel
+    uint8_t sync_channel_id = 0;
+    loradisc_config.lbt_channel_primary = sync_channel_id;
+    LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+
+    // round:
+    Gpi_Fast_Tick_Extended deadline;
+    Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_period_time_s * 1000) / 1) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
+
+    /* set current state as mixer */
+	chirp_isr.state = ISR_MIXER;
+
+	deadline = gpi_tick_fast_extended();
+
+	if (loradisc_config.primitive != FLOODING)
+        loradisc_config.packet_hash = DISC_HEADER;
+    else
+        loradisc_config.packet_hash = FLOODING_HEADER;
 
 }
 
@@ -247,3 +270,73 @@ void loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_lengt
     mx_period_time_us =  loradisc_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
     loradisc_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
 }
+
+#if MX_LBT_ACCESS
+
+uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available)
+{
+    /* make sure the total number of channel is less than 32 */
+    assert_reset((channel_total <= sizeof(uint32_t) * 8));
+
+    /* init seed */
+    srand(pesudo_value);
+    rand();
+
+    uint32_t help_bitmask = 0;
+
+    uint32_t lbt = lbt_available & (~(1 << last_channel));
+
+    uint8_t lbt_len = gpi_popcnt_32(lbt);
+    assert_reset((lbt_len <= channel_total) && (lbt_len > 0));
+
+    uint8_t lookupTable[lbt_len];
+    uint8_t i = 0;
+    while (lbt)
+    {
+        // isolate first set bit
+        #if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+            help_bitmask = lbt & -lbt;			// isolate LSB
+        #else
+            #error TODO						// isolate MSB
+        #endif
+
+        lookupTable[i++] = gpi_get_lsb_32(lbt);
+        lbt &= ~help_bitmask;
+    }
+    uint8_t value = lookupTable[rand() % lbt_len];
+
+    return value;
+}
+
+uint32_t lbt_update_channel(uint32_t tx_us, uint8_t tx_channel)
+{
+    loradisc_config.lbt_channel_time_us[tx_channel] += tx_us;
+    loradisc_config.lbt_channel_time_stats_us[tx_channel] += tx_us;
+    if(tx_us)
+
+    /* not enough for the next tx */
+    // TODO:
+    if ((loradisc_config.lbt_channel_time_us[tx_channel]) > LBT_TX_TIME_S * 1e6 - tx_us)
+        loradisc_config.lbt_channel_available &= ~(1 << tx_channel);
+    return loradisc_config.lbt_channel_available;
+}
+
+void lbt_check_time()
+{
+	// Chirp_Time gps_time = GPS_Get_Time();
+    // time_t diff = GPS_Diff(&gps_time, loradisc_config.lbt_init_time.chirp_year, loradisc_config.lbt_init_time.chirp_month, loradisc_config.lbt_init_time.chirp_date, loradisc_config.lbt_init_time.chirp_hour, loradisc_config.lbt_init_time.chirp_min, loradisc_config.lbt_init_time.chirp_sec);
+	Chirp_Time gps_time = RTC_GetTime();
+    time_t diff = GPS_Diff(&gps_time, loradisc_config.lbt_init_time.chirp_year, loradisc_config.lbt_init_time.chirp_month, loradisc_config.lbt_init_time.chirp_date, loradisc_config.lbt_init_time.chirp_hour, loradisc_config.lbt_init_time.chirp_min, loradisc_config.lbt_init_time.chirp_sec);
+    if (ABS(diff) >= 3600)
+    {
+        memcpy(&loradisc_config.lbt_init_time, &gps_time, sizeof(Chirp_Time));
+        memset(&loradisc_config.lbt_channel_time_us[0], 0, sizeof(loradisc_config.lbt_channel_time_us));
+        int32_t mask = 1 << (sizeof(uint_fast_t) * 8 - 1);
+        uint32_t i;
+        for (i = sizeof(uint32_t) * 8; i-- > loradisc_config.lbt_channel_total;)
+            mask >>= 1;
+        loradisc_config.lbt_channel_available = ~(mask << 1);
+    }
+}
+
+#endif

@@ -112,7 +112,8 @@ void SX1276SetOpMode( uint8_t opMode );
 /*!
  * \brief DIO 0 IRQ callback
  */
-void SX1276OnDio0Irq( void* context );
+// void SX1276OnDio0Irq( void* context );
+void lpwan_dio0_isr();
 
 /*!
  * \brief DIO 1 IRQ callback
@@ -127,7 +128,8 @@ void SX1276OnDio2Irq( void* context );
 /*!
  * \brief DIO 3 IRQ callback
  */
-void SX1276OnDio3Irq( void* context );
+// void SX1276OnDio3Irq( void* context );
+void lpwan_dio3_isr();
 
 /*!
  * \brief DIO 4 IRQ callback
@@ -1502,7 +1504,7 @@ void SX1276OnTimeoutIrq( void* context )
     }
 }
 
-void SX1276OnDio0Irq( void* context )
+void lpwan_dio0_isr( void* context )
 {
     volatile uint8_t irqFlags = 0;
 
@@ -1851,7 +1853,7 @@ void SX1276OnDio2Irq( void* context )
     }
 }
 
-void SX1276OnDio3Irq( void* context )
+void lpwan_dio3_isr( void* context )
 {
     switch( SX1276.Settings.Modem )
     {

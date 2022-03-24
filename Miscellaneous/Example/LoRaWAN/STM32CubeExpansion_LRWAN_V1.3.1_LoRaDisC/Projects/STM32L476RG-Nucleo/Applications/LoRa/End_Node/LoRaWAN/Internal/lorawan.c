@@ -111,6 +111,8 @@ volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_c
 //***** Global Functions ***************************************************************************
 void lorawan_start(uint32_t dev_id)
 {
+	chirp_isr.state = ISR_TOPO;
+
     lora_rx_count_rece = 0;
 
     /*Disbale Stand-by mode*/

@@ -32,15 +32,7 @@ typedef enum
     FUT_UPLINK_POWER,
 } FUT_param;
 
- /* LPTIM1 */
-#define LP_TIMER hlptim1.Instance
-#define LP_TIMER_IRQ LPTIM1_IRQn
-#define LP_TIMER_ISR_NAME LPTIM1_IRQHandler
-
-#define LP_TIMER_CMP_REG (LP_TIMER->CMP)  /* compare interrupt count */
-#define LP_TIMER_CNT_REG (LP_TIMER->CNT)  /* lptim1 now count */
-
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-void slow_tick_update();
-void slow_tick_end();
+// void slow_tick_update();
+// void slow_tick_end();

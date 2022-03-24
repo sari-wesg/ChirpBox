@@ -55,6 +55,9 @@ extern "C" {
 
 #include "API_ChirpBox.h"
 
+#if USE_FOR_LORAWAN
+	#include "lorawan_internal.h"
+#endif
 #ifdef __cplusplus
 }
 #endif

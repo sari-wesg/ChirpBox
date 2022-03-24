@@ -1,6 +1,6 @@
 
-#ifndef __CHIRPBOX_INTERNAL_H__
-#define __CHIRPBOX_INTERNAL_H__
+#ifndef __LORAWAN_INTERNAL_H__
+#define __LORAWAN_INTERNAL_H__
 
 //**************************************************************************************************
 //***** Includes ***********************************************************************************
@@ -287,6 +287,12 @@ void SX1276OnDio0Irq();
 void SX1276OnDio3Irq();
 
 //**************************************************************************************************
+// for lpwan
+void slow_tick_update();
+void slow_tick_end();
+void lpwan_lp_timer_isr();
+
+//**************************************************************************************************
 /* chirpbox */
 void 		chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl);
 uint8_t 	chirp_recv(uint8_t node_id, Chirp_Outl *chirp_outl);
@@ -323,4 +329,4 @@ void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 //**************************************************************************************************
 //***** Implementations of Inline Functions ********************************************************
 
-#endif // __CHIRPBOX_INTERNAL_H__
+#endif // __LORAWAN_INTERNAL_H__
