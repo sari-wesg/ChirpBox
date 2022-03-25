@@ -130,12 +130,15 @@ typedef enum Disc_Primitive_tag
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
 // loradisc
+void loradisc_init();
+void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency);
 void loradisc_write(uint8_t i, uint8_t *data);
 void loradisc_read(uint8_t *data);
-void loradisc_start(uint32_t dev_id);
+void loradisc_start();
 
 // loradisc preparation
-void loradisc_packet_write(uint8_t node_id, uint8_t *the_data);
+void loradisc_data_init(uint8_t data_length, uint8_t *data);
+void loradisc_packet_write(uint8_t node_id, uint8_t *data);
 
 // lorawan
 void lorawan_listen_init(uint8_t node_id);
@@ -148,6 +151,7 @@ void lorawan_dio3_isr();
 
 
 /* LBT */
+void lbt_init();
 uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available);
 uint32_t lbt_update_channel(uint32_t tx_us, uint8_t tx_channel);
 void lbt_check_time();

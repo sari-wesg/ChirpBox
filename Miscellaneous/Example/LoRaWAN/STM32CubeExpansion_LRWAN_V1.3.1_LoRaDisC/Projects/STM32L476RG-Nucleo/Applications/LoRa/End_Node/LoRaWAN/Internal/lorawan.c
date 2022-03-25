@@ -109,7 +109,7 @@ volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_c
 
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
-void lorawan_start(uint32_t dev_id)
+void lorawan_start()
 {
 	chirp_isr.state = ISR_LPWAN;
 
@@ -120,9 +120,9 @@ void lorawan_start(uint32_t dev_id)
 
     PRINTF("LoRaWAN System started\n");
 
-    log_to_flash("starting node %x ...\n", dev_id);
+    log_to_flash("starting node %x ...\n", TOS_NODE_ID);
     log_flush();
-    srand(dev_id);
+    srand(TOS_NODE_ID);
     rand();
 
     PRINTF("APP_VERSION= %02X.%02X.%02X.%02X\r\n", (uint8_t)(__APP_VERSION >> 24), (uint8_t)(__APP_VERSION >> 16), (uint8_t)(__APP_VERSION >> 8), (uint8_t)__APP_VERSION);
