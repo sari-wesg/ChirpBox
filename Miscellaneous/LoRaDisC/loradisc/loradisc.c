@@ -122,7 +122,7 @@ void loradisc_start(uint32_t dev_id)
     assert_reset(the_data_length >= FLOODING_SURPLUS_LENGTH);
 
     // radio config
-    loradisc_radio_config(12, 1, 14, CN470_FREQUENCY);
+    loradisc_radio_config(12, 1, 14, CN470_FREQUENCY/1000);
     // packet config, if flooding
     loradisc_packet_config(MX_NUM_NODES_CONF, 0, 0, FLOODING);
 
