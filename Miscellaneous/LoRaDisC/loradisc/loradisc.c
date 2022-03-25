@@ -159,12 +159,16 @@ void loradisc_start()
     uint8_t *data = NULL;
     uint8_t data_length;
 
-    // config
-    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, sizeof(data), DISSEMINATION, 7, 14, CN470_FREQUENCY);
-    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, sizeof(data), COLLECTION, 7, 14, CN470_FREQUENCY);
-    loradisc_reconfig(MX_NUM_NODES_CONF, NULL, sizeof(data), FLOODING, 7, 14, CN470_FREQUENCY);
+    // update data
+    data_length = 10;
+    loradisc_data_init(data_length, &data);
 
-    // round:
+    // config
+    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, DISSEMINATION, 7, 14, CN470_FREQUENCY);
+    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
+    loradisc_reconfig(MX_NUM_NODES_CONF, NULL, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
+
+    // round start:
     chirp_isr.state = ISR_MIXER;
 
     Gpi_Fast_Tick_Extended deadline;
@@ -174,8 +178,6 @@ void loradisc_start()
 
     while (1)
     {
-        data_length = 10;
-        loradisc_data_init(data_length, &data);
         loradisc_init();
 
         gpi_radio_init();
