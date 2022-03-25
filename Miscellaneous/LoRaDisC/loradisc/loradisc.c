@@ -20,7 +20,9 @@
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO:
+// uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO:
+uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO:
+
 uint8_t MX_NUM_NODES_CONF;
 
 //**************************************************************************************************
@@ -117,12 +119,16 @@ void loradisc_start(uint32_t dev_id)
     uint8_t the_data_length = 10;
     uint8_t the_data[the_data_length];
     uint8_t i;
-    for (i = 0; i < the_data_length; i++)
+    memset(the_data, 0xFF, sizeof(dev_id));
+    if (!node_id_allocate)
+        memcpy(the_data, &dev_id, sizeof(dev_id));
+    for (i = sizeof(dev_id); i < the_data_length; i++)
         the_data[i] = i;
     assert_reset(the_data_length >= FLOODING_SURPLUS_LENGTH);
-
+    i = 0;
+    PRINTF_DISC("sending data: 0x%x\n", the_data[i++] << 24 | the_data[i++] << 16 | the_data[i++] << 8 | the_data[i++]);
     // radio config
-    loradisc_radio_config(12, 1, 14, CN470_FREQUENCY/1000);
+    loradisc_radio_config(7, 1, 14, CN470_FREQUENCY / 1000);
     // packet config, if flooding
     loradisc_packet_config(MX_NUM_NODES_CONF, 0, 0, FLOODING);
 
@@ -175,48 +181,66 @@ void loradisc_start(uint32_t dev_id)
 
         loradisc_packet_write(node_id_allocate, the_data);
 
-
-		/* arm mixer, node 0 = initiator
-		start first round with infinite scan
-		-> nodes join next available round, does not require simultaneous boot-up */
+        /* arm mixer, node 0 = initiator
+        start first round with infinite scan
+        -> nodes join next available round, does not require simultaneous boot-up */
         mixer_arm(((!node_id_allocate) ? MX_ARM_INITIATOR : 0) | ((1 == 0) ? MX_ARM_INFINITE_SCAN : 0));
 
-		/* delay initiator a bit
-		-> increase probability that all nodes are ready when initiator starts the round
-		-> avoid problems in view of limited deadline accuracy */
-		if (!node_id_allocate)
+        /* delay initiator a bit
+        -> increase probability that all nodes are ready when initiator starts the round
+        -> avoid problems in view of limited deadline accuracy */
+        if (!node_id_allocate)
             deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length;
 
-		/* start when deadline reached
-		ATTENTION: don't delay after the polling loop (-> print before) */
-		// while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
-        #if MX_LBT_ACCESS
-            lbt_check_time();
-            chirp_isr.state = ISR_MIXER;
-            if (loradisc_config.primitive != FLOODING)
-            {
-                // loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
-                // if ((!chirp_outl->disem_flag) && (chirp_outl->task == CB_DISSEMINATE) && (chirp_outl->round >= 2))
-                // {
-                //     loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
-                // }
-            }
-            LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
-            PRINTF("-------lbt_channel_primary:%d\n", loradisc_config.lbt_channel_primary);
-        #endif
+/* start when deadline reached
+ATTENTION: don't delay after the polling loop (-> print before) */
+// while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
+#if MX_LBT_ACCESS
+        lbt_check_time();
+        chirp_isr.state = ISR_MIXER;
+        if (loradisc_config.primitive != FLOODING)
+        {
+            // loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
+            // if ((!chirp_outl->disem_flag) && (chirp_outl->task == CB_DISSEMINATE) && (chirp_outl->round >= 2))
+            // {
+            //     loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
+            // }
+        }
+        LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+        PRINTF("-------lbt_channel_primary:%d\n", loradisc_config.lbt_channel_primary);
+#endif
 
-		while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-        #if ENERGEST_CONF_ON
-            ENERGEST_OFF(ENERGEST_TYPE_CPU);
-        #endif
+        while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
+            ;
+#if ENERGEST_CONF_ON
+        ENERGEST_OFF(ENERGEST_TYPE_CPU);
+#endif
 
         /* used in mixer_write, and revalue before mixer round */
         loradisc_config.full_rank = 0;
         loradisc_config.full_column = UINT8_MAX;
         // rece_dissem_index = UINT16_MAX;
 
-		deadline = mixer_start();
+        deadline = mixer_start();
 
+        if (loradisc_config.primitive == FLOODING)
+            loradisc_read(the_data);
+        i = 0;
+        PRINTF_DISC("receiving data:0x%x\n", the_data[i++] << 24 | the_data[i++] << 16 | the_data[i++] << 8 | the_data[i++]);
+        uint8_t recv_result = 0;
+        if (the_data[0] != 0xFF)
+            recv_result++;
+
+        Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
+
+        /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
+        if (!recv_result)
+            deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
+        /* have synchronized to a node */
+        else
+            deadline += (Gpi_Fast_Tick_Extended)(update_period);
+        while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
+            ;
     }
 }
 
