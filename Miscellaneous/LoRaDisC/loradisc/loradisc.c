@@ -19,8 +19,8 @@
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-// uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO:
-uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO:
+uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO: oead
+// uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
 
 uint8_t MX_NUM_NODES_CONF;
 
@@ -94,30 +94,41 @@ void loradisc_read(uint8_t *data)
 
 void loradisc_init()
 {
-    // radio and lbt config
-#if MX_LBT_ACCESS
-    lbt_init();
-#endif
-
     // loradisc flooding clear data
     memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
     memset(loradisc_config.flooding_packet_payload, 0xFF, sizeof(loradisc_config.flooding_packet_payload));
+
+    /* used in mixer_write, and revalue before mixer round */
+    loradisc_config.full_rank = 0;
+    loradisc_config.full_column = UINT8_MAX;
+    // rece_dissem_index = UINT16_MAX;
 }
 
-void loradisc_data_init(uint8_t data_length, uint8_t *data)
+void loradisc_data_init(uint8_t data_length, uint8_t **data)
 {
+    if (*data != NULL)
+        free(*data);
+
     assert_reset(data_length >= FLOODING_SURPLUS_LENGTH);
+    *data = (uint8_t *)malloc(data_length);
+
     uint8_t i;
-    memcpy(data, &TOS_NODE_ID, sizeof(TOS_NODE_ID));
+    memcpy(*data, &TOS_NODE_ID, sizeof(TOS_NODE_ID));
     for (i = sizeof(TOS_NODE_ID); i < data_length; i++)
-        data[i] = i;
+        *data[i] = i;
 }
 
 void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency)
 {
     // radio config
     loradisc_radio_config(sf, 1, tp, lora_frequency / 1000);
-    // packet config, if flooding
+
+    // lbt config
+#if MX_LBT_ACCESS
+    lbt_init();
+#endif
+
+    // packet config
     if (primitive == FLOODING)
     {
         loradisc_packet_config(nodes_num, 0, 0, primitive);
@@ -127,49 +138,46 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
         loradisc_packet_config(nodes_num, generation_size, data_length, primitive);
 
     uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
-    uint8_t hop_count; //TODO: calculate
+    uint8_t hop_count; // TODO: calculate
     if (primitive == FLOODING)
-        hop_count = nodes_num > 10 ? 6 : 4;
+        hop_count = nodes_num > 10 ? 6 * 2 : 4 * 2;
     else
         hop_count = nodes_num > 10 ? (nodes_num * generation_size + 5) / 5 : (nodes_num * generation_size + 4) / 4;
 
-    loradisc_slot_config(packet_time + 100000, hop_count * 2, 1500000);
+    loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
+
+    if (loradisc_config.primitive != FLOODING)
+        loradisc_config.packet_hash = DISC_HEADER;
+    else
+        loradisc_config.packet_hash = FLOODING_HEADER;
 }
 
 void loradisc_start()
 {
     // init
     node_id_allocate = logical_node_id(TOS_NODE_ID, dev_id_list); // node id
-    uint8_t data[10];
-    loradisc_data_init(sizeof(data), data); //TODO: data
+    uint8_t *data = NULL;
+    uint8_t data_length;
 
-    loradisc_init();
-
-    //TODO: primitive
+    // config
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, sizeof(data), DISSEMINATION, 7, 14, CN470_FREQUENCY);
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, sizeof(data), COLLECTION, 7, 14, CN470_FREQUENCY);
     loradisc_reconfig(MX_NUM_NODES_CONF, NULL, sizeof(data), FLOODING, 7, 14, CN470_FREQUENCY);
 
-    // lbt channel
-    LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
-
     // round:
+    chirp_isr.state = ISR_MIXER;
+
     Gpi_Fast_Tick_Extended deadline;
     Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_period_time_s * 1000) / 1) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
 
-    /* set current state as mixer */
-    chirp_isr.state = ISR_MIXER;
-
     deadline = gpi_tick_fast_extended();
-    PRINTF_DISC("deadline:%lu\n", deadline);
-
-    if (loradisc_config.primitive != FLOODING)
-        loradisc_config.packet_hash = DISC_HEADER;
-    else
-        loradisc_config.packet_hash = FLOODING_HEADER;
 
     while (1)
     {
+        data_length = 10;
+        loradisc_data_init(data_length, &data);
+        loradisc_init();
+
         gpi_radio_init();
 
         /* init mixer */
@@ -200,53 +208,40 @@ void loradisc_start()
         if (!node_id_allocate)
             deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length;
 
-/* start when deadline reached
-ATTENTION: don't delay after the polling loop (-> print before) */
-// while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), deadline) < 0);
 #if MX_LBT_ACCESS
-        lbt_check_time();
-        chirp_isr.state = ISR_MIXER;
-        if (loradisc_config.primitive != FLOODING)
-        {
-            // loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
-            // if ((!chirp_outl->disem_flag) && (chirp_outl->task == CB_DISSEMINATE) && (chirp_outl->round >= 2))
-            // {
-            //     loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + LBT_CHANNEL_NUM - 1) % LBT_CHANNEL_NUM;
-            // }
-        }
-        LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
-        PRINTF("-------lbt_channel_primary:%d\n", loradisc_config.lbt_channel_primary);
+        lbt_update();
 #endif
 
+        /* start when deadline reached
+        ATTENTION: don't delay after the polling loop (-> print before) */
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
             ;
+
 #if ENERGEST_CONF_ON
         ENERGEST_OFF(ENERGEST_TYPE_CPU);
 #endif
 
-        /* used in mixer_write, and revalue before mixer round */
-        loradisc_config.full_rank = 0;
-        loradisc_config.full_column = UINT8_MAX;
-        // rece_dissem_index = UINT16_MAX;
-
         deadline = mixer_start();
 
         if (loradisc_config.primitive == FLOODING)
+        {
             loradisc_read(data);
-        uint8_t i = 0;
-        PRINTF_DISC("receiving data:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
-        uint8_t recv_result = 0;
-        if (data[0] != 0xFF)
-            recv_result++;
+            uint8_t i = 0;
+            PRINTF_DISC("receiving data:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
+            uint8_t recv_result = 0;
+            if (data[0] != 0xFF)
+                recv_result++;
 
-        Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
+            Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
 
-        /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
-        if (!recv_result)
-            deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
-        /* have synchronized to a node */
-        else
-            deadline += (Gpi_Fast_Tick_Extended)(update_period);
+            /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
+            if (!recv_result)
+                deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
+            /* have synchronized to a node */
+            else
+                deadline += (Gpi_Fast_Tick_Extended)(update_period);
+        }
+
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
             ;
     }

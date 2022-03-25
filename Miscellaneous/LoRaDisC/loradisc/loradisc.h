@@ -137,7 +137,7 @@ void loradisc_read(uint8_t *data);
 void loradisc_start();
 
 // loradisc preparation
-void loradisc_data_init(uint8_t data_length, uint8_t *data);
+void loradisc_data_init(uint8_t data_length, uint8_t **data);
 void loradisc_packet_write(uint8_t node_id, uint8_t *data);
 
 // lorawan
@@ -152,6 +152,7 @@ void lorawan_dio3_isr();
 
 /* LBT */
 void lbt_init();
+void lbt_update();
 uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available);
 uint32_t lbt_update_channel(uint32_t tx_us, uint8_t tx_channel);
 void lbt_check_time();

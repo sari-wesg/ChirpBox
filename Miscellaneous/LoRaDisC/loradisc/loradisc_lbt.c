@@ -36,7 +36,17 @@ void lbt_init()
         mask >>= 1;
     loradisc_config.lbt_channel_mask = ~(mask << 1);
     loradisc_config.lbt_channel_primary = 0;
+    LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
 }
+
+void lbt_update()
+{
+    lbt_check_time();
+    if (loradisc_config.primitive != FLOODING)
+        loradisc_config.lbt_channel_primary = (loradisc_config.lbt_channel_primary + 1) % LBT_CHANNEL_NUM;
+    LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+}
+
 
 uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available)
 {
