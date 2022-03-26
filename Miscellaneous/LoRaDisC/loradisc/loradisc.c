@@ -249,6 +249,8 @@ void loradisc_start()
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
             ;
     }
+    if (data != NULL)
+        free(data);
 }
 
 void loradisc_packet_write(uint8_t node_id, uint8_t *data)
