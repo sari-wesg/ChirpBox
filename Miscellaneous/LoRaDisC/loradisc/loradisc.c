@@ -120,15 +120,15 @@ void loradisc_data_init(uint8_t data_length, uint8_t **data)
 
 void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency)
 {
-    // radio config
+    // 1. radio config
     loradisc_radio_config(sf, 1, tp, lora_frequency / 1000);
 
-    // lbt config
+    // 2. lbt config
 #if MX_LBT_ACCESS
     lbt_init();
 #endif
 
-    // packet config
+    // 3. packet structure config
     if (primitive == FLOODING)
     {
         loradisc_packet_config(nodes_num, 0, 0, primitive);
@@ -137,19 +137,19 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
     else
         loradisc_packet_config(nodes_num, generation_size, data_length, primitive);
 
+    // 4. slot config
     uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
     uint8_t hop_count; // TODO: calculate
     if (primitive == FLOODING)
         hop_count = nodes_num > 10 ? 6 * 2 : 4 * 2;
+    else if (primitive == DISSEMINATION)
+        hop_count = nodes_num > 4 ? (nodes_num * generation_size + 5) / 5 : (nodes_num * generation_size + 4) / 4;
     else
-        hop_count = nodes_num > 10 ? (nodes_num * generation_size + 5) / 5 : (nodes_num * generation_size + 4) / 4;
+        hop_count = nodes_num * generation_size;
 
     loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
 
-    if (loradisc_config.primitive != FLOODING)
-        loradisc_config.packet_hash = DISC_HEADER;
-    else
-        loradisc_config.packet_hash = FLOODING_HEADER;
+    loradisc_payload_distribution();
 }
 
 void loradisc_start()
@@ -163,7 +163,7 @@ void loradisc_start()
     data_length = 10;
     loradisc_data_init(data_length, &data);
 
-    // config
+    // TODO: config
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, DISSEMINATION, 7, 14, CN470_FREQUENCY);
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
     loradisc_reconfig(MX_NUM_NODES_CONF, NULL, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
@@ -251,6 +251,8 @@ void loradisc_start()
     }
     if (data != NULL)
         free(data);
+    if (payload_distribution != NULL)
+        free(payload_distribution);
 }
 
 void loradisc_packet_write(uint8_t node_id, uint8_t *data)
@@ -373,6 +375,12 @@ void loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
     loradisc_config.my_row_mask.len = loradisc_config.matrix_coding_vector.len;
     loradisc_config.my_column_mask.pos = loradisc_config.my_row_mask.pos + loradisc_config.my_row_mask.len;
     loradisc_config.my_column_mask.len = loradisc_config.matrix_coding_vector.len;
+
+    // to identify the loradisc packet
+    if (loradisc_config.primitive != FLOODING)
+        loradisc_config.packet_hash = DISC_HEADER;
+    else
+        loradisc_config.packet_hash = FLOODING_HEADER;
 }
 
 /* slot length is mx_slot_length_in_us microseconds,
@@ -390,6 +398,33 @@ void loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_lengt
     loradisc_config.mx_round_length = mx_round_length;
     mx_period_time_us = loradisc_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
     loradisc_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
+}
+
+
+/**
+ * @description: To allocate payload among nodes according to the type of mixer (dissemination / collection)
+ * @param mx_task: CB_DISSEMINATE / CB_COLLECT
+ * @return: None
+ */
+void loradisc_payload_distribution()
+{
+    uint8_t i;
+    if (loradisc_config.primitive == DISSEMINATION)
+    {
+        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_generation_size);
+        /* Only the initiator has packets */
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
+            payload_distribution[i] = 0;
+    }
+    else if (loradisc_config.primitive == COLLECTION)
+    {
+        /* Each node has a packet */
+        assert_reset((loradisc_config.mx_num_nodes == loradisc_config.mx_generation_size));
+        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_num_nodes);
+
+        for (i = 0; i < loradisc_config.mx_num_nodes; i++)
+            payload_distribution[i] = i;
+    }
 }
 
 uint32_t Chirp_RSHash(uint8_t *str, uint32_t len)

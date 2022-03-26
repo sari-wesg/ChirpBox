@@ -103,32 +103,6 @@ void uart_read_command(uint8_t *p, uint8_t rxbuffer_len)
 
 //**************************************************************************************************
 
-/**
- * @description: To allocate payload among nodes according to the type of mixer (dissemination / collection)
- * @param mx_task: CB_DISSEMINATE / CB_COLLECT
- * @return: None
- */
-void chirp_payload_distribution(ChirpBox_Task mx_task)
-{
-    uint8_t i;
-    if ((mx_task == CB_DISSEMINATE))
-    {
-        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_generation_size);
-        /* Only the initiator has packets */
-        for (i = 0; i < loradisc_config.mx_generation_size; i++)
-            payload_distribution[i] = 0;
-    }
-    else
-    {
-        /* Each node has a packet */
-        assert_reset((loradisc_config.mx_num_nodes == loradisc_config.mx_generation_size));
-        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_num_nodes);
-
-        for (i = 0; i < loradisc_config.mx_num_nodes; i++)
-            payload_distribution[i] = i;
-    }
-}
-
 void chirp_write(uint8_t node_id, Chirp_Outl *chirp_outl)
 {
     PRINTF("chirp_write:%d, %d\n", node_id, chirp_outl->round_max);
@@ -714,13 +688,6 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
 
     clear_data();
 
-    // loradisc_config.task = chirp_outl->task;
-
-	if (loradisc_config.primitive != FLOODING)
-        loradisc_config.packet_hash = DISC_HEADER;
-    else
-        loradisc_config.packet_hash = FLOODING_HEADER;
-
 	while (1)
 	{
         PRINTF("round:%d, %d\n", chirp_outl->round, chirp_outl->round_max);
@@ -870,7 +837,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         loradisc_packet_config(chirp_outl->num_nodes, chirp_outl->generation_size, chirp_outl->payload_len + HASH_TAIL, DISSEMINATION);
                         chirp_outl->packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, loradisc_config.phy_payload_size);
                         loradisc_slot_config(chirp_outl->packet_time + 100000, chirp_outl->default_slot_num, 2000000);
-                        chirp_payload_distribution(chirp_outl->task);
+                        loradisc_payload_distribution();
                         chirp_outl->disem_flag = 1;
                     }
                     /* next is confirm session: collect all nodes condition (if full rank in last mixer round) */
@@ -896,7 +863,7 @@ uint8_t chirp_round(uint8_t node_id, Chirp_Outl *chirp_outl)
                         if (chirp_outl->dissem_back_slot_num == 0)
                             chirp_outl->dissem_back_slot_num = chirp_outl->num_nodes * 8;
                         loradisc_slot_config(chirp_outl->packet_time + 100000, chirp_outl->dissem_back_slot_num, 1500000);
-                        chirp_payload_distribution(CB_COLLECT);
+                        loradisc_payload_distribution();
                         chirp_outl->disem_flag = 0;
                         /* in confirm, all nodes sends packets */
                         PRINTF("rece_dissem_index:%x\n", rece_dissem_index);
