@@ -189,15 +189,6 @@ void loradisc_start()
         ENERGEST_ON(ENERGEST_TYPE_CPU);
 #endif
 
-        // /* except these two task that all nodes need to upload data, others only initiator transmit data */
-        // if (loradisc_config.primitive == DISSEMINATION)
-        // {
-        //     if (!node_id_allocate)
-        //         chirp_write(node_id_allocate, chirp_outl);
-        // }
-        // else
-        //     chirp_write(node_id_allocate, chirp_outl);
-
         loradisc_packet_write(node_id_allocate, data);
 
         /* arm mixer, node 0 = initiator
@@ -246,9 +237,6 @@ void loradisc_start()
                 PRINTF_DISC("RX OK:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
             }
         }
-
-        while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
-            ;
     }
     if (data != NULL)
         free(data);
@@ -258,15 +246,18 @@ void loradisc_start()
 
 void loradisc_packet_write(uint8_t node_id, uint8_t *data)
 {
-    // uint8_t loradisc_data_length;
-    // uint8_t *loradisc_data;
-    // if (loradisc_config.primitive != FLOODING)
-    //     loradisc_data_length = loradisc_config.phy_payload_size - LORADISC_HEADER_LEN;
-    // loradisc_data = (uint8_t *)malloc(loradisc_data_length);
-
     if (loradisc_config.primitive == FLOODING)
     {
         loradisc_write(NULL, data);
+    }
+    else
+    {
+        uint8_t i;
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
+        {
+            if (payload_distribution[i] == node_id)
+                loradisc_write(i, (uint8_t *)data);
+        }
     }
 }
 
