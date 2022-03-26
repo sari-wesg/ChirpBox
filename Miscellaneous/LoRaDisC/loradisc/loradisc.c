@@ -229,7 +229,6 @@ void loradisc_start()
         {
             loradisc_read(data);
             uint8_t i = 0;
-            PRINTF_DISC("receiving data:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
             uint8_t recv_result = 0;
             if (data[0] != 0xFF)
                 recv_result++;
@@ -241,7 +240,10 @@ void loradisc_start()
                 deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
             /* have synchronized to a node */
             else
+            {
                 deadline += (Gpi_Fast_Tick_Extended)(update_period);
+                PRINTF_DISC("RX OK:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
+            }
         }
 
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
