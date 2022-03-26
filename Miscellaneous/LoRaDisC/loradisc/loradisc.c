@@ -149,6 +149,7 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
 
     loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
 
+    // 5. payload distribution
     loradisc_payload_distribution();
 }
 
