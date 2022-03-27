@@ -90,6 +90,35 @@ void loradisc_read(uint8_t *data)
         if (loradisc_config.phy_payload_size > LORADISC_HEADER_LEN)
             memcpy((uint8_t *)&(data[FLOODING_SURPLUS_LENGTH]), (uint8_t *)(loradisc_config.flooding_packet_payload), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
     }
+    else
+    {
+        uint8_t i;
+        uint8_t packet_correct_num = 0;
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
+        {
+            void *p = mixer_read(i);
+            if (NULL != p)
+            {
+                // valid packet with correct hash
+                uint8_t packet_correct = 0;
+                uint16_t calu_payload_hash, rece_hash;
+                uint8_t *receive_payload = (uint8_t *)malloc(loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
+                memcpy(receive_payload, p, loradisc_config.matrix_payload_8.len);
+                calu_payload_hash = Chirp_RSHash((uint8_t *)receive_payload, loradisc_config.matrix_payload_8.len - 2);
+                rece_hash = receive_payload[loradisc_config.matrix_payload_8.len - 2] << 8 | receive_payload[loradisc_config.matrix_payload_8.len - 1];
+                if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
+                packet_correct++;
+                packet_correct_num++;
+
+                // if (packet_correct)
+                // {
+                //     memcpy(data, p, loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
+                // }
+                free(receive_payload);
+            }
+        }
+        PRINTF_DISC("RX OK num:%d\n", packet_correct_num);
+    }
 }
 
 void loradisc_init()
@@ -167,7 +196,7 @@ void loradisc_start()
     // TODO: config
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, DISSEMINATION, 7, 14, CN470_FREQUENCY);
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
-    loradisc_reconfig(MX_NUM_NODES_CONF, NULL, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
+    // loradisc_reconfig(MX_NUM_NODES_CONF, NULL, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
 
     // round start:
     chirp_isr.state = ISR_MIXER;
@@ -237,6 +266,13 @@ void loradisc_start()
                 PRINTF_DISC("RX OK:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
             }
         }
+        else
+        {
+            // deadline += (Gpi_Fast_Tick_Extended)(update_period);
+            loradisc_read(data);
+        }
+
+        while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
     }
     if (data != NULL)
         free(data);
