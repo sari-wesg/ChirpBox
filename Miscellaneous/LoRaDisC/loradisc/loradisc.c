@@ -283,7 +283,8 @@ void loradisc_packet_write(uint8_t node_id, uint8_t *data)
 {
     if (loradisc_config.primitive == FLOODING)
     {
-        loradisc_write(NULL, data);
+        if (!node_id)
+            loradisc_write(NULL, data);
     }
     else
     {

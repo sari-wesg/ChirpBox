@@ -66,9 +66,11 @@ int main(void)
   uint8_t node_id_buffer[8];
   node_id_restore(node_id_buffer);
 
-  // lorawan_start();
+  lorawan_start();
 
-  loradisc_start(FLOODING);
+  // loradisc_start(FLOODING);
+  // loradisc_start(DISSEMINATION);
+  // loradisc_start(COLLECTION);
 
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */
