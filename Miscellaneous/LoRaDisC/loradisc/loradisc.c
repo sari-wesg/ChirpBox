@@ -171,8 +171,6 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
     uint8_t hop_count; // TODO: calculate
     if (primitive == FLOODING)
         hop_count = nodes_num > 10 ? 6 * 2 : 4 * 2;
-    else if (primitive == DISSEMINATION)
-        hop_count = nodes_num > 4 ? (nodes_num * generation_size + 5) / 5 : (nodes_num * generation_size + 4) / 4;
     else
         hop_count = nodes_num * generation_size;
 
@@ -182,7 +180,7 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
     loradisc_payload_distribution();
 }
 
-void loradisc_start()
+void loradisc_start(Disc_Primitive primitive)
 {
     // init
     node_id_allocate = logical_node_id(TOS_NODE_ID, dev_id_list); // node id
@@ -194,9 +192,7 @@ void loradisc_start()
     loradisc_data_init(data_length, &data);
 
     // TODO: config
-    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, DISSEMINATION, 7, 14, CN470_FREQUENCY);
-    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
-    // loradisc_reconfig(MX_NUM_NODES_CONF, NULL, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
+    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, primitive, 7, 14, CN470_FREQUENCY);
 
     // round start:
     chirp_isr.state = ISR_MIXER;
@@ -254,17 +250,20 @@ void loradisc_start()
             if (data[0] != 0xFF)
                 recv_result++;
 
-            Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
+            if (recv_result)
+                PRINTF_DISC("FLOODING OK\n");
+
+            // Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
 
             /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
-            if (!recv_result)
-                deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
-            /* have synchronized to a node */
-            else
-            {
-                deadline += (Gpi_Fast_Tick_Extended)(update_period);
-                PRINTF_DISC("RX OK:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
-            }
+            // if (!recv_result)
+            //     deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
+            // /* have synchronized to a node */
+            // else
+            // {
+            //     deadline += (Gpi_Fast_Tick_Extended)(update_period);
+            //     PRINTF_DISC("RX OK:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
+            // }
         }
         else
         {

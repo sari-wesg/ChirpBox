@@ -24,7 +24,9 @@
 #include <stdlib.h>
 #include "ll_flash.h"
 #include "lorawan.h"
-
+#if CHIRPBOX_LORAWAN
+    #include "loradisc.h"
+#endif
 // #include "Commissioning.h"
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={2, 5, 0, DR_5, 0};
 extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
@@ -64,9 +66,9 @@ int main(void)
   uint8_t node_id_buffer[8];
   node_id_restore(node_id_buffer);
 
-  lorawan_start(TOS_NODE_ID);
+  // lorawan_start();
 
-  loradisc_start(TOS_NODE_ID);
+  loradisc_start(FLOODING);
 
   /* USER CODE BEGIN 1 */
   /* USER CODE END 1 */

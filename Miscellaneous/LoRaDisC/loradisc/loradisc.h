@@ -134,7 +134,7 @@ void loradisc_init();
 void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency);
 void loradisc_write(uint8_t i, uint8_t *data);
 void loradisc_read(uint8_t *data);
-void loradisc_start();
+void loradisc_start(Disc_Primitive primitive);
 
 // loradisc preparation
 void loradisc_data_init(uint8_t data_length, uint8_t **data);
