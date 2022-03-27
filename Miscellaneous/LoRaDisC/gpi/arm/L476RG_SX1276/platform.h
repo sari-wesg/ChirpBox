@@ -66,21 +66,21 @@
 #define USART3_RX_GPIO_Port GPIOC
 /*-------------------*/
 #define LED_GPIO_Port GPIOC
-#define LED1 GPIO_PIN_8
-#define LED2 GPIO_PIN_6
-#define LED3 GPIO_PIN_9
-#define LED4 GPIO_PIN_10
-#define LED5 GPIO_PIN_12
+#define GPIO_LED1 GPIO_PIN_8
+#define GPIO_LED2 GPIO_PIN_6
+#define GPIO_LED3 GPIO_PIN_9
+#define GPIO_LED4 GPIO_PIN_10
+#define GPIO_LED5 GPIO_PIN_12
 
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
 
 // #define GPI_LED_NONE	0
-// #define GPI_LED_1		LED1
-// #define GPI_LED_2		LED2
-// #define GPI_LED_3		LED3
-// #define GPI_LED_4		LED4
-// #define GPI_LED_5		LED5
+// #define GPI_LED_1		GPIO_LED1
+// #define GPI_LED_2		GPIO_LED2
+// #define GPI_LED_3		GPIO_LED3
+// #define GPI_LED_4		GPIO_LED4
+// #define GPI_LED_5		GPIO_LED5
 
 #define GPI_LED_NONE	0
 #define GPI_LED_1		GPI_LED_NONE
