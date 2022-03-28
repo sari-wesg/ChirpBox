@@ -7,7 +7,11 @@
 #include "mixer_internal.h"
 // DEBUG
 #include "gpi/tools.h"
-
+#if USE_FOR_LORAWAN && LORADISC
+    #include "Commissioning.h"
+    #include "timeServer.h"
+#endif
+//
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 
@@ -19,11 +23,15 @@
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO: oead
-// uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
+// uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO: oead
+uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
 // uint32_t dev_id_list[NODE_LENGTH] = {0x001E0037, 0x0042002C, 0x004E004A}; // TODO: sari
 uint8_t MX_NUM_NODES_CONF;
 
+#if USE_FOR_LORAWAN && LORADISC
+    static TimerEvent_t LoRaDisC_Timer;
+    uint8_t loradisc_timer_finished;
+#endif
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 extern LoRaDisC_Config loradisc_config;
@@ -180,8 +188,23 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
     loradisc_payload_distribution();
 }
 
+#if USE_FOR_LORAWAN && LORADISC
+// for lorawan:
+static void LoRaDisC_TimerEvent(void *context)
+{
+    printf("LoRaDisC_TimerEvent");
+    loradisc_timer_finished = 1;
+}
+#endif
+
 void loradisc_start(Disc_Primitive primitive)
 {
+#if USE_FOR_LORAWAN && LORADISC
+    TimerInit(&LoRaDisC_Timer, LoRaDisC_TimerEvent);
+    TimerSetValue(&LoRaDisC_Timer, 5 * 1000);
+    // TimerStart(&LoRaDisC_Timer);
+    loradisc_timer_finished = 0;
+#endif
     // init
     node_id_allocate = logical_node_id(TOS_NODE_ID, dev_id_list); // node id
     uint8_t *data = NULL;
@@ -202,11 +225,15 @@ void loradisc_start(Disc_Primitive primitive)
 
     deadline = gpi_tick_fast_extended();
 
+#if USE_FOR_LORAWAN && LORADISC
+    while (!loradisc_timer_finished)
+#else
     while (1)
+#endif
     {
         loradisc_init();
 
-        gpi_radio_init();
+        // gpi_radio_init();
 
         /* init mixer */
         mixer_init(node_id_allocate);
@@ -272,6 +299,7 @@ void loradisc_start(Disc_Primitive primitive)
         }
 
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
+        break;
     }
     if (data != NULL)
         free(data);

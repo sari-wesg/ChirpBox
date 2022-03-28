@@ -5,7 +5,9 @@
 #include "Commissioning.h"
 #include "version.h"
 #include "lora.h"
-
+#if CHIRPBOX_LORAWAN
+    #include "loradisc.h"
+#endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 
@@ -79,6 +81,9 @@ static uint8_t AppLedStateOn = RESET;
 
 static TimerEvent_t TxTimer;
 
+#if LORADISC
+    uint8_t lorawan_finish;
+#endif
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 uint32_t lora_rx_count_rece;
@@ -102,7 +107,7 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 // static lora_AppData_t AppData={ AppDataBuff,  0 ,0 };
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={2, 5, 0, DR_5, 0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 0, DR_5, 0};
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -138,6 +143,9 @@ void lorawan_start()
 
     LORA_Join();
 
+    #if LORADISC
+        lorawan_finish = 0;
+    #endif
     LoraStartTx(TX_ON_TIMER);
     while (1)
     {
@@ -145,8 +153,30 @@ void lorawan_start()
         {
             /*reset notification flag*/
             AppProcessRequest = LORA_RESET;
-            /*Send*/
-            Send(NULL);
+            #if !LORADISC
+                /*Send*/
+                Send(NULL);
+            #else
+                if(!lorawan_finish)
+                {
+                    /*Send*/
+                    Send(NULL);
+                    lorawan_finish = 1;
+                }
+                else
+                {
+                    TimerStop(&TxTimer);
+                    loradisc_start(FLOODING);
+                    lorawan_finish = 0;
+                    chirp_isr.state = ISR_LPWAN;
+                    LPM_ExitStopMode();
+
+                    LORA_Init(&LoRaMainCallbacks, &LoRaParamInit);
+                    LORA_Join();
+
+                    OnTxTimerEvent(NULL);
+                }
+            #endif
         }
         if (LoraMacProcessRequest == LORA_SET)
         {
@@ -346,6 +376,7 @@ static void Send(void *context)
 
 static void OnTxTimerEvent(void *context)
 {
+    printf("OnTxTimerEvent");
     uint16_t time_value;
     if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
     {
