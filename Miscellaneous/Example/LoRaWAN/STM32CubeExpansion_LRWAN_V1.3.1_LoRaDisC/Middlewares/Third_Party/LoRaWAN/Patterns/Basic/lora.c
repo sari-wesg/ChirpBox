@@ -580,6 +580,38 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
   LoRaMacStart( );
 }
 
+#if LORADISC
+void LORA_ReInit ()
+{
+#if defined( REGION_AS923 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AS923 );
+#elif defined( REGION_AU915 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AU915 );
+#elif defined( REGION_CN470 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN470 );
+#elif defined( REGION_CN779 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN779 );
+#elif defined( REGION_EU433 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU433 );
+#elif defined( REGION_IN865 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_IN865 );
+#elif defined( REGION_EU868 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU868 );
+#elif defined( REGION_KR920 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_KR920 );
+#elif defined( REGION_US915 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915 );
+#elif defined( REGION_RU864 )
+  LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_RU864 );
+#else
+    #error "Please define a region in the compiler options."
+#endif
+
+  /*set Mac statein Idle*/
+  LoRaMacStart( );
+}
+#endif
+
 
 void LORA_Join( void)
 {

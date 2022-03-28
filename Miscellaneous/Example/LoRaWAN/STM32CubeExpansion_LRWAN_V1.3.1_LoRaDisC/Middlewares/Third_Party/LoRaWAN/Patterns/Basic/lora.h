@@ -43,7 +43,9 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include "Commissioning.h"
 #include "LoRaMac.h"
 #include "region/Region.h"
-
+#if CHIRPBOX_LORAWAN
+    #include "loradisc.h"
+#endif
 /* Exported constants --------------------------------------------------------*/
    /*!
  * LoRaWAN confirmed messages
@@ -212,6 +214,9 @@ void ( *MacProcessNotify )( void );
  */
 void lora_tx_rate(uint8_t tx_rate);
 void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam );
+#if LORADISC
+void LORA_ReInit ();
+#endif
 
 /**
  * @brief run Lora classA state Machine

@@ -171,7 +171,7 @@ void lorawan_start()
                     chirp_isr.state = ISR_LPWAN;
                     LPM_ExitStopMode();
 
-                    LORA_Init(&LoRaMainCallbacks, &LoRaParamInit);
+                    LORA_ReInit();
                     LORA_Join();
 
                     OnTxTimerEvent(NULL);
