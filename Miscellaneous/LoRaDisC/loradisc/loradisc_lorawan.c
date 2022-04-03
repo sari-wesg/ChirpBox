@@ -9,6 +9,7 @@
 	#include "lorawan_internal.h"
 #endif
 #include "mixer_config.h"
+#include "loradisc.h"
 
 #include GPI_PLATFORM_PATH(sx1276Regs_Fsk.h)
 #include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)

@@ -23,8 +23,8 @@
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-// uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO: oead
-uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
+uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO: oead
+// uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
 // uint32_t dev_id_list[NODE_LENGTH] = {0x001E0037, 0x0042002C, 0x004E004A}; // TODO: sari
 uint8_t MX_NUM_NODES_CONF;
 
@@ -299,7 +299,9 @@ void loradisc_start(Disc_Primitive primitive)
         }
 
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-        break;
+        #if USE_FOR_LORAWAN && LORADISC
+            break;
+        #endif
     }
     if (data != NULL)
         free(data);
