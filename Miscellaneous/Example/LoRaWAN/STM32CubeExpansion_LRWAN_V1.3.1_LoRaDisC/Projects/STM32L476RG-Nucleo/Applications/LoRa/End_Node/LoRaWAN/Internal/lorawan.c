@@ -81,7 +81,7 @@ static uint8_t AppLedStateOn = RESET;
 
 static TimerEvent_t TxTimer;
 
-#if LORADISC
+#if USE_FOR_LORAWAN && LORADISC
     uint8_t lorawan_finish;
 #endif
 //**************************************************************************************************
@@ -143,38 +143,42 @@ void lorawan_start()
 
     LORA_Join();
 
-    #if LORADISC
+    #if USE_FOR_LORAWAN && LORADISC
         lorawan_finish = 0;
+        AppProcessRequest = LORA_SET;
+    #else
+        LoraStartTx(TX_ON_TIMER);
     #endif
-    LoraStartTx(TX_ON_TIMER);
     while (1)
     {
         if (AppProcessRequest == LORA_SET)
         {
             /*reset notification flag*/
             AppProcessRequest = LORA_RESET;
-            #if !LORADISC
+            #if !(USE_FOR_LORAWAN && LORADISC)
                 /*Send*/
                 Send(NULL);
             #else
                 if(!lorawan_finish)
                 {
+                    LORA_ReInit();
+                    LORA_Join();
                     /*Send*/
                     Send(NULL);
                     lorawan_finish = 1;
+
+                    lpwan_grid_timer_init(10);
                 }
                 else
                 {
-                    TimerStop(&TxTimer);
+                    loradisc_grid_timer_init(1, 10);
+
+                    // loradisc_rounds();
                     loradisc_start(FLOODING);
+                    loradisc_grid_timer_init(0, NULL);
+
                     lorawan_finish = 0;
                     chirp_isr.state = ISR_LPWAN;
-                    LPM_ExitStopMode();
-
-                    LORA_ReInit();
-                    LORA_Join();
-
-                    OnTxTimerEvent(NULL);
                 }
             #endif
         }
@@ -376,7 +380,7 @@ static void Send(void *context)
 
 static void OnTxTimerEvent(void *context)
 {
-    printf("OnTxTimerEvent");
+    printf("OnTxTimerEvent\n");
     uint16_t time_value;
     if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
     {

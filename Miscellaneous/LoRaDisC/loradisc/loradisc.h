@@ -164,4 +164,8 @@ void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, u
 void RTC_Waiting_Count_Stop(uint32_t Count_wait);
 void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 
+
+/* Discovery */
+void loradisc_rounds();
+
 #endif  /* __LORADISC_H__ */

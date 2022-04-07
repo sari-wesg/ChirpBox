@@ -71,7 +71,7 @@ void __attribute__((naked)) SX1276OnDio0Irq()
 		"add	pc, r0						\n"		// jump into vector table (see ARM DUI 0553A for details)
 		".align 2							\n"		// ensure alignment and correct offset
 		"b.w	mixer_dio0_isr		 		\n"		// 0: mixer_dio0_isr (don't return to here)
-		"b.w	lpwan_dio0_isr				\n"		// 4: topo_dio0_isr (don't return to here)
+		"b.w	lpwan_dio0_isr				\n"		// 4: lpwan_dio0_isr (don't return to here)
 		"b.w	lorawan_dio0_isr	    	\n"		// 8: lorawan_dio0_isr (don't return to here)
 		"1:									\n"
 		".word	%c0							\n"
