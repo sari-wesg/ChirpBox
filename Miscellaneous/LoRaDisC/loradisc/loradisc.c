@@ -1,26 +1,18 @@
 //**************************************************************************************************
 //**** Includes ************************************************************************************
-
 //**************************************************************************************************
 #include "loradisc.h"
 // Mixer
 #include "mixer_internal.h"
 // DEBUG
 #include "gpi/tools.h"
-#if USE_FOR_LORAWAN && LORADISC
-    #include "Commissioning.h"
-    #include "timeServer.h"
-#endif
 //
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-
 //**************************************************************************************************
 //***** Local Typedefs and Class Declarations ******************************************************
-
 //**************************************************************************************************
 //***** Forward Declarations ***********************************************************************
-
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
 uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047}; // TODO: delft
@@ -28,26 +20,20 @@ uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047}; // TODO: delft
 // uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
 // uint32_t dev_id_list[NODE_LENGTH] = {0x001E0037, 0x0042002C, 0x004E004A}; // TODO: sari
 uint8_t MX_NUM_NODES_CONF;
-
-#if USE_FOR_LORAWAN && LORADISC
-    static TimerEvent_t LoRaDisC_Timer;
-    uint8_t loradisc_timer_finished;
-#endif
+uint8_t *data, data_length;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 extern LoRaDisC_Config loradisc_config;
-
 /* device id */
 extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 /* node id */
 uint8_t node_id_allocate;
+uint32_t discover_node, discover_lorawan_interval_s;
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
-
 static uint8_t logical_node_id(uint32_t dev_id, uint32_t *UID_list)
 {
     uint8_t node_id;
-
     /* translate dev_id to logical node id used with mixer */
     for (node_id = 0; node_id < NODE_LENGTH; ++node_id)
     {
@@ -56,13 +42,11 @@ static uint8_t logical_node_id(uint32_t dev_id, uint32_t *UID_list)
     }
     MX_NUM_NODES_CONF = node_id;
     PRINTF("MX_NUM_NODES_CONF:%d\n", MX_NUM_NODES_CONF);
-
     for (node_id = 0; node_id < MX_NUM_NODES_CONF; ++node_id)
     {
         if (UID_list[node_id] == dev_id)
             break;
     }
-
     if (node_id >= MX_NUM_NODES_CONF)
     {
         PRINTF("Warning: node mapping not found for node 0x%x !!!\n", dev_id);
@@ -70,10 +54,8 @@ static uint8_t logical_node_id(uint32_t dev_id, uint32_t *UID_list)
             ;
     }
     PRINTF("Running with node ID: %d\n", node_id);
-
     return node_id;
 }
-
 //**************************************************************************************************
 //***** Global Functions ***************************************************************************
 void loradisc_write(uint8_t i, uint8_t *data)
@@ -90,7 +72,6 @@ void loradisc_write(uint8_t i, uint8_t *data)
         mixer_write(i, (uint8_t *)data, loradisc_config.mx_payload_size - HASH_TAIL);
     }
 }
-
 void loradisc_read(uint8_t *data)
 {
     if (loradisc_config.primitive == FLOODING)
@@ -118,7 +99,6 @@ void loradisc_read(uint8_t *data)
                 if (((uint16_t)calu_payload_hash == rece_hash) && (rece_hash))
                 packet_correct++;
                 packet_correct_num++;
-
                 // if (packet_correct)
                 // {
                 //     memcpy(data, p, loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
@@ -129,43 +109,24 @@ void loradisc_read(uint8_t *data)
         PRINTF_DISC("RX OK num:%d\n", packet_correct_num);
     }
 }
-
 void loradisc_init()
 {
     // loradisc flooding clear data
     memset(loradisc_config.flooding_packet_header, 0xFF, sizeof(loradisc_config.flooding_packet_header));
     memset(loradisc_config.flooding_packet_payload, 0xFF, sizeof(loradisc_config.flooding_packet_payload));
-
     /* used in mixer_write, and revalue before mixer round */
     loradisc_config.full_rank = 0;
     loradisc_config.full_column = UINT8_MAX;
     // rece_dissem_index = UINT16_MAX;
 }
-
-void loradisc_data_init(uint8_t data_length, uint8_t **data)
-{
-    if (*data != NULL)
-        free(*data);
-
-    assert_reset(data_length >= FLOODING_SURPLUS_LENGTH);
-    *data = (uint8_t *)malloc(data_length);
-
-    uint8_t i;
-    memcpy(*data, &TOS_NODE_ID, sizeof(TOS_NODE_ID));
-    for (i = sizeof(TOS_NODE_ID); i < data_length; i++)
-        *data[i] = i;
-}
-
 void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency)
 {
     // 1. radio config
     loradisc_radio_config(sf, 1, tp, lora_frequency / 1000);
-
     // 2. lbt config
 #if MX_LBT_ACCESS
     lbt_init();
 #endif
-
     // 3. packet structure config
     if (primitive == FLOODING)
     {
@@ -174,7 +135,6 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
     }
     else
         loradisc_packet_config(nodes_num, generation_size, data_length, primitive);
-
     // 4. slot config
     uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
     uint8_t hop_count; // TODO: calculate
@@ -182,113 +142,107 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
         hop_count = nodes_num > 10 ? 6 * 2 : 4 * 2;
     else
         hop_count = nodes_num * generation_size;
-
     loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
-
     // 5. payload distribution
     loradisc_payload_distribution();
 }
-
-#if USE_FOR_LORAWAN && LORADISC
-// for lorawan:
-static void LoRaDisC_TimerEvent(void *context)
+/* one lorawan node initiates the flooding round */
+void loradisc_discover(uint32_t lorawan_interval_s)
 {
-    printf("LoRaDisC_TimerEvent");
-    loradisc_timer_finished = 1;
-}
-#endif
+    // update data
+    data = NULL;
+    data_length = 2 * sizeof(uint32_t);
+    assert_reset(data_length >= FLOODING_SURPLUS_LENGTH);
+    data = (uint8_t *)malloc(data_length);
+    memcpy(data, &TOS_NODE_ID, sizeof(TOS_NODE_ID));
+    uint8_t i;
+    for (i = 0; i < sizeof(uint32_t); i++)
+        data[sizeof(uint32_t) + i++] = lorawan_interval_s >> 8 * i;
 
-void loradisc_rounds()
+    /* start loradisc */
+    loradisc_start(FLOODING);
+
+    /* read data */
+    discover_node = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
+    discover_lorawan_interval_s = data[sizeof(uint32_t)] | data[sizeof(uint32_t) + 1] << 8 | data[sizeof(uint32_t) + 2] << 16 | data[sizeof(uint32_t) + 3] << 24;
+
+    if (data != NULL)
+        free(data);
+    if (payload_distribution != NULL)
+        free(payload_distribution);
+}
+void loradisc_collect()
 {
-
+    // TODO: data from sensor for gateway
+    // update data
+    data = NULL;
+    data_length = sizeof(uint32_t);
+    assert_reset(data_length >= FLOODING_SURPLUS_LENGTH);
+    data = (uint8_t *)malloc(data_length);
+    memcpy(data, &TOS_NODE_ID, sizeof(TOS_NODE_ID));
+    loradisc_start(COLLECTION);
+    if (data != NULL)
+        free(data);
+    if (payload_distribution != NULL)
+        free(payload_distribution);
 }
 
+void loradisc_node_id()
+{
+    node_id_allocate = logical_node_id(TOS_NODE_ID, dev_id_list); // node id
+}
 
 void loradisc_start(Disc_Primitive primitive)
 {
-#if USE_FOR_LORAWAN && LORADISC
-    TimerInit(&LoRaDisC_Timer, LoRaDisC_TimerEvent);
-    TimerSetValue(&LoRaDisC_Timer, 5 * 1000);
-    // TimerStart(&LoRaDisC_Timer);
-    loradisc_timer_finished = 0;
-#endif
-    // init
-    node_id_allocate = logical_node_id(TOS_NODE_ID, dev_id_list); // node id
-    uint8_t *data = NULL;
-    uint8_t data_length;
-
-    // update data
-    data_length = 10;
-    loradisc_data_init(data_length, &data);
-
     // TODO: config
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, primitive, 7, 14, CN470_FREQUENCY);
-
     // round start:
     chirp_isr.state = ISR_MIXER;
-
     Gpi_Fast_Tick_Extended deadline;
     Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_period_time_s * 1000) / 1) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
-
     deadline = gpi_tick_fast_extended();
-
-#if USE_FOR_LORAWAN && LORADISC
-    while (!loradisc_timer_finished)
-#else
-    while (1)
-#endif
+    uint8_t recv_result = 0;
+    while (!recv_result)
     {
         loradisc_init();
-
         // gpi_radio_init();
-
         /* init mixer */
         mixer_init(node_id_allocate);
 #if ENERGEST_CONF_ON
         ENERGEST_ON(ENERGEST_TYPE_CPU);
 #endif
-
         loradisc_packet_write(node_id_allocate, data);
-
         /* arm mixer, node 0 = initiator
         start first round with infinite scan
         -> nodes join next available round, does not require simultaneous boot-up */
         mixer_arm(((!node_id_allocate) ? MX_ARM_INITIATOR : 0) | ((1 == 0) ? MX_ARM_INFINITE_SCAN : 0));
-
         /* delay initiator a bit
         -> increase probability that all nodes are ready when initiator starts the round
         -> avoid problems in view of limited deadline accuracy */
         if (!node_id_allocate)
             deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length;
-
 #if MX_LBT_ACCESS
         lbt_update();
 #endif
-
         /* start when deadline reached
         ATTENTION: don't delay after the polling loop (-> print before) */
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
             ;
-
 #if ENERGEST_CONF_ON
         ENERGEST_OFF(ENERGEST_TYPE_CPU);
 #endif
-
         deadline = mixer_start();
-
         if (loradisc_config.primitive == FLOODING)
         {
             loradisc_read(data);
             uint8_t i = 0;
-            uint8_t recv_result = 0;
-            if (data[0] != 0xFF)
+            if (data[0] != 0xFF) && (!loradisc_config.timeout_flag)
+            {
                 recv_result++;
-
+            }
             if (recv_result)
                 PRINTF_DISC("FLOODING OK\n");
-
             // Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
-
             /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
             // if (!recv_result)
             //     deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
@@ -303,19 +257,11 @@ void loradisc_start(Disc_Primitive primitive)
         {
             // deadline += (Gpi_Fast_Tick_Extended)(update_period);
             loradisc_read(data);
+            recv_result++;
         }
-
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-        #if USE_FOR_LORAWAN && LORADISC
-            break;
-        #endif
     }
-    if (data != NULL)
-        free(data);
-    if (payload_distribution != NULL)
-        free(payload_distribution);
 }
-
 void loradisc_packet_write(uint8_t node_id, uint8_t *data)
 {
     if (loradisc_config.primitive == FLOODING)
@@ -333,11 +279,9 @@ void loradisc_packet_write(uint8_t node_id, uint8_t *data)
         }
     }
 }
-
 void loradisc_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrate, int8_t tx_output_power, uint32_t lora_frequency)
 {
     memset(&loradisc_config + offsetof(LoRaDisC_Config, lora_sf), 0, sizeof(loradisc_config) - offsetof(LoRaDisC_Config, lora_sf));
-
     // default:
     loradisc_config.lora_bw = LoRaDisC_DEFAULT_BW;
     loradisc_config.lora_plen = LoRaDisC_PREAMBLE_LENGTH;
@@ -352,7 +296,6 @@ void loradisc_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrat
     loradisc_config.lbt_detect_duration_us = (6 * symbol_time_us >= LBT_DELAY_IN_US) ? 6 * symbol_time_us : LBT_DELAY_IN_US;
 #endif
 }
-
 /**
  * @description: mixer configurations
  * @param mx_num_nodes: number of nodes in the mixer network (NUM_ELEMENTS(nodes))
@@ -368,7 +311,6 @@ void loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
     loradisc_config.mx_num_nodes = mx_num_nodes;
     loradisc_config.mx_generation_size = mx_generation_size;
     loradisc_config.mx_payload_size = mx_payload_size;
-
     loradisc_config.coding_vector.pos = 0;
     loradisc_config.coding_vector.len = (loradisc_config.mx_generation_size + 7) / 8;
     loradisc_config.payload.pos = loradisc_config.coding_vector.pos + loradisc_config.coding_vector.len;
@@ -405,29 +347,23 @@ void loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
     loradisc_config.phy_payload_size = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.coding_vector.len + loradisc_config.payload.len + loradisc_config.info_vector.len;
     loradisc_config.packet_len = offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.packet_chunk_len;
     assert_reset(!(loradisc_config.packet_len % sizeof(uint_fast_t)));
-
     loradisc_config.matrix_coding_vector_8.pos = 0;
     loradisc_config.matrix_coding_vector_8.len = loradisc_config.coding_vector.len;
     loradisc_config.matrix_payload_8.pos = loradisc_config.matrix_coding_vector_8.pos + loradisc_config.matrix_coding_vector_8.len;
     loradisc_config.matrix_payload_8.len = loradisc_config.payload.len;
-
     loradisc_config.matrix_coding_vector.pos = 0;
     loradisc_config.matrix_coding_vector.len = (loradisc_config.mx_generation_size + (sizeof(uint_fast_t) * 8) - 1) / (sizeof(uint_fast_t) * 8);
     loradisc_config.matrix_payload.pos = loradisc_config.matrix_coding_vector.pos + loradisc_config.matrix_coding_vector.len;
     loradisc_config.matrix_payload.len = (loradisc_config.mx_payload_size + sizeof(uint_fast_t) - 1) / sizeof(uint_fast_t);
-
     loradisc_config.matrix_chunk_8_len = loradisc_config.matrix_coding_vector_8.len + loradisc_config.matrix_payload_8.len;
     loradisc_config.matrix_chunk_32_len = loradisc_config.matrix_coding_vector.len + loradisc_config.matrix_payload.len;
     loradisc_config.matrix_size_32 = loradisc_config.matrix_chunk_32_len + 1;
-
     loradisc_config.history_len_8 = offsetof(Node, row_map_chunk) + loradisc_config.matrix_coding_vector.len * sizeof(uint_fast_t);
-
     uint8_t hash_factor = (((loradisc_config.mx_num_nodes + 7) / 8 + loradisc_config.info_vector.len - 1) / loradisc_config.info_vector.len);
     loradisc_config.map.pos = 0;
     loradisc_config.map.len = hash_factor * loradisc_config.info_vector.len;
     loradisc_config.hash.pos = loradisc_config.map.pos + loradisc_config.map.len;
     loradisc_config.hash.len = loradisc_config.info_vector.len;
-
     loradisc_config.row_all_mask.pos = 0;
     loradisc_config.row_all_mask.len = loradisc_config.matrix_coding_vector.len;
     loradisc_config.row_any_mask.pos = loradisc_config.row_all_mask.pos + loradisc_config.row_all_mask.len;
@@ -440,14 +376,14 @@ void loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
     loradisc_config.my_row_mask.len = loradisc_config.matrix_coding_vector.len;
     loradisc_config.my_column_mask.pos = loradisc_config.my_row_mask.pos + loradisc_config.my_row_mask.len;
     loradisc_config.my_column_mask.len = loradisc_config.matrix_coding_vector.len;
-
     // to identify the loradisc packet
     if (loradisc_config.primitive != FLOODING)
         loradisc_config.packet_hash = DISC_HEADER;
     else
         loradisc_config.packet_hash = FLOODING_HEADER;
-}
 
+    loradisc_config.timeout_flag = 0;
+}
 /* slot length is mx_slot_length_in_us microseconds,
 needed slot number is mx_round_length,
 round is last for mx_period_time_us seconds */
@@ -464,8 +400,6 @@ void loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_lengt
     mx_period_time_us = loradisc_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
     loradisc_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
 }
-
-
 /**
  * @description: To allocate payload among nodes according to the type of mixer (dissemination / collection)
  * @param mx_task: CB_DISSEMINATE / CB_COLLECT
@@ -474,6 +408,7 @@ void loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_lengt
 void loradisc_payload_distribution()
 {
     uint8_t i;
+    payload_distribution = NULL;
     if (loradisc_config.primitive == DISSEMINATION)
     {
         payload_distribution = (uint8_t *)malloc(loradisc_config.mx_generation_size);
@@ -486,35 +421,29 @@ void loradisc_payload_distribution()
         /* Each node has a packet */
         assert_reset((loradisc_config.mx_num_nodes == loradisc_config.mx_generation_size));
         payload_distribution = (uint8_t *)malloc(loradisc_config.mx_num_nodes);
-
         for (i = 0; i < loradisc_config.mx_num_nodes; i++)
             payload_distribution[i] = i;
     }
 }
-
 uint32_t Chirp_RSHash(uint8_t *str, uint32_t len)
 {
     uint32_t b = 378551;
     uint32_t a = 63689;
     uint32_t hash = 0;
     uint32_t i = 0;
-
     for (i = 0; i < len; str++, i++)
     {
         hash = hash * a + (*str);
         a = a * b;
     }
-
     return hash;
 }
-
 uint8_t randInt(uint8_t begin, uint8_t end)
 {
     uint8_t temp;
     temp = begin + (rand() % (end - begin + 1));
     return temp;
 }
-
 void randomPermutation1(uint8_t channel_sync, uint8_t n)
 {
     bool boollist[n];
@@ -530,7 +459,6 @@ void randomPermutation1(uint8_t channel_sync, uint8_t n)
         {
             k = randInt(1, n);
         }
-
         used[k] = false;
         a[i] = k;
         // printf("a[i]:%lu, %lu\n", a[i], i);

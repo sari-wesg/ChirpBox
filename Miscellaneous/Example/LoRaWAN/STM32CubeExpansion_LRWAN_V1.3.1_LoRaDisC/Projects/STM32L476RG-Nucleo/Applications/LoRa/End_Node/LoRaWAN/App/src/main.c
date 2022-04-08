@@ -66,6 +66,8 @@ int main(void)
   uint8_t node_id_buffer[8];
   node_id_restore(node_id_buffer);
 
+  loradisc_node_id();
+
   lorawan_start();
 
   // loradisc_start(FLOODING);

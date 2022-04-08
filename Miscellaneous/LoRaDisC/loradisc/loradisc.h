@@ -130,14 +130,17 @@ typedef enum Disc_Primitive_tag
 //**************************************************************************************************
 //***** Prototypes of Global Functions *************************************************************
 // loradisc
+void loradisc_node_id();
 void loradisc_init();
 void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency);
 void loradisc_write(uint8_t i, uint8_t *data);
 void loradisc_read(uint8_t *data);
 void loradisc_start(Disc_Primitive primitive);
+// Primitive
+void loradisc_collect();
+void loradisc_dissem();
 
 // loradisc preparation
-void loradisc_data_init(uint8_t data_length, uint8_t **data);
 void loradisc_packet_write(uint8_t node_id, uint8_t *data);
 
 // lorawan
@@ -166,6 +169,7 @@ void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 
 
 /* Discovery */
-void loradisc_rounds();
+void loradisc_discover(uint32_t lorawan_interval_s);
+
 
 #endif  /* __LORADISC_H__ */

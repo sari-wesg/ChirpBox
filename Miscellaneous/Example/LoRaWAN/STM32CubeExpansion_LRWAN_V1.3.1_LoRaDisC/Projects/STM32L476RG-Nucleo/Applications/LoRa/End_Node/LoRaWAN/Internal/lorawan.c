@@ -82,7 +82,9 @@ static uint8_t AppLedStateOn = RESET;
 static TimerEvent_t TxTimer;
 
 #if USE_FOR_LORAWAN && LORADISC
-    uint8_t lorawan_finish;
+    uint8_t lorawan_finish, first_lorawan, DISCOVER_GAP, DISCOVER_DURATION, COLLECT_GAP;
+    uint32_t lorawan_interval_s;
+	uint32_t lorawan_bitmap;
 #endif
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
@@ -108,6 +110,8 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 0, DR_5, 0};
+
+extern uint32_t discover_node, discover_lorawan_interval_s;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -145,7 +149,17 @@ void lorawan_start()
 
     #if USE_FOR_LORAWAN && LORADISC
         lorawan_finish = 0;
+        first_lorawan = 1;
         AppProcessRequest = LORA_SET;
+
+        /* parameters */
+        lorawan_interval_s = 25;
+        DISCOVER_GAP = 5;
+        DISCOVER_DURATION = 5;
+        COLLECT_GAP = 5;
+
+        /* config */
+        lorawan_bitmap = 0x00000001;
     #else
         LoraStartTx(TX_ON_TIMER);
     #endif
@@ -159,25 +173,59 @@ void lorawan_start()
                 /*Send*/
                 Send(NULL);
             #else
-                if(!lorawan_finish)
+                /* lorawan nodes */
+                if ((lorawan_bitmap & (1 << (node_id_allocate % 32))))
                 {
-                    LORA_ReInit();
-                    LORA_Join();
-                    /*Send*/
-                    Send(NULL);
-                    lorawan_finish = 1;
+                    if(!lorawan_finish)
+                    {
+                        LORA_ReInit();
+                        LORA_Join();
+                        /*Send*/
+                        Send(NULL);
+                        lorawan_finish = 1;
+                        if(first_lorawan)
+                            lpwan_grid_timer_init(DISCOVER_GAP);
+                        else
+                            lpwan_grid_timer_init(COLLECT_GAP);
+                    }
+                    else
+                    {
+                        if(first_lorawan)
+                        {
+                            loradisc_discover(lorawan_interval_s);
+                            first_lorawan = 0;
+                            printf("discover_lorawan_interval_s:%d\n", discover_lorawan_interval_s);
+                            loradisc_grid_timer_init(1, discover_lorawan_interval_s - DISCOVER_GAP - DISCOVER_DURATION);
+                            loradisc_grid_timer_init(0, NULL);
+                        }
+                        else
+                        {
+                            loradisc_grid_timer_init(1, discover_lorawan_interval_s - DISCOVER_GAP);
+                            loradisc_collect();
+                            loradisc_grid_timer_init(0, NULL);
+                        }
 
-                    lpwan_grid_timer_init(10);
+                        lorawan_finish = 0;
+                        chirp_isr.state = ISR_LPWAN;
+                    }
                 }
+                /* LoRaDisC nodes */
                 else
                 {
-                    loradisc_grid_timer_init(1, 10);
-
-                    // loradisc_rounds();
-                    loradisc_start(FLOODING);
-                    loradisc_grid_timer_init(0, NULL);
-
-                    lorawan_finish = 0;
+                    if(first_lorawan)
+                    {
+                        loradisc_discover(0);
+                        first_lorawan = 0;
+                        printf("discover_lorawan_interval_s:%d\n", discover_lorawan_interval_s);
+                        loradisc_grid_timer_init(1, discover_lorawan_interval_s - DISCOVER_DURATION);
+                        loradisc_grid_timer_init(0, NULL);
+                    }
+                    else
+                    {
+                        loradisc_grid_timer_init(1, discover_lorawan_interval_s);
+                        loradisc_collect();
+                        loradisc_grid_timer_init(0, NULL);
+                    }
                     chirp_isr.state = ISR_LPWAN;
                 }
             #endif
