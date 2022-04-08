@@ -236,7 +236,7 @@ void loradisc_start(Disc_Primitive primitive)
         {
             loradisc_read(data);
             uint8_t i = 0;
-            if (data[0] != 0xFF) && (!loradisc_config.timeout_flag)
+            if ((data[0] != 0xFF) && (!loradisc_config.timeout_flag))
             {
                 recv_result++;
             }
