@@ -27,6 +27,8 @@
 #if CHIRPBOX_LORAWAN
     #include "loradisc.h"
 #endif
+#include "msf.h"
+
 // #include "Commissioning.h"
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={2, 5, 0, DR_5, 0};
 extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
@@ -75,6 +77,7 @@ int main(void)
   // loradisc_start(COLLECTION);
 
   /* USER CODE BEGIN 1 */
+  // msf_start(node_id_allocate);
   /* USER CODE END 1 */
 }
 
