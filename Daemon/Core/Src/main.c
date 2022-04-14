@@ -109,7 +109,9 @@ Here is the example of daemon_config with blank and local settings:
 // tu graz:
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d}, 0xe3e9, 433000};
 // oead:
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x004a0022, 0x00350017}, 0xe3e9, 433000};
+// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x004a0022, 0x00350017}, 0xe3e9, 433000};
+// delft:
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x004A0038, 0x00300047}, 0xe3e9, 433000};
 /*
 Firmware under test configuration:
 Similar to the daemon, the FUT configuration can be set with blank or local settings, or reconfigured directly on the BIN file using param_patch_FUT.py and a custom json file.

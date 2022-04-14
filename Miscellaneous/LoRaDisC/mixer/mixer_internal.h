@@ -396,7 +396,9 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 	/* Disc_Primitive */
 	Disc_Primitive primitive;
 
-	uint8_t timeout_flag;
+	uint8_t		timeout_flag;
+	uint8_t		initiator; // if the current node is the discover initiator
+	uint8_t		recv_ok;
 } LoRaDisC_Config;
 
 #if INFO_VECTOR_QUEUE

@@ -114,6 +114,11 @@
 
 #define LBT_TX_TIME_S           3600
 
+/******************************* discover config ******************************/
+#define LORAWAN_MAX_NUM         8
+#define DISCOVER_SLOT_DEFAULT   60
+
+
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
 typedef enum Disc_Primitive_tag
@@ -122,6 +127,34 @@ typedef enum Disc_Primitive_tag
 	DISSEMINATION = 2,
 	COLLECTION = 3
 } Disc_Primitive;
+
+
+/* local config */
+typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
+{
+	/* defined infomation */
+	Gpi_Slow_Tick_Extended 	discover_duration_slow;
+	Gpi_Slow_Tick_Extended 	collect_duration_slow;
+	Gpi_Slow_Tick_Extended 	dissem_duration_slow;
+	uint8_t					lorawan_num;	// total number of lorawan nodes
+	uint32_t 				lorawan_bitmap; // node for lorawan
+	Gpi_Slow_Tick_Extended 	discover_duration_gap;
+
+	/* local infomation */
+	uint8_t					lorawan_on;
+	uint8_t					loradisc_on;
+	uint8_t 				discover_on; // time for discover
+	uint32_t 				node_id_bitmap; // discovered node id
+
+	Gpi_Slow_Tick_Extended	lorawan_gap; // self compared to node 0
+	Gpi_Slow_Tick_Extended	lorawan_begin[LORAWAN_MAX_NUM]; // the start time of all nodes
+	Gpi_Slow_Tick_Extended 	next_loradisc_gap;
+
+	uint8_t					discover_slot;
+
+	/* global infomation */
+	uint16_t				lorawan_interval_s[LORAWAN_MAX_NUM];
+} LoRaDisC_Discover_Config;
 
 
 //**************************************************************************************************
@@ -169,7 +202,12 @@ void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 
 
 /* Discovery */
-void loradisc_discover(uint32_t lorawan_interval_s);
-
+void loradisc_discover_init();
+void loradisc_discover_update_initiator();
+void loradisc_discover(uint16_t lorawan_interval_s);
+void calculate_next_loradisc();
+void calculate_next_lorawan();
+uint8_t compare_discover_initiator_expired();
+uint8_t reset_discover_slot_num();
 
 #endif  /* __LORADISC_H__ */

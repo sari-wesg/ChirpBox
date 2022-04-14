@@ -1844,6 +1844,8 @@ PT_THREAD(mixer_maintenance())
 		// "now"?) is not very critical here.
 		if ((mx.slot_number >= loradisc_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0))
 		{
+			printf("round_deadline:%lu, %lu, %lu\n", mx.slot_number, loradisc_config.mx_round_length, (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0));
+
 			if(mx.slot_number < loradisc_config.mx_round_length)
 				loradisc_config.timeout_flag = 1;
 			mx.slot_number = loradisc_config.mx_round_length;

@@ -7,6 +7,7 @@
 #include "lora.h"
 #if CHIRPBOX_LORAWAN
     #include "loradisc.h"
+    #include "gpi/olf.h"
 #endif
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -81,11 +82,6 @@ static uint8_t AppLedStateOn = RESET;
 
 static TimerEvent_t TxTimer;
 
-#if USE_FOR_LORAWAN && LORADISC
-    uint8_t lorawan_finish, first_lorawan, DISCOVER_GAP, DISCOVER_DURATION, COLLECT_GAP;
-    uint32_t lorawan_interval_s;
-	uint32_t lorawan_bitmap;
-#endif
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 uint32_t lora_rx_count_rece;
@@ -109,9 +105,9 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 // static lora_AppData_t AppData={ AppDataBuff,  0 ,0 };
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={5, 5, 0, DR_5, 0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0xFF, 5, 0, DR_5, 0};
 
-extern uint32_t discover_node, discover_lorawan_interval_s;
+extern LoRaDisC_Discover_Config loradisc_discover_config;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -148,18 +144,13 @@ void lorawan_start()
     LORA_Join();
 
     #if USE_FOR_LORAWAN && LORADISC
-        lorawan_finish = 0;
-        first_lorawan = 1;
-        AppProcessRequest = LORA_SET;
-
-        /* parameters */
-        lorawan_interval_s = 25;
-        DISCOVER_GAP = 5;
-        DISCOVER_DURATION = 5;
-        COLLECT_GAP = 5;
-
-        /* config */
-        lorawan_bitmap = 0x00000001;
+        /* discover config */
+        loradisc_discover_init();
+        /* lorawan config */
+        if ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32))))
+            LoraStartTx(TX_ON_TIMER);
+        else
+            AppProcessRequest = LORA_SET;
     #else
         LoraStartTx(TX_ON_TIMER);
     #endif
@@ -174,55 +165,68 @@ void lorawan_start()
                 Send(NULL);
             #else
                 /* lorawan nodes */
-                if ((lorawan_bitmap & (1 << (node_id_allocate % 32))))
+                if ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32))))
                 {
-                    if(!lorawan_finish)
+                    if(loradisc_discover_config.lorawan_on)
                     {
+                        if(loradisc_discover_config.discover_on)
+                        {
+                            lpwan_grid_timer_init(loradisc_discover_config.discover_duration_gap);
+                        }
+                        else
+                        {
+                            calculate_next_loradisc();
+                            lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap);
+                        }
+                        loradisc_discover_config.lorawan_begin[node_id_allocate] = gpi_tick_slow_extended() + GPI_TICK_S_TO_SLOW(loradisc_discover_config.lorawan_interval_s[node_id_allocate]);
+                        printf("gg:%lu\n", gpi_tick_slow_extended());
+
+                        /* LoRaWAN */
                         LORA_ReInit();
                         LORA_Join();
                         /*Send*/
                         Send(NULL);
-                        lorawan_finish = 1;
-                        if(first_lorawan)
-                            lpwan_grid_timer_init(DISCOVER_GAP);
-                        else
-                            lpwan_grid_timer_init(COLLECT_GAP);
+                        loradisc_discover_config.lorawan_on ^= 1;
+
+                        calculate_next_lorawan();
                     }
                     else
                     {
-                        if(first_lorawan)
+                        if(loradisc_discover_config.discover_on)
                         {
-                            loradisc_discover(lorawan_interval_s);
-                            first_lorawan = 0;
-                            printf("discover_lorawan_interval_s:%d\n", discover_lorawan_interval_s);
-                            loradisc_grid_timer_init(1, discover_lorawan_interval_s - DISCOVER_GAP - DISCOVER_DURATION);
-                            loradisc_grid_timer_init(0, NULL);
+                            while ((loradisc_discover_config.discover_on) && (!loradisc_discover_config.lorawan_on))
+                            {
+                                if (compare_discover_initiator_expired())
+                                {
+                                    loradisc_discover(loradisc_discover_config.lorawan_interval_s[node_id_allocate]);
+                                }
+                                else
+                                    break;
+                            }
                         }
                         else
                         {
-                            loradisc_grid_timer_init(1, discover_lorawan_interval_s - DISCOVER_GAP);
+                            // loradisc_grid_timer_init(1, TODO:);
                             loradisc_collect();
                             loradisc_grid_timer_init(0, NULL);
                         }
 
-                        lorawan_finish = 0;
                         chirp_isr.state = ISR_LPWAN;
                     }
                 }
                 /* LoRaDisC nodes */
                 else
                 {
-                    if(first_lorawan)
+                    if(loradisc_discover_config.discover_on)
                     {
-                        loradisc_discover(0);
-                        first_lorawan = 0;
-                        printf("discover_lorawan_interval_s:%d\n", discover_lorawan_interval_s);
-                        loradisc_grid_timer_init(1, discover_lorawan_interval_s - DISCOVER_DURATION);
-                        loradisc_grid_timer_init(0, NULL);
+                        while (loradisc_discover_config.discover_on)
+                        {
+                            loradisc_discover(NULL);
+                        }
                     }
                     else
                     {
-                        loradisc_grid_timer_init(1, discover_lorawan_interval_s);
+                        // loradisc_grid_timer_init(1, TODO:);
                         loradisc_collect();
                         loradisc_grid_timer_init(0, NULL);
                     }
@@ -430,12 +434,18 @@ static void OnTxTimerEvent(void *context)
 {
     printf("OnTxTimerEvent\n");
     uint16_t time_value;
-    if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
-    {
-        time_value = rand() % (fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000) + fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
-    }
-    else
-        time_value = fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+    #if USE_FOR_LORAWAN && LORADISC
+        time_value = loradisc_discover_config.lorawan_interval_s[node_id_allocate] * 1000;
+        loradisc_discover_config.lorawan_on = 1;
+        loradisc_discover_config.loradisc_on = 0;
+    #else
+        if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
+        {
+            time_value = rand() % (fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000) + fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+        }
+        else
+            time_value = fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+    #endif
     TimerSetValue(&TxTimer, time_value);
     TimerStart(&TxTimer);
     AppProcessRequest = LORA_SET;
@@ -479,12 +489,16 @@ static void LoraStartTx(TxEventType_t EventType)
         /* send everytime timer elapses */
         TimerInit(&TxTimer, OnTxTimerEvent);
         uint16_t time_value;
-        if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
-        {
-            time_value = rand() % (fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000) + fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
-        }
-        else
-            time_value = fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+        #if USE_FOR_LORAWAN && LORADISC
+            time_value = loradisc_discover_config.lorawan_interval_s[node_id_allocate];
+        #else
+            if (fut_config.CUSTOM[FUT_RANDOM_INTERVAL] == 1)
+            {
+                time_value = rand() % (fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000) + fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+            }
+            else
+                time_value = fut_config.CUSTOM[FUT_DATA_SEND_INTERVAL] * 1000;
+        #endif
         TimerSetValue(&TxTimer, time_value);
         OnTxTimerEvent(NULL);
     }

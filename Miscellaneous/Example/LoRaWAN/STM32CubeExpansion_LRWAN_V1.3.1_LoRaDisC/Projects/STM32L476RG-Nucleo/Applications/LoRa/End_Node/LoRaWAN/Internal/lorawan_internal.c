@@ -26,7 +26,7 @@ static struct
 {
 	Slot_State				slot_state;
 
-	uint32_t				loradisc_gap_start_s;
+	Gpi_Slow_Tick_Extended	loradisc_gap_start;
 
 	Gpi_Slow_Tick_Extended	next_grid_tick;
 } s;
@@ -146,13 +146,13 @@ void lpwan_lp_timer_isr()
 }
 
 
-void lpwan_grid_timer_init(uint32_t loradisc_gap_start_s)
+void lpwan_grid_timer_init(Gpi_Slow_Tick_Extended loradisc_gap_start)
 {
 	s.slot_state = LORAWAN_RUNNING;
 
-    s.loradisc_gap_start_s = loradisc_gap_start_s;
+    s.loradisc_gap_start = loradisc_gap_start;
 
-    s.next_grid_tick = gpi_tick_slow_extended() + GPI_TICK_S_TO_SLOW(s.loradisc_gap_start_s);
+    s.next_grid_tick = gpi_tick_slow_extended() + s.loradisc_gap_start;
 
     /* set timer */
 	mask_slow_timer();
@@ -169,14 +169,14 @@ void lpwan_grid_timer_init(uint32_t loradisc_gap_start_s)
 }
 
 
-void loradisc_grid_timer_init(uint8_t init, uint32_t loradisc_gap_start_s)
+void loradisc_grid_timer_init(uint8_t init, Gpi_Slow_Tick_Extended loradisc_gap_start_s)
 {
     if(init)
     {
         s.slot_state = LORADISC_RUNNING;
-        s.loradisc_gap_start_s = loradisc_gap_start_s;
+        s.loradisc_gap_start = loradisc_gap_start_s;
 
-        s.next_grid_tick = gpi_tick_slow_extended() + GPI_TICK_S_TO_SLOW(s.loradisc_gap_start_s);
+        s.next_grid_tick = gpi_tick_slow_extended() + s.loradisc_gap_start;
     }
     else
     {

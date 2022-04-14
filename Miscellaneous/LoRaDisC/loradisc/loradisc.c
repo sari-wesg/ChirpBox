@@ -6,6 +6,9 @@
 #include "mixer_internal.h"
 // DEBUG
 #include "gpi/tools.h"
+// discover
+#include "gpi/olf.h"
+
 //
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
@@ -15,7 +18,7 @@
 //***** Forward Declarations ***********************************************************************
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047}; // TODO: delft
+uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047, 0x004a0022}; // TODO: delft
 // uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO: oead
 // uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
 // uint32_t dev_id_list[NODE_LENGTH] = {0x001E0037, 0x0042002C, 0x004E004A}; // TODO: sari
@@ -28,7 +31,8 @@ extern LoRaDisC_Config loradisc_config;
 extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 /* node id */
 uint8_t node_id_allocate;
-uint32_t discover_node, discover_lorawan_interval_s;
+extern LoRaDisC_Discover_Config loradisc_discover_config;
+
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
 static uint8_t logical_node_id(uint32_t dev_id, uint32_t *UID_list)
@@ -118,7 +122,9 @@ void loradisc_init()
     loradisc_config.full_rank = 0;
     loradisc_config.full_column = UINT8_MAX;
     // rece_dissem_index = UINT16_MAX;
+    loradisc_config.timeout_flag = 0;
 }
+
 void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency)
 {
     // 1. radio config
@@ -137,42 +143,113 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
         loradisc_packet_config(nodes_num, generation_size, data_length, primitive);
     // 4. slot config
     uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
-    uint8_t hop_count; // TODO: calculate
+    uint8_t hop_count;
     if (primitive == FLOODING)
-        hop_count = nodes_num > 10 ? 6 * 2 : 4 * 2;
+        #if USE_FOR_LORAWAN && LORADISC
+            hop_count = loradisc_discover_config.discover_slot;
+        #else
+            hop_count = 10 * 2;
+        #endif
     else
         hop_count = nodes_num * generation_size;
     loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
     // 5. payload distribution
     loradisc_payload_distribution();
 }
-/* one lorawan node initiates the flooding round */
-void loradisc_discover(uint32_t lorawan_interval_s)
+
+void loradisc_discover_init()
 {
+    memset(&loradisc_discover_config, 0, sizeof(loradisc_discover_config));
+    loradisc_discover_config.discover_on = 1;
+    loradisc_discover_config.lorawan_on = 1;
+    loradisc_discover_config.node_id_bitmap = 0x00000001;
+
+    loradisc_discover_config.lorawan_bitmap = 0x00000007; // TODO:
+    loradisc_discover_config.lorawan_num = gpi_popcnt_32(loradisc_discover_config.lorawan_bitmap);
+    loradisc_discover_config.discover_duration_gap = GPI_TICK_S_TO_SLOW(5); //TODO:
+    loradisc_discover_config.collect_duration_slow = GPI_TICK_S_TO_SLOW(10); //TODO:
+    loradisc_discover_config.dissem_duration_slow = GPI_TICK_S_TO_SLOW(10); //TODO:
+    loradisc_discover_config.discover_slot = DISCOVER_SLOT_DEFAULT;
+    loradisc_discover_config.lorawan_interval_s[node_id_allocate] = 25; // TODO:
+}
+
+void loradisc_discover_update_initiator()
+{
+    if (loradisc_discover_config.discover_on)
+        loradisc_config.initiator = gpi_get_msb_32(loradisc_discover_config.node_id_bitmap);
+    else
+        loradisc_config.initiator = 0;
+    printf("loradisc_config.initiator:%d, %d\n", loradisc_config.initiator, node_id_allocate);
+}
+
+
+/* one lorawan node initiates the flooding round */
+void loradisc_discover(uint16_t lorawan_interval_s)
+{
+    Gpi_Slow_Tick_Extended discover_start = gpi_tick_slow_extended();
+    loradisc_discover_config.loradisc_on = 1;
+
+    Gpi_Slow_Tick_Extended gap_to_node_0 = loradisc_discover_config.lorawan_gap;
     // update data
     data = NULL;
-    data_length = 2 * sizeof(uint32_t);
+    data_length = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(Gpi_Slow_Tick_Extended);
     assert_reset(data_length >= FLOODING_SURPLUS_LENGTH);
     data = (uint8_t *)malloc(data_length);
-    memcpy(data, &TOS_NODE_ID, sizeof(TOS_NODE_ID));
+    data[0] = node_id_allocate;
     uint8_t i;
-    for (i = 0; i < sizeof(uint32_t); i++)
-        data[sizeof(uint32_t) + i++] = lorawan_interval_s >> 8 * i;
+    for (i = 0; i < sizeof(uint16_t); i++)
+        data[sizeof(uint8_t) + i] = lorawan_interval_s >> 8 * i;
+    for (i = 0; i < sizeof(Gpi_Slow_Tick_Extended); i++)
+        data[sizeof(uint8_t) + sizeof(uint16_t) + i] = gap_to_node_0 >> 8 * i;
 
     /* start loradisc */
     loradisc_start(FLOODING);
 
-    /* read data */
-    discover_node = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-    discover_lorawan_interval_s = data[sizeof(uint32_t)] | data[sizeof(uint32_t) + 1] << 8 | data[sizeof(uint32_t) + 2] << 16 | data[sizeof(uint32_t) + 3] << 24;
+    /* update node id bitmap */
+    if (loradisc_config.recv_ok)
+    {
+        Gpi_Slow_Tick_Extended discover_end = gpi_tick_slow_extended();
+        Gpi_Slow_Tick_Extended discover_duration = discover_end - discover_start;
+        // printf("discover_duration:%lu, %lu, %lu\n", gpi_tick_slow_to_us(discover_duration), discover_duration, loradisc_discover_config.discover_duration_slow);
+
+        /* read data */
+        uint8_t discover_node = data[0];
+        /* update discover data */
+        loradisc_discover_config.node_id_bitmap |= 1 << (discover_node + 1);
+        loradisc_discover_config.lorawan_interval_s[discover_node] = data[sizeof(uint8_t)] | data[sizeof(uint8_t) + 1] << 8;
+        gap_to_node_0 = data[sizeof(uint8_t) + 2] | data[sizeof(uint8_t) + 3] << 8 | data[sizeof(uint8_t) + 4] << 16 | data[sizeof(uint8_t) + 5] << 24;
+
+        /* update lorawan begin */
+        if (discover_node != node_id_allocate)
+        {
+            if (!discover_node) // node 0
+                loradisc_discover_config.lorawan_begin[discover_node] = gpi_tick_slow_extended() - loradisc_discover_config.discover_duration_slow - loradisc_discover_config.discover_duration_gap - loradisc_discover_config.lorawan_gap;
+            else // node x
+                loradisc_discover_config.lorawan_begin[discover_node] = loradisc_discover_config.lorawan_begin[0] + gap_to_node_0;
+        }
+
+        /* update lorawan_gap compared to node 0 */
+        if ((!discover_node) && (node_id_allocate))
+            loradisc_discover_config.lorawan_gap = loradisc_discover_config.lorawan_begin[node_id_allocate] - loradisc_discover_config.lorawan_begin[discover_node];
+
+        /* end discover when all nodes are collected */
+        if (discover_node + 1 >= loradisc_discover_config.lorawan_num)
+            loradisc_discover_config.discover_on = 0;
+
+        printf("lorawan_gap: %lu, %d, %d, %d\n", discover_node, (int32_t)(gpi_tick_slow_to_us(loradisc_discover_config.lorawan_gap)), (int32_t)(gpi_tick_slow_to_us(gap_to_node_0)), loradisc_discover_config.lorawan_interval_s[discover_node]);
+    }
+    loradisc_discover_update_initiator();
 
     if (data != NULL)
         free(data);
     if (payload_distribution != NULL)
         free(payload_distribution);
 }
+
 void loradisc_collect()
 {
+    loradisc_discover_config.loradisc_on = 1;
+
     // TODO: data from sensor for gateway
     // update data
     data = NULL;
@@ -196,14 +273,24 @@ void loradisc_start(Disc_Primitive primitive)
 {
     // TODO: config
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, primitive, 7, 14, CN470_FREQUENCY);
+    loradisc_discover_update_initiator();
+
     // round start:
     chirp_isr.state = ISR_MIXER;
     Gpi_Fast_Tick_Extended deadline;
     Gpi_Fast_Tick_Native update_period = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_period_time_s * 1000) / 1) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
     deadline = gpi_tick_fast_extended();
-    uint8_t recv_result = 0;
-    while (!recv_result)
+    loradisc_config.recv_ok = 0;
+    while ((!loradisc_config.recv_ok) && (loradisc_discover_config.loradisc_on))
     {
+        if ((loradisc_discover_config.discover_on) && (!reset_discover_slot_num()))
+        {
+            /* receiver time limited, end the discover */
+            loradisc_discover_config.loradisc_on = 0;
+            loradisc_discover_config.lorawan_on = 1;
+            break;
+        }
+
         loradisc_init();
         // gpi_radio_init();
         /* init mixer */
@@ -215,11 +302,11 @@ void loradisc_start(Disc_Primitive primitive)
         /* arm mixer, node 0 = initiator
         start first round with infinite scan
         -> nodes join next available round, does not require simultaneous boot-up */
-        mixer_arm(((!node_id_allocate) ? MX_ARM_INITIATOR : 0) | ((1 == 0) ? MX_ARM_INFINITE_SCAN : 0));
+        mixer_arm(((loradisc_config.initiator == node_id_allocate) ? MX_ARM_INITIATOR : 0) | ((1 == 0) ? MX_ARM_INFINITE_SCAN : 0));
         /* delay initiator a bit
         -> increase probability that all nodes are ready when initiator starts the round
         -> avoid problems in view of limited deadline accuracy */
-        if (!node_id_allocate)
+        if (loradisc_config.initiator == node_id_allocate)
             deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length;
 #if MX_LBT_ACCESS
         lbt_update();
@@ -232,41 +319,44 @@ void loradisc_start(Disc_Primitive primitive)
         ENERGEST_OFF(ENERGEST_TYPE_CPU);
 #endif
         deadline = mixer_start();
-        if (loradisc_config.primitive == FLOODING)
+        if (loradisc_discover_config.loradisc_on)
         {
-            loradisc_read(data);
-            uint8_t i = 0;
-            if ((data[0] != 0xFF) && (!loradisc_config.timeout_flag))
+            if (loradisc_config.primitive == FLOODING)
             {
-                recv_result++;
+                loradisc_read(data);
+                uint8_t i = 0;
+                if ((data[0] != 0xFF) && (!loradisc_config.timeout_flag))
+                {
+                    loradisc_config.recv_ok++;
+                }
+                if (loradisc_config.recv_ok)
+                    PRINTF_DISC("FLOODING OK\n");
+                // Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
+                /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
+                // if (!loradisc_config.recv_ok)
+                //     deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
+                // /* have synchronized to a node */
+                // else
+                // {
+                //     deadline += (Gpi_Fast_Tick_Extended)(update_period);
+                //     PRINTF_DISC("RX OK:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
+                // }
             }
-            if (recv_result)
-                PRINTF_DISC("FLOODING OK\n");
-            // Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
-            /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
-            // if (!recv_result)
-            //     deadline += (Gpi_Fast_Tick_Extended)(update_period - resync_plus);
-            // /* have synchronized to a node */
-            // else
-            // {
-            //     deadline += (Gpi_Fast_Tick_Extended)(update_period);
-            //     PRINTF_DISC("RX OK:0x%x\n", data[i++] << 24 | data[i++] << 16 | data[i++] << 8 | data[i++]);
-            // }
+            else
+            {
+                // deadline += (Gpi_Fast_Tick_Extended)(update_period);
+                loradisc_read(data);
+                loradisc_config.recv_ok++;
+            }
+            while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
         }
-        else
-        {
-            // deadline += (Gpi_Fast_Tick_Extended)(update_period);
-            loradisc_read(data);
-            recv_result++;
-        }
-        while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
     }
 }
 void loradisc_packet_write(uint8_t node_id, uint8_t *data)
 {
     if (loradisc_config.primitive == FLOODING)
     {
-        if (!node_id)
+        if (loradisc_config.initiator == node_id_allocate)
             loradisc_write(NULL, data);
     }
     else
@@ -381,8 +471,6 @@ void loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, ui
         loradisc_config.packet_hash = DISC_HEADER;
     else
         loradisc_config.packet_hash = FLOODING_HEADER;
-
-    loradisc_config.timeout_flag = 0;
 }
 /* slot length is mx_slot_length_in_us microseconds,
 needed slot number is mx_round_length,
@@ -399,6 +487,9 @@ void loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_lengt
     loradisc_config.mx_round_length = mx_round_length;
     mx_period_time_us = loradisc_config.mx_slot_length_in_us * mx_round_length + period_time_us_plus;
     loradisc_config.mx_period_time_s = (mx_period_time_us + 1000000 - 1) / 1000000;
+
+    loradisc_config.timeout_flag = 0;
+    loradisc_config.initiator = 0;
 }
 /**
  * @description: To allocate payload among nodes according to the type of mixer (dissemination / collection)

@@ -2006,14 +2006,14 @@ void mixer_transport_start()
 	GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "start grid timer");
 	if (loradisc_config.primitive != FLOODING)
 	{
-	if (mx.tx_sideload)		// if initiator
-		enter_resync(2);
-	else
-		enter_resync(1);
+		if (mx.tx_sideload)		// if initiator
+			enter_resync(2);
+		else
+			enter_resync(1);
 	}
 	else
 	{
-		if (!node_id_allocate)		// if initiator
+		if (loradisc_config.initiator == node_id_allocate)		// if initiator
 			enter_resync(2);
 		else
 			enter_resync(1);

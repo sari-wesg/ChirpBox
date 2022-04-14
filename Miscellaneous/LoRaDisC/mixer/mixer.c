@@ -111,6 +111,9 @@ struct mx		mx;
 /* Mixer packet and node configuration, Radio (LoRa) configuration */
 LoRaDisC_Config loradisc_config;
 
+#if (USE_FOR_LORAWAN && LORADISC)
+	extern LoRaDisC_Discover_Config loradisc_discover_config;
+#endif
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
 
@@ -428,7 +431,11 @@ Gpi_Fast_Tick_Extended mixer_start()
 
 	unsigned int event_mask = BV(SLOT_UPDATE) | BV(TRIGGER_TICK);
 
-	while (event_mask)
+	#if (USE_FOR_LORAWAN && LORADISC)
+		while ((event_mask) && (loradisc_discover_config.loradisc_on))
+	#else
+		while (event_mask)
+	#endif
 	{
 		// isolate highest priority pending event
 		unsigned int event = mx.events & event_mask;
@@ -603,11 +610,16 @@ Gpi_Fast_Tick_Extended mixer_start()
 	// #endif
 
 	#if ENERGEST_CONF_ON
-
+		#if (USE_FOR_LORAWAN && LORADISC)
+			if(loradisc_discover_config.loradisc_on)
+			{
+		#endif
 	unsigned long avg_energy1 = ((((unsigned long)gpi_tick_hybrid_to_us(energest_type_time(ENERGEST_TYPE_LISTEN) + energest_type_time(ENERGEST_TYPE_TRANSMIT)))) / (unsigned long)(loradisc_config.mx_period_time_s));
 
 	printf("E 1:%lu.%03lu \n", avg_energy1 / 1000, avg_energy1 % 1000);
-
+		#if (USE_FOR_LORAWAN && LORADISC)
+			}
+		#endif
 	#endif
 
 	free(mx.rx_queue[0]);
