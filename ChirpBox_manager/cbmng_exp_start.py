@@ -177,11 +177,14 @@ def start(com_port, flash_protection, version_hash, command_sf, bitmap, slot_num
 			pass
 	if(timeout_cnt > 6000 * 10):
 		print("Timeout...")
+		ser.close()
 		return False
 
 	if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
+		ser.close()
 		return False
 
+	ser.close()
 	return True
 
 def is_running():
@@ -253,9 +256,11 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 			pass
 	if(timeout_cnt > 60000 * 10):
 		print("Timeout...")
+		ser.close()
 		return False
 
 	if(waiting_for_the_execution_timeout(ser, 12000) == False): # timeout: 800 seconds
+		ser.close()
 		return False
 
 	time_now1 = datetime.datetime.now()
@@ -270,6 +275,7 @@ def connectivity_evaluation(sf_bitmap, channel, tx_power, command_sf, com_port, 
 	with open("tmp\\"+exp_name+"("+str(exp_no)+").json", "w") as outfile:
 		outfile.write(weather_json_object)
 
+	ser.close()
 	return True
 
 def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitmap, start_address_col, end_address_col):
@@ -339,6 +345,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 			pass
 	if(timeout_cnt > 60000 * 30):
 		print("Timeout...")
+		ser.close()
 		return False
 
 	with open(filename, 'w+') as f:
@@ -362,6 +369,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 				pass
 	if(timeout_cnt > 60000 * 30):
 		print("Timeout...")
+		ser.close()
 		return False
 
 	time_now1 = datetime.datetime.now()
@@ -370,6 +378,7 @@ def collect_data(com_port, command_len, command_sf, slot_num, used_tp, task_bitm
 		json.dump(running_dict, f)
 
 	print("Results of " + filename + " have been collected!" )
+	ser.close()
 	return True
 
 def collect_version(com_port, command_sf, slot_num, used_tp):
@@ -409,29 +418,30 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 				line = ser.readline().decode('ascii').strip() # skip the empty data
 				timeout_cnt = timeout_cnt + 1
 				if line:
-				 	print (line)
-				 	if (line == "Input initiator task:"):
-				 		input = 1
-				 		print("Input")
-				 		task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
-				 		print(task)
-				 		ser.write(str(task).encode()) # send commands
-				 		# ser.write(str(task_index).encode()) # send commands
-				 	if (line == "output from initiator (version):"):
-				 		start_read = 1
-	 				if ((line == "---------MX_GLOSSY---------") and (input == 1)):
-	 					timeout_cnt = 0
-	 					input = 0
-	 					break
-	 				if(start_read == 1):
-	 					f.write(line + "\r")
+					print (line)
+					if (line == "Input initiator task:"):
+						input = 1
+						print("Input")
+						task = '{0:01}'.format(int(task_index)) + ',{0:02}'.format(int(command_sf))+ ',{0:03}'.format(int(120)) + ',{0:03}'.format(int(1)) + ',{0:04}'.format(int(slot_num)) + ',{0:02}'.format(int(dissem_back_sf)) + ',{0:03}'.format(int(dissem_back_slot)) + ',{0:02}'.format(int(used_tp)) + "," + '{0:08X}'.format(int(bitmap, 16))+ "," + '{0:08X}'.format(int(task_bitmap, 16))
+						print(task)
+						ser.write(str(task).encode()) # send commands
+						# ser.write(str(task_index).encode()) # send commands
+					if (line == "output from initiator (version):"):
+						start_read = 1
+					if ((line == "---------MX_GLOSSY---------") and (input == 1)):
+						timeout_cnt = 0
+						input = 0
+						break
+					if(start_read == 1):
+						f.write(line + "\r")
 				if(timeout_cnt > 60000 * 3):
-	 				break
+					break
 			except:
-	 			pass
+				pass
 	if(timeout_cnt > 60000 * 3):
-	 	print("Timeout...")
-	 	return False
+		print("Timeout...")
+		ser.close()
+		return False
 
 	time_now1 = datetime.datetime.now()
 	running_dict = {'exp_name': exp_name, 'exp_number': exp_no, 'start_time': time_now.strftime("%Y-%m-%d %H:%M:%S"), 'end_time': time_now1.strftime("%Y-%m-%d %H:%M:%S"), 'duration': 0}
@@ -439,6 +449,7 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 		json.dump(running_dict, f)
 
 	print("Version has been collected!" )
+	ser.close()
 	return True
 
 
@@ -564,11 +575,13 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 					timeout_cnt = 0
 					break
 			if(timeout_cnt > 60000 * 3):
+				ser.close()
 				break
 		except:
 			pass
 	if(timeout_cnt > 60000 * 3):
 		print("Timeout...")
+		ser.close()
 		return False
 
 	while True:
@@ -587,6 +600,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 			pass
 	if(timeout_cnt > 6000 * 10):
 		print("Timeout...")
+		ser.close()
 		return False
 	# transmit the file
 	YMODEM_result = False
@@ -605,6 +619,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 	print("*YMODEM* done\n")
 
 	if(waiting_for_the_execution_timeout(ser, 6000000 * 20) == False): # timeout: 800 seconds
+		ser.close()
 		return False
 
 	if(daemon_patch == 1):
@@ -620,6 +635,7 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 	with open(running_status, "w") as f:
 		json.dump(running_dict, f)
 
+	ser.close()
 	return True
 
 def waiting_for_the_execution_timeout(ser, timeout_value):
