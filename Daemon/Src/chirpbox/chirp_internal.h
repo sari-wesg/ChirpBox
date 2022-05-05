@@ -14,7 +14,6 @@
 #include <stdbool.h>
 #include "stm32l4xx_hal.h"
 #include "API_ChirpBox.h"
-#include "mixer_config.h"
 
 //**************************************************************************************************
 //***** Global (Public) Defines and Consts *********************************************************
@@ -30,12 +29,21 @@ typedef enum Chirp_ISR_tag  /* For allocate isr functions */
 /* chirpbox config */
 /* Only allowed to run in the daemon bank (bank1), e.g. alarm clearing and flash write protection removal. */
 #ifndef DAEMON_BANK
-	#define DAEMON_BANK								1
+	#define DAEMON_BANK								0
 #endif
 
+/* Turn on gps or rtc for synchronization */
 #ifndef GPS_DATA
-	#define GPS_DATA								1
-	#define DS3231_ON								1
+	#define GPS_DATA								0
+	#define DS3231_ON								0
+#endif
+
+/* Whether to print logs */
+#define DEBUG_CHIRPBOX 1
+#if DEBUG_CHIRPBOX
+#define PRINTF_CHIRP(...) printf(__VA_ARGS__)
+#else
+#define PRINTF_CHIRP(...)
 #endif
 
 /* DATA config */
@@ -104,8 +112,8 @@ typedef enum ChirpBox_ArrangeDataLength_tag
 	/* all to all: CB_COLLECT, CB_VERSION */
 	/* one to all: CB_DISSEMINATE */
 	CB_START_LENGTH = 0x04,
-	CB_DISSEMINATE_LENGTH = 0x08,
-	CB_COLLECT_LENGTH = 0x05,
+	CB_DISSEMINATE_LENGTH = 0x23,
+	CB_COLLECT_LENGTH = 0x0D,
 	CB_CONNECTIVITY_LENGTH = 0xFF,
 	CB_VERSION_LENGTH = 0xFF,
 	CB_GLOSSY_LENGTH = 1
@@ -184,7 +192,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 
 	uint16_t			round; 				/* current round num */
 	uint16_t			round_max; 			/* desired round num to carriage task */
-	uint8_t				round_setup_to_delete; 		/* setup round for all nodes synchronization */
 
 	uint32_t			packet_time;
 	uint16_t			default_slot_num;
@@ -199,8 +206,6 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	// send back the results in dissem
 	uint8_t				dissem_back_sf;
 	uint8_t				dissem_back_slot_num;
-
-	uint32_t			hash_header;
 
 	uint8_t				glossy_resync;
 	uint8_t				glossy_gps_on;
@@ -233,7 +238,7 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	uint8_t				firmware_md5[16];
 	uint16_t			version_hash;
 
-	uint32_t			file_compression;
+	uint8_t				file_compression;
 
 	uint8_t				patch_update;
 	uint8_t 			patch_bank;
@@ -244,13 +249,20 @@ typedef struct __attribute__((packed)) Chirp_Outline_tag
 	/* CB_COLLECT */
 	uint32_t			collect_addr_start;
 	uint32_t			collect_addr_end;
-	uint32_t			collect_length;
 
 	/* CB_CONNECTIVITY */
 	uint8_t				sf_bitmap;
 	uint32_t			freq;
 	int8_t				tx_power;
 	uint8_t				topo_payload_len;
+
+	/* CB_DISSEMINATE */
+	uint8_t				disem_flag;
+	uint16_t			disem_file_index;
+	uint16_t			disem_file_max;
+	uint16_t			disem_file_index_stay;
+	uint8_t				disem_flag_full_rank;
+	uint32_t			*disem_file_memory;
 
 	/* debug energy (address must be 32-bit) */
 	Chirp_Energy		chirp_energy[3];
@@ -293,18 +305,6 @@ void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t
 void Stats_value(uint8_t stats_type, uint32_t value);
 void Stats_value_debug(uint8_t energy_type, uint32_t value);
 void Stats_to_Flash(ChirpBox_Task task);
-
-/* LBT */
-uint8_t lbt_pesudo_channel(uint8_t channel_total, uint8_t last_channel, uint16_t pesudo_value, uint32_t lbt_available);
-uint32_t lbt_update_channel(uint32_t tx_us, uint8_t tx_channel);
-void lbt_check_time();
-
-/* RTC */
-void RTC_ModifyTime(uint8_t year, uint8_t month, uint8_t date, uint8_t day, uint8_t hour, uint8_t mintue, uint8_t second);
-Chirp_Time RTC_GetTime(void);
-void RTC_Waiting(uint16_t start_year, uint8_t start_month, uint8_t start_date, uint8_t start_hour, uint8_t start_min, uint8_t start_sec);
-void RTC_Waiting_Count_Stop(uint32_t Count_wait);
-void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 
 //**************************************************************************************************
 /* Topology */

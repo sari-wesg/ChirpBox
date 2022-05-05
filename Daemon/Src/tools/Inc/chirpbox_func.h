@@ -127,7 +127,6 @@ uint32_t menu_initiator_read_file(void);
 /* chirpbox */
 uint8_t menu_wait_task(Chirp_Outl *chirp_outl);
 void chirp_controller_read_command(Chirp_Outl *chirp_outl);
-uint32_t Chirp_RSHash(uint8_t* str, uint32_t len);
 void chirpbox_packet_write(Chirp_Outl *chirp_outl, uint8_t node_id);
 void chirpbox_start(uint8_t node_id, uint8_t network_num_nodes);
 

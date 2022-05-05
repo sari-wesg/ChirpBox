@@ -1,4 +1,5 @@
 #include "spi.h"
+
 /*---------------------------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
 /*---------------------------------------------------------------------------*/
@@ -18,6 +19,7 @@ void spi_init(void)
     hspi1.Init.NSS = SPI_NSS_SOFT;
     hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
 
+    SPI_CLK_ENABLE();
 
 //  hspi1.Init.CRCPolynomial = 7;
 //  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
@@ -28,6 +30,70 @@ void spi_init(void)
     Error_Handler();
   }
 
+  /*##-2- Configure the SPI GPIOs */
+  HW_SPI_IoInit();
+}
+
+/*!
+ * @brief De-initializes the SPI object and MCU peripheral
+ *
+ * @param [IN] none
+ */
+void HW_SPI_DeInit(void)
+{
+
+  HAL_SPI_DeInit(&hspi1);
+
+  /*##-1- Reset peripherals ####*/
+  __HAL_RCC_SPI1_FORCE_RESET();
+  __HAL_RCC_SPI1_RELEASE_RESET();
+  /*##-2- Configure the SPI GPIOs */
+  HW_SPI_IoDeInit();
+}
+
+void HW_SPI_IoInit(void)
+{
+  GPIO_InitTypeDef initStruct = {0};
+
+
+  initStruct.Mode = GPIO_MODE_AF_PP;
+  initStruct.Pull = GPIO_NOPULL  ;
+  initStruct.Speed = GPIO_SPEED_HIGH;
+  initStruct.Alternate = SPI1_AF ;
+
+  HW_GPIO_Init(RADIO_SCLK_PORT, RADIO_SCLK_PIN, &initStruct);
+  HW_GPIO_Init(RADIO_MISO_PORT, RADIO_MISO_PIN, &initStruct);
+  HW_GPIO_Init(RADIO_MOSI_PORT, RADIO_MOSI_PIN, &initStruct);
+
+  initStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  initStruct.Pull = GPIO_NOPULL;
+
+  HW_GPIO_Init(RADIO_NSS_PORT, RADIO_NSS_PIN, &initStruct);
+
+  HW_GPIO_Write(RADIO_NSS_PORT, RADIO_NSS_PIN, 1);
+}
+
+void HW_SPI_IoDeInit(void)
+{
+  GPIO_InitTypeDef initStruct = {0};
+
+  initStruct.Mode = GPIO_MODE_OUTPUT_PP;
+
+  initStruct.Pull = GPIO_NOPULL  ;
+  HW_GPIO_Init(RADIO_MOSI_PORT, RADIO_MOSI_PIN, &initStruct);
+  HW_GPIO_Write(RADIO_MOSI_PORT, RADIO_MOSI_PIN, 0);
+
+  initStruct.Pull = GPIO_PULLDOWN;
+  HW_GPIO_Init(RADIO_MISO_PORT, RADIO_MISO_PIN, &initStruct);
+  HW_GPIO_Write(RADIO_MISO_PORT, RADIO_MISO_PIN, 0);
+
+  initStruct.Pull = GPIO_NOPULL  ;
+  HW_GPIO_Init(RADIO_SCLK_PORT, RADIO_SCLK_PIN, &initStruct);
+  HW_GPIO_Write(RADIO_SCLK_PORT, RADIO_SCLK_PIN, 0);
+
+  initStruct.Pull = GPIO_NOPULL  ;
+  HW_GPIO_Init(RADIO_NSS_PORT, RADIO_NSS_PIN, &initStruct);
+  HW_GPIO_Write(RADIO_NSS_PORT, RADIO_NSS_PIN, 1);
 }
 
 uint16_t HW_SPI_InOut( uint16_t txData )

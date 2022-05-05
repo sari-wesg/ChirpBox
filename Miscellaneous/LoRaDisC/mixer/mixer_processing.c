@@ -89,12 +89,6 @@ GPI_TRACE_CONFIG(mixer_processing, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-// #define DEBUG 1
-#if PRINTF_CHIRP
-#define PRINTF_decode(...) printf(__VA_ARGS__)
-#else
-#define PRINTF_decode(...)
-#endif
 
 
 //**************************************************************************************************
@@ -177,7 +171,7 @@ static void trace_packet(const Packet *p)
 		ps += sprintf(ps, "%02" PRIx16, p->packet_chunk[loradisc_config.payload.pos + i]);
 	}
 
-	PRINTF_CHIRP("%s\n", msg);
+	PRINTF_MIXER("%s\n", msg);
 }
 
 #else
@@ -556,7 +550,7 @@ PT_THREAD(mixer_update_slot())
 		#if MX_VERBOSE_PACKETS
 			if (mx.events & BV(TX_READY))
 			{
-				PRINTF_CHIRP("Tx: ");
+				PRINTF_MIXER("Tx: ");
 
 				TRACE_PACKET(&(mx.tx_packet->phy_payload_begin));
 			}
@@ -1306,7 +1300,7 @@ PT_THREAD(mixer_process_rx_data())
 
 				TRACE_DUMP(1, "Rx packet:", &(p->phy_payload_begin), loradisc_config.phy_payload_size);
 
-				PRINTF_CHIRP("Rx: ");
+				PRINTF_MIXER("Rx: ");
 
 				TRACE_PACKET(p);
 
@@ -1548,7 +1542,7 @@ PT_THREAD(mixer_process_rx_data())
 							if (!mx.request->my_column_pending)
 							{
 								loradisc_config.full_column = 0;
-								PRINTF_CHIRP("-----column_pending = 0-----\n");
+								PRINTF_MIXER("-----column_pending = 0-----\n");
 							}
 
 						#endif
@@ -1566,7 +1560,7 @@ PT_THREAD(mixer_process_rx_data())
 						// to time.
 						if (loradisc_config.mx_generation_size == mx.rank)
 						{
-							PRINTF_CHIRP("------------full_rank------------:%d\n", mx.slot_number);
+							PRINTF_MIXER("------------full_rank------------:%d\n", mx.slot_number);
 
 							static Pt_Context	pt_decode;
 
@@ -1842,7 +1836,7 @@ PT_THREAD(mixer_maintenance())
 		// Gpi_Fast_Tick_Native now = gpi_tick_fast_native();
 		Gpi_Fast_Tick_Extended now = gpi_tick_fast_extended();
 
-        PRINTF_CHIRP("l:%lu\n", (uint32_t)(mx.round_deadline - now) / 16000000);
+        PRINTF_MIXER("l:%lu\n", (uint32_t)(mx.round_deadline - now) / 16000000);
 
 		// monitor round length
 		// NOTE: we test once per slot, and STOP executes gracefully at the next slot boundary
@@ -1850,6 +1844,10 @@ PT_THREAD(mixer_maintenance())
 		// "now"?) is not very critical here.
 		if ((mx.slot_number >= loradisc_config.mx_round_length) || (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0))
 		{
+			printf("round_deadline:%lu, %lu, %lu\n", mx.slot_number, loradisc_config.mx_round_length, (gpi_tick_compare_fast_extended(now, mx.round_deadline) >= 0));
+
+			if(mx.slot_number < loradisc_config.mx_round_length)
+				loradisc_config.timeout_flag = 1;
 			mx.slot_number = loradisc_config.mx_round_length;
 
 			mx.round_deadline_update_slot = mx.slot_number;
@@ -1898,10 +1896,10 @@ PT_THREAD(mixer_maintenance())
 			{
 				#if !(GPI_ARCH_IS_BOARD(TMOTE_FLOCKLAB) || GPI_ARCH_IS_BOARD(TMOTE_INDRIYA))
 
-					PRINTF_CHIRP("# ID:%u ", mx.tx_packet->sender_id + 1);
+					PRINTF_MIXER("# ID:%u ", mx.tx_packet->sender_id + 1);
 				#endif
 
-				PRINTF_CHIRP("profile %u %s %4" PRIu16 ": %" PRIu32 "\n", s_snapshot_index, module_name, line, timestamp);
+				PRINTF_MIXER("profile %u %s %4" PRIu16 ": %" PRIu32 "\n", s_snapshot_index, module_name, line, timestamp);
 			}
 		#endif
 	}

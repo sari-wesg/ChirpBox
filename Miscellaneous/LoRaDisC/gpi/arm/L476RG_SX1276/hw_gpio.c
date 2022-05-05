@@ -37,12 +37,12 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, 0xffff, GPIO_PIN_RESET);
 
   /*Configure LED pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED1|LED2|LED3|LED4|LED5, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(LED_GPIO_Port, GPIO_LED1|GPIO_LED2|GPIO_LED3|GPIO_LED4|GPIO_LED5, GPIO_PIN_RESET);
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 
-  HW_GPIO_Init(LED_GPIO_Port, LED1|LED2|LED3|LED4|LED5, &GPIO_InitStruct );
+  HW_GPIO_Init(LED_GPIO_Port, GPIO_LED1|GPIO_LED2|GPIO_LED3|GPIO_LED4|GPIO_LED5, &GPIO_InitStruct );
 
   // TODO: no need to config?
   /*Configure RADIO_DIO_3_PIN pin Output Level */

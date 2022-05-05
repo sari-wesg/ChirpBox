@@ -3,10 +3,7 @@
 #include "mixer_internal.h"
 #include "chirp_internal.h"
 #include "stm32l4xx_hal.h"
-
-#ifdef MX_CONFIG_FILE
-#include STRINGIFY(MX_CONFIG_FILE)
-#endif
+#include "mixer_config.h"
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************

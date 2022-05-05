@@ -556,7 +556,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 	if (TX_RUNNING != s.slot_state)
 	{
 		// Clear Irq
-		SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
+		LoRaDS_SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
 		// situation at this point: Rx done, radio entering DISABLED state
 		gpi_led_off(LED_RX);
 
@@ -579,19 +579,19 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		#endif
 
 		// if LEN or CRC not ok: regard packet as invisible
-		volatile uint8_t packet_len = (uint8_t)SX1276Read( REG_LR_RXNBBYTES );
-		volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
+		volatile uint8_t packet_len = (uint8_t)LoRaDS_SX1276Read( REG_LR_RXNBBYTES );
+		volatile uint8_t irqFlags = LoRaDS_SX1276Read( REG_LR_IRQFLAGS );
 		if( ( ( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) == RFLR_IRQFLAGS_PAYLOADCRCERROR ) || ( packet_len != loradisc_config.phy_payload_size )
 		)
 		{
-			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
+			LoRaDS_SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
 
 			GPI_TRACE_MSG_FAST(TRACE_INFO, "broken packet received, LEN: %d, CRC:error", (int)(packet_len));
 
 			#if MX_VERBOSE_STATISTICS
 				mx.stat_counter.num_rx_broken++;
 			#endif
-			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 
 			// trigger timeout timer (immediately) -> do error handling there
 			// NOTE: don't need to unmask timer here because it already is
@@ -603,15 +603,15 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 		{
 			if (loradisc_config.primitive == FLOODING)
 			{
-				PRINTF_CHIRP("ok\n");
+				PRINTF_MIXER("ok\n");
 			}
 
 			uint8_t RxPacketBuffer[packet_len];
 			memset( RxPacketBuffer, 0, ( size_t )packet_len );
 			// read rx packet from start address (in data buffer) of last packet received
-			SX1276Write( REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
-			SX1276ReadFifo( RxPacketBuffer, packet_len );
-			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+			LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, LoRaDS_SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
+			LoRaDS_SX1276ReadFifo( RxPacketBuffer, packet_len );
+			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 
 			// allocate rx queue destination slot
 			Packet	*packet;
@@ -875,10 +875,10 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 	else
 	{
         // Clear Irq
-        SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
+        LoRaDS_SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
 
 		// situation at this point: transmission completed, radio entering DISABLED state
-		SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+		LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 		gpi_led_off(LED_TX);
 
 
@@ -935,7 +935,7 @@ void LED_ISR(mixer_dio3_isr, LED_DIO3_ISR)
 			if (TX_RUNNING != s.slot_state)
 			{
 				// Clear Irq
-				SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_VALIDHEADER );
+				LoRaDS_SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_VALIDHEADER );
 				// if frame detected
 				GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "header detected");
 
@@ -981,7 +981,8 @@ void LED_ISR(mixer_dio3_isr, LED_DIO3_ISR)
 
 //**************************************************************************************************
 // helper ISR for grid timer, see start_grid_timer() for details
-void LED_ISR(LP_TIMER_ISR_NAME, GPI_LED_5)
+// void LED_ISR(LP_TIMER_ISR_NAME, GPI_LED_5)
+void LED_ISR(mixer_lp_timer_isr, GPI_LED_5)
 {
 	// start_grid_timer();
 	mask_slow_timer();
@@ -1074,7 +1075,7 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 	if (s.lbt_rx_on)
 	{
 		/* Bit 0: Signal Detected, see SX1276/77/78/79 - 137 MHz to 1020 MHz, Rev. 5, Page 46 */
-		if (SX1276Read( REG_LR_MODEMSTAT ) & RFLR_MODEMSTAT_MODEM_STATUS_SIGNAL_MASK)
+		if (LoRaDS_SX1276Read( REG_LR_MODEMSTAT ) & RFLR_MODEMSTAT_MODEM_STATUS_SIGNAL_MASK)
 		{
 			s.lbt_rx_on = 0;
 			/* waiting for a valid header time */
@@ -1089,15 +1090,15 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 		else
 		{
 			s.lbt_channel_seq_no ++;
-			SX1276SetOpMode(RFLR_OPMODE_SLEEP);
+			LoRaDS_SX1276SetOpMode(RFLR_OPMODE_SLEEP);
 			if (s.lbt_channel_seq_no < CHANNEL_ALTER)
 			{
 				Gpi_Hybrid_Reference r = gpi_tick_hybrid_reference();
 				/* hop to another channel, random seed is related to round seq, slot number and channel seq */
 				uint8_t now_channel = lbt_pesudo_channel(loradisc_config.lbt_channel_total, loradisc_config.lbt_channel_primary, mx.slot_number + loradisc_config.lbt_channel_primary + s.lbt_channel_seq_no, loradisc_config.lbt_channel_mask);
 
-				SX1276SetChannel(loradisc_config.lora_freq + now_channel * CHANNEL_STEP);
-				SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+				LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + now_channel * CHANNEL_STEP);
+				LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 				/* waiting for a valid header time */
 				Gpi_Hybrid_Tick t = s.next_grid_tick_last + s.rx_trigger_offset - radio.rx_to_grid_offset + GPI_TICK_US_TO_FAST2(loradisc_config.lbt_detect_duration_us * (s.lbt_channel_seq_no + 1) - radio.isr_latency_buffer + LBT_DELAY_IN_US);
 				MAIN_TIMER_CC_REG = r.fast_capture + (t - r.hybrid_tick) * FAST_HYBRID_RATIO;
@@ -1117,7 +1118,7 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 					ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 				#endif
 				/* no packets in this slot */
-				SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+				LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
 			}
 		}
 	}
@@ -1128,8 +1129,8 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 	{
 		s.valid_header = 0;
 		memset( APP_HEADER_FIFO, 0, HASH_HEADER );
-		SX1276Write( REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ));
-		SX1276ReadFifo( APP_HEADER_FIFO, HASH_HEADER );
+		LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, LoRaDS_SX1276Read( REG_LR_FIFORXCURRENTADDR ));
+		LoRaDS_SX1276ReadFifo( APP_HEADER_FIFO, HASH_HEADER );
 		uint16_t app_header = APP_HEADER_FIFO[1] << 8 | APP_HEADER_FIFO[0];
 		if (app_header == loradisc_config.packet_hash)
 		{
@@ -1153,7 +1154,7 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 		else
 		{
 			// turn radio off
-			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 			gpi_led_off(LED_RX);
 		}
 	}
@@ -1161,10 +1162,10 @@ void LED_ISR(timeout_isr, LED_TIMEOUT_ISR)
 	// NOTE: being here implies that Rx is active (state = RESYNC or RX_RUNNING)
 	// mask interrupts (radio)
 	// NOTE: stopping timeout timer is not needed since this is done implicitely below
-	SX1276Write( REG_LR_IRQFLAGSMASK, 0xFF );
+	LoRaDS_SX1276Write( REG_LR_IRQFLAGSMASK, 0xFF );
 
 	// turn radio off
-	SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+	LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 	gpi_led_off(LED_RX | LED_TX);
 
 	#if MX_VERBOSE_STATISTICS
@@ -1281,18 +1282,18 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		// rx begin
 		assert_reset((loradisc_config.lora_bw >= 7)&&(loradisc_config.lora_bw <= 9));
 
-		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
-		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ, ( ( LoRaDS_SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 
-		SX1276Write( REG_LR_DETECTOPTIMIZE, SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
-		SX1276Write( REG_LR_IFFREQ2, 0x00 );
+		LoRaDS_SX1276Write( REG_LR_DETECTOPTIMIZE, LoRaDS_SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
+		LoRaDS_SX1276Write( REG_LR_IFFREQ2, 0x00 );
 		if(loradisc_config.lora_bw != 9)
 		{
-			SX1276Write( REG_LR_IFFREQ1, 0x40 );
+			LoRaDS_SX1276Write( REG_LR_IFFREQ1, 0x40 );
 		}
 		else
 		{
-			SX1276Write( REG_LR_DETECTOPTIMIZE, SX1276Read( REG_LR_DETECTOPTIMIZE ) | 0x80 );
+			LoRaDS_SX1276Write( REG_LR_DETECTOPTIMIZE, LoRaDS_SX1276Read( REG_LR_DETECTOPTIMIZE ) | 0x80 );
 		}
 
 		if (RESYNC != s.slot_state)
@@ -1311,7 +1312,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			PROFILE_ISR();
 
 			// set radio in rx mode
-			SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 			gpi_led_on(LED_RX);
 
 			#if MX_VERBOSE_STATISTICS
@@ -1325,7 +1326,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		{
 			// set radio in rx mode
 			// while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), trigger_tick) <= 0);
-			SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 			gpi_led_on(LED_RX);
 			#if MX_VERBOSE_STATISTICS
 				trigger_tick = gpi_tick_fast_native();
@@ -1342,7 +1343,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 
 		// unmask IRQs
 		// enable RxDone, PayloadCrcError and ValidHeader interrupt
-		SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+		LoRaDS_SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 											//RFLR_IRQFLAGS_RXDONE |
 											//RFLR_IRQFLAGS_PAYLOADCRCERROR |
 											//RFLR_IRQFLAGS_VALIDHEADER |
@@ -1351,7 +1352,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 											RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
 											RFLR_IRQFLAGS_CADDETECTED );
 
-		SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK &
+		LoRaDS_SX1276Write( REG_DIOMAPPING1, ( LoRaDS_SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK &
 		RFLR_DIOMAPPING1_DIO3_MASK) | RFLR_DIOMAPPING1_DIO0_00 | RFLR_DIOMAPPING1_DIO3_01);
 
 		#if MX_HEADER_CHECK
@@ -1359,8 +1360,8 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 		#endif
 
 		// allocate rx queue destination slot
-        SX1276Write( REG_LR_FIFORXBASEADDR, 0 );
-		// SX1276Write( REG_LR_FIFOADDRPTR, 0 );
+        LoRaDS_SX1276Write( REG_LR_FIFORXBASEADDR, 0 );
+		// LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, 0 );
 
 		mx.rx_queue_num_writing = mx.rx_queue_num_written + 1;
 		s.event_tick_nominal = s.next_grid_tick + radio.packet_air_time;
@@ -1388,7 +1389,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			#if MX_LBT_ACCESS
 				s.lbt_rx_on = 1;
 				s.lbt_channel_seq_no = 0;
-				SX1276Write( REG_LR_MODEMSTAT, SX1276Read( REG_LR_MODEMSTAT ) & ~ RFLR_MODEMSTAT_MODEM_STATUS_SIGNAL_MASK);
+				LoRaDS_SX1276Write( REG_LR_MODEMSTAT, LoRaDS_SX1276Read( REG_LR_MODEMSTAT ) & ~ RFLR_MODEMSTAT_MODEM_STATUS_SIGNAL_MASK);
 				t = s.next_grid_tick + s.rx_trigger_offset - radio.rx_to_grid_offset +
 				GPI_TICK_US_TO_HYBRID2(loradisc_config.lbt_detect_duration_us) * CHANNEL_ALTER + 4 * radio.grid_drift_offset + GPI_TICK_US_TO_HYBRID2(LBT_DELAY_IN_US);
 			#else
@@ -1454,7 +1455,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					s.next_grid_tick_last = s.next_grid_tick;
 					s.tx_now_channel = loradisc_config.lbt_channel_primary;
 
-					SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
+					LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + loradisc_config.lbt_channel_primary * CHANNEL_STEP);
 
 					t_ps_us = 0;
 					trigger_tick = MAIN_TIMER_CC_REG + GPI_TICK_US_TO_FAST(radio.isr_latency_buffer);
@@ -1468,7 +1469,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					s.lbt_channel_seq_no ++;
 
 					s.tx_now_channel = lbt_pesudo_channel(loradisc_config.lbt_channel_total, loradisc_config.lbt_channel_primary, mx.slot_number + 1 + loradisc_config.lbt_channel_primary + s.lbt_channel_seq_no, loradisc_config.lbt_channel_mask);
-					SX1276SetChannel(loradisc_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
+					LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
 
 					if (s.lbt_channel_seq_no < CHANNEL_ALTER)
 					{
@@ -1487,7 +1488,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					}
 				}
 
-				SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+				LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 				gpi_led_on(LED_RX);
 
 				#if ENERGEST_CONF_ON
@@ -1507,7 +1508,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			else if (s.lbt_tx_on == CCA_ON)
 			{
 				s.lbt_tx_on = CCA_NONE;
-				SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+				LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 				gpi_led_off(LED_RX);
 				#if ENERGEST_CONF_ON
 					ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
@@ -1520,7 +1521,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 					{
 						s.tx_now_channel = lbt_pesudo_channel(loradisc_config.lbt_channel_total, loradisc_config.lbt_channel_primary, mx.slot_number + 1 + loradisc_config.lbt_channel_primary + s.lbt_channel_seq_no, loradisc_config.lbt_channel_mask);
 
-						SX1276SetChannel(loradisc_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
+						LoRaDS_SX1276SetChannel(loradisc_config.lora_freq + s.tx_now_channel * CHANNEL_STEP);
 
 						t_lbt = s.next_grid_tick_last + s.tx_trigger_offset - radio.tx_to_grid_offset + GPI_TICK_US_TO_HYBRID2(loradisc_config.lbt_detect_duration_us * s.lbt_channel_seq_no - radio.isr_latency_buffer);
 						r_lbt = gpi_tick_hybrid_reference();
@@ -1592,12 +1593,12 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			late = 0;
 		PROFILE_ISR();
 
-		SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
+		LoRaDS_SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
 
 		// if we are late: start manually (immediately)
 		if (late)
 		{
-			// SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
+			// LoRaDS_SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
 
 			#if MX_VERBOSE_STATISTICS
 				trigger_tick = gpi_tick_fast_native();
@@ -1605,12 +1606,12 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
         }
 
 		// init FIFO
-		SX1276Write( REG_LR_PAYLOADLENGTH, loradisc_config.phy_payload_size);
-		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
-		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+		LoRaDS_SX1276Write( REG_LR_PAYLOADLENGTH, loradisc_config.phy_payload_size);
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ, ( ( LoRaDS_SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 		// Full buffer used for Tx
-		SX1276Write( REG_LR_FIFOTXBASEADDR, 0 );
-		SX1276Write( REG_LR_FIFOADDRPTR, 0 );
+		LoRaDS_SX1276Write( REG_LR_FIFOTXBASEADDR, 0 );
+		LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, 0 );
 
 		gpi_led_on(LED_TX);
 		#if MX_VERBOSE_STATISTICS
@@ -1844,7 +1845,7 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			#endif
 
 			// turn radio off
-			SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 
 			gpi_led_off(LED_TX);
 
@@ -1874,12 +1875,12 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 			// TODO:
 			uint8_t Buffer2[loradisc_config.phy_payload_size];
 
-			SX1276Write( REG_LR_FIFOADDRPTR, 0);
-			SX1276ReadBuffer( 0, Buffer2, loradisc_config.phy_payload_size );
-			SX1276Write( REG_LR_FIFOADDRPTR, 0);
+			LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, 0);
+			LoRaDS_SX1276ReadBuffer( 0, Buffer2, loradisc_config.phy_payload_size );
+			LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, 0);
 
 			// unmask IRQ
-			SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+			LoRaDS_SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 												RFLR_IRQFLAGS_RXDONE |
 												RFLR_IRQFLAGS_PAYLOADCRCERROR |
 												RFLR_IRQFLAGS_VALIDHEADER |
@@ -1889,9 +1890,10 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 												RFLR_IRQFLAGS_CADDETECTED );
 
 			// DIO0=TxDone
-			SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
+			LoRaDS_SX1276Write( REG_DIOMAPPING1, ( LoRaDS_SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
 
-			gpi_memcpy_dma_aligned(&(mx.tx_packet->phy_payload_begin), Buffer2, loradisc_config.phy_payload_size);
+			if (loradisc_config.primitive != FLOODING)
+				gpi_memcpy_dma_aligned(&(mx.tx_packet->phy_payload_begin), Buffer2, loradisc_config.phy_payload_size);
 
 			set_event(TX_READY);
 
@@ -2004,14 +2006,14 @@ void mixer_transport_start()
 	GPI_TRACE_MSG_FAST(TRACE_VERBOSE, "start grid timer");
 	if (loradisc_config.primitive != FLOODING)
 	{
-	if (mx.tx_sideload)		// if initiator
-		enter_resync(2);
-	else
-		enter_resync(1);
+		if (mx.tx_sideload)		// if initiator
+			enter_resync(2);
+		else
+			enter_resync(1);
 	}
 	else
 	{
-		if (!node_id_allocate)		// if initiator
+		if (loradisc_config.initiator == node_id_allocate)		// if initiator
 			enter_resync(2);
 		else
 			enter_resync(1);

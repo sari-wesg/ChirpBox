@@ -7,9 +7,7 @@
 
 #include "gpi/tools.h" /* STRINGIFY(), LSB(), ASSERT_CT() */
 #include "gpi/olf.h"
-#ifdef MX_CONFIG_FILE
-#include STRINGIFY(MX_CONFIG_FILE)
-#endif
+#include "mixer_config.h"
 #include "gpi/platform_spec.h"
 #include "gpi/platform.h"
 #include "gpi/clocks.h"
@@ -20,14 +18,6 @@
 #include "flash_if.h"
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#if DEBUG_CHIRPBOX
-#include <stdio.h>
-#include <stdlib.h>
-
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
 
 #define BUFFER_SIZE                 255
 
@@ -108,7 +98,7 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
 
     Gpi_Fast_Tick_Extended deadline;
 
-    SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+    LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 	chirp_isr.state = ISR_TOPO;
 
     topology_state = IDLE;
@@ -117,8 +107,8 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
     round_id = i;
     if (i != node_id)
     {
-        PRINTF("Topology---Rx:%d\n", i);
-		SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+        PRINTF_CHIRP("Topology---Rx:%d\n", i);
+		LoRaDS_SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 											//RFLR_IRQFLAGS_RXDONE |
 											//RFLR_IRQFLAGS_PAYLOADCRCERROR |
 											RFLR_IRQFLAGS_VALIDHEADER |
@@ -126,16 +116,16 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
 											RFLR_IRQFLAGS_CADDONE |
 											RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
 											RFLR_IRQFLAGS_CADDETECTED );
-		SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00);
+		LoRaDS_SX1276Write( REG_DIOMAPPING1, ( LoRaDS_SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00);
 
-		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
-		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ, ( ( LoRaDS_SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 
-		SX1276Write( REG_LR_DETECTOPTIMIZE, SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
-		SX1276Write( REG_LR_IFFREQ2, 0x00 );
-        SX1276Write( REG_LR_IFFREQ1, 0x40 );
+		LoRaDS_SX1276Write( REG_LR_DETECTOPTIMIZE, LoRaDS_SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
+		LoRaDS_SX1276Write( REG_LR_IFFREQ2, 0x00 );
+        LoRaDS_SX1276Write( REG_LR_IFFREQ1, 0x40 );
 
-        SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+        LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
         #if ENERGEST_CONF_ON
             ENERGEST_OFF(ENERGEST_TYPE_CPU);
             ENERGEST_ON(ENERGEST_TYPE_LISTEN);
@@ -166,8 +156,8 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
         /* delay more than receivers */
         deadline = gpi_tick_fast_extended() + GPI_TICK_US_TO_FAST2(packet_time_us * 3) + GPI_TICK_US_TO_FAST2(1000000);
 
-        SX1276WriteFIFO(Tx_Buffer, tx_payload_len);
-		SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+        LoRaDS_SX1276WriteFIFO(Tx_Buffer, tx_payload_len);
+		LoRaDS_SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 											RFLR_IRQFLAGS_RXDONE |
 											RFLR_IRQFLAGS_PAYLOADCRCERROR |
 											RFLR_IRQFLAGS_VALIDHEADER |
@@ -175,18 +165,18 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
 											RFLR_IRQFLAGS_CADDONE |
 											RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
 											RFLR_IRQFLAGS_CADDETECTED );
-        SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
+        LoRaDS_SX1276Write( REG_DIOMAPPING1, ( LoRaDS_SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
 
-		SX1276Write( REG_LR_PAYLOADLENGTH, tx_payload_len );
-		SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
-		SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+		LoRaDS_SX1276Write( REG_LR_PAYLOADLENGTH, tx_payload_len );
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ, ( ( LoRaDS_SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+		LoRaDS_SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 		// Full buffer used for Tx
-		SX1276Write( REG_LR_FIFOTXBASEADDR, 0 );
-		SX1276Write( REG_LR_FIFOADDRPTR, 0 );
+		LoRaDS_SX1276Write( REG_LR_FIFOTXBASEADDR, 0 );
+		LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, 0 );
 
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0);
-        PRINTF("Topology---Tx\n");
-        SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
+        PRINTF_CHIRP("Topology---Tx\n");
+        LoRaDS_SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
         #if ENERGEST_CONF_ON
             ENERGEST_OFF(ENERGEST_TYPE_CPU);
             ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
@@ -207,7 +197,7 @@ void topo_round_robin(uint8_t node_id, uint8_t nodes_num, uint8_t i)
     }
     __HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
     __HAL_TIM_DISABLE_IT(&htim2, TIM_IT_CC1);
-    SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+    LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 }
 
 void topo_result(uint8_t nodes_num, uint8_t topo_test_id)
@@ -218,7 +208,7 @@ void topo_result(uint8_t nodes_num, uint8_t topo_test_id)
     for ( i = 0; i < nodes_num; i++)
     {
         node_topology_link[i].reliability = (uint16_t)(((uint32_t)node_topology[i].rx_num * 1e4) / (uint32_t)(tx_num_max));
-        PRINTF("r:%d, %d\n", i, node_topology_link[i].reliability);
+        PRINTF_CHIRP("r:%d, %d\n", i, node_topology_link[i].reliability);
     }
 
     uint8_t temp_raw = SX1276GetRawTemp();
@@ -252,22 +242,22 @@ void topo_dio0_isr()
     if (topology_state == RX_RUNNING)
     {
         gpi_led_on(GPI_LED_1);
-        SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
-        volatile uint8_t packet_len = (uint8_t)SX1276Read( REG_LR_RXNBBYTES );
-        volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
+        LoRaDS_SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
+        volatile uint8_t packet_len = (uint8_t)LoRaDS_SX1276Read( REG_LR_RXNBBYTES );
+        volatile uint8_t irqFlags = LoRaDS_SX1276Read( REG_LR_IRQFLAGS );
         if(( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) != RFLR_IRQFLAGS_PAYLOADCRCERROR )
         {
             memset(Rx_Buffer, 0, BUFFER_SIZE);
             // read rx packet from start address (in data buffer) of last packet received
-            SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
-            SX1276ReadFifo(Rx_Buffer, packet_len );
+            LoRaDS_SX1276Write(REG_LR_FIFOADDRPTR, LoRaDS_SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
+            LoRaDS_SX1276ReadFifo(Rx_Buffer, packet_len );
             if ((Rx_Buffer[0]-1) == round_id)
             {
                 rx_receive_num++;
 
                 // Returns SNR value [dB] rounded to the nearest integer value
-                SnrValue = (((int8_t)SX1276Read(REG_LR_PKTSNRVALUE)) + 2) >> 2;
-                rssi_link = SX1276Read(REG_LR_PKTRSSIVALUE);
+                SnrValue = (((int8_t)LoRaDS_SX1276Read(REG_LR_PKTSNRVALUE)) + 2) >> 2;
+                rssi_link = LoRaDS_SX1276Read(REG_LR_PKTRSSIVALUE);
 
                 if (SnrValue < 0)
                 {
@@ -301,24 +291,24 @@ void topo_dio0_isr()
                 }
                     node_topology_link[Rx_Buffer[0]-1].snr_total += SnrValue;
                     node_topology_link[Rx_Buffer[0]-1].rssi_total += RssiValue_link;
-                PRINTF("RX: %d\n", rx_receive_num);
+                PRINTF_CHIRP("RX: %d\n", rx_receive_num);
             }
         }
         else
         {
-			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
-            PRINTF("RX wrong: %d\n", rx_receive_num);
+			LoRaDS_SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
+            PRINTF_CHIRP("RX wrong: %d\n", rx_receive_num);
         }
-        SX1276SetOpMode( RFLR_OPMODE_SLEEP );
-        SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+        LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+        LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 
         gpi_led_off(GPI_LED_1);
     }
     else if (topology_state == TX_RUNNING)
     {
-        PRINTF("TXDONE\n");
+        PRINTF_CHIRP("TXDONE\n");
         gpi_led_on(GPI_LED_2);
-        SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
+        LoRaDS_SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
         topology_state = 0;
 
         Gpi_Fast_Tick_Native tx_interval = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST2(10000);
@@ -327,7 +317,7 @@ void topo_dio0_isr()
 
         if (tx_send_num < tx_num_max)
         {
-            SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
+            LoRaDS_SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
             tx_send_num++;
             topology_state = TX_RUNNING;
         }
@@ -355,7 +345,7 @@ void topo_manager(uint8_t nodes_num, uint8_t node_id, uint8_t sf_bitmap, uint8_t
         sf_lsb = gpi_get_lsb(sf_bitmap);
         sf_bitmap &= sf_bitmap - 1;
         sf = TOPO_DEFAULT_SF + sf_lsb;
-        PRINTF("Test SF:%u\n", sf);
+        PRINTF_CHIRP("Test SF:%u\n", sf);
 
         gpi_radio_set_spreading_factor(sf);
         topo_init(nodes_num, node_id, sf, payload_len);

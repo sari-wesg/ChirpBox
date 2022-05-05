@@ -3,7 +3,7 @@
     "all_command_tp": 14,
     "all_command_comport": "com3",
     "all_command_bitmap": "1FFFFF",
-    "flooding_command_bitmap": 12,
+    "flooding_command_slot_number": 12,
     "dissem_command_slot_number": 80,
     "collect_command_slot_number": 60,
     "coldata_command_sf": 7,

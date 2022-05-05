@@ -2,8 +2,14 @@
 //**** Includes ************************************************************************************
 
 //**************************************************************************************************
-#include "chirp_internal.h"
+#if USE_FOR_CHIRPBOX
+	#include "chirp_internal.h"
+#endif
+#if USE_FOR_LORAWAN
+	#include "lorawan_internal.h"
+#endif
 #include "mixer_config.h"
+#include "loradisc.h"
 
 #include GPI_PLATFORM_PATH(sx1276Regs_Fsk.h)
 #include GPI_PLATFORM_PATH(sx1276Regs_LoRa.h)
@@ -11,7 +17,7 @@ uint8_t send_count = 0;
 
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
-#if DEBUG_CHIRPBOX
+#if DEBUG_DISC
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -53,11 +59,11 @@ LoRaWAN_State lorawan_state;
 //***** Global Functions ***************************************************************************
 void lorawan_listen_init(uint8_t node_id)
 {
-    SX1276SetOpMode( RFLR_OPMODE_SLEEP );
-	chirp_radio_config(7, 1, 14, 486300);
+    LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+	loradisc_radio_config(7, 1, 14, 486300);
 	chirp_isr.state = ISR_LORAWAN;
 	lorawan_state = IDLE;
-	SX1276SetPublicNetwork(true);
+	LoRaDS_SX1276SetPublicNetwork(true);
 	if(node_id == 0)
 		lorawan_listen();
 	else
@@ -68,7 +74,7 @@ void lorawan_listen()
 {
 	printf("lorawan_listen\n");
 	// rx config
-	SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+	LoRaDS_SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 										//RFLR_IRQFLAGS_RXDONE |
 										//RFLR_IRQFLAGS_PAYLOADCRCERROR |
 										RFLR_IRQFLAGS_VALIDHEADER |
@@ -76,22 +82,22 @@ void lorawan_listen()
 										RFLR_IRQFLAGS_CADDONE |
 										RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
 										RFLR_IRQFLAGS_CADDETECTED );
-	SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00);
+	LoRaDS_SX1276Write( REG_DIOMAPPING1, ( LoRaDS_SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK) | RFLR_DIOMAPPING1_DIO0_00);
 
-	SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
-	SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+	LoRaDS_SX1276Write( REG_LR_INVERTIQ, ( ( LoRaDS_SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+	LoRaDS_SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 
-	SX1276Write( REG_LR_DETECTOPTIMIZE, SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
-	SX1276Write( REG_LR_IFFREQ2, 0x00 );
-	SX1276Write( REG_LR_IFFREQ1, 0x40 );
+	LoRaDS_SX1276Write( REG_LR_DETECTOPTIMIZE, LoRaDS_SX1276Read( REG_LR_DETECTOPTIMIZE ) & 0x7F );
+	LoRaDS_SX1276Write( REG_LR_IFFREQ2, 0x00 );
+	LoRaDS_SX1276Write( REG_LR_IFFREQ1, 0x40 );
 
-	SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+	LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 	lorawan_state = RX_RUNNING;
 
 	// int i;
 	// for (i = 0; i <= 0x39; i++)
 	// {
-	// 	PRINTF("%02x, %02x\n", i, SX1276Read(i));
+	// 	PRINTF("%02x, %02x\n", i, LoRaDS_SX1276Read(i));
 	// }
 
 	__HAL_TIM_CLEAR_IT(&htim2, TIM_IT_CC1);
@@ -109,8 +115,8 @@ void lorawan_transmission()
 	tx_payload_len = sizeof(data);
     memset(Tx_Buffer, 0xff, tx_payload_len);
 	memcpy(Tx_Buffer, data, tx_payload_len);
-	SX1276WriteFIFO(Tx_Buffer, tx_payload_len);
-	SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
+	LoRaDS_SX1276WriteFIFO(Tx_Buffer, tx_payload_len);
+	LoRaDS_SX1276Write( REG_LR_IRQFLAGSMASK, RFLR_IRQFLAGS_RXTIMEOUT |
 										RFLR_IRQFLAGS_RXDONE |
 										RFLR_IRQFLAGS_PAYLOADCRCERROR |
 										RFLR_IRQFLAGS_VALIDHEADER |
@@ -118,16 +124,16 @@ void lorawan_transmission()
 										RFLR_IRQFLAGS_CADDONE |
 										RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL |
 										RFLR_IRQFLAGS_CADDETECTED );
-	SX1276Write( REG_DIOMAPPING1, ( SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
+	LoRaDS_SX1276Write( REG_DIOMAPPING1, ( LoRaDS_SX1276Read( REG_DIOMAPPING1 ) & RFLR_DIOMAPPING1_DIO0_MASK ) | RFLR_DIOMAPPING1_DIO0_01 );
 
-	SX1276Write( REG_LR_PAYLOADLENGTH, tx_payload_len );
-	SX1276Write( REG_LR_INVERTIQ, ( ( SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
-	SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
+	LoRaDS_SX1276Write( REG_LR_PAYLOADLENGTH, tx_payload_len );
+	LoRaDS_SX1276Write( REG_LR_INVERTIQ, ( ( LoRaDS_SX1276Read( REG_LR_INVERTIQ ) & RFLR_INVERTIQ_TX_MASK & RFLR_INVERTIQ_RX_MASK ) | RFLR_INVERTIQ_RX_OFF | RFLR_INVERTIQ_TX_OFF ) );
+	LoRaDS_SX1276Write( REG_LR_INVERTIQ2, RFLR_INVERTIQ2_OFF );
 	// Full buffer used for Tx
-	SX1276Write( REG_LR_FIFOTXBASEADDR, 0 );
-	SX1276Write( REG_LR_FIFOADDRPTR, 0 );
+	LoRaDS_SX1276Write( REG_LR_FIFOTXBASEADDR, 0 );
+	LoRaDS_SX1276Write( REG_LR_FIFOADDRPTR, 0 );
 
-	SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
+	LoRaDS_SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
 	lorawan_state = TX_RUNNING;
 }
 
@@ -146,15 +152,15 @@ void lorawan_dio0_isr()
     gpi_watchdog_periodic();
     if (lorawan_state == RX_RUNNING)
 	{
-		SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
-		volatile uint8_t packet_len = (uint8_t)SX1276Read( REG_LR_RXNBBYTES );
-		volatile uint8_t irqFlags = SX1276Read( REG_LR_IRQFLAGS );
+		LoRaDS_SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXDONE );
+		volatile uint8_t packet_len = (uint8_t)LoRaDS_SX1276Read( REG_LR_RXNBBYTES );
+		volatile uint8_t irqFlags = LoRaDS_SX1276Read( REG_LR_IRQFLAGS );
 		if(( irqFlags & RFLR_IRQFLAGS_PAYLOADCRCERROR_MASK ) != RFLR_IRQFLAGS_PAYLOADCRCERROR )
 		{
 			memset(Rx_Buffer, 0, BUFFER_SIZE);
 			// read rx packet from start address (in data buffer) of last packet received
-			SX1276Write(REG_LR_FIFOADDRPTR, SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
-			SX1276ReadFifo(Rx_Buffer, packet_len );
+			LoRaDS_SX1276Write(REG_LR_FIFOADDRPTR, LoRaDS_SX1276Read( REG_LR_FIFORXCURRENTADDR ) );
+			LoRaDS_SX1276ReadFifo(Rx_Buffer, packet_len );
 			int i;
 			PRINTF("RX:%d\n", packet_len);
 			for (i = 0; i < packet_len; i++)
@@ -165,11 +171,11 @@ void lorawan_dio0_isr()
 		}
 		else
 		{
-			SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
+			LoRaDS_SX1276Write(REG_LR_IRQFLAGS, RFLR_IRQFLAGS_PAYLOADCRCERROR);
 			PRINTF("RX wrong\n");
 		}
-		SX1276SetOpMode( RFLR_OPMODE_SLEEP );
-		SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
+		LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
+		LoRaDS_SX1276SetOpMode( RFLR_OPMODE_RECEIVER );
 	}
 	else if (lorawan_state == TX_RUNNING)
 	{
@@ -177,11 +183,11 @@ void lorawan_dio0_isr()
 		{
 			send_count++;
 			PRINTF("TXDONE:%d\n", send_count);
-			SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
+			LoRaDS_SX1276Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_TXDONE );
 
 			Gpi_Fast_Tick_Native tx_interval = gpi_tick_fast_native() + GPI_TICK_US_TO_FAST2(1000000);
 			while (gpi_tick_compare_fast_native(gpi_tick_fast_native(), tx_interval) < 0);
-			SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
+			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_TRANSMITTER );
 			lorawan_state = TX_RUNNING;
 		}
 	}

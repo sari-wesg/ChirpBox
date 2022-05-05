@@ -6,16 +6,6 @@
 
 #include "mixer_config.h"
 
-#if DEBUG_CHIRPBOX
-#include <stdio.h>
-#include <stdlib.h>
-
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
-
 /**
   * @brief  Set the FLASH_WRP1xR status of daemon flash area.
   * @param  none
@@ -157,7 +147,7 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
         decode_file.bank = encode_file.bank;
         decode_file.origin_page = encode_file.origin_page + (patchSize + FLASH_PAGE - 1) / FLASH_PAGE;
         decode_file.file_size = LZSS_decode(&encode_file, &decode_file);
-        PRINTF("LZSS_decode:%lu\n", decode_file.file_size);
+        PRINTF_CHIRP("LZSS_decode:%lu\n", decode_file.file_size);
         if(!decode_file.file_size)
             return false;
         else
@@ -203,10 +193,10 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
 
         /* 2. check patch result */
         if (newFile.file_size)
-            PRINTF("Patch success!:%lu, %lu, %lu\n", newFile.file_size, newFile.origin_page, newFile.now_page);
+            PRINTF_CHIRP("Patch success!:%lu, %lu, %lu\n", newFile.file_size, newFile.origin_page, newFile.now_page);
         else
         {
-            PRINTF("Patch failed!\n");
+            PRINTF_CHIRP("Patch failed!\n");
             /* If new file is daemon, erase the whole bank 2, else, erase patch file and new file in bank 2 */
             if (!originalBank)
                 FLASH_If_Erase(0);
@@ -229,16 +219,16 @@ bool FirmwareUpgrade(uint8_t patch_update, uint8_t originalBank, uint32_t origin
     }
 
     /* 3. check file integrity */
-    PRINTF("Md5 check: %lu\n", newFile.file_size);
+    PRINTF_CHIRP("Md5 check: %lu\n", newFile.file_size);
     for (i = 0; i < 16; i++)
     {
-        PRINTF("%02X", md5_code[i]);
+        PRINTF_CHIRP("%02X", md5_code[i]);
     }
-    PRINTF("\n");
+    PRINTF_CHIRP("\n");
 
     if ((newFile.file_size > 0) && (!MD5_File(newFile, md5_code)))
     {
-        PRINTF("md5 error\n");
+        PRINTF_CHIRP("md5 error\n");
         /*
         patching:
         If new file is daemon, erase the whole bank 2, else, erase patch file and new file in bank 2

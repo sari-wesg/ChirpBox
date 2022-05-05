@@ -43,6 +43,22 @@ void __attribute__((naked)) MAIN_TIMER_ISR_NAME()
 	);
 }
 
+//LP_Timer IRQ dispatcher
+void __attribute__((naked)) LP_TIMER_ISR_NAME()
+{
+	__asm__ volatile
+	(
+		"ldr	r0, 1f						\n"		// r0 = chirp_isr.state
+		"ldrb	r0, [r0]					\n"
+		"add	pc, r0						\n"		// jump into vector table (see ARM DUI 0553A for details)
+		".align 2							\n"		// ensure alignment and correct offset
+		"b.w	mixer_lp_timer_isr	 		\n"		// 0: mixer_lp_timer_isr (don't return to here)
+		"1:									\n"
+		".word	%c0							\n"
+		: : "i"(&chirp_isr.state)
+	);
+}
+
 //SX1276DIO0 IRQ dispatcher
 void __attribute__((naked)) SX1276OnDio0Irq()
 {

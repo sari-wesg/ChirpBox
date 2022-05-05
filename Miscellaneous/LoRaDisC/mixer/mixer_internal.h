@@ -61,7 +61,12 @@
 #endif
 
 #include <stdint.h>
-#include "chirp_internal.h"
+#if USE_FOR_CHIRPBOX
+	#include "chirp_internal.h"
+#endif
+#if USE_FOR_LORAWAN
+	#include "lorawan_internal.h"
+#endif
 
 // TODO:
 #include "mixer_config.h"
@@ -390,13 +395,10 @@ typedef struct __attribute__((packed)) LoRaDisC_Config_tag
 
 	/* Disc_Primitive */
 	Disc_Primitive primitive;
-	uint8_t				disem_flag;
-	uint16_t			disem_file_index;
-	uint16_t			disem_file_max;
-	uint16_t			disem_file_index_stay;
-	uint8_t				disem_flag_full_rank;
-	uint32_t			*disem_file_memory;
 
+	uint8_t		timeout_flag;
+	uint8_t		initiator; // if the current node is the discover initiator
+	uint8_t		recv_ok;
 } LoRaDisC_Config;
 
 #if INFO_VECTOR_QUEUE
@@ -427,7 +429,7 @@ typedef union __attribute__((packed)) Packet_tag
 			{
 				uint16_t	app_header;
 
-				uint8_t 	packet_header[2]; // only used when flooding packets in glossy
+				uint8_t 	packet_header[2]; // used when flooding packets or for collect and dissem
 			};
         };
 
@@ -675,10 +677,13 @@ void 			uart_read_data(uint8_t uart_isr_flag, uint8_t buffer_len);
 void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 
 /* loradisc config */
-	void 		chirp_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
-	void 		chirp_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
-	void 		chirp_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrate, int8_t tx_output_power, uint32_t lora_frequency);
-	void 		chirp_payload_distribution(ChirpBox_Task mx_task);
+	void 		loradisc_packet_config(uint8_t mx_num_nodes, uint8_t mx_generation_size, uint8_t mx_payload_size, Disc_Primitive primitive);
+	void 		loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
+	void 		loradisc_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrate, int8_t tx_output_power, uint32_t lora_frequency);
+	void 		loradisc_payload_distribution();
+
+/* loradisc tools */
+	uint32_t Chirp_RSHash(uint8_t* str, uint32_t len);
 
 #ifdef __cplusplus
 	}
