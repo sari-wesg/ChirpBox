@@ -53,7 +53,8 @@ void msf_start(uint8_t node_id)
     {
         LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
         // loradisc_radio_config(12, 1, 14, 486300);
-        loradisc_radio_config(12, 1, 14, 486200);
+        // loradisc_radio_config(12, 1, 14, 486200);
+        loradisc_radio_config(12, 1, 14, 486400);
         chirp_isr.state = ISR_LORAWAN;
         LoRaDS_SX1276SetPublicNetwork(true);
 
@@ -71,7 +72,7 @@ void msf_start(uint8_t node_id)
                 break;
             }
             rssi = LoRaDS_SX1276ReadRssi( MODEM_LORA );
-            if (rssi > -170)
+            if (rssi > -90)
             {
                 if (!time_flag)
                 {
@@ -81,10 +82,10 @@ void msf_start(uint8_t node_id)
                 rssi_tmp[i++] = rssi;
             }
         }
+        for ( i = 0; i < 5000; i++)
+        {
+            printf("%d\n", rssi_tmp[i]);
+        }
+        printf("time:%lu, %lu, %lu\n", gpi_tick_fast_to_us(packet_end - packet_start), packet_start, packet_end);
     }
-    for ( i = 0; i < 5000; i++)
-    {
-        printf("%d\n", rssi_tmp[i]);
-    }
-    printf("time:%lu, %lu, %lu\n", gpi_tick_fast_to_us(packet_end - packet_start), packet_start, packet_end);
 }
