@@ -9,13 +9,14 @@ import time
 
 # This must point to the API interface.
 # The gateway host address / network translator address of the gateway
-server = "TODO:"
+# server = "TODO:"
+server = "[2400:dd02:1008:15:5281:bf7b:42c9:e25c]:8080"
 
 # TODO: The DevEUI for which you want to enqueue the downlink (dev_eui = 0x 00 00 00 00 00 1D 00 4E)
 dev_eui = bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x1D, 0x00, 0x4E])
 
 # The API token (retrieved using the web-interface).
-api_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaGlycHN0YWNrLWFwcGxpY2F0aW9uLXNlcnZlciIsImF1ZCI6ImNoaXJwc3RhY2stYXBwbGljYXRpb24tc2VydmVyIiwic3ViIjoidXNlciIsInVzZXJuYW1lIjoiYWRtaW4ifQ.jQjVFrYYj9wbGmI7QKb90INACuZ8Po-jHAcm9-C1eVM"
+api_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJjaGlycHN0YWNrLWFwcGxpY2F0aW9uLXNlcnZlciIsImF1ZCI6ImNoaXJwc3RhY2stYXBwbGljYXRpb24tc2VydmVyIiwic3ViIjoidXNlciIsInVzZXJuYW1lIjoiYWRtaW4ifQ.mONH1q_hnadSNbKUdVq5CbMj7jV7VBOxr9_YMeBRp9A"
 
 # if __name__ == "__main__":
 def group_send_on_packet():
