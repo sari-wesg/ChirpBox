@@ -68,7 +68,9 @@ int main(void)
   uint8_t node_id_buffer[8];
   node_id_restore(node_id_buffer);
 
-  loradisc_node_id();
+  #if USE_FOR_LORAWAN && LORADISC
+    loradisc_node_id();
+  #endif
 
   lorawan_start();
 
