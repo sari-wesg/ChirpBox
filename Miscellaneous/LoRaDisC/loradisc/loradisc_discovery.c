@@ -118,7 +118,7 @@ Gpi_Slow_Tick_Extended calculate_next_loradisc()
    /* collect data length */
     uint8_t data_length = 8 * sizeof(uint8_t);//TODO:
 
-    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
+    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
 
     loradisc_discover_config.collect_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * loradisc_config.mx_round_length + LORADISC_LATENCY) / 1000 + 1000));
 
@@ -191,7 +191,7 @@ uint8_t compare_discover_initiator_expired()
 {
     uint8_t data_length = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(Gpi_Slow_Tick_Extended);
 
-    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
+    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
     loradisc_discover_update_initiator();
 
     loradisc_discover_config.discover_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * DISCOVER_SLOT_DEFAULT + LORADISC_LATENCY) / 1000));

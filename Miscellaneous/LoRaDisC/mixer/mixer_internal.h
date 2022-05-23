@@ -681,6 +681,7 @@ void 			uart_read_command(uint8_t *p, uint8_t rxbuffer_len);
 	void 		loradisc_slot_config(uint32_t mx_slot_length_in_us, uint16_t mx_round_length, uint32_t period_time_us_plus);
 	void 		loradisc_radio_config(uint8_t lora_spreading_factor, uint8_t lora_codingrate, int8_t tx_output_power, uint32_t lora_frequency);
 	void 		loradisc_payload_distribution();
+	void 		loradisc_lorawan_payload_distribution();
 
 /* loradisc tools */
 	uint32_t Chirp_RSHash(uint8_t* str, uint32_t len);

@@ -125,7 +125,7 @@ void loradisc_init()
     loradisc_config.timeout_flag = 0;
 }
 
-void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency)
+void loradisc_reconfig(uint8_t nodes_num, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency)
 {
     // 1. radio config
     loradisc_radio_config(sf, 1, tp, lora_frequency / 1000);
@@ -139,8 +139,8 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
         loradisc_packet_config(nodes_num, 0, 0, primitive);
         loradisc_config.phy_payload_size = LORADISC_HEADER_LEN + (data_length > FLOODING_SURPLUS_LENGTH ? data_length - FLOODING_SURPLUS_LENGTH : 0);
     }
-    else
-        loradisc_packet_config(nodes_num, generation_size, data_length, primitive);
+    else if (primitive == COLLECTION)
+        loradisc_packet_config(nodes_num, nodes_num - loradisc_discover_config.lorawan_num, data_length, primitive);
     // 4. slot config
     uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
     uint8_t hop_count;
@@ -151,7 +151,7 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
             hop_count = 10 * 2;
         #endif
     else
-        hop_count = nodes_num * (generation_size + 1); // TODO:
+        hop_count = nodes_num * (loradisc_config.mx_generation_size + 1); // TODO:
     loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
 }
 
@@ -165,8 +165,6 @@ void loradisc_discover_init()
     loradisc_discover_config.lorawan_bitmap = 0x00000003; // TODO:
     loradisc_discover_config.lorawan_num = gpi_popcnt_32(loradisc_discover_config.lorawan_bitmap);
     loradisc_discover_config.lorawan_duration = GPI_TICK_S_TO_SLOW(5); //TODO:
-    loradisc_discover_config.collect_duration_slow = GPI_TICK_S_TO_SLOW(10); //TODO:
-    loradisc_discover_config.dissem_duration_slow = GPI_TICK_S_TO_SLOW(10); //TODO:
     loradisc_discover_config.discover_slot = DISCOVER_SLOT_DEFAULT;
     loradisc_discover_config.lorawan_interval_s[node_id_allocate] = 25; // TODO:
 }
@@ -175,8 +173,9 @@ void loradisc_discover_update_initiator()
 {
     if (loradisc_discover_config.discover_on)
         loradisc_config.initiator = gpi_get_msb_32(loradisc_discover_config.node_id_bitmap);
-    else
-        loradisc_config.initiator = 0;
+    /* if collection, the initiator is the node with the smallest LoRaDisC node ID */
+    else if (loradisc_discover_config.collect_on)
+        loradisc_config.initiator = loradisc_discover_config.lorawan_num;
     printf("--- LoRaDisC initiator is node %d\n", loradisc_config.initiator);
 }
 
@@ -262,6 +261,9 @@ void loradisc_collect()
         free(data);
     if (payload_distribution != NULL)
         free(payload_distribution);
+
+    // collection finished
+    loradisc_discover_config.collect_on = 0;
 }
 
 void loradisc_node_id()
@@ -273,9 +275,9 @@ void loradisc_start(Disc_Primitive primitive)
 {
     printf("--- LoRaDisC start\n");
     // TODO: config
-    loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, primitive, 7, 14, CN470_FREQUENCY);
+    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, primitive, 7, 14, CN470_FREQUENCY);
     // payload distribution
-    loradisc_payload_distribution();
+    loradisc_lorawan_payload_distribution();
     /* initiator */
     loradisc_discover_update_initiator();
 
@@ -521,6 +523,33 @@ void loradisc_payload_distribution()
             payload_distribution[i] = i;
     }
 }
+
+/**
+ * @description: To allocate payload among nodes for LoRaWAN packets (dissemination / collection)
+ * @param mx_task: CB_DISSEMINATE / CB_COLLECT
+ * @return: None
+ */
+void loradisc_lorawan_payload_distribution()
+{
+    uint8_t i;
+    payload_distribution = NULL;
+    if (loradisc_config.primitive == DISSEMINATION)
+    {
+        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_generation_size);
+        /* Only the initiator has packets */
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
+            payload_distribution[i] = 0;
+    }
+    else if (loradisc_config.primitive == COLLECTION)
+    {
+        /* Each LoRaDisC node has a packet */
+        assert_reset((loradisc_config.mx_num_nodes == loradisc_config.mx_generation_size + loradisc_discover_config.lorawan_num));
+        payload_distribution = (uint8_t *)malloc(loradisc_config.mx_generation_size);
+        for (i = 0; i < loradisc_config.mx_generation_size; i++)
+            payload_distribution[i] = i + loradisc_discover_config.lorawan_num;
+    }
+}
+
 uint32_t Chirp_RSHash(uint8_t *str, uint32_t len)
 {
     uint32_t b = 378551;

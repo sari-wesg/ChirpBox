@@ -216,6 +216,7 @@ void lorawan_start()
                             /* when discovery ends, immediately start LoRaDisC collect */
                             if (!loradisc_discover_config.discover_on)
                             {
+                                loradisc_discover_config.collect_on = 1;
                                 loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                                 if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
                                 {
@@ -232,7 +233,7 @@ void lorawan_start()
                                     lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
                             }
                         }
-                        else
+                        else if (loradisc_discover_config.collect_on)
                         {
                             loradisc_collect();
                             loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
@@ -255,6 +256,7 @@ void lorawan_start()
                         /* when discovery ends, immediately start LoRaDisC collect */
                         if (!loradisc_discover_config.discover_on)
                         {
+                            loradisc_discover_config.collect_on = 1;
                             loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                             if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
                             {
@@ -271,7 +273,7 @@ void lorawan_start()
                                 lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
                         }
                     }
-                    else
+                    else if (loradisc_discover_config.collect_on)
                     {
                         loradisc_collect();
                         loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();

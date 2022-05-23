@@ -124,6 +124,9 @@
 #define LORAWAN_DURATION_S		5
 #define LPM_TIMER_UPDATE_S		1000 /* Used only to keep lptimer interrupted at regular intervals */
 
+/******************************* dissemination config ******************************/
+#define LORAWAN_ACK         	true
+
 /******************************* discover config ******************************/
 
 #define MAX(a,b) \
@@ -160,6 +163,8 @@ typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 	/* local infomation */
 	uint8_t					lorawan_on;
 	uint8_t					loradisc_on;
+	uint8_t					collect_on;
+	uint8_t					dissem_on;
 	uint8_t 				discover_on; // time for discover
 	uint32_t 				node_id_bitmap; // discovered node id
 
@@ -182,7 +187,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 // loradisc
 void loradisc_node_id();
 void loradisc_init();
-void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency);
+void loradisc_reconfig(uint8_t nodes_num, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency);
 void loradisc_write(uint8_t i, uint8_t *data);
 void loradisc_read(uint8_t *data);
 void loradisc_start(Disc_Primitive primitive);
