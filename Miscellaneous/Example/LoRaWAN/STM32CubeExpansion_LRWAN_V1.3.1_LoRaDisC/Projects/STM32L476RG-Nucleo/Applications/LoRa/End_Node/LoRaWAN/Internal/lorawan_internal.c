@@ -158,7 +158,7 @@ void lpwan_grid_timer_init(Gpi_Slow_Tick_Extended loradisc_gap_start)
 	mask_slow_timer();
 	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
     __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
-    LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + GPI_TICK_MS_TO_SLOW(1000);
+    LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + GPI_TICK_MS_TO_SLOW(1);
     while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
 
     REORDER_BARRIER();

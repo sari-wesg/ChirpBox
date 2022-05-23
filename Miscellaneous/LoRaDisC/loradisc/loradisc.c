@@ -18,9 +18,9 @@
 //***** Forward Declarations ***********************************************************************
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047, 0x004a0022}; // TODO: delft
+// uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047, 0x004a0022}; // TODO: delft
 // uint32_t dev_id_list[NODE_LENGTH] = {0x004a0022, 0x00350017}; // TODO: oead
-// uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d}; // TODO: tu graz
+uint32_t dev_id_list[NODE_LENGTH] = {0x00440034, 0x0027002d, 0x004a0022, 0x00350017}; // TODO: tu graz
 // uint32_t dev_id_list[NODE_LENGTH] = {0x001E0037, 0x0042002C, 0x004E004A}; // TODO: sari
 uint8_t MX_NUM_NODES_CONF;
 uint8_t *data, data_length;
@@ -151,10 +151,8 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t generation_size, uint8_t data_
             hop_count = 10 * 2;
         #endif
     else
-        hop_count = nodes_num * generation_size;
+        hop_count = nodes_num * (generation_size + 1); // TODO:
     loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
-    // 5. payload distribution
-    loradisc_payload_distribution();
 }
 
 void loradisc_discover_init()
@@ -164,9 +162,9 @@ void loradisc_discover_init()
     loradisc_discover_config.lorawan_on = 1;
     loradisc_discover_config.node_id_bitmap = 0x00000001;
 
-    loradisc_discover_config.lorawan_bitmap = 0x00000007; // TODO:
+    loradisc_discover_config.lorawan_bitmap = 0x00000003; // TODO:
     loradisc_discover_config.lorawan_num = gpi_popcnt_32(loradisc_discover_config.lorawan_bitmap);
-    loradisc_discover_config.discover_duration_gap = GPI_TICK_S_TO_SLOW(5); //TODO:
+    loradisc_discover_config.lorawan_duration = GPI_TICK_S_TO_SLOW(5); //TODO:
     loradisc_discover_config.collect_duration_slow = GPI_TICK_S_TO_SLOW(10); //TODO:
     loradisc_discover_config.dissem_duration_slow = GPI_TICK_S_TO_SLOW(10); //TODO:
     loradisc_discover_config.discover_slot = DISCOVER_SLOT_DEFAULT;
@@ -179,7 +177,7 @@ void loradisc_discover_update_initiator()
         loradisc_config.initiator = gpi_get_msb_32(loradisc_discover_config.node_id_bitmap);
     else
         loradisc_config.initiator = 0;
-    printf("loradisc_config.initiator:%d, %d\n", loradisc_config.initiator, node_id_allocate);
+    printf("--- LoRaDisC initiator is node %d\n", loradisc_config.initiator);
 }
 
 
@@ -189,7 +187,7 @@ void loradisc_discover(uint16_t lorawan_interval_s)
     Gpi_Slow_Tick_Extended discover_start = gpi_tick_slow_extended();
     loradisc_discover_config.loradisc_on = 1;
 
-    Gpi_Slow_Tick_Extended gap_to_node_0 = loradisc_discover_config.lorawan_gap;
+    int32_t gap_to_node_0 = loradisc_discover_config.lorawan_diff;
     // update data
     data = NULL;
     data_length = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(Gpi_Slow_Tick_Extended);
@@ -215,7 +213,8 @@ void loradisc_discover(uint16_t lorawan_interval_s)
         /* read data */
         uint8_t discover_node = data[0];
         /* update discover data */
-        loradisc_discover_config.node_id_bitmap |= 1 << (discover_node + 1);
+        if (discover_node + 1 < loradisc_discover_config.lorawan_num)
+            loradisc_discover_config.node_id_bitmap |= 1 << (discover_node + 1);
         loradisc_discover_config.lorawan_interval_s[discover_node] = data[sizeof(uint8_t)] | data[sizeof(uint8_t) + 1] << 8;
         gap_to_node_0 = data[sizeof(uint8_t) + 2] | data[sizeof(uint8_t) + 3] << 8 | data[sizeof(uint8_t) + 4] << 16 | data[sizeof(uint8_t) + 5] << 24;
 
@@ -223,20 +222,20 @@ void loradisc_discover(uint16_t lorawan_interval_s)
         if (discover_node != node_id_allocate)
         {
             if (!discover_node) // node 0
-                loradisc_discover_config.lorawan_begin[discover_node] = gpi_tick_slow_extended() - loradisc_discover_config.discover_duration_slow - loradisc_discover_config.discover_duration_gap - loradisc_discover_config.lorawan_gap;
+                loradisc_discover_config.lorawan_begin[discover_node] = gpi_tick_slow_extended() - loradisc_discover_config.discover_duration_slow - loradisc_discover_config.lorawan_duration;
             else // node x
                 loradisc_discover_config.lorawan_begin[discover_node] = loradisc_discover_config.lorawan_begin[0] + gap_to_node_0;
         }
 
-        /* update lorawan_gap compared to node 0 */
-        if ((!discover_node) && (node_id_allocate))
-            loradisc_discover_config.lorawan_gap = loradisc_discover_config.lorawan_begin[node_id_allocate] - loradisc_discover_config.lorawan_begin[discover_node];
+        /* update lorawan_diff compared to node 0 */
+        if ((!discover_node) && (node_id_allocate) && ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32)))))
+            loradisc_discover_config.lorawan_diff = (int32_t)((int32_t)loradisc_discover_config.lorawan_begin[node_id_allocate] - (int32_t)loradisc_discover_config.lorawan_begin[discover_node]);
 
         /* end discover when all nodes are collected */
         if (discover_node + 1 >= loradisc_discover_config.lorawan_num)
             loradisc_discover_config.discover_on = 0;
 
-        printf("lorawan_gap: %lu, %d, %d, %d\n", discover_node, (int32_t)(gpi_tick_slow_to_us(loradisc_discover_config.lorawan_gap)), (int32_t)(gpi_tick_slow_to_us(gap_to_node_0)), loradisc_discover_config.lorawan_interval_s[discover_node]);
+        printf("--- discover initiator is node %d, discover's lorawan_diff is %d, node's lorawan_diff is %d, node's lorawan_interval_s is %d, node_bitmap: %x\n", discover_node, (int32_t)(gap_to_node_0), (int32_t)(loradisc_discover_config.lorawan_diff), loradisc_discover_config.lorawan_interval_s[discover_node], loradisc_discover_config.node_id_bitmap);
     }
     loradisc_discover_update_initiator();
 
@@ -249,6 +248,7 @@ void loradisc_discover(uint16_t lorawan_interval_s)
 void loradisc_collect()
 {
     loradisc_discover_config.loradisc_on = 1;
+    loradisc_discover_config.lorawan_on = 0;
 
     // TODO: data from sensor for gateway
     // update data
@@ -271,8 +271,12 @@ void loradisc_node_id()
 
 void loradisc_start(Disc_Primitive primitive)
 {
+    printf("--- LoRaDisC start\n");
     // TODO: config
     loradisc_reconfig(MX_NUM_NODES_CONF, MX_NUM_NODES_CONF, data_length, primitive, 7, 14, CN470_FREQUENCY);
+    // payload distribution
+    loradisc_payload_distribution();
+    /* initiator */
     loradisc_discover_update_initiator();
 
     // round start:
@@ -283,6 +287,7 @@ void loradisc_start(Disc_Primitive primitive)
     loradisc_config.recv_ok = 0;
     while ((!loradisc_config.recv_ok) && (loradisc_discover_config.loradisc_on))
     {
+        /* node is the receiver, and cannot complete LoRaDisC before LoRaWAN, end LoRaDisC round immediately */
         if ((loradisc_discover_config.discover_on) && (!reset_discover_slot_num()))
         {
             /* receiver time limited, end the discover */

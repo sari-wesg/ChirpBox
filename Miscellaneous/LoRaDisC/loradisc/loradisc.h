@@ -55,12 +55,15 @@
 #endif
 
 /***************************** radio config ****************************/
-#define REGION_CN470							   // Frequency by country
-#define USE_MODEM_LORA							   // Radio modem
-#define CHANNEL_MAX                                9
-#define CHANNEL_MIN                                0
-#define CHANNEL_STEP                               200000
-#define CN470_FREQUENCY							   486300000
+#define REGION_CN470							   	// Frequency by country
+#define USE_MODEM_LORA							   	// Radio modem
+#define CHANNEL_MAX                                	9
+#define CHANNEL_MIN                                	0
+#define CHANNEL_STEP                               	200000
+#define CN470_FREQUENCY							   	486300000
+
+
+#define LORADISC_LATENCY						   	177320
 
 #if defined( USE_MODEM_LORA )
 
@@ -117,7 +120,21 @@
 /******************************* discover config ******************************/
 #define LORAWAN_MAX_NUM         8
 #define DISCOVER_SLOT_DEFAULT   60
+#define LORAWAN_TIME_LENGTH		2
+#define LORAWAN_DURATION_S		5
+#define LPM_TIMER_UPDATE_S		1000 /* Used only to keep lptimer interrupted at regular intervals */
 
+/******************************* discover config ******************************/
+
+#define MAX(a,b) \
+({ __typeof__ (a) _a = (a); \
+	__typeof__ (b) _b = (b); \
+	_a > _b ? _a : _b; })
+
+#define MIN(a,b) \
+({ __typeof__ (a) _a = (a); \
+	__typeof__ (b) _b = (b); \
+	_a <= _b ? _a : _b; })
 
 //**************************************************************************************************
 //***** Global Typedefs and Class Declarations *****************************************************
@@ -138,7 +155,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 	Gpi_Slow_Tick_Extended 	dissem_duration_slow;
 	uint8_t					lorawan_num;	// total number of lorawan nodes
 	uint32_t 				lorawan_bitmap; // node for lorawan
-	Gpi_Slow_Tick_Extended 	discover_duration_gap;
+	Gpi_Slow_Tick_Extended 	lorawan_duration;
 
 	/* local infomation */
 	uint8_t					lorawan_on;
@@ -146,8 +163,8 @@ typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 	uint8_t 				discover_on; // time for discover
 	uint32_t 				node_id_bitmap; // discovered node id
 
-	Gpi_Slow_Tick_Extended	lorawan_gap; // self compared to node 0
-	Gpi_Slow_Tick_Extended	lorawan_begin[LORAWAN_MAX_NUM]; // the start time of all nodes
+	int32_t					lorawan_diff; // self compared to node 0
+	Gpi_Slow_Tick_Extended	lorawan_begin[LORAWAN_MAX_NUM]; // the begin time of all nodes
 	Gpi_Slow_Tick_Extended 	next_loradisc_gap;
 
 	uint8_t					discover_slot;
@@ -205,9 +222,14 @@ void RTC_Waiting_Count_Sleep(uint32_t Count_wait);
 void loradisc_discover_init();
 void loradisc_discover_update_initiator();
 void loradisc_discover(uint16_t lorawan_interval_s);
-void calculate_next_loradisc();
+Gpi_Slow_Tick_Extended calculate_next_loradisc();
 void calculate_next_lorawan();
 uint8_t compare_discover_initiator_expired();
 uint8_t reset_discover_slot_num();
+
+/* Calculate time for LoRaDisC */
+int check_combination_groups(int a[], int b[], const int N, const int M);
+void generate_combination(int n, int m, int a[], int b[], const int N, const int M, Gpi_Slow_Tick_Extended loradisc_start_time[], Gpi_Slow_Tick_Extended loradisc_end_time[], Gpi_Slow_Tick_Extended loradisc_duration);
+void select_LoRaDisC_time(uint8_t node_number, uint8_t time_length, Gpi_Slow_Tick_Extended loradisc_start_time[], Gpi_Slow_Tick_Extended loradisc_end_time[], Gpi_Slow_Tick_Extended loradisc_duration);
 
 #endif  /* __LORADISC_H__ */
