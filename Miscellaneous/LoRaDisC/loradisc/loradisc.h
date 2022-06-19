@@ -119,15 +119,18 @@
 
 /******************************* discover config ******************************/
 #define LORAWAN_MAX_NUM         8
-#define DISCOVER_SLOT_DEFAULT   60
-#define LORAWAN_TIME_LENGTH		2
+#define DISCOVER_SLOT_DEFAULT   40
+#define LORAWAN_TIME_LENGTH		5 //TODO:
 #define LORAWAN_DURATION_S		5
+#define LORAWAN_GUARDTIME_S		0
 #define LPM_TIMER_UPDATE_S		1000 /* Used only to keep lptimer interrupted at regular intervals */
 
-/******************************* dissemination config ******************************/
-#define LORAWAN_ACK         	true
+/******************************* collect config ********************************/
+#define LORADISC_COLLECT_LENGTH 9
 
-/******************************* discover config ******************************/
+/******************************* dissemination config **************************/
+
+
 
 #define MAX(a,b) \
 ({ __typeof__ (a) _a = (a); \
@@ -148,25 +151,26 @@ typedef enum Disc_Primitive_tag
 	COLLECTION = 3
 } Disc_Primitive;
 
-
 /* local config */
 typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 {
 	/* defined infomation */
 	Gpi_Slow_Tick_Extended 	discover_duration_slow;
-	Gpi_Slow_Tick_Extended 	collect_duration_slow;
-	Gpi_Slow_Tick_Extended 	dissem_duration_slow;
+	Gpi_Slow_Tick_Extended 	loradisc_duration_slow;
+	Gpi_Slow_Tick_Extended 	lorawan_duration_slow;
 	uint8_t					lorawan_num;	// total number of lorawan nodes
 	uint32_t 				lorawan_bitmap; // node for lorawan
 	Gpi_Slow_Tick_Extended 	lorawan_duration;
 
 	/* local infomation */
 	uint8_t					lorawan_on;
-	uint8_t					loradisc_on;
 	uint8_t					collect_on;
+	uint8_t					loradisc_lorawan_on;
 	uint8_t					dissem_on;
+	uint8_t					loradisc_on;
 	uint8_t 				discover_on; // time for discover
 	uint32_t 				node_id_bitmap; // discovered node id
+	uint8_t					lorawan_relay_id;
 
 	int32_t					lorawan_diff; // self compared to node 0
 	Gpi_Slow_Tick_Extended	lorawan_begin[LORAWAN_MAX_NUM]; // the begin time of all nodes
@@ -236,5 +240,12 @@ uint8_t reset_discover_slot_num();
 int check_combination_groups(int a[], int b[], const int N, const int M);
 void generate_combination(int n, int m, int a[], int b[], const int N, const int M, Gpi_Slow_Tick_Extended loradisc_start_time[], Gpi_Slow_Tick_Extended loradisc_end_time[], Gpi_Slow_Tick_Extended loradisc_duration);
 void select_LoRaDisC_time(uint8_t node_number, uint8_t time_length, Gpi_Slow_Tick_Extended loradisc_start_time[], Gpi_Slow_Tick_Extended loradisc_end_time[], Gpi_Slow_Tick_Extended loradisc_duration);
+
+/* relay the loradisc packets with lorawan */
+uint32_t lorawan_relay_node_id_allocate(uint8_t relay_id);
+uint8_t lorawan_relay_collect(uint8_t relay_id);
+uint8_t lorawan_relay_max_packetnum();
+
+int lorawan_loradisc_send(uint8_t *data, uint8_t data_length);
 
 #endif  /* __LORADISC_H__ */

@@ -216,6 +216,7 @@ void lora_tx_rate(uint8_t tx_rate);
 void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam );
 #if LORADISC
 void LORA_ReInit ();
+void LORA_Init_node_id();
 #endif
 
 /**

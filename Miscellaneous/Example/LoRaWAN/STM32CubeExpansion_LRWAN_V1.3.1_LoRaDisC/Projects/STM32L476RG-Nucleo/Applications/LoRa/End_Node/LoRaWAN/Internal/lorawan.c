@@ -173,11 +173,12 @@ void lorawan_start()
                     {
                         if(loradisc_discover_config.discover_on)
                         {
-                            /* keep the lptimer on */
+                            /* wakeup after the lorawan packet ends */
                             lpwan_grid_timer_init(loradisc_discover_config.lorawan_duration);
                         }
                         else
                         {
+                            /* next loradisc */
                             loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                             printf("--- next:%lu, now:%lu\n", loradisc_discover_config.next_loradisc_gap, gpi_tick_slow_extended());
                             if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
@@ -204,7 +205,6 @@ void lorawan_start()
                             {
                                 if (compare_discover_initiator_expired())
                                 {
-                                    printf("--- Node %d starts LoRaDisC\n", node_id_allocate);
                                     loradisc_discover(loradisc_discover_config.lorawan_interval_s[node_id_allocate]);
                                 }
                                 else
@@ -218,29 +218,97 @@ void lorawan_start()
                             {
                                 loradisc_discover_config.collect_on = 1;
                                 loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
+                                /* next is collection */
                                 if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
                                 {
-                                    if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap) >= 0)
-                                    {
-                                        lpwan_grid_timer_init(GPI_TICK_MS_TO_SLOW(1));
-                                    }
-                                    else
-                                    {
+                                    // if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap) >= 0)
+                                    // {
+                                    //     lpwan_grid_timer_init(GPI_TICK_MS_TO_SLOW(1));
+                                    // }
+                                    // else
+                                    // {
                                         lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
-                                    }
+                                    // }
                                 }
                                 else
                                     lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
                             }
                         }
-                        else if (loradisc_discover_config.collect_on)
+                        /* LoRaDisC collection */
+                        else if ((loradisc_discover_config.collect_on) && (!loradisc_discover_config.loradisc_lorawan_on))
                         {
                             loradisc_collect();
+                            /* next is lorawan relay */
                             loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                             if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
                                 lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
                             else
                                 lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
+                        }
+                        /* start LoRaWAN relay LoRaDisC packets */
+                        else if ((loradisc_discover_config.collect_on) && (loradisc_discover_config.loradisc_lorawan_on))
+                        {
+                            if(loradisc_discover_config.loradisc_on)
+                            {
+                                /* wait until all lorawan nodes relay lorawan packet */
+                                /* next will return back and then is dissem */
+                                if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap + loradisc_discover_config.lorawan_duration_slow) < 0)
+                                {
+                                    lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap + loradisc_discover_config.lorawan_duration_slow - gpi_tick_slow_extended());
+                                }
+                                else
+                                {
+                                    /* change the state */
+                                    if (loradisc_discover_config.dissem_on)
+                                        loradisc_discover_config.collect_on = 0;
+
+                                    loradisc_discover_config.loradisc_lorawan_on = 0;
+                                    /* next is dissem or collect, depends on dissem_on */
+                                    loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
+                                    if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
+                                    {
+                                        // if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap) >= 0)
+                                        // {
+                                        //     lpwan_grid_timer_init(GPI_TICK_MS_TO_SLOW(1));
+                                        // }
+                                        // else
+                                        // {
+                                            lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
+                                        // }
+                                    }
+                                    else
+                                        lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
+                                }
+                            }
+                            else
+                            {
+                                printf("start relay!!!!\n");
+                                /* start to relay LoRaDisC packets with LoRaWAN */
+                                /* LoRaWAN */
+                                uint32_t node_id = lorawan_relay_node_id_allocate(loradisc_discover_config.lorawan_relay_id);
+                                printf("node_id:%x\n", node_id);
+                                LORA_Init_node_id(node_id);
+                                LORA_ReInit();
+                                LORA_Join();
+                                /*Send*/
+                                uint8_t relay_ends = lorawan_relay_collect(loradisc_discover_config.lorawan_relay_id);
+                                loradisc_discover_config.lorawan_relay_id++;
+                                /* if all relay packets end, then switch to loradisc (for flag) */
+                                if (relay_ends)
+                                {
+                                    loradisc_discover_config.loradisc_on = 1;
+                                }
+                                lpwan_grid_timer_init(loradisc_discover_config.lorawan_duration);
+                            }
+                        }
+                        else if (loradisc_discover_config.dissem_on)
+                        {
+                            // TODO: start dissem
+                            // loradisc_dissem();
+
+                            /* change the state */
+                            loradisc_discover_config.dissem_on = 0;
+                            loradisc_discover_config.collect_on = 1;
                         }
                     }
                 }
@@ -260,30 +328,74 @@ void lorawan_start()
                             loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                             if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
                             {
-                                if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap) >= 0)
-                                {
-                                    lpwan_grid_timer_init(GPI_TICK_MS_TO_SLOW(1));
-                                }
-                                else
-                                {
+                                // if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap) >= 0)
+                                // {
+                                //     lpwan_grid_timer_init(GPI_TICK_MS_TO_SLOW(1));
+                                // }
+                                // else
+                                // {
                                     lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
-                                }
+                                // }
                             }
                             else
                                 lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
                         }
                     }
-                    else if (loradisc_discover_config.collect_on)
+                    /* LoRaDisC collection */
+                    else if ((loradisc_discover_config.collect_on) && (!loradisc_discover_config.loradisc_lorawan_on))
                     {
                         loradisc_collect();
+                        /* next is lorawan relay, will wake up to calculate dissem time */
                         loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                         if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
                             lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
                         else
                             lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
                     }
+                    /* start LoRaWAN relay LoRaDisC packets */
+                    else if ((loradisc_discover_config.collect_on) && (loradisc_discover_config.loradisc_lorawan_on))
+                    {
+                        /* wait until all lorawan nodes relay lorawan packet */
+                        /* next will return back and then is dissem */
+                        if (gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap + loradisc_discover_config.lorawan_duration_slow) < 0)
+                        {
+                            lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap + loradisc_discover_config.lorawan_duration_slow - gpi_tick_slow_extended());
+                        }
+                        else
+                        {
+                            /* change the state */
+                            if (loradisc_discover_config.dissem_on)
+                                loradisc_discover_config.collect_on = 0;
+
+                            loradisc_discover_config.loradisc_lorawan_on = 0;
+                            /* next is dissem */
+                            loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
+                            if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
+                            {
+                                // if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap) >= 0)
+                                // {
+                                //     lpwan_grid_timer_init(GPI_TICK_MS_TO_SLOW(1));
+                                // }
+                                // else
+                                // {
+                                    lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
+                                // }
+                            }
+                            else
+                                lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
+                        }
+                    }
+                    else if (loradisc_discover_config.dissem_on)
+                    {
+                        // TODO: start dissem
+                        // loradisc_dissem();
+
+                        /* change the state */
+                        loradisc_discover_config.dissem_on = 0;
+                        loradisc_discover_config.collect_on = 1;
+                    }
                 }
-                calculate_next_lorawan();
+                // calculate_next_lorawan();
                 chirp_isr.state = ISR_LPWAN;
             #endif
         }
@@ -485,7 +597,7 @@ static void Send(void *context)
 
 static void OnTxTimerEvent(void *context)
 {
-    uint16_t time_value;
+    uint32_t time_value;
     #if USE_FOR_LORAWAN && LORADISC
         time_value = loradisc_discover_config.lorawan_interval_s[node_id_allocate] * 1000;
         loradisc_discover_config.lorawan_on = 1;
@@ -540,7 +652,7 @@ static void LoraStartTx(TxEventType_t EventType)
     {
         /* send everytime timer elapses */
         TimerInit(&TxTimer, OnTxTimerEvent);
-        uint16_t time_value;
+        uint32_t time_value;
         #if USE_FOR_LORAWAN && LORADISC
             time_value = loradisc_discover_config.lorawan_interval_s[node_id_allocate];
         #else

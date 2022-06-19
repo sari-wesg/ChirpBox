@@ -7,6 +7,11 @@
 #include "gpi/olf.h"
 #include "gpi/clocks.h"
 
+/* for relay loradisc with lorawan */
+#include "lora.h"
+#include "lorawan.h"
+
+
 //**************************************************************************************************
 //***** Local Defines and Consts *******************************************************************
 
@@ -30,7 +35,7 @@ extern uint8_t MX_NUM_NODES_CONF;
 uint32_t lastest_loradisc_time;
 Gpi_Slow_Tick_Extended max_loradisc_start_time, min_loradisc_end_time, min_max_loradisc_start_time;
 
-
+extern lora_AppData_t AppData;
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
 
@@ -116,11 +121,22 @@ void select_LoRaDisC_time(uint8_t node_number, uint8_t time_length, Gpi_Slow_Tic
 Gpi_Slow_Tick_Extended calculate_next_loradisc()
 {
    /* collect data length */
-    uint8_t data_length = 8 * sizeof(uint8_t);//TODO:
+    uint8_t data_length = LORADISC_COLLECT_LENGTH;  //TODO:
 
-    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
+    if (loradisc_discover_config.loradisc_lorawan_on)
+    {
+        uint8_t packet_num = lorawan_relay_max_packetnum();
+        loradisc_discover_config.lorawan_duration_slow = packet_num *         GPI_TICK_S_TO_SLOW(LORAWAN_DURATION_S + LORAWAN_GUARDTIME_S);
+    }
+    else
+    {
+        if (loradisc_discover_config.collect_on)
+            loradisc_reconfig(MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
+        else if (loradisc_discover_config.dissem_on)
+            loradisc_reconfig(MX_NUM_NODES_CONF, data_length, DISSEMINATION, 7, 14, CN470_FREQUENCY);
 
-    loradisc_discover_config.collect_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * loradisc_config.mx_round_length + LORADISC_LATENCY) / 1000 + 1000));
+        loradisc_discover_config.loradisc_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * loradisc_config.mx_round_length + LORADISC_LATENCY) / 1000 + 1000));
+    }
 
     uint8_t lorawan_node_number = gpi_popcnt_32(loradisc_discover_config.lorawan_bitmap);
 
@@ -149,15 +165,18 @@ Gpi_Slow_Tick_Extended calculate_next_loradisc()
         }
     }
 
-    printf("now:%lu, %lu\n", gpi_tick_slow_extended(), loradisc_discover_config.collect_duration_slow);
+    printf("now:%lu, %lu\n", gpi_tick_slow_extended(), loradisc_discover_config.loradisc_duration_slow);
     for (uint8_t i = 0; i < lorawan_node_number * LORAWAN_TIME_LENGTH; i++)
     {
         printf("%lu, %lu\n", (Gpi_Slow_Tick_Extended)(loradisc_start_time[i]), (Gpi_Slow_Tick_Extended)(loradisc_end_time[i]));
     }
 
-    select_LoRaDisC_time(lorawan_node_number, LORAWAN_TIME_LENGTH, loradisc_start_time, loradisc_end_time, loradisc_discover_config.collect_duration_slow);
+    if (loradisc_discover_config.loradisc_lorawan_on)
+        select_LoRaDisC_time(lorawan_node_number, LORAWAN_TIME_LENGTH, loradisc_start_time, loradisc_end_time, loradisc_discover_config.lorawan_duration_slow);
+    else
+        select_LoRaDisC_time(lorawan_node_number, LORAWAN_TIME_LENGTH, loradisc_start_time, loradisc_end_time, loradisc_discover_config.loradisc_duration_slow);
 
-    printf("collection:%lu\n", min_max_loradisc_start_time);
+    printf("loradisc:%lu\n", min_max_loradisc_start_time);
     return min_max_loradisc_start_time;
 }
 // ---------------------------------------------------------------------------------
@@ -169,7 +188,7 @@ void calculate_next_lorawan()
     for (i = 0; i < discovered_node_num; i++)
     {
         printf("--- node %d, now: %lu\n", i, gpi_tick_slow_extended());
-        /* lorawan time is behind now */
+        /* lorawan time is before now */
         if (gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.lorawan_begin[i]) >= 0)
         {
             int8_t multiple_lorawan_interval = (int32_t)(gpi_tick_slow_extended() - loradisc_discover_config.lorawan_begin[i] + GPI_TICK_S_TO_SLOW(loradisc_discover_config.lorawan_interval_s[i]) - 1) / GPI_TICK_S_TO_SLOW(loradisc_discover_config.lorawan_interval_s[i]);
@@ -248,4 +267,34 @@ uint8_t reset_discover_slot_num()
     return LoRaDisC_complete;
 }
 
+int lorawan_loradisc_send(uint8_t *data, uint8_t data_length)
+{
+    lora_tx_rate(DR_5);
+    AppData.Port = LORAWAN_APP_PORT;
+    // uint32_t i = 0;
+    // send_count++;
+    // PRINTF("send:%lu\n", send_count);
+    memcpy(AppData.Buff, (uint8_t *)(data), data_length);
+
+    // AppData.Buff[i++] = send_count >> 8;
+    // AppData.Buff[i++] = send_count;
+    // AppData.Buff[i++] = 0xff;
+    // AppData.Buff[i++] = 0xee;
+    // AppData.Buff[i++] = 0xdd;
+    // AppData.Buff[i++] = 0xcc;
+    // AppData.Buff[i++] = 0xbb;
+    // AppData.Buff[i++] = 0xaa;
+
+    AppData.BuffSize = data_length;
+    // for (i = 0; i < AppData.BuffSize; i++)
+    // {
+    //     /* code */
+    //     PRINTF("%02x ", AppData.Buff[i]);
+    // }
+    // PRINTF("\n");
+
+    LORA_send(&AppData, LORAWAN_DEFAULT_CONFIRM_MSG_STATE);
+
+    return 0;
+}
 //**************************************************************************************************

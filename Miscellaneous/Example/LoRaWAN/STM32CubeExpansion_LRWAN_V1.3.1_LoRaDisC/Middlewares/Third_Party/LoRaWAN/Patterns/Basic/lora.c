@@ -610,6 +610,145 @@ void LORA_ReInit ()
   /*set Mac statein Idle*/
   LoRaMacStart( );
 }
+
+void LORA_Init_node_id(uint32_t node_id)
+{
+  uint8_t devEui[] = LORAWAN_DEVICE_EUI;
+  uint8_t joinEui[] = LORAWAN_JOIN_EUI;
+
+  // /* init the Tx Duty Cycle*/
+  // LoRaParamInit = LoRaParam;
+
+  // /* init the main call backs*/
+  // LoRaMainCallbacks = callbacks;
+
+#if (STATIC_DEVICE_EUI != 1)
+  // LoRaMainCallbacks->BoardGetUniqueId( devEui );
+  devEui[7] = node_id;
+  devEui[6] = node_id >> 8;
+  devEui[5] = node_id >> 16;
+  devEui[4] = node_id >> 24;
+  devEui[3] = 0;
+  devEui[2] = 0;
+  devEui[1] = 0;
+  devEui[0] = 0;
+#endif
+
+// #if( OVER_THE_AIR_ACTIVATION != 0 )
+
+//   PRINTF( "OTAA\n\r");
+//   PRINTF( "DevEui= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\n\r", HEX8(devEui));
+//   PRINTF( "AppEui= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\n\r", HEX8(joinEui));
+//   PRINTF( "AppKey= %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n\r", HEX16(AppKey));
+// #else
+
+// #if (STATIC_DEVICE_ADDRESS != 1)
+//   // Random seed initialization
+//   srand1( LoRaMainCallbacks->BoardGetRandomSeed( ) );
+//   // Choose a random device address
+//   DevAddr = randr( 0, 0x01FFFFFF );
+// #endif
+#if CHIRPBOX_LORAWAN
+  DevAddr = (uint32_t)(node_id);
+#endif
+  PRINTF( "ABP\n\r");
+  PRINTF( "DevEui= %02X-%02X-%02X-%02X-%02X-%02X-%02X-%02X\n\r", HEX8(devEui));
+  PRINTF( "DevAdd=  %08X\n\r", DevAddr) ;
+  PRINTF( "NwkSKey= %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n\r", HEX16(NwkSEncKey));
+  PRINTF( "AppSKey= %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X\n\r", HEX16(AppSKey));
+// #endif
+//   LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
+//   LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
+//   LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
+//   LoRaMacPrimitives.MacMlmeIndication = MlmeIndication;
+//   LoRaMacCallbacks.GetBatteryLevel = LoRaMainCallbacks->BoardGetBatteryLevel;
+//   LoRaMacCallbacks.GetTemperatureLevel = LoRaMainCallbacks->BoardGetTemperatureLevel;
+//   LoRaMacCallbacks.MacProcessNotify = LoRaMainCallbacks->MacProcessNotify;
+// #if defined( REGION_AS923 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AS923 );
+// #elif defined( REGION_AU915 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AU915 );
+// #elif defined( REGION_CN470 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN470 );
+// #elif defined( REGION_CN779 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN779 );
+// #elif defined( REGION_EU433 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU433 );
+// #elif defined( REGION_IN865 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_IN865 );
+// #elif defined( REGION_EU868 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU868 );
+// #elif defined( REGION_KR920 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_KR920 );
+// #elif defined( REGION_US915 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915 );
+// #elif defined( REGION_RU864 )
+//   LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_RU864 );
+// #else
+//     #error "Please define a region in the compiler options."
+// #endif
+
+// #if defined( HYBRID )
+// #if defined( REGION_US915 ) || defined( REGION_AU915 )
+//   uint16_t channelMask[] = { 0x00FF, 0x0000, 0x0000, 0x0000, 0x0001, 0x0000};
+//   mibReq.Type = MIB_CHANNELS_MASK;
+//   mibReq.Param.ChannelsMask = channelMask;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+//   mibReq.Type = MIB_CHANNELS_DEFAULT_MASK;
+//   mibReq.Param.ChannelsDefaultMask = channelMask;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+// #endif
+// #if defined( REGION_CN470 )
+//   uint16_t channelMask[] = { 0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000};
+//   mibReq.Type = MIB_CHANNELS_MASK;
+//   mibReq.Param.ChannelsMask = channelMask;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+//   mibReq.Type = MIB_CHANNELS_DEFAULT_MASK;
+//   mibReq.Param.ChannelsDefaultMask = channelMask;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+// #endif
+// #endif
+
+  mibReq.Type = MIB_DEV_EUI;
+  mibReq.Param.DevEui = devEui;
+  LoRaMacMibSetRequestConfirm( &mibReq );
+
+//   mibReq.Type = MIB_JOIN_EUI;
+//   mibReq.Param.JoinEui = joinEui;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+
+//   mibReq.Type = MIB_ADR;
+//   mibReq.Param.AdrEnable = LoRaParamInit->AdrEnable;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+
+//   mibReq.Type = MIB_PUBLIC_NETWORK;
+//   mibReq.Param.EnablePublicNetwork = LoRaParamInit->EnablePublicNetwork;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+
+//   mibReq.Type = MIB_APP_KEY;
+//   mibReq.Param.AppKey = AppKey;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+
+//   mibReq.Type = MIB_NWK_KEY;
+//   mibReq.Param.NwkKey = NwkKey;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+
+//   mibReq.Type = MIB_DEVICE_CLASS;
+//   mibReq.Param.Class= CLASS_A;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+
+// #if defined( REGION_EU868 ) || defined( REGION_RU864 ) || defined( REGION_CN779 ) || defined( REGION_EU433 )
+//   LoRaMacTestSetDutyCycleOn( LORAWAN_DUTYCYCLE_ON );
+// #endif
+
+//   mibReq.Type = MIB_SYSTEM_MAX_RX_ERROR;
+//   mibReq.Param.SystemMaxRxError = 20;
+//   LoRaMacMibSetRequestConfirm( &mibReq );
+
+//   /*set Mac statein Idle*/
+//   LoRaMacStart( );
+}
+
 #endif
 
 
