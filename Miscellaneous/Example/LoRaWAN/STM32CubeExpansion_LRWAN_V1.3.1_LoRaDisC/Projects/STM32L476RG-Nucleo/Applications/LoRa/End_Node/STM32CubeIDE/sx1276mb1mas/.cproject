@@ -148,6 +148,7 @@
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.145603813" name="System calls" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.systemcalls.value.minimalimplementation" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags.1227559076" name="Other flags" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.option.otherflags" useByScannerDiscovery="false" valueType="stringList">
 									<listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.FUTSettingSection=0x08000610"/>
+									<listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.ChirpBoxSettingSection=0x08000200"/>
 									<listOptionValue builtIn="false" value="-Wl,--section-start -Wl,.text=0x08000A0C"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.input.1957485331" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.linker.input">

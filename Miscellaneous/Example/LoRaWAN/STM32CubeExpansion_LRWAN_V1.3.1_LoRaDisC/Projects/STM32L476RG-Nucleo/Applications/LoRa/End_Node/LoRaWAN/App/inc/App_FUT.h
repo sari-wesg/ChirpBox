@@ -25,11 +25,18 @@
 //***** Global Typedefs and Class Declarations *****************************************************
 typedef enum
 {
+    // lorawan
     FUT_MAX_SEND = 0,
     FUT_DATA_SEND_INTERVAL,
     FUT_RANDOM_INTERVAL,
     FUT_UPLINK_RATE,
     FUT_UPLINK_POWER,
+    /* loradisc lorawan relay */
+    FUT_LORAWAN_BITMAP,
+    FUT_COLLECT_SLOTS,
+    FUT_COLLECT_SLOTS_MAX,
+    FUT_LORAWAN_INTERVAL_S,
+    FUT_LORADISC_SF,
 } FUT_param;
 
 //**************************************************************************************************

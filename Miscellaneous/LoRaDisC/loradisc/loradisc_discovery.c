@@ -131,9 +131,9 @@ Gpi_Slow_Tick_Extended calculate_next_loradisc()
     else
     {
         if (loradisc_discover_config.collect_on)
-            loradisc_reconfig(MX_NUM_NODES_CONF, data_length, COLLECTION, 7, 14, CN470_FREQUENCY);
+            loradisc_reconfig(MX_NUM_NODES_CONF, data_length, COLLECTION, fut_config.CUSTOM[FUT_LORADISC_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
         else if (loradisc_discover_config.dissem_on)
-            loradisc_reconfig(MX_NUM_NODES_CONF, data_length, DISSEMINATION, 7, 14, CN470_FREQUENCY);
+            loradisc_reconfig(MX_NUM_NODES_CONF, data_length, DISSEMINATION, fut_config.CUSTOM[FUT_LORADISC_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
 
         loradisc_discover_config.loradisc_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * loradisc_config.mx_round_length + LORADISC_LATENCY) / 1000 + 1000));
     }
@@ -210,7 +210,7 @@ uint8_t compare_discover_initiator_expired()
 {
     uint8_t data_length = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(Gpi_Slow_Tick_Extended);
 
-    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, FLOODING, 7, 14, CN470_FREQUENCY);
+    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, FLOODING, fut_config.CUSTOM[FUT_LORADISC_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
     loradisc_discover_update_initiator();
 
     loradisc_discover_config.discover_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * DISCOVER_SLOT_DEFAULT + LORADISC_LATENCY) / 1000));

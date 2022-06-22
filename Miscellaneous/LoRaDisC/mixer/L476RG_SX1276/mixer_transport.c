@@ -613,6 +613,30 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 			LoRaDS_SX1276ReadFifo( RxPacketBuffer, packet_len );
 			LoRaDS_SX1276SetOpMode( RFLR_OPMODE_SLEEP );
 
+			/* in case of any abort packet */
+			if (loradisc_config.primitive != FLOODING)
+			{
+				uint16_t calu_payload_hash = Chirp_RSHash((uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.coding_vector.pos), loradisc_config.coding_vector.len);
+
+				if(!calu_payload_hash)
+				{
+					#if MX_VERBOSE_STATISTICS
+						mx.stat_counter.num_rx_broken++;
+					#endif
+
+					// trigger timeout timer (immediately) -> do error handling there
+					// NOTE: don't need to unmask timer here because it already is
+					trigger_main_timer(0);
+					unmask_main_timer(1);
+
+					#if	ENERGEST_CONF_ON
+						ENERGEST_OFF(ENERGEST_TYPE_IRQ);
+					#endif
+
+					GPI_TRACE_RETURN_FAST();
+				}
+			}
+
 			// allocate rx queue destination slot
 			Packet	*packet;
 

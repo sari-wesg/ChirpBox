@@ -161,6 +161,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 	uint8_t					lorawan_num;	// total number of lorawan nodes
 	uint32_t 				lorawan_bitmap; // node for lorawan
 	Gpi_Slow_Tick_Extended 	lorawan_duration;
+	uint16_t				loradisc_collect_id;
 
 	/* local infomation */
 	uint8_t					lorawan_on;
@@ -196,7 +197,7 @@ void loradisc_write(uint8_t i, uint8_t *data);
 void loradisc_read(uint8_t *data);
 void loradisc_start(Disc_Primitive primitive);
 // Primitive
-void loradisc_collect();
+uint8_t loradisc_collect();
 void loradisc_dissem();
 
 // loradisc preparation

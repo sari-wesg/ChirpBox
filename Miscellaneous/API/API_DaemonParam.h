@@ -5,7 +5,7 @@
 
 /*
 Device:
-1. UID_list: see how to get unique device ID (UID) in https://chirpbox.github.io/diy_chirpbox/2-2-Firmware-configuration
+1. UID_list: see how to get unique device ID (UID) in https://chirpbox.github.io/diy_chirpbox/#2-2-Firmware-configuration
 2. UID_version: version in 16 bit of the UID_list
 
 Radio:

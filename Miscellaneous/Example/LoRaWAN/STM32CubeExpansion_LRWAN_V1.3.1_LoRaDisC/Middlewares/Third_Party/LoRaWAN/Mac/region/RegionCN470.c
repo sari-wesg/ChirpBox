@@ -201,7 +201,7 @@ PhyParam_t RegionCN470GetPhyParam( GetPhyParams_t* getPhy )
         {
             phyParam.Value = CN470_DEFAULT_TX_POWER;
             #if CHIRPBOX_LORAWAN
-                phyParam.Value = ((int8_t)CN470_DEFAULT_MAX_EIRP - fut_config.CUSTOM[FUT_UPLINK_POWER]) / 2;
+                phyParam.Value = (CN470_MIN_TX_POWER - fut_config.CUSTOM[FUT_UPLINK_POWER]);
             #endif
             break;
         }

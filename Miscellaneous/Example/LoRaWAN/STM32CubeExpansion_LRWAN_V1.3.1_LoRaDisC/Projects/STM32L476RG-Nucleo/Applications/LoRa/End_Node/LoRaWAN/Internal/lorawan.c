@@ -105,7 +105,7 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 // static lora_AppData_t AppData={ AppDataBuff,  0 ,0 };
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0xFFFF, 5, 0, DR_5, 0};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0xFFFF, 5, 0, 5, 0, 0x00000001, 0x14, 0x03, 0x19, 0x07};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 
@@ -189,6 +189,7 @@ void lorawan_start()
                         loradisc_discover_config.lorawan_begin[node_id_allocate] = gpi_tick_slow_extended() + GPI_TICK_S_TO_SLOW(loradisc_discover_config.lorawan_interval_s[node_id_allocate]);
 
                         /* LoRaWAN */
+                        LORA_Init_node_id(TOS_NODE_ID);
                         LORA_ReInit();
                         LORA_Join();
                         /*Send*/
@@ -237,13 +238,20 @@ void lorawan_start()
                         /* LoRaDisC collection */
                         else if ((loradisc_discover_config.collect_on) && (!loradisc_discover_config.loradisc_lorawan_on))
                         {
-                            loradisc_collect();
-                            /* next is lorawan relay */
-                            loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
-                            if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
-                                lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
+                            uint8_t collect_end = loradisc_collect();
+                            if (collect_end)
+                            {
+                                /* next is lorawan relay */
+                                loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
+                                if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
+                                    lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
+                                else
+                                    lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
+                            }
                             else
+                            {
                                 lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
+                            }
                         }
                         /* start LoRaWAN relay LoRaDisC packets */
                         else if ((loradisc_discover_config.collect_on) && (loradisc_discover_config.loradisc_lorawan_on))
@@ -287,6 +295,7 @@ void lorawan_start()
                                 /* LoRaWAN */
                                 uint32_t node_id = lorawan_relay_node_id_allocate(loradisc_discover_config.lorawan_relay_id);
                                 printf("node_id:%x\n", node_id);
+
                                 LORA_Init_node_id(node_id);
                                 LORA_ReInit();
                                 LORA_Join();
