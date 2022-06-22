@@ -105,7 +105,7 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 // static lora_AppData_t AppData={ AppDataBuff,  0 ,0 };
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0xFFFF, 5, 0, 5, 0, 0x00000001, 0x14, 0x03, 0x19, 0x07};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0xFFFF, 5, 0, 5, 0, 0x00000001, 0x14, 0x03, 0x19, 0x0C};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 
@@ -124,6 +124,11 @@ void lorawan_start()
     LPM_SetOffMode(LPM_APPLI_Id, LPM_Disable);
 
     PRINTF("LoRaWAN System started\n");
+
+    DS3231_GetTime();
+    /* Set alarm */
+    Chirp_Time ds3231_time = DS3231_ShowTime();
+    log_to_flash("starting time %d, %d\n", ds3231_time.chirp_hour, ds3231_time.chirp_min);
 
     log_to_flash("starting node %x ...\n", TOS_NODE_ID);
     log_flush();
