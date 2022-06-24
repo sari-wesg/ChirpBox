@@ -101,6 +101,7 @@ void LPM_EnterLowPower(void)
     {
       #if ENERGEST_CONF_ON
           ENERGEST_ON(ENERGEST_TYPE_STOP);
+          ENERGEST_ON(ENERGEST_TYPE_LPM);
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
           gpi_led_off(GPI_LED_3);
           // slow_tick_update();
@@ -112,6 +113,7 @@ void LPM_EnterLowPower(void)
       LPM_ExitStopMode();
       #if ENERGEST_CONF_ON
           ENERGEST_OFF(ENERGEST_TYPE_STOP);
+          ENERGEST_OFF(ENERGEST_TYPE_LPM);
           ENERGEST_ON(ENERGEST_TYPE_CPU);
           gpi_led_on(GPI_LED_3);
           // slow_tick_end();

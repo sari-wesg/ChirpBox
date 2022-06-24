@@ -210,10 +210,11 @@ uint8_t compare_discover_initiator_expired()
 {
     uint8_t data_length = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(Gpi_Slow_Tick_Extended);
 
-    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, FLOODING, fut_config.CUSTOM[FUT_LORADISC_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
+    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, FLOODING, fut_config.CUSTOM[FUT_DISCOVER_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
     loradisc_discover_update_initiator();
 
-    loradisc_discover_config.discover_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * DISCOVER_SLOT_DEFAULT + LORADISC_LATENCY) / 1000));
+    uint16_t discover_slots = fut_config.CUSTOM[FUT_DISCOVER_SLOTS];
+    loradisc_discover_config.discover_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * discover_slots + LORADISC_LATENCY) / 1000));
 
     Gpi_Slow_Tick_Extended discover_end = gpi_tick_slow_extended() + loradisc_discover_config.discover_duration_slow + GPI_TICK_MS_TO_SLOW(100);
     printf("check initiator discover expired:\ndiscover will end at %lu, node will begin LoRaWAN at %lu, if node is initiator %lu, if discover will end after LoRaWAN %lu\n", discover_end, loradisc_discover_config.lorawan_begin[node_id_allocate], (loradisc_config.initiator == node_id_allocate), (gpi_tick_compare_slow_extended(discover_end, loradisc_discover_config.lorawan_begin[node_id_allocate]) >= 0));
@@ -232,7 +233,8 @@ uint8_t compare_discover_initiator_expired()
 uint8_t reset_discover_slot_num()
 {
     uint8_t slot_num, LoRaDisC_complete = 1;
-    loradisc_discover_config.discover_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * DISCOVER_SLOT_DEFAULT + LORADISC_LATENCY) / 1000));
+    uint16_t discover_slots = fut_config.CUSTOM[FUT_DISCOVER_SLOTS];
+    loradisc_discover_config.discover_duration_slow = GPI_TICK_MS_TO_SLOW((uint16_t)((loradisc_config.mx_slot_length_in_us * discover_slots + LORADISC_LATENCY) / 1000));
 
     /* node is receiver and LoRaWAN nodes */
     if ((loradisc_config.initiator != node_id_allocate) && ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32)))))

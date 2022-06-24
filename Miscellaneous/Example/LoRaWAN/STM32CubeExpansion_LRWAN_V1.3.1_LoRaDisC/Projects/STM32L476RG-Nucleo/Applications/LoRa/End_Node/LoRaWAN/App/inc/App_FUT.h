@@ -37,6 +37,8 @@ typedef enum
     FUT_COLLECT_SLOTS_MAX,
     FUT_LORAWAN_INTERVAL_S,
     FUT_LORADISC_SF,
+    FUT_DISCOVER_SF,
+    FUT_DISCOVER_SLOTS,
 } FUT_param;
 
 //**************************************************************************************************

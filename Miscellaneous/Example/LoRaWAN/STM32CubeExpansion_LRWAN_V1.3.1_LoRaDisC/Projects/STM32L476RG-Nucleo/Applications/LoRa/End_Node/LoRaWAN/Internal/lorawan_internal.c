@@ -130,6 +130,10 @@ void lpwan_lp_timer_isr()
     if ((int32_t)d < 0)
     {
         AppProcessRequest = LORA_SET;
+        #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_LPM);
+            ENERGEST_ON(ENERGEST_TYPE_CPU);
+        #endif
     }
     else if (d > 0xF000ul)
     {
@@ -154,6 +158,10 @@ void lpwan_grid_timer_init(Gpi_Slow_Tick_Extended loradisc_gap_start)
 
     s.next_grid_tick = gpi_tick_slow_extended() + s.loradisc_gap_start;
 
+    #if ENERGEST_CONF_ON
+        ENERGEST_ON(ENERGEST_TYPE_LPM);
+        ENERGEST_OFF(ENERGEST_TYPE_CPU);
+    #endif
     /* set timer */
 	mask_slow_timer();
 	__HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);

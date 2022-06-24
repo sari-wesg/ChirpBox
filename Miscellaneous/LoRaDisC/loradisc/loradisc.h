@@ -177,12 +177,17 @@ typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 	Gpi_Slow_Tick_Extended	lorawan_begin[LORAWAN_MAX_NUM]; // the begin time of all nodes
 	Gpi_Slow_Tick_Extended 	next_loradisc_gap;
 
-	uint8_t					discover_slot;
-
 	/* global infomation */
 	uint16_t				lorawan_interval_s[LORAWAN_MAX_NUM];
 } LoRaDisC_Discover_Config;
 
+typedef struct __attribute__((packed)) Chirp_Energy_tag
+{
+	uint32_t CPU;
+	uint32_t LPM;
+	uint32_t TRANSMIT;
+	uint32_t LISTEN;
+} LoRaDisC_Energy;
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************

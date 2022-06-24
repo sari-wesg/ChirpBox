@@ -38,6 +38,7 @@ extern uint32_t __attribute__((section(".data"))) TOS_NODE_ID;
 /* node id */
 uint8_t node_id_allocate;
 extern LoRaDisC_Discover_Config loradisc_discover_config;
+LoRaDisC_Energy energy_stats;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -152,11 +153,7 @@ void loradisc_reconfig(uint8_t nodes_num, uint8_t data_length, Disc_Primitive pr
     uint32_t packet_time = SX1276GetPacketTime(loradisc_config.lora_sf, loradisc_config.lora_bw, 1, 0, 8, LORADISC_HEADER_LEN);
     uint8_t hop_count;
     if (primitive == FLOODING)
-        #if USE_FOR_LORAWAN && LORADISC
-            hop_count = loradisc_discover_config.discover_slot;
-        #else
-            hop_count = fut_config.CUSTOM[FUT_COLLECT_SLOTS];
-        #endif
+        hop_count = fut_config.CUSTOM[FUT_DISCOVER_SLOTS];
     else
         hop_count = fut_config.CUSTOM[FUT_COLLECT_SLOTS]; // TODO:
     loradisc_slot_config(packet_time + 100000, hop_count, 1500000);
@@ -172,9 +169,15 @@ void loradisc_discover_init()
     loradisc_discover_config.lorawan_bitmap = fut_config.CUSTOM[FUT_LORAWAN_BITMAP]; // TODO:
     loradisc_discover_config.lorawan_num = gpi_popcnt_32(loradisc_discover_config.lorawan_bitmap);
     loradisc_discover_config.lorawan_duration = GPI_TICK_S_TO_SLOW(5); //TODO:
-    loradisc_discover_config.discover_slot = DISCOVER_SLOT_DEFAULT;
     loradisc_discover_config.lorawan_interval_s[node_id_allocate] = fut_config.CUSTOM[FUT_LORAWAN_INTERVAL_S]; // TODO:
-    loradisc_discover_config.loradisc_collect_id = 0; // TODO:
+    loradisc_discover_config.loradisc_collect_id = 0;
+
+#if ENERGEST_CONF_ON
+    energy_stats.CPU = 0;
+    energy_stats.LPM = 0;
+    energy_stats.TRANSMIT = 0;
+    energy_stats.LISTEN = 0;
+#endif
 }
 
 void loradisc_discover_update_initiator()
@@ -250,6 +253,12 @@ void loradisc_discover(uint16_t lorawan_interval_s)
         free(data);
     if (payload_distribution != NULL)
         free(payload_distribution);
+#if ENERGEST_CONF_ON
+    energy_stats.CPU += energest_type_time(ENERGEST_TYPE_CPU);
+    energy_stats.LPM += energest_type_time(ENERGEST_TYPE_LPM);
+    energy_stats.TRANSMIT += energest_type_time(ENERGEST_TYPE_TRANSMIT);
+    energy_stats.LISTEN += energest_type_time(ENERGEST_TYPE_LISTEN);
+#endif
 }
 
 uint8_t loradisc_collect()
@@ -304,6 +313,13 @@ uint8_t loradisc_collect()
 
     free(mx.request);
 
+#if ENERGEST_CONF_ON
+    energy_stats.CPU += energest_type_time(ENERGEST_TYPE_CPU);
+    energy_stats.LPM += energest_type_time(ENERGEST_TYPE_LPM);
+    energy_stats.TRANSMIT += energest_type_time(ENERGEST_TYPE_TRANSMIT);
+    energy_stats.LISTEN += energest_type_time(ENERGEST_TYPE_LISTEN);
+    printf("collect_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
+#endif
     return 1;
 }
 
@@ -363,7 +379,10 @@ void loradisc_start(Disc_Primitive primitive)
 {
     printf("--- LoRaDisC start\n");
     // TODO: config
-    loradisc_reconfig(MX_NUM_NODES_CONF, data_length, primitive, fut_config.CUSTOM[FUT_LORADISC_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
+    if (primitive == FLOODING)
+        loradisc_reconfig(MX_NUM_NODES_CONF, data_length, primitive, fut_config.CUSTOM[FUT_DISCOVER_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
+    else
+        loradisc_reconfig(MX_NUM_NODES_CONF, data_length, primitive, fut_config.CUSTOM[FUT_LORADISC_SF], fut_config.CUSTOM[FUT_UPLINK_POWER], daemon_config.Frequency);
     // payload distribution
     loradisc_lorawan_payload_distribution();
     /* initiator */
@@ -390,9 +409,6 @@ void loradisc_start(Disc_Primitive primitive)
         // gpi_radio_init();
         /* init mixer */
         mixer_init(node_id_allocate);
-#if ENERGEST_CONF_ON
-        ENERGEST_ON(ENERGEST_TYPE_CPU);
-#endif
         loradisc_packet_write(node_id_allocate, data);
         /* arm mixer, node 0 = initiator
         start first round with infinite scan
@@ -402,7 +418,7 @@ void loradisc_start(Disc_Primitive primitive)
         -> increase probability that all nodes are ready when initiator starts the round
         -> avoid problems in view of limited deadline accuracy */
         if (loradisc_config.initiator == node_id_allocate)
-            deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length;
+            deadline += (Gpi_Fast_Tick_Extended)1 * loradisc_config.mx_slot_length / 10;
 #if MX_LBT_ACCESS
         lbt_update();
 #endif
@@ -412,8 +428,13 @@ void loradisc_start(Disc_Primitive primitive)
             ;
 #if ENERGEST_CONF_ON
         ENERGEST_OFF(ENERGEST_TYPE_CPU);
+        ENERGEST_ON(ENERGEST_TYPE_LPM);
 #endif
         deadline = mixer_start();
+#if ENERGEST_CONF_ON
+        ENERGEST_ON(ENERGEST_TYPE_CPU);
+        ENERGEST_OFF(ENERGEST_TYPE_LPM);
+#endif
         if (loradisc_discover_config.loradisc_on)
         {
             if (loradisc_config.primitive == FLOODING)
