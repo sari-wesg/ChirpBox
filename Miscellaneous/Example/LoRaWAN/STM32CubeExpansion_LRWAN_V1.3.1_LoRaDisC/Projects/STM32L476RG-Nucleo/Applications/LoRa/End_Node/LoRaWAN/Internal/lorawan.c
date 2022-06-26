@@ -129,7 +129,7 @@ void lorawan_start()
     DS3231_GetTime();
     /* Set alarm */
     Chirp_Time ds3231_time = DS3231_ShowTime();
-    log_to_flash("starting time %d, %d\n", ds3231_time.chirp_hour, ds3231_time.chirp_min);
+    log_to_flash("starting time %d, %d, %d, %d\n", ds3231_time.chirp_month, ds3231_time.chirp_date, ds3231_time.chirp_hour, ds3231_time.chirp_min);
 
     log_to_flash("starting node %x ...\n", TOS_NODE_ID);
     log_flush();
