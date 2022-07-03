@@ -72,6 +72,11 @@ int main(void)
     loradisc_node_id();
   #endif
 
+  // TODO:
+  DS3231_GetTime();
+  Chirp_Time ds3231_time = DS3231_ShowTime();
+  log_to_flash("starting time %d, %d, %d, %d\n", ds3231_time.chirp_month, ds3231_time.chirp_date, ds3231_time.chirp_hour, ds3231_time.chirp_min);
+	RTC_ModifyTime(ds3231_time.chirp_year - 2000, ds3231_time.chirp_month, ds3231_time.chirp_date, ds3231_time.chirp_day, ds3231_time.chirp_hour, ds3231_time.chirp_min, ds3231_time.chirp_sec);
   lorawan_start();
 
   // loradisc_start(FLOODING);

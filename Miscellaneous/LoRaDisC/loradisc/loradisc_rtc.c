@@ -92,8 +92,7 @@ Chirp_Time RTC_GetTime(void)
     RTC_Time.chirp_hour = nTime.Hours;
     RTC_Time.chirp_min = nTime.Minutes;
     RTC_Time.chirp_sec = nTime.Seconds;
-	PRINTF_DISC("RTC_GetTime: %d-%d-%d %d:%d:%d week: %d\n", RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec, RTC_Time.chirp_day);
-
+    printf("RTC_GetTime: %d-%d-%d %d:%d:%d week: %d\n", RTC_Time.chirp_year, RTC_Time.chirp_month, RTC_Time.chirp_date, RTC_Time.chirp_hour, RTC_Time.chirp_min, RTC_Time.chirp_sec, RTC_Time.chirp_day);
     return RTC_Time;
 }
 

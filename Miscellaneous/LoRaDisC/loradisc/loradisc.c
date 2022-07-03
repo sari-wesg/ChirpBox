@@ -22,11 +22,10 @@
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
 // uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047, 0x004a0022}; // TODO: delft
-// uint32_t dev_id_list[NODE_LENGTH] = {0x001E0037, 0x0042002C, 0x004E004A}; // TODO: sari
 
-// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x0042002C, 0x004E004A}, 0, 0}; // TODO: sari
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x0042002C, 0x004E004A}, 0, 0}; // TODO: sari
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x004a0022, 0x00350017}, 0, 486300}; // TODO: tu graz
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d}, 0, 486300}; // TODO: tu graz
+// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x00350017}, 0, 486300}; // TODO: tu graz
 
 uint8_t MX_NUM_NODES_CONF;
 uint8_t *data, data_length, *collect_data;
@@ -136,7 +135,7 @@ void loradisc_init()
 void loradisc_reconfig(uint8_t nodes_num, uint8_t data_length, Disc_Primitive primitive, uint8_t sf, uint8_t tp, uint32_t lora_frequency)
 {
     // 1. radio config
-    loradisc_radio_config(sf, 1, tp, lora_frequency / 1000);
+    loradisc_radio_config(sf, 1, tp, lora_frequency);
     // 2. lbt config
 #if MX_LBT_ACCESS
     lbt_init();
@@ -171,13 +170,6 @@ void loradisc_discover_init()
     loradisc_discover_config.lorawan_duration = GPI_TICK_S_TO_SLOW(5); //TODO:
     loradisc_discover_config.lorawan_interval_s[node_id_allocate] = fut_config.CUSTOM[FUT_LORAWAN_INTERVAL_S]; // TODO:
     loradisc_discover_config.loradisc_collect_id = 0;
-
-#if ENERGEST_CONF_ON
-    energy_stats.CPU = 0;
-    energy_stats.LPM = 0;
-    energy_stats.TRANSMIT = 0;
-    energy_stats.LISTEN = 0;
-#endif
 }
 
 void loradisc_discover_update_initiator()
@@ -253,12 +245,6 @@ void loradisc_discover(uint16_t lorawan_interval_s)
         free(data);
     if (payload_distribution != NULL)
         free(payload_distribution);
-#if ENERGEST_CONF_ON
-    energy_stats.CPU += energest_type_time(ENERGEST_TYPE_CPU);
-    energy_stats.LPM += energest_type_time(ENERGEST_TYPE_LPM);
-    energy_stats.TRANSMIT += energest_type_time(ENERGEST_TYPE_TRANSMIT);
-    energy_stats.LISTEN += energest_type_time(ENERGEST_TYPE_LISTEN);
-#endif
 }
 
 uint8_t loradisc_collect()
@@ -313,13 +299,12 @@ uint8_t loradisc_collect()
 
     free(mx.request);
 
-#if ENERGEST_CONF_ON
-    energy_stats.CPU += energest_type_time(ENERGEST_TYPE_CPU);
-    energy_stats.LPM += energest_type_time(ENERGEST_TYPE_LPM);
-    energy_stats.TRANSMIT += energest_type_time(ENERGEST_TYPE_TRANSMIT);
-    energy_stats.LISTEN += energest_type_time(ENERGEST_TYPE_LISTEN);
-    printf("collect_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
-#endif
+    if ((loradisc_discover_config.loradisc_collect_id >= fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]) && (!(loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32)))))
+    {
+        loradisc_discover_config.collect_on = 0;
+        return 0;
+    }
+
     return 1;
 }
 
@@ -426,15 +411,9 @@ void loradisc_start(Disc_Primitive primitive)
         ATTENTION: don't delay after the polling loop (-> print before) */
         while (gpi_tick_compare_fast_extended(gpi_tick_fast_extended(), deadline) < 0)
             ;
-#if ENERGEST_CONF_ON
-        ENERGEST_OFF(ENERGEST_TYPE_CPU);
-        ENERGEST_ON(ENERGEST_TYPE_LPM);
-#endif
+
         deadline = mixer_start();
-#if ENERGEST_CONF_ON
-        ENERGEST_ON(ENERGEST_TYPE_CPU);
-        ENERGEST_OFF(ENERGEST_TYPE_LPM);
-#endif
+
         if (loradisc_discover_config.loradisc_on)
         {
             if (loradisc_config.primitive == FLOODING)
@@ -446,7 +425,11 @@ void loradisc_start(Disc_Primitive primitive)
                     loradisc_config.recv_ok++;
                 }
                 if (loradisc_config.recv_ok)
-                    PRINTF_DISC("FLOODING OK\n");
+                {
+                    log_to_flash("FLOODING OK\n");
+                    log_flush();
+                }
+                // PRINTF_DISC("FLOODING OK\n");
                 // Gpi_Fast_Tick_Native resync_plus = GPI_TICK_MS_TO_FAST2(((loradisc_config.mx_slot_length_in_us * 5 / 2) * (loradisc_config.mx_round_length / 2 - 1) / 1000) - loradisc_config.mx_round_length * (loradisc_config.mx_slot_length_in_us / 1000));
                 /* haven't received any synchronization packet, always on reception mode, leading to end a round later than synchronized node */
                 // if (!loradisc_config.recv_ok)

@@ -187,6 +187,11 @@ typedef struct __attribute__((packed)) Chirp_Energy_tag
 	uint32_t LPM;
 	uint32_t TRANSMIT;
 	uint32_t LISTEN;
+
+	uint32_t LORAWAN_CPU;
+	uint32_t LORAWAN_LPM;
+	uint32_t LORAWAN_TRANSMIT;
+	uint32_t LORAWAN_LISTEN;
 } LoRaDisC_Energy;
 
 //**************************************************************************************************

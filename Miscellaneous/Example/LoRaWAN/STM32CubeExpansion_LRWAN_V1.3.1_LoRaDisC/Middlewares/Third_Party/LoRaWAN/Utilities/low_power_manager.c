@@ -100,6 +100,8 @@ void LPM_EnterLowPower(void)
     if( OffModeDisable )
     {
       #if ENERGEST_CONF_ON
+          ENERGEST_OFF(ENERGEST_TYPE_LPM);
+
           ENERGEST_ON(ENERGEST_TYPE_STOP);
           ENERGEST_ON(ENERGEST_TYPE_LPM);
           ENERGEST_OFF(ENERGEST_TYPE_CPU);
@@ -112,6 +114,8 @@ void LPM_EnterLowPower(void)
       LPM_EnterStopMode();
       LPM_ExitStopMode();
       #if ENERGEST_CONF_ON
+          ENERGEST_OFF(ENERGEST_TYPE_CPU);
+
           ENERGEST_OFF(ENERGEST_TYPE_STOP);
           ENERGEST_OFF(ENERGEST_TYPE_LPM);
           ENERGEST_ON(ENERGEST_TYPE_CPU);

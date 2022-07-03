@@ -131,6 +131,8 @@ void lpwan_lp_timer_isr()
     {
         AppProcessRequest = LORA_SET;
         #if ENERGEST_CONF_ON
+            ENERGEST_OFF(ENERGEST_TYPE_CPU);
+
             ENERGEST_OFF(ENERGEST_TYPE_LPM);
             ENERGEST_ON(ENERGEST_TYPE_CPU);
         #endif
@@ -159,6 +161,8 @@ void lpwan_grid_timer_init(Gpi_Slow_Tick_Extended loradisc_gap_start)
     s.next_grid_tick = gpi_tick_slow_extended() + s.loradisc_gap_start;
 
     #if ENERGEST_CONF_ON
+        ENERGEST_OFF(ENERGEST_TYPE_LPM);
+
         ENERGEST_ON(ENERGEST_TYPE_LPM);
         ENERGEST_OFF(ENERGEST_TYPE_CPU);
     #endif
@@ -176,29 +180,9 @@ void lpwan_grid_timer_init(Gpi_Slow_Tick_Extended loradisc_gap_start)
 	unmask_slow_timer(1);
 }
 
-
-void loradisc_grid_timer_init(uint8_t init, Gpi_Slow_Tick_Extended loradisc_gap_start_s)
+void lpwan_grid_timer_stop()
 {
-    if(init)
-    {
-        s.slot_state = LORADISC_RUNNING;
-        s.loradisc_gap_start = loradisc_gap_start_s;
-
-        s.next_grid_tick = gpi_tick_slow_extended() + s.loradisc_gap_start;
-    }
-    else
-    {
-        /* set timer */
-        mask_slow_timer();
-        __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
-        __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
-        LP_TIMER_CMP_REG = LP_TIMER_CNT_REG + GPI_TICK_MS_TO_SLOW(1000);
-        while (!(__HAL_LPTIM_GET_FLAG(&hlptim1, LPTIM_FLAG_CMPOK)));
-
-        REORDER_BARRIER();
-        __DMB();
-
-        // unmask grid timer interrupt
-        unmask_slow_timer(1);
-    }
+    mask_slow_timer();
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPM);
+    __HAL_LPTIM_CLEAR_FLAG(&hlptim1, LPTIM_FLAG_CMPOK);
 }

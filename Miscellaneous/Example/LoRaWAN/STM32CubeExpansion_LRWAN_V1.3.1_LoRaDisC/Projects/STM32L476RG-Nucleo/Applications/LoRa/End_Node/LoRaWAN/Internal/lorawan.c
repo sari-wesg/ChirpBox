@@ -105,7 +105,7 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 // static lora_AppData_t AppData={ AppDataBuff,  0 ,0 };
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0xFFFF, 5, 0, 5, 0, 0x00000001, 0x14, 0x03, 0x19, 0x07, 0x0C, 0x0A};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0003, 5, 0, 5, 0x0E, 0x00000001, 0x20, 0x03, 0x64, 0x07, 0x07, 0x3C};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 extern LoRaDisC_Energy energy_stats;
@@ -126,10 +126,10 @@ void lorawan_start()
 
     PRINTF("LoRaWAN System started\n");
 
-    DS3231_GetTime();
-    /* Set alarm */
-    Chirp_Time ds3231_time = DS3231_ShowTime();
-    log_to_flash("starting time %d, %d, %d, %d\n", ds3231_time.chirp_month, ds3231_time.chirp_date, ds3231_time.chirp_hour, ds3231_time.chirp_min);
+#if ENERGEST_CONF_ON
+    memset(&energy_stats, 0, sizeof(LoRaDisC_Energy));
+    energest_init();
+#endif
 
     log_to_flash("starting node %x ...\n", TOS_NODE_ID);
     log_flush();
@@ -171,6 +171,13 @@ void lorawan_start()
                 /*Send*/
                 Send(NULL);
             #else
+            #if ENERGEST_CONF_ON
+                energy_stats.CPU += energest_type_time(ENERGEST_TYPE_CPU);
+                energy_stats.LPM += energest_type_time(ENERGEST_TYPE_LPM);
+                energy_stats.TRANSMIT += energest_type_time(ENERGEST_TYPE_TRANSMIT);
+                energy_stats.LISTEN += energest_type_time(ENERGEST_TYPE_LISTEN);
+                energest_init();
+            #endif
                 /* lorawan nodes */
                 if ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32))))
                 {
@@ -223,8 +230,6 @@ void lorawan_start()
                             /* when discovery ends, immediately start LoRaDisC collect */
                             if (!loradisc_discover_config.discover_on)
                             {
-                                log_to_flash("discovery_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
-                                log_flush();
                                 loradisc_discover_config.collect_on = 1;
                                 loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                                 /* next is collection */
@@ -258,8 +263,6 @@ void lorawan_start()
                             }
                             else
                             {
-                                log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
-                                log_flush();
                                 lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
                             }
                         }
@@ -343,8 +346,6 @@ void lorawan_start()
                         /* when discovery ends, immediately start LoRaDisC collect */
                         if (!loradisc_discover_config.discover_on)
                         {
-                            log_to_flash("discovery_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
-                            log_flush();
                             loradisc_discover_config.collect_on = 1;
                             loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                             if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
@@ -366,15 +367,19 @@ void lorawan_start()
                     else if ((loradisc_discover_config.collect_on) && (!loradisc_discover_config.loradisc_lorawan_on))
                     {
                         uint8_t collect_end = loradisc_collect();
-                        /* next is lorawan relay, will wake up to calculate dissem time */
-                        loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
-                        if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
-                            lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
-                        else
-                            lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
-                        if (!collect_end)
+                        if (collect_end)
                         {
-                            log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT) - send_count * 32000, gpi_tick_slow_to_us(energy_stats.LISTEN) - send_count * 2000000);
+                            /* next is lorawan relay, will wake up to calculate dissem time */
+                            loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
+                            if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
+                                lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
+                            else
+                                lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
+                        }
+                        else
+                        {
+                            lpwan_grid_timer_stop();
+                            log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
                             log_flush();
                         }
                     }
@@ -398,14 +403,7 @@ void lorawan_start()
                             loradisc_discover_config.next_loradisc_gap = calculate_next_loradisc();
                             if (loradisc_discover_config.next_loradisc_gap != 0xFFFFFFFF)
                             {
-                                // if(gpi_tick_compare_slow_extended(gpi_tick_slow_extended(), loradisc_discover_config.next_loradisc_gap) >= 0)
-                                // {
-                                //     lpwan_grid_timer_init(GPI_TICK_MS_TO_SLOW(1));
-                                // }
-                                // else
-                                // {
-                                    lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
-                                // }
+                                lpwan_grid_timer_init(loradisc_discover_config.next_loradisc_gap - gpi_tick_slow_extended());
                             }
                             else
                                 lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
@@ -598,6 +596,12 @@ static void Send(void *context)
         {
             lora_tx_rate(fut_config.CUSTOM[FUT_UPLINK_RATE]);
             sensor_send();
+
+            if (send_count == fut_config.CUSTOM[FUT_MAX_SEND])
+            {
+                lpwan_grid_timer_init(loradisc_discover_config.lorawan_duration);
+                loradisc_discover_config.lorawan_on ^= 1;
+            }
         }
         else if ((fut_config.CUSTOM[FUT_UPLINK_RATE] == 0xFFFFFFFF) && (send_count < fut_config.CUSTOM[FUT_MAX_SEND] * 6))
         {
@@ -613,9 +617,9 @@ static void Send(void *context)
         else
         {
             TimerStop(&TxTimer);
-            // log_to_flash("rx_time:%lu, tx_time: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT)));
-            // log_to_flash("cpu: %lu, stop: %lu\n", gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU)), gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_STOP)));
-            // log_flush();
+            lpwan_grid_timer_stop();
+            log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
+            log_flush();
         }
         return;
     }

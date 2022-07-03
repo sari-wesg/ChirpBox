@@ -54,7 +54,7 @@ with open("C:\\Users\\tecop\\Desktop\\"+'test'+".txt","w") as f_target:
 
     for node in range(total_node_num):
         #open original txt
-        f_original = open("C:\\Users\\tecop\\Desktop\\test_example(20220624230752979740).txt")
+        f_original = open("C:\\Users\\tecop\\Desktop\\test_example(20220630064553296089).txt")
         line = f_original.readline()
         f_target.write("Node "+str(node)+"\n"+"{\n")
         while line:

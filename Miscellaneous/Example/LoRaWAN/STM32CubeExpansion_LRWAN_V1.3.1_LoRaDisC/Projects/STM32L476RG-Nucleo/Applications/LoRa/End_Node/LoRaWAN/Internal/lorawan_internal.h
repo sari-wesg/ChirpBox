@@ -82,7 +82,7 @@ void lpwan_lp_timer_isr();
 
 // grid
 void lpwan_grid_timer_init(uint32_t loradisc_gap_start_s);
-void loradisc_grid_timer_init(uint8_t init, uint32_t loradisc_gap_start_s);
+void lpwan_grid_timer_stop();
 
 //**************************************************************************************************
 //***** Implementations of Inline Functions ********************************************************
