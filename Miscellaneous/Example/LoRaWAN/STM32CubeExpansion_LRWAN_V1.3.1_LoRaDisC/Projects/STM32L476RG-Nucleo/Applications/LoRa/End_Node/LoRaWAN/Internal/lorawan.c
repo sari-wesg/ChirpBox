@@ -105,13 +105,14 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 // static lora_AppData_t AppData={ AppDataBuff,  0 ,0 };
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x000A, 5, 0, 5, 0x00, 0x00000001, 0x0C, 0x0A, 0x64, 0x07, 0x07, 0x3C};
-// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 5, 0x00, 0x00000003, 0x00, 0x00, 0x64, 0x07, 0x07, 0x3C};
+// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x000A, 5, 0, 5, 0x00, 0x00000001, 0x0C, 0x0A, 0x19, 0x07, 0x07, 0x3C};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 5, 0x00, 0x00000003, 0x00, 0x00, 0x64, 0x07, 0x07, 0x3C};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 extern LoRaDisC_Energy energy_stats;
 extern uint32_t *collect_full_rank;
 extern uint32_t collect_success;
+extern uint8_t MX_NUM_NODES_CONF;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -175,12 +176,12 @@ void lorawan_start()
                 Send(NULL);
             #else
             #if ENERGEST_CONF_ON
-                energy_stats.CPU += energest_type_time(ENERGEST_TYPE_CPU);
-                energy_stats.LPM += energest_type_time(ENERGEST_TYPE_LPM);
-                energy_stats.TRANSMIT += energest_type_time(ENERGEST_TYPE_TRANSMIT);
-                energy_stats.LISTEN += energest_type_time(ENERGEST_TYPE_LISTEN);
+                energy_stats.CPU += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU));
+                energy_stats.LPM += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LPM));
+                energy_stats.TRANSMIT += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT));
+                energy_stats.LISTEN += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN));
+                printf("energest_init: %lu, %lu, %lu, %lu\n", energy_stats.CPU, energy_stats.LPM, energy_stats.TRANSMIT, energy_stats.LISTEN);
                 energest_init();
-                printf("energest_init: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
             #endif
                 /* lorawan nodes */
                 if ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32))))
@@ -212,6 +213,11 @@ void lorawan_start()
                         /*Send*/
                         Send(NULL);
                         loradisc_discover_config.lorawan_on ^= 1;
+                        if (MX_NUM_NODES_CONF == loradisc_discover_config.lorawan_num)
+                        {
+                            loradisc_discover_config.lorawan_on ^= 1;
+                            lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
+                        }
                     }
                     /* loradisc is on */
                     else
@@ -383,7 +389,7 @@ void lorawan_start()
                         else
                         {
                             lpwan_grid_timer_stop();
-                            log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
+                            log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", energy_stats.CPU, energy_stats.LPM, energy_stats.TRANSMIT, energy_stats.LISTEN);
                             uint32_t mean_full_rank = calculate_array_mean(collect_full_rank, fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
                             log_to_flash("full_rank: %lu, %lu\n", mean_full_rank, collect_success);
                             log_flush();
@@ -624,7 +630,7 @@ static void Send(void *context)
         {
             TimerStop(&TxTimer);
             lpwan_grid_timer_stop();
-            log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
+            log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", energy_stats.CPU, energy_stats.LPM, energy_stats.TRANSMIT, energy_stats.LISTEN);
             uint32_t mean_full_rank = calculate_array_mean(collect_full_rank, fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
             log_to_flash("full_rank: %lu, %lu\n", mean_full_rank, collect_success);
             log_flush();

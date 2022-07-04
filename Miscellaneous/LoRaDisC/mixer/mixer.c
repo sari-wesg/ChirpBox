@@ -311,8 +311,10 @@ void mixer_init(uint8_t node_id)
 	#endif
 
 	#if ENERGEST_CONF_ON
-		// Initialize Energest values.
-		energest_init();
+		#if !CHIRPBOX_LORAWAN
+			// Initialize Energest values.
+			energest_init();
+		#endif
 	#endif
 
 	GPI_TRACE_RETURN();
