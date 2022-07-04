@@ -23,8 +23,8 @@
 //***** Local (Static) Variables *******************************************************************
 // uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047, 0x004a0022}; // TODO: delft
 
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x0042002C, 0x004E004A}, 0, 0}; // TODO: sari
-// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x004a0022, 0x00350017}, 0, 486300}; // TODO: tu graz
+// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x0042002C, 0x004E004A}, 0, 470000}; // TODO: sari
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x004a0022, 0x00350017}, 0, 486300}; // TODO: tu graz
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x00350017}, 0, 486300}; // TODO: tu graz
 
 uint8_t MX_NUM_NODES_CONF;
@@ -39,7 +39,7 @@ uint8_t node_id_allocate;
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 LoRaDisC_Energy energy_stats;
 
-uint32_t	*collect_full_rank;
+uint32_t *collect_full_rank;
 uint32_t collect_success;
 
 //**************************************************************************************************
@@ -173,7 +173,7 @@ void loradisc_discover_init()
     loradisc_discover_config.lorawan_duration = GPI_TICK_S_TO_SLOW(5); //TODO:
     loradisc_discover_config.lorawan_interval_s[node_id_allocate] = fut_config.CUSTOM[FUT_LORAWAN_INTERVAL_S]; // TODO:
     loradisc_discover_config.loradisc_collect_id = 0;
-    collect_full_rank = (uint32_t *)malloc(fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
+    collect_full_rank = (uint32_t *)malloc(sizeof(uint32_t) * fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
     memset(collect_full_rank, 0, sizeof(uint32_t) * fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
     collect_success = 0;
 }
@@ -312,10 +312,12 @@ uint8_t loradisc_collect()
 
     free(mx.request);
 
-    if ((loradisc_discover_config.loradisc_collect_id >= fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]) && (!(loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32)))))
+    if (!(loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32))))
     {
-        loradisc_discover_config.collect_on = 0;
-        return 0;
+        free(mx.matrix[0]);
+        free(collect_data);
+        if (loradisc_discover_config.loradisc_collect_id >= fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX])
+            return 0;
     }
 
     return 1;

@@ -105,8 +105,8 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 // static lora_AppData_t AppData={ AppDataBuff,  0 ,0 };
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0003, 5, 0, 5, 0x0E, 0x00000001, 0x20, 0x03, 0x64, 0x07, 0x07, 0x3C};
-// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0003, 5, 0, 5, 0x00, 0x001FFFFF, 0x00, 0x00, 0x05, 0x07, 0x07, 0x00};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x000A, 5, 0, 5, 0x00, 0x00000001, 0x0C, 0x0A, 0x64, 0x07, 0x07, 0x3C};
+// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 5, 0x00, 0x00000003, 0x00, 0x00, 0x64, 0x07, 0x07, 0x3C};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 extern LoRaDisC_Energy energy_stats;
