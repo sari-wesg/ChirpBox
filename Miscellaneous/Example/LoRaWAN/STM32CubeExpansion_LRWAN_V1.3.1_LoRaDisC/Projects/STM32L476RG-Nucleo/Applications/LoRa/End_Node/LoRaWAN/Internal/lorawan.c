@@ -106,9 +106,12 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
 volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0003, 5, 0, 5, 0x0E, 0x00000001, 0x20, 0x03, 0x64, 0x07, 0x07, 0x3C};
+// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0003, 5, 0, 5, 0x00, 0x001FFFFF, 0x00, 0x00, 0x05, 0x07, 0x07, 0x00};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 extern LoRaDisC_Energy energy_stats;
+extern uint32_t *collect_full_rank;
+extern uint32_t collect_success;
 
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
@@ -177,6 +180,7 @@ void lorawan_start()
                 energy_stats.TRANSMIT += energest_type_time(ENERGEST_TYPE_TRANSMIT);
                 energy_stats.LISTEN += energest_type_time(ENERGEST_TYPE_LISTEN);
                 energest_init();
+                printf("energest_init: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
             #endif
                 /* lorawan nodes */
                 if ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32))))
@@ -380,6 +384,8 @@ void lorawan_start()
                         {
                             lpwan_grid_timer_stop();
                             log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
+                            uint32_t mean_full_rank = calculate_array_mean(collect_full_rank, fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
+                            log_to_flash("full_rank: %lu, %lu\n", mean_full_rank, collect_success);
                             log_flush();
                         }
                     }
@@ -619,6 +625,8 @@ static void Send(void *context)
             TimerStop(&TxTimer);
             lpwan_grid_timer_stop();
             log_to_flash("energy_stats: %lu, %lu, %lu, %lu\n", gpi_tick_slow_to_us(energy_stats.CPU), gpi_tick_slow_to_us(energy_stats.LPM), gpi_tick_slow_to_us(energy_stats.TRANSMIT), gpi_tick_slow_to_us(energy_stats.LISTEN));
+            uint32_t mean_full_rank = calculate_array_mean(collect_full_rank, fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
+            log_to_flash("full_rank: %lu, %lu\n", mean_full_rank, collect_success);
             log_flush();
         }
         return;

@@ -39,6 +39,9 @@ uint8_t node_id_allocate;
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 LoRaDisC_Energy energy_stats;
 
+uint32_t	*collect_full_rank;
+uint32_t collect_success;
+
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
 static uint8_t logical_node_id(uint32_t dev_id, uint32_t *UID_list)
@@ -170,6 +173,9 @@ void loradisc_discover_init()
     loradisc_discover_config.lorawan_duration = GPI_TICK_S_TO_SLOW(5); //TODO:
     loradisc_discover_config.lorawan_interval_s[node_id_allocate] = fut_config.CUSTOM[FUT_LORAWAN_INTERVAL_S]; // TODO:
     loradisc_discover_config.loradisc_collect_id = 0;
+    collect_full_rank = (uint32_t *)malloc(fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
+    memset(collect_full_rank, 0, sizeof(uint32_t) * fut_config.CUSTOM[FUT_COLLECT_SLOTS_MAX]);
+    collect_success = 0;
 }
 
 void loradisc_discover_update_initiator()
@@ -287,6 +293,13 @@ uint8_t loradisc_collect()
         free(data);
     if (payload_distribution != NULL)
         free(payload_distribution);
+
+    printf("slot_full_rank:%x\n", mx.stat_counter.slot_full_rank);
+    if(!mx.stat_counter.slot_full_rank)
+        mx.stat_counter.slot_full_rank = fut_config.CUSTOM[FUT_COLLECT_SLOTS];
+    else
+        collect_success++;
+    collect_full_rank[loradisc_discover_config.loradisc_collect_id] = mx.stat_counter.slot_full_rank;
 
     /* start LoRaWAN relay with LoRaDisC */
     loradisc_discover_config.loradisc_lorawan_on = 1;

@@ -299,4 +299,17 @@ int lorawan_loradisc_send(uint8_t *data, uint8_t data_length)
 
     return 0;
 }
+
+
+uint32_t calculate_array_mean(uint32_t *array, uint8_t array_length)
+{
+    uint32_t sum = 0;
+    for (uint8_t i = 0; i < array_length; i++)
+    {
+        sum += array[i];
+    }
+    uint32_t mean = sum / array_length;
+    return mean;
+}
+
 //**************************************************************************************************

@@ -194,6 +194,7 @@ typedef struct __attribute__((packed)) Chirp_Energy_tag
 	uint32_t LORAWAN_LISTEN;
 } LoRaDisC_Energy;
 
+
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
@@ -258,5 +259,5 @@ uint8_t lorawan_relay_collect(uint8_t relay_id);
 uint8_t lorawan_relay_max_packetnum();
 
 int lorawan_loradisc_send(uint8_t *data, uint8_t data_length);
-
+uint32_t calculate_array_mean(uint32_t *array, uint8_t array_length);
 #endif  /* __LORADISC_H__ */
