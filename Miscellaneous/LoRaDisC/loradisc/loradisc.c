@@ -23,8 +23,8 @@
 //***** Local (Static) Variables *******************************************************************
 // uint32_t dev_id_list[NODE_LENGTH] = {0x004A0038, 0x00300047, 0x004a0022}; // TODO: delft
 
-// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x0042002C, 0x004E004A}, 0, 470000}; // TODO: sari
-volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x004a0022, 0x00350017}, 0, 486300}; // TODO: tu graz
+volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x0042002C, 0x004E004A}, 0, 470000}; // TODO: sari
+// volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x004a0022, 0x00350017}, 0, 486300}; // TODO: tu graz
 // volatile chirpbox_daemon_config __attribute((section (".ChirpBoxSettingSection"))) daemon_config ={{0x00440034, 0x0027002d, 0x00350017}, 0, 486300}; // TODO: tu graz
 
 uint8_t MX_NUM_NODES_CONF;

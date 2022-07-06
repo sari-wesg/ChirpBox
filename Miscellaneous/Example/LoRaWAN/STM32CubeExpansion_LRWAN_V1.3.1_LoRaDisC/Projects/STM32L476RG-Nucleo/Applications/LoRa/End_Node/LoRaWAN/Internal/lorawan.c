@@ -106,7 +106,8 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x000A, 5, 0, 5, 0x00, 0x00000001, 0x0C, 0x0A, 0x19, 0x07, 0x07, 0x3C};
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 5, 0x00, 0x00000003, 0x00, 0x00, 0x64, 0x07, 0x07, 0x3C};
+// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 5, 0x00, 0x00000003, 0x00, 0x00, 0x19, 0x07, 0x07, 0x3C};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 0, 0x00, 0x00000003, 0x00, 0x00, 0x64, 0x07, 0x07, 0x3C};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 extern LoRaDisC_Energy energy_stats;
@@ -176,10 +177,10 @@ void lorawan_start()
                 Send(NULL);
             #else
             #if ENERGEST_CONF_ON
-                energy_stats.CPU += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU));
-                energy_stats.LPM += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LPM));
-                energy_stats.TRANSMIT += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT));
-                energy_stats.LISTEN += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN));
+                energy_stats.CPU += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_CPU))/1000;
+                energy_stats.LPM += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LPM))/1000;
+                energy_stats.TRANSMIT += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_TRANSMIT))/1000;
+                energy_stats.LISTEN += gpi_tick_slow_to_us(energest_type_time(ENERGEST_TYPE_LISTEN))/1000;
                 printf("energest_init: %lu, %lu, %lu, %lu\n", energy_stats.CPU, energy_stats.LPM, energy_stats.TRANSMIT, energy_stats.LISTEN);
                 energest_init();
             #endif
@@ -213,7 +214,7 @@ void lorawan_start()
                         /*Send*/
                         Send(NULL);
                         loradisc_discover_config.lorawan_on ^= 1;
-                        if (MX_NUM_NODES_CONF == loradisc_discover_config.lorawan_num)
+                        if ((MX_NUM_NODES_CONF == loradisc_discover_config.lorawan_num) && (send_count < fut_config.CUSTOM[FUT_MAX_SEND]))
                         {
                             loradisc_discover_config.lorawan_on ^= 1;
                             lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
