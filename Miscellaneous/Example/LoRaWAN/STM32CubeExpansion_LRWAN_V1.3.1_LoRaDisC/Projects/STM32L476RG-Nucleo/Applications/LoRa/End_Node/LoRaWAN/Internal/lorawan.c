@@ -106,8 +106,8 @@ static uint8_t AppDataBuff[LORAWAN_APP_DATA_BUFF_SIZE];
 lora_AppData_t AppData = {AppDataBuff, 0, 0};
 
 // volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x000A, 5, 0, 5, 0x00, 0x00000001, 0x0C, 0x0A, 0x19, 0x07, 0x07, 0x3C};
-// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 5, 0x00, 0x00000003, 0x00, 0x00, 0x19, 0x07, 0x07, 0x3C};
-volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 0, 0x00, 0x00000003, 0x00, 0x00, 0x64, 0x07, 0x07, 0x3C};
+volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0002, 5, 0, 5, 0x00, 0x00000001, 0x0C, 0x02, 0x64, 0x07, 0x07, 0x3C};
+// volatile chirpbox_fut_config __attribute((section (".FUTSettingSection"))) fut_config ={0x0064, 5, 0, 0, 0x00, 0x00000003, 0x00, 0x00, 0x64, 0x07, 0x07, 0x3C};
 
 extern LoRaDisC_Discover_Config loradisc_discover_config;
 extern LoRaDisC_Energy energy_stats;
@@ -214,7 +214,7 @@ void lorawan_start()
                         /*Send*/
                         Send(NULL);
                         loradisc_discover_config.lorawan_on ^= 1;
-                        if ((MX_NUM_NODES_CONF == loradisc_discover_config.lorawan_num) && (send_count < fut_config.CUSTOM[FUT_MAX_SEND]))
+                        if ((MX_NUM_NODES_CONF == loradisc_discover_config.lorawan_num) && (send_count < fut_config.CUSTOM[FUT_MAX_SEND])) //only lorawan nodes
                         {
                             loradisc_discover_config.lorawan_on ^= 1;
                             lpwan_grid_timer_init(GPI_TICK_S_TO_SLOW(LPM_TIMER_UPDATE_S));
