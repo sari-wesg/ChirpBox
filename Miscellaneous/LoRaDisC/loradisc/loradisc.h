@@ -176,6 +176,7 @@ typedef struct __attribute__((packed)) LoRaDisC_Discover_tag
 	int32_t					lorawan_diff; // self compared to node 0
 	Gpi_Slow_Tick_Extended	lorawan_begin[LORAWAN_MAX_NUM]; // the begin time of all nodes
 	Gpi_Slow_Tick_Extended 	next_loradisc_gap;
+	uint8_t					lorawan_node_full_rank[2];
 
 	/* global infomation */
 	uint16_t				lorawan_interval_s[LORAWAN_MAX_NUM];

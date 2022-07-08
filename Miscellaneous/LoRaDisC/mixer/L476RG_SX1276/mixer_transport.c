@@ -234,6 +234,10 @@ static struct
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
 
+#if USE_FOR_LORAWAN && LORADISC
+	extern LoRaDisC_Discover_Config loradisc_discover_config;
+#endif
+
 //**************************************************************************************************
 //***** Local Functions ****************************************************************************
 
@@ -649,7 +653,7 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				gpi_memcpy_dma_aligned(&(mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)]->phy_payload_begin), RxPacketBuffer, LORADISC_HEADER_LEN);
 			}
 			packet = mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
-				#if INFO_VECTOR_QUEUE
+			#if INFO_VECTOR_QUEUE
 				gpi_memcpy_dma_inline((uint8_t *)&(mx.code_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.code_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.coding_vector.pos), loradisc_config.coding_vector.len);
 				gpi_memcpy_dma_inline((uint8_t *)&(mx.info_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.info_queue)]->vector[0]), (uint8_t *)(RxPacketBuffer + offsetof(Packet, packet_chunk) + loradisc_config.info_vector.pos), loradisc_config.info_vector.len);
 
@@ -661,6 +665,19 @@ void LED_ISR(mixer_dio0_isr, LED_DIO0_ISR)
 				/* payload after header */
 				gpi_memcpy_dma_inline((uint8_t *)&(loradisc_config.flooding_packet_payload[0]), (uint8_t *)&(RxPacketBuffer[LORADISC_HEADER_LEN]), loradisc_config.phy_payload_size - LORADISC_HEADER_LEN);
 			}
+				#if USE_FOR_LORAWAN && LORADISC
+					else if (loradisc_config.primitive == COLLECTION)
+					{
+						uint8_t received_node_id = packet->sender_id;
+						/* when the received node is from lorawan node, and this node has already got all packets */
+						if ((loradisc_discover_config.lorawan_bitmap & (1 << (received_node_id % 32))) && (packet->flags.is_full_rank))
+						{
+							loradisc_discover_config.lorawan_node_full_rank[received_node_id / sizeof(uint8_t)] |= 1 << (received_node_id % sizeof(uint8_t));
+						}
+						loradisc_discover_config.lorawan_node_full_rank[0] |= packet->packet_header[0];
+						loradisc_discover_config.lorawan_node_full_rank[1] |= packet->packet_header[1];
+					}
+				#endif
 			#else
 			gpi_memcpy_dma_aligned(&mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)].phy_payload_begin, RxPacketBuffer, PHY_PAYLOAD_SIZE);
 			packet = &mx.rx_queue[mx.rx_queue_num_written % NUM_ELEMENTS(mx.rx_queue)];
@@ -1676,6 +1693,19 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 						mx.tx_packet->flags.radio_off = 1;
 					}
 				#endif
+
+				#if USE_FOR_LORAWAN && LORADISC
+				/* if the node has all lorawan node bitmap is full, stop the flooding */
+					#if MX_SMART_SHUTDOWN_LORADISC
+					if (loradisc_discover_config.collect_on)
+					{
+						if ((loradisc_discover_config.lorawan_bitmap & (1 << (node_id_allocate % 32))) && (mx.tx_packet->flags.is_full_rank))
+							loradisc_discover_config.lorawan_node_full_rank[node_id_allocate / sizeof(uint8_t)] |= 1 << (node_id_allocate % sizeof(uint8_t));
+							if (((gpi_popcnt_8(loradisc_discover_config.lorawan_node_full_rank[0]) + gpi_popcnt_8(loradisc_discover_config.lorawan_node_full_rank[1])) >= loradisc_discover_config.lorawan_num))
+								mx.tx_packet->flags.radio_off = 1;
+					}
+					#endif
+				#endif
             }
 
 			#if MX_REQUEST
@@ -1722,7 +1752,12 @@ void LED_ISR(grid_timer_isr, LED_GRID_TIMER_ISR)
 				gpi_memcpy_dma_inline((uint8_t *)&(mx.tx_packet->packet_header[0]), (uint8_t *)(loradisc_config.flooding_packet_header), FLOODING_SURPLUS_LENGTH - sizeof(mx.tx_packet->flags));
 				mx.tx_packet->flags.all = loradisc_config.flooding_packet_header[FLOODING_SURPLUS_LENGTH - sizeof(mx.tx_packet->flags)];
 			}
-
+			#if USE_FOR_LORAWAN && LORADISC
+				else if (loradisc_config.primitive == COLLECTION)
+				{
+					gpi_memcpy_dma_inline((uint8_t *)&(mx.tx_packet->packet_header[0]), (uint8_t *)(loradisc_discover_config.lorawan_node_full_rank), 2 * sizeof(uint8_t));
+				}
+			#endif
 			write_tx_fifo(&(mx.tx_packet->phy_payload_begin),
 			NULL, offsetof(Packet, packet_chunk) - offsetof(Packet, phy_payload_begin) + loradisc_config.coding_vector.pos);
 		}

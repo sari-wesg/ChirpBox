@@ -95,9 +95,13 @@
 #endif
 
 #ifndef MX_SMART_SHUTDOWN
-	#define MX_SMART_SHUTDOWN		0
+	#define MX_SMART_SHUTDOWN		1
 	#undef  MX_SMART_SHUTDOWN_MAP
-	#define MX_SMART_SHUTDOWN_MAP	0
+	#define MX_SMART_SHUTDOWN_MAP	1
+#endif
+
+#ifndef MX_SMART_SHUTDOWN_LORADISC
+	#define MX_SMART_SHUTDOWN_LORADISC		1
 #endif
 
 #ifndef MX_BENCHMARK_NO_SIDELOAD
@@ -429,7 +433,7 @@ typedef union __attribute__((packed)) Packet_tag
 			{
 				uint16_t	app_header;
 
-				uint8_t 	packet_header[2]; // used when flooding packets or for collect and dissem
+				uint8_t 	packet_header[2]; // used when flooding packets or for collect and dissem or used as the lorawan nodes bitmap
 			};
         };
 
