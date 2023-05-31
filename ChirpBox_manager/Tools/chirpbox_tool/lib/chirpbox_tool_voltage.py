@@ -37,8 +37,8 @@ class voltage():
                     node_value_in_row.append(node_id_value_list[i][1][node_id_index]/1000)
                 except:
                     node_value_in_row.append(CHIRPBOX_ERROR_VALUE)
-                    logger.warning("cannot find node %s in list %s at datetime: %s\n", nodes, node_id_value_list[i][0], datetime.datetime.fromtimestamp(int(self._utc_list[i])))
-            logger.debug("plot for node %s with value: %s\n", nodes, node_value_in_row)
+                    logger.info("cannot find node %s in list %s at datetime: %s\n", nodes, node_id_value_list[i][0], datetime.datetime.fromtimestamp(int(self._utc_list[i])))
+            # logger.info("plot for node %s with value: %s\n", nodes, node_value_in_row)
 
             if plot_date is not None:
                 ax.set_xlim(plot_data_start1,plot_data_end1)
@@ -67,7 +67,7 @@ class voltage():
         # convert csv files to utc list and node id with values
         (self._utc_list, self._node_values) = self._chirpbox_txt.chirpbox_csv_with_utc(directory_path, self._file_start_name, self._time_zone, self._voltage_value_format)
 
-        logger.debug("utc_list: %s, node_values: %s\n", self._utc_list, self._node_values)
+        # logger.info("utc_list: %s, node_values: %s\n", self._utc_list, self._node_values)
 
         self.utc_node_value_plot(node_id, self._node_values, plot_date)
 

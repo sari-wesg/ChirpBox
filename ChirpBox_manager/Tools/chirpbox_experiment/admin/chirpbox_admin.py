@@ -77,7 +77,7 @@ class ChirpBoxAdmin():
 
     def bitmap_list_to_roundrobin(self, bitmap):
         bitmap = int(bitmap, 16)
-        node_list = []
+        node_list = [0]
         i = 0
         while (bitmap):
             i += 1
@@ -121,10 +121,10 @@ class ChirpBoxAdmin():
                 for bitmap in bitmap_list:
                     lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [bitmap, "1"])
                     time.sleep(int(cbmng_exp_config.myExpConfApproach().experiment_duration) + 60) #waiting for the end of experiment
-                time.sleep(180) #waiting for all nodes have GPS signal
+                # time.sleep(180) #waiting for all nodes have GPS signal
             else:
-                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "1"])  #TODO: upgrade: "1" means Flash protection, "0" means no flash protection, only when firmware upgrade can be set as "0"
-                time.sleep(180) #waiting for all nodes have GPS signal
+                lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_START_COMMAND, [cbmng_exp_method.myExpMethodApproach().experiment_run_bitmap, "0"])  #TODO: upgrade: "1" means Flash protection, "0" means no flash protection, only when firmware upgrade can be set as "0"
+                # time.sleep(180) #waiting for all nodes have GPS signal
             # collect
             lib.chirpbox_tool_cbmng_command.cbmng_command.run_command_with_json(self, CHIRPBOX_COLLECT_COMMAND, [cbmng_exp_method.myExpMethodApproach().start_address, cbmng_exp_method.myExpMethodApproach().end_address])
 
@@ -138,7 +138,8 @@ class ChirpBoxAdmin():
             logger.debug("manage_chirpbox")
             if self._connect is True:
                 # connectivity
-                chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
+                # chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-12 -tp 0 -f 470000,480000,490000 -pl 8 link_quality:measurement"
+                chirpbox_tool_command = "chirpbox_tool.py " + "-sf 7-9 -tp 2,4,6,8,10,12,14 -f 480000 -pl 8 link_quality:measurement"
                 chirpbox_tool.main(chirpbox_tool_command.split())
             if self._version is True:
                 # collect version

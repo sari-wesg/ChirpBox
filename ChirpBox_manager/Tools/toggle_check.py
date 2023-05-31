@@ -69,7 +69,7 @@ def check_daemon(com_port, alarm_time):
 
 def main(argv):
     # TODO: change the FUT name and com port name
-    check_toggle("FUT.bin", "066AFF565653756687152608", "com7")
+    check_toggle("D:\\TP\Study\ChirpBox\Daemon\Debug\jxr_test.bin", "0670FF515455777867100827", "com3")
 
 
 if __name__ == "__main__":

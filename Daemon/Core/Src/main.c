@@ -191,7 +191,7 @@ static uint8_t hardware_init()
 	#endif
 
 	gpi_int_enable();
-
+Starting node
 	/* init RF transceiver */
 	gpi_radio_init();
 	node_id_restore();

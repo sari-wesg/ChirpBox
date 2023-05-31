@@ -87,7 +87,7 @@ def main(argv):
 			print("The testbed is idle...")
 			exit(0)
 	elif(((argv[1] == "connectivity_evaluation") or (argv[1] == "-connect")) and (len(argv) == 10)):
-		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), argv[6], int(argv[7]), int(argv[8]), int(argv[9]))
+		cbmng_exp_start.connectivity_evaluation(int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]), argv[6], int(argv[7]), int(argv[8]), int(argv[9],16))
 		# exit(1)
 	elif(((argv[1] == "collect_data") or (argv[1] == "-coldata")) and (len(argv) == 10)):
 		if(cbmng_exp_start.is_running() == False):

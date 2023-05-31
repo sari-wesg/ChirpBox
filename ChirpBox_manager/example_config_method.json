@@ -1,16 +1,17 @@
 {
-	"experiment_name": "test_example",
+	"experiment_name": "test",
 	"experiment_description": "Just for description",
-    "FUT_CUSTOM_list": "0x0000000A, 0x00000005",
+    "FUT_CUSTOM_list": "0x0003, 5, 0, 5, 0x0E, 0x00000003, 0x3C, 0x03, 0x64, 0x07, 0x07, 0x3C, 0x3C, 0x00, 0x01,0x10",
 	"payload_length": 6,
-	"experiment_duration": 20,
+	"experiment_duration": 30,
 	"num_generated_packets": "True",
 	"num_received_packets": "True",
 	"e2e_latency": "True",
 	"tx_energy": "True",
 	"rx_energy": "True",
 	"start_address": "080FD000",
-	"end_address": "080FD800",
-	"experiment_run_bitmap": "1FFFFF",
+	"end_address": "080FD0C8",
+	"experiment_run_bitmap": "1",
+	"experiment_run_bitmap_": "1FFFFF",
 	"experiment_run_round": "False"
 }

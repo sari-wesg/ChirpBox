@@ -14,7 +14,7 @@ MYSQL_DATABASE = "LoRaWANChirpBox"
 MYSQL_TABLE = ""
 
 
-MQTT_HOST = "192.168.1.103"
+MQTT_HOST = "[2400:dd02:1008:15:5281:bf7b:42c9:e25c]"
 MQTT_PORT = 1883
 
 """ --------------------------------------------------------------------- """
@@ -79,7 +79,7 @@ def application_packets_to_table(utc_time, application_packets):
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
    print("Connected with result code "+str(rc))
-   client.subscribe("application/2/#")
+   client.subscribe("application/1/#")
 
 def on_message(client, userdata, msg):
    application_packets = json.loads(msg.payload.decode('utf-8'))

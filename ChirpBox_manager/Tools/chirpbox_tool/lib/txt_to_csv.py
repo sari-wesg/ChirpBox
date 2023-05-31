@@ -88,7 +88,8 @@ class chirpbox_txt():
     def chirpbox_csv_with_utc(self, directory_path, file_start_name, utc_time_zone, value_format):
         # 1. read csv file list
         csv_files = glob.glob(directory_path + "\\" + file_start_name + "*" + self._csv_suffix)
-        logger.debug("csv_files: %s\n", csv_files)
+
+        # logger.info("csv_files: %s\n", csv_files)
 
         # 2. loop csv files, and read node id and payload bytes from csv
         utc_list = []
@@ -106,8 +107,8 @@ class chirpbox_txt():
 
             node_id_with_value.append(self.read_nodes_value_from_csv(filename, value_format))
 
-        # logger.debug(node_id_with_value)
-        # logger.debug(utc_list)
+        # logger.info(node_id_with_value)
+        # logger.info(utc_list)
 
         return (utc_list, node_id_with_value)
 

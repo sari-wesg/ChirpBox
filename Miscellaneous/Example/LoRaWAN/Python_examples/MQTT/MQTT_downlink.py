@@ -17,8 +17,8 @@ mqttc= mqtt.Client("python_pub")
 mqttc.connect("[2400:dd02:1008:15:5281:bf7b:42c9:e25c]", 1883)
 mqttc.loop_start()
 
-data = {"confirmed": False, "fPort": 10, "data": "aGVsbG8="}
+data = {"confirmed": False, "fPort": 10, "data": "MDAxMTIyMzM0NA=="}
 the_json = json.dumps(data) # Encode the data
 print(the_json)
 while True:
-   mqttc.publish("application/1/device/00000000001e0037", the_json)
+   mqttc.publish("application/1/device/00000000004e004a/tx", the_json)

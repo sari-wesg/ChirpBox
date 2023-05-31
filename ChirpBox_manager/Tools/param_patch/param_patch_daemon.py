@@ -62,4 +62,4 @@ usage example:
 chirpbox_param_patch('param_patch_daemon_SARI.json', 'Daemon.bin')
 """
 
-chirpbox_param_patch(os.path.join(os.path.dirname(__file__), 'param_patch_daemon_SARI.json'), os.path.join(os.path.dirname(__file__), 'Daemon.bin'))
+chirpbox_param_patch(os.path.join(os.path.dirname(__file__), 'param_patch_daemon.json'), os.path.join(os.path.dirname(__file__), 'D:\TP\Study\ChirpBox\Daemon\Debug\sx1276mb1mas.bin'))

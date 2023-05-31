@@ -40,7 +40,7 @@ fut_param_patch('FUT.bin', 'example_config_method.json')
 """
 
 def main():
-    fut_param_patch('FUT.bin', 'example_config_method.json')
+    fut_param_patch('D:\TP\Study\ChirpBox\Daemon\Debug\sx1276mb1mas.bin', 'example_config_method.json')
 
 if __name__ == "__main__":
     main()

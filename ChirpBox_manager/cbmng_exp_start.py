@@ -455,13 +455,13 @@ def collect_version(com_port, command_sf, slot_num, used_tp):
 
 def disseminate(com_port, version_hash, command_len, command_sf, command_size, bitmap, slot_num, dissem_back_sf, dissem_back_slot, used_tp, task_bitmap, daemon_patch):
 	BANK2_SIZE = 512 * 1024
-
 	try:
 		if(daemon_patch == 1):
 			f = open(firmware_daemon_burned, mode = 'r')
+			f.close()
 		if(daemon_patch == 0):
 			f = open(firmware_burned, mode = 'r')
-		f.close()
+			f.close()
 		firmware_burned_existing = 1
 	except FileNotFoundError:
 		firmware_burned_existing = 0
@@ -574,12 +574,12 @@ def disseminate(com_port, version_hash, command_len, command_sf, command_size, b
 					ser.write(str(para).encode()) # send commands
 					timeout_cnt = 0
 					break
-			if(timeout_cnt > 60000 * 3):
+			if(timeout_cnt > 6000000 * 3):
 				ser.close()
 				break
 		except:
 			pass
-	if(timeout_cnt > 60000 * 3):
+	if(timeout_cnt > 6000000 * 3):
 		print("Timeout...")
 		ser.close()
 		return False
