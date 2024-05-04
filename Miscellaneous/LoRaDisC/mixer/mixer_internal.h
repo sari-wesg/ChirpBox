@@ -623,7 +623,7 @@ extern struct mx
 #endif
 } mx;
 
-	Node *mx_absent_head, *mx_present_head, *mx_finished_head;
+extern Node *mx_absent_head, *mx_present_head, *mx_finished_head;
 
 // the following is significant for efficient queue handling
 ASSERT_CT_STATIC(IS_POWER_OF_2(NUM_ELEMENTS(((struct mx*)0)->rx_queue)), rx_queue_size_must_be_power_of_2);

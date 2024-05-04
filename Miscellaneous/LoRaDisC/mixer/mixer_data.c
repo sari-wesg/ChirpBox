@@ -39,6 +39,7 @@ static uint16_t    rece_dissem_index;
 uint16_t    calu_payload_hash, rece_hash;
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
+uint8_t *payload_distribution;
 
 uint8_t                     uartRxBuffer[128];
 

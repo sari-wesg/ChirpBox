@@ -48,8 +48,8 @@ void packet_prepare(uint8_t node_id);
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
 
-uint8_t Tx_Buffer[BUFFER_SIZE];
-uint8_t Rx_Buffer[BUFFER_SIZE];
+static uint8_t Tx_Buffer[BUFFER_SIZE];
+static uint8_t Rx_Buffer[BUFFER_SIZE];
 
 uint16_t tx_send_num;
 uint16_t rx_receive_num;
@@ -62,7 +62,7 @@ static uint32_t round_length_us;
 Topology_result *node_topology;
 Topology_result_link *node_topology_link;
 
-int8_t SnrValue;
+static int8_t SnrValue;
 int16_t rssi_link, RssiValue_link;
 static uint8_t round_id;
 //**************************************************************************************************

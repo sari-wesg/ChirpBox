@@ -169,8 +169,8 @@ uint32_t FLASH_If_Erase_Pages(uint32_t bank_active, uint32_t page)
 uint32_t FLASH_If_Check_old(uint32_t start)
 {
   /* checking if the data could be code (first word is stack location) */
-  if ((*(uint32_t*)start >> 24) != 0x20 ) return FLASHIF_EMPTY;
-
+//  if ((*(uint32_t*)start >> 24) != 0x20 ) return FLASHIF_EMPTY;
+//	if ((*(uint32_t*)start & 0x000000ff) != 0x00000020 ) return FLASHIF_EMPTY;
   return FLASHIF_OK;
 }
 

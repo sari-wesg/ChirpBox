@@ -36,9 +36,9 @@ typedef enum LoRaWAN_State_tag
 
 //**************************************************************************************************
 //***** Local (Static) Variables *******************************************************************
-uint8_t Tx_Buffer[BUFFER_SIZE];
+static uint8_t Tx_Buffer[BUFFER_SIZE];
 
-uint8_t Rx_Buffer[BUFFER_SIZE];
+static uint8_t Rx_Buffer[BUFFER_SIZE];
 LoRaWAN_State lorawan_state;
 
 //**************************************************************************************************

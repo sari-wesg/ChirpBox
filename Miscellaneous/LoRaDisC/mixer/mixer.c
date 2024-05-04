@@ -103,6 +103,8 @@ GPI_TRACE_CONFIG(mixer, GPI_TRACE_BASE_SELECTION | GPI_TRACE_LOG_USER);
 
 //**************************************************************************************************
 //***** Global Variables ***************************************************************************
+Node *mx_absent_head, *mx_present_head, *mx_finished_head;
+
 
 // mixer internal data
 struct mx		mx;

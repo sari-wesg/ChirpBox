@@ -12,7 +12,7 @@
 #endif
 
 /*********************************************************/
-uint8_t *payload_distribution;
+extern uint8_t *payload_distribution;
 
 // turn verbose log messages on or off
 #define MX_VERBOSE_CONFIG		0
